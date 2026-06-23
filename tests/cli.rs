@@ -469,6 +469,7 @@ fn runtime_reflow_smoke_cli_reports_resize_reflow_without_gpu_bootstrap() {
         exit.stdout
             .contains("scrollback hard breaks: [false, true]")
     );
+    assert!(exit.stdout.contains("scrollback logical lines: [0, 0]"));
     assert!(exit.stdout.contains("visible lines: klmno|pqrst"));
     assert!(exit.stdout.contains("rendered frames: 1"));
     assert!(exit.stderr.is_empty());

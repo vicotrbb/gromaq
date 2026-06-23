@@ -82,9 +82,12 @@ impl Scrollback {
 
     /// Produce a stable snapshot.
     pub fn snapshot(&self) -> ScrollbackSnapshot {
+        let hard_breaks: Vec<bool> = self.lines.iter().map(|line| line.hard_break).collect();
+        let logical_line_ids = logical_line_ids_for(&hard_breaks);
         ScrollbackSnapshot {
             lines: self.lines.iter().map(ScrollbackLine::text).collect(),
-            hard_breaks: self.lines.iter().map(|line| line.hard_break).collect(),
+            hard_breaks,
+            logical_line_ids,
             hyperlinks: Vec::new(),
             underline_colors: Vec::new(),
             cells: self.lines.iter().map(|line| line.cells.clone()).collect(),
@@ -213,6 +216,18 @@ fn last_visible_cell(cells: &[CellSnapshot]) -> Option<usize> {
         .rposition(|cell| !cell.text.is_empty() && !cell.is_wide_trailing)
 }
 
+fn logical_line_ids_for(hard_breaks: &[bool]) -> Vec<usize> {
+    let mut current_id = 0;
+    let mut ids = Vec::with_capacity(hard_breaks.len());
+    for hard_break in hard_breaks {
+        ids.push(current_id);
+        if *hard_break {
+            current_id += 1;
+        }
+    }
+    ids
+}
+
 /// Immutable scrollback snapshot used by tests and debug tooling.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScrollbackSnapshot {
@@ -220,6 +235,8 @@ pub struct ScrollbackSnapshot {
     pub lines: Vec<String>,
     /// Whether each scrollback row ended a hard line break instead of a soft wrap.
     pub hard_breaks: Vec<bool>,
+    /// Stable logical-line group for each retained physical scrollback row.
+    pub logical_line_ids: Vec<usize>,
     /// OSC 8 hyperlink URI table indexed by non-zero cell hyperlink identifiers.
     pub hyperlinks: Vec<String>,
     /// Underline color table indexed by non-zero style underline color identifiers.
