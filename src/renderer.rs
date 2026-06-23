@@ -15,6 +15,7 @@ use crate::terminal::CursorSnapshot;
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 14;
 const DEFAULT_GLYPH_ATLAS_CAPACITY: usize = 4096;
+const MAX_GLYPH_ATLAS_CAPACITY: usize = 65_536;
 
 /// Renderer configuration for the GPU backend.
 #[derive(Debug, Clone, PartialEq)]
@@ -1356,9 +1357,10 @@ pub struct GlyphAtlasConfig {
 impl GlyphAtlasConfig {
     /// Create a glyph atlas configuration.
     pub fn new(capacity: usize) -> Result<Self> {
-        if capacity == 0 {
+        if capacity == 0 || capacity > MAX_GLYPH_ATLAS_CAPACITY {
             return Err(GromaqError::InvalidGlyphAtlasCapacity {
                 minimum: 1,
+                maximum: MAX_GLYPH_ATLAS_CAPACITY,
                 actual: capacity,
             });
         }

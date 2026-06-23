@@ -80,3 +80,11 @@ fn invalid_glyph_atlas_capacity_is_rejected() {
 
     assert!(error.to_string().contains("glyph atlas capacity"));
 }
+
+#[test]
+fn oversized_glyph_atlas_capacity_is_rejected() {
+    let error = GlyphAtlasConfig::new(usize::MAX).unwrap_err();
+
+    assert!(error.to_string().contains("65536"));
+    assert!(error.to_string().contains(&usize::MAX.to_string()));
+}

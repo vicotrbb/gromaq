@@ -55,11 +55,13 @@ pub enum GromaqError {
         actual: u32,
     },
 
-    /// Glyph atlas capacity must be non-zero.
-    #[error("glyph atlas capacity must be at least {minimum}, got {actual}")]
+    /// Glyph atlas capacity must be bounded and non-zero.
+    #[error("glyph atlas capacity must be between {minimum} and {maximum}, got {actual}")]
     InvalidGlyphAtlasCapacity {
         /// Inclusive lower bound.
         minimum: usize,
+        /// Inclusive upper bound.
+        maximum: usize,
         /// Actual invalid value.
         actual: usize,
     },
