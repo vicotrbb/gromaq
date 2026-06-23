@@ -315,6 +315,25 @@ fn scrollback_reflow_preserves_wide_cluster_metadata() {
 }
 
 #[test]
+fn scrollback_reflow_uses_single_cell_wide_span_at_one_column() {
+    let config = TerminalConfig::new(4, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal.write_str("ab界\r\ncd\r\nef").unwrap();
+
+    terminal.resize(1, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["a", "b", "界"]);
+    assert_eq!(scrollback.cells[2].len(), 1);
+    assert_eq!(scrollback.cells[2][0].text, "界");
+    assert!(!scrollback.cells[2][0].is_wide_leading);
+    assert!(!scrollback.cells[2][0].is_wide_trailing);
+}
+
+#[test]
 fn scrollback_reflow_preserves_hyperlink_metadata() {
     let config = TerminalConfig::new(10, 2)
         .unwrap()

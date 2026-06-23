@@ -123,6 +123,7 @@ impl Scrollback {
         let mut current_width = 0;
         for cell in line.iter().filter(|cell| !cell.is_wide_trailing) {
             let width = cell_width(cell);
+            let width = if width == 2 && cols == 1 { 1 } else { width };
             if width == 0 {
                 current.push(cell.clone());
                 continue;
