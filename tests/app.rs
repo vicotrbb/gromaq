@@ -323,9 +323,44 @@ fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
     assert_eq!(app.runtime().config().scrollback_lines, 16);
     assert_eq!(
         app.runtime().config().shell.program,
-        PathBuf::from("/bin/sh")
+        PathBuf::from("/bin/zsh")
     );
     assert_eq!(app.runtime().dump_runtime_perf_metrics().resize_events, 1);
+    assert!(!app.runtime().has_shell_session());
+}
+
+#[test]
+fn native_app_applies_reloadable_shell_config_before_runtime_starts() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig {
+            shell: ShellCommand {
+                program: "/bin/sh".into(),
+                args: Vec::new(),
+                cwd: None,
+            },
+            ..NativeTerminalRuntimeConfig::default()
+        },
+        RendererConfig::default(),
+    )
+    .unwrap();
+    let mut config = GromaqConfig::default();
+    config.shell.program = Some("/bin/zsh".to_owned());
+    config.shell.args = vec!["-l".to_owned()];
+    config.shell.cwd = Some("/tmp".to_owned());
+
+    app.apply_reloadable_gromaq_config(&config).unwrap();
+
+    assert_eq!(
+        app.runtime().config().shell.program,
+        PathBuf::from("/bin/zsh")
+    );
+    assert_eq!(app.runtime().config().shell.args, vec![PathBuf::from("-l")]);
+    assert_eq!(
+        app.runtime().config().shell.cwd,
+        Some(PathBuf::from("/tmp"))
+    );
+    assert_eq!(app.runtime().dump_runtime_perf_metrics().resize_events, 0);
     assert!(!app.runtime().has_shell_session());
 }
 
@@ -374,6 +409,11 @@ fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
 
         [font]
         size_px = 18.0
+
+        [shell]
+        program = "/bin/zsh"
+        args = ["-l"]
+        cwd = "/tmp"
         "#,
     )
     .unwrap();
@@ -383,6 +423,15 @@ fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
     assert_eq!(app.runtime().terminal().dump_grid().cols, 24);
     assert_eq!(app.runtime().terminal().dump_grid().rows, 6);
     assert_eq!(app.runtime().config().scrollback_lines, 64);
+    assert_eq!(
+        app.runtime().config().shell.program,
+        PathBuf::from("/bin/zsh")
+    );
+    assert_eq!(app.runtime().config().shell.args, vec![PathBuf::from("-l")]);
+    assert_eq!(
+        app.runtime().config().shell.cwd,
+        Some(PathBuf::from("/tmp"))
+    );
     assert_eq!(app.renderer().config().target_fps, 120);
     assert!(!app.renderer().config().dirty_regions);
     assert_eq!(app.renderer().config().font_size_px, 18);
@@ -979,6 +1028,48 @@ fn native_terminal_runtime_starts_shell_pty_once_and_keeps_session() {
     assert_eq!(configs[0].pixel_height, 600);
     assert_eq!(configs[0].shell.program, "/bin/sh");
     assert_eq!(configs[0].shell.args, vec!["-l"]);
+    assert!(runtime.has_shell_session());
+}
+
+#[test]
+fn native_terminal_runtime_restarts_shell_with_updated_command() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 80,
+        terminal_rows: 24,
+        scrollback_lines: 1_000,
+        pixel_width: 800,
+        pixel_height: 480,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+
+    runtime
+        .restart_shell(
+            ShellCommand {
+                program: "/bin/zsh".into(),
+                args: vec!["-l".into()],
+                cwd: Some("/tmp".into()),
+            },
+            &spawner,
+        )
+        .unwrap();
+
+    let configs = spawner.configs.borrow();
+    assert_eq!(configs.len(), 2);
+    assert_eq!(configs[1].cols, 80);
+    assert_eq!(configs[1].rows, 24);
+    assert_eq!(configs[1].pixel_width, 800);
+    assert_eq!(configs[1].pixel_height, 480);
+    assert_eq!(configs[1].shell.program, PathBuf::from("/bin/zsh"));
+    assert_eq!(configs[1].shell.args, vec![PathBuf::from("-l")]);
+    assert_eq!(configs[1].shell.cwd, Some(PathBuf::from("/tmp")));
+    assert_eq!(runtime.config().shell, configs[1].shell);
     assert!(runtime.has_shell_session());
 }
 

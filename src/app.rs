@@ -1,6 +1,6 @@
 //! Native `winit` application loop boundary.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -931,6 +931,38 @@ impl<S> NativeTerminalRuntime<S> {
         debug!("native shell PTY started");
         Ok(())
     }
+
+    /// Update the shell command used for the next PTY spawn.
+    pub fn set_shell_command(&mut self, shell: ShellCommand) {
+        self.config.shell = shell;
+    }
+
+    /// Replace the configured shell and start a fresh PTY session.
+    pub fn restart_shell<P>(
+        &mut self,
+        shell: ShellCommand,
+        spawner: &P,
+    ) -> Result<(), NativeAppError>
+    where
+        P: NativePtySpawner<Session = S>,
+    {
+        self.config.shell = shell;
+        let pty_config = self.config.pty_config();
+        debug!(
+            cols = pty_config.cols,
+            rows = pty_config.rows,
+            pixel_width = pty_config.pixel_width,
+            pixel_height = pty_config.pixel_height,
+            shell = ?pty_config.shell.program,
+            "restarting native shell PTY"
+        );
+        let session = spawner
+            .spawn(pty_config)
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        self.shell_session = Some(session);
+        debug!("native shell PTY restarted");
+        Ok(())
+    }
 }
 
 impl<S> NativeTerminalRuntime<S>
@@ -1444,10 +1476,10 @@ impl NativeTerminalApp {
         config: &GromaqConfig,
     ) -> Result<(), NativeAppError> {
         let app_config = NativeAppConfig::from_gromaq_config(config)?;
-        let mut runtime_config = NativeTerminalRuntimeConfig::from_gromaq_config(
-            config,
-            self.runtime.config().shell.clone(),
-        )?;
+        let reloaded_shell = shell_command_from_gromaq_config(config);
+        let shell_changed = self.runtime.config().shell != reloaded_shell;
+        let mut runtime_config =
+            NativeTerminalRuntimeConfig::from_gromaq_config(config, reloaded_shell.clone())?;
         let (reference_width_px, reference_height_px, pixel_width, pixel_height) =
             self.reload_reference_size(&app_config);
         runtime_config.pixel_width = pixel_width;
@@ -1466,8 +1498,22 @@ impl NativeTerminalApp {
         let renderer_config = RendererConfig::from_gromaq_config(config)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         let clear_color = self.renderer.config().clear_color;
-        if self.runtime.config() != &runtime_config {
+        let terminal_config_changed = self.runtime.config().terminal_cols
+            != runtime_config.terminal_cols
+            || self.runtime.config().terminal_rows != runtime_config.terminal_rows
+            || self.runtime.config().scrollback_lines != runtime_config.scrollback_lines
+            || self.runtime.config().pixel_width != runtime_config.pixel_width
+            || self.runtime.config().pixel_height != runtime_config.pixel_height;
+        if terminal_config_changed {
             self.runtime.reconfigure_terminal(runtime_config)?;
+        }
+        if shell_changed {
+            if self.runtime.has_shell_session() {
+                self.runtime
+                    .restart_shell(reloaded_shell, &self.pty_spawner)?;
+            } else {
+                self.runtime.set_shell_command(reloaded_shell);
+            }
         }
         self.resize_mapper = resize_mapper;
         self.lifecycle.apply_config(app_config);
@@ -1508,6 +1554,22 @@ impl NativeTerminalApp {
     pub fn set_event_proxy(&mut self, event_proxy: NativeAppEventProxy) {
         self.pty_spawner = RealNativePtySpawner::with_event_proxy(event_proxy);
     }
+}
+
+fn shell_command_from_gromaq_config(config: &GromaqConfig) -> ShellCommand {
+    let mut shell = config
+        .shell
+        .program
+        .as_ref()
+        .map(|program| ShellCommand {
+            program: program.into(),
+            args: Vec::new(),
+            cwd: None,
+        })
+        .unwrap_or_else(ShellCommand::default_shell);
+    shell.args = config.shell.args.iter().map(Into::into).collect();
+    shell.cwd = config.shell.cwd.as_ref().map(PathBuf::from);
+    shell
 }
 
 impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
