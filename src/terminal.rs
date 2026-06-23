@@ -1521,7 +1521,9 @@ impl Terminal {
             1048 if enabled => self.save_dec_cursor(),
             1048 => self.restore_dec_cursor(),
             1049 if enabled => {
-                self.save_dec_cursor();
+                if self.saved_primary.is_none() {
+                    self.save_dec_cursor();
+                }
                 self.enter_alternate_screen();
             }
             1049 => {

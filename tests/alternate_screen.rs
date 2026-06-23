@@ -32,6 +32,19 @@ fn alternate_screen_1049_restores_saved_rendition_state() {
 }
 
 #[test]
+fn repeated_1049_enter_keeps_original_primary_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("primary\x1b[?1049halternate\x1b[?1049h\x1b[?1049lZ")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "primaryZ");
+    assert_eq!(terminal.dump_cursor().col, 8);
+}
+
+#[test]
 fn alternate_screen_does_not_append_to_scrollback() {
     let mut terminal = Terminal::new(
         TerminalConfig::new(8, 2)
