@@ -98,6 +98,52 @@ fn narrowing_reflows_existing_scrollback_lines() {
 }
 
 #[test]
+fn scrollback_reflow_preserves_exact_width_hard_line_breaks() {
+    let config = TerminalConfig::new(5, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal.write_str("abcde\nfghij\nklmno\npq").unwrap();
+
+    terminal.resize(10, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["abcde", "fghij"]);
+}
+
+#[test]
+fn scrollback_reflow_merges_exact_width_soft_wrapped_rows() {
+    let config = TerminalConfig::new(5, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal.write_str("abcdefghijklmnopq").unwrap();
+
+    terminal.resize(10, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["abcdefghij"]);
+}
+
+#[test]
+fn scrollback_reflow_keeps_soft_wraps_after_repeated_resize() {
+    let config = TerminalConfig::new(5, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal.write_str("abcdefghijklmnopq").unwrap();
+
+    terminal.resize(4, 2).unwrap();
+    terminal.resize(10, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["abcdefghij"]);
+}
+
+#[test]
 fn scrollback_reflow_preserves_styled_cell_metadata() {
     let config = TerminalConfig::new(10, 2)
         .unwrap()

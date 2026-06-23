@@ -770,9 +770,11 @@ impl Terminal {
         let region_rows = self.scroll_bottom - self.scroll_top + 1;
         if self.scroll_top == 0 && self.scroll_bottom == self.config.rows - 1 && count == 1 {
             let removed = self.trimmed_visible_row_snapshot(0);
+            let removed_hard_break = self.hard_breaks.first().copied().unwrap_or(false);
             self.grid.scroll_up_one(self.style);
             if self.saved_primary.is_none() {
-                self.scrollback.push_cells(removed);
+                self.scrollback
+                    .push_cells_with_hard_break(removed, removed_hard_break);
             }
             if !self.hard_breaks.is_empty() {
                 self.hard_breaks.rotate_left(1);

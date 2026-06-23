@@ -22,7 +22,7 @@ impl Scrollback {
         }
     }
 
-    /// Push one line, evicting the oldest line when capacity is reached.
+    /// Push one hard-break line, evicting the oldest line when capacity is reached.
     pub fn push(&mut self, line: String) {
         let cells = line
             .chars()
@@ -37,8 +37,17 @@ impl Scrollback {
         self.push_cells(cells);
     }
 
-    /// Push one styled cell row, evicting the oldest line when capacity is reached.
+    /// Push one hard-break styled cell row, evicting the oldest line when capacity is reached.
     pub fn push_cells(&mut self, cells: Vec<CellSnapshot>) {
+        self.push_cells_with_hard_break(cells, true);
+    }
+
+    /// Push one styled cell row, preserving whether it ended with a hard line break.
+    pub(crate) fn push_cells_with_hard_break(
+        &mut self,
+        cells: Vec<CellSnapshot>,
+        hard_break: bool,
+    ) {
         if self.limit == 0 {
             return;
         }
@@ -49,7 +58,7 @@ impl Scrollback {
         if self.lines.len() == self.limit {
             self.lines.pop_front();
         }
-        self.lines.push_back(ScrollbackLine { cells });
+        self.lines.push_back(ScrollbackLine { cells, hard_break });
     }
 
     /// Produce a stable snapshot.
@@ -75,19 +84,20 @@ impl Scrollback {
         let old_lines = std::mem::take(&mut self.lines);
         let mut logical_line = Vec::new();
         for line in old_lines {
-            let was_soft_wrapped = line_width(&line.cells) >= usize::from(old_cols);
+            let is_soft_wrapped =
+                !line.hard_break && line_width(&line.cells) >= usize::from(old_cols);
             logical_line.extend(line.cells);
-            if !was_soft_wrapped {
-                self.push_reflowed_cells(&logical_line, new_cols);
+            if !is_soft_wrapped {
+                self.push_reflowed_cells(&logical_line, new_cols, line.hard_break);
                 logical_line.clear();
             }
         }
         if !logical_line.is_empty() {
-            self.push_reflowed_cells(&logical_line, new_cols);
+            self.push_reflowed_cells(&logical_line, new_cols, false);
         }
     }
 
-    fn push_reflowed_cells(&mut self, line: &[CellSnapshot], cols: u16) {
+    fn push_reflowed_cells(&mut self, line: &[CellSnapshot], cols: u16, hard_break: bool) {
         let cols = usize::from(cols);
         let mut current = Vec::new();
         let mut current_width = 0;
@@ -98,14 +108,14 @@ impl Scrollback {
                 continue;
             }
             if current_width + width > cols && !current.is_empty() {
-                self.push_cells(std::mem::take(&mut current));
+                self.push_cells_with_hard_break(std::mem::take(&mut current), false);
                 current_width = 0;
             }
             push_reflow_cell(&mut current, cell, width);
             current_width += width;
         }
         if !current.is_empty() {
-            self.push_cells(current);
+            self.push_cells_with_hard_break(current, hard_break);
         }
     }
 }
@@ -113,6 +123,7 @@ impl Scrollback {
 #[derive(Debug, Clone)]
 struct ScrollbackLine {
     cells: Vec<CellSnapshot>,
+    hard_break: bool,
 }
 
 impl ScrollbackLine {
