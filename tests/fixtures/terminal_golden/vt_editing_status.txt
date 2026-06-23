@@ -1,0 +1,14 @@
+grid:12x5
+visible[0]:"     T"
+visible[1]:"abXYcdef"
+visible[2]:"abef"
+visible[3]:"┌─┐Z"
+visible[4]:"bottom"
+cursor:row=4,col=6,visible=false,shape=Bar,blinking=false
+scrollback:[]
+tabbed_cell:text="T"
+inserted_cell:text="X"
+deleted_gap:text=""
+box_cell:text="┌"
+pending_response:\x1bP1$r6 q\x1b\\\x1bP1$r2;4r\x1b\\\x1b[5;7R
+perf:parsed_bytes=140,dirty_cells=54,scrolls=0,resizes=0,dirty_batches=0
