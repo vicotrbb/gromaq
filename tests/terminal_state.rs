@@ -498,6 +498,32 @@ fn scrollback_preserves_wide_cell_metadata_when_row_scrolls_offscreen() {
 }
 
 #[test]
+fn scrollback_preserves_rich_cell_metadata_when_row_scrolls_offscreen() {
+    let config = TerminalConfig::new(8, 2)
+        .unwrap()
+        .with_scrollback_limit(4)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    terminal
+        .write_str(
+            "\x1b]8;;https://gromaq.dev\x1b\\\x1b[31;4;58:2:17:34:51mabcdefgh\x1b[0m\x1b]8;;\x1b\\\r\nnext\r\nlast",
+        )
+        .unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["abcdefgh"]);
+    assert_eq!(scrollback.hyperlinks, vec!["https://gromaq.dev"]);
+    assert_eq!(scrollback.underline_colors, vec![Color::Rgb(17, 34, 51)]);
+    for cell in &scrollback.cells[0] {
+        assert_eq!(cell.hyperlink_id, 1);
+        assert_eq!(cell.style.foreground, Color::Ansi(1));
+        assert!(cell.style.underline);
+        assert_eq!(cell.style.underline_color_id, 1);
+    }
+}
+
+#[test]
 fn vertical_tab_and_form_feed_follow_linefeed_without_carriage_return() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
 
