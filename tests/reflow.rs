@@ -239,3 +239,26 @@ fn scrollback_reflow_preserves_wide_cluster_metadata() {
     assert!(scrollback.cells[0][2].is_wide_leading);
     assert!(scrollback.cells[0][3].is_wide_trailing);
 }
+
+#[test]
+fn scrollback_reflow_preserves_hyperlink_metadata() {
+    let config = TerminalConfig::new(10, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal
+        .write_str("\x1b]8;;https://gromaq.dev\x1b\\abcdefghij\x1b]8;;\x1b\\\r\nklmnopqrst\r\nuv")
+        .unwrap();
+
+    terminal.resize(5, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["abcde", "fghij"]);
+    assert_eq!(scrollback.hyperlinks, vec!["https://gromaq.dev"]);
+    for row in 0..2 {
+        for col in 0..5 {
+            assert_eq!(scrollback.cells[row][col].hyperlink_id, 1);
+        }
+    }
+}
