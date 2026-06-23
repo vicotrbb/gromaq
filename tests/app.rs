@@ -254,6 +254,32 @@ fn native_app_can_start_with_explicit_renderer_config() {
 }
 
 #[test]
+fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig {
+            clear_color: [0.1, 0.2, 0.3, 1.0],
+            ..RendererConfig::default()
+        },
+    )
+    .unwrap();
+    let mut config = GromaqConfig::default();
+    config.performance.target_fps = 120;
+    config.performance.dirty_region_rendering = false;
+    config.font.size_px = 18.0;
+
+    app.apply_reloadable_gromaq_config(&config).unwrap();
+
+    assert_eq!(app.lifecycle().config().target_fps, 120);
+    assert_eq!(app.renderer().config().target_fps, 120);
+    assert!(!app.renderer().config().dirty_regions);
+    assert_eq!(app.renderer().config().font_size_px, 18);
+    assert_eq!(app.renderer().config().clear_color, [0.1, 0.2, 0.3, 1.0]);
+    assert!(!app.runtime().has_shell_session());
+}
+
+#[test]
 fn default_native_glyph_cache_loads_system_monospace_font() {
     let cache = load_default_native_glyph_cache().unwrap();
 
@@ -333,6 +359,24 @@ fn native_app_lifecycle_schedules_next_pty_pump_deadline() {
     lifecycle.on_close_requested();
 
     assert_eq!(lifecycle.next_pty_pump_deadline(now), None);
+}
+
+#[test]
+fn native_app_lifecycle_applies_reloaded_frame_cadence() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
+    lifecycle.on_window_created();
+    let now = std::time::Instant::now();
+    let config = NativeAppConfig {
+        target_fps: 120,
+        ..NativeAppConfig::default()
+    };
+
+    lifecycle.apply_config(config);
+
+    assert_eq!(
+        lifecycle.next_pty_pump_deadline(now),
+        Some(now + Duration::from_nanos(8_333_333))
+    );
 }
 
 #[test]

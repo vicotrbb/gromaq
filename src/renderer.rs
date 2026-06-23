@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cell::{Color, Style, UnderlineStyle};
+use crate::config::GromaqConfig;
 use crate::dirty::DirtyRegion;
 use crate::error::{GromaqError, Result};
 use crate::grid::GridSnapshot;
@@ -961,6 +962,19 @@ impl Default for RendererConfig {
     }
 }
 
+impl RendererConfig {
+    /// Build renderer configuration from validated user configuration.
+    pub fn from_gromaq_config(config: &GromaqConfig) -> Result<Self> {
+        config.validate()?;
+        Ok(Self {
+            target_fps: config.performance.target_fps,
+            dirty_regions: config.performance.dirty_region_rendering,
+            font_size_px: config.font.renderer_font_size_px(),
+            ..Self::default()
+        })
+    }
+}
+
 /// Narrow GPU rendering interface.
 pub trait GpuRenderer {
     /// Queue a terminal snapshot for rendering.
@@ -997,6 +1011,13 @@ impl WgpuRenderer {
     /// Access renderer configuration.
     pub fn config(&self) -> &RendererConfig {
         &self.config
+    }
+
+    /// Replace renderer configuration for future frame planning.
+    pub fn reconfigure(&mut self, config: RendererConfig) {
+        self.planner = RenderPlanner::new(config.font_size_px);
+        self.config = config;
+        self.last_plan = None;
     }
 
     /// Return the most recent planned frame.

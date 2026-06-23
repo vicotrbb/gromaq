@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use gromaq::font::RasterizedGlyphCache;
 use gromaq::renderer::{GpuRenderer, PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
-use gromaq::{Terminal, TerminalConfig};
+use gromaq::{GromaqConfig, Terminal, TerminalConfig};
 
 fn system_mono_font() -> PathBuf {
     [
@@ -61,6 +61,47 @@ fn wgpu_renderer_uses_configured_font_size_for_render_plan() {
     let plan = renderer.last_plan().unwrap();
     assert_eq!(plan.glyphs.len(), 1);
     assert_eq!(plan.glyphs[0].font_size_px, 18);
+}
+
+#[test]
+fn renderer_config_maps_validated_gromaq_settings() {
+    let mut config = GromaqConfig::default();
+    config.performance.target_fps = 120;
+    config.performance.dirty_region_rendering = false;
+    config.font.size_px = 16.5;
+
+    let renderer_config = RendererConfig::from_gromaq_config(&config).unwrap();
+
+    assert_eq!(renderer_config.target_fps, 120);
+    assert!(!renderer_config.dirty_regions);
+    assert_eq!(renderer_config.font_size_px, 17);
+}
+
+#[test]
+fn wgpu_renderer_reconfigure_updates_future_frame_planning() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+    terminal.write_str("A").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    assert!(renderer.last_plan().is_some());
+
+    renderer.reconfigure(RendererConfig {
+        font_size_px: 20,
+        dirty_regions: false,
+        ..RendererConfig::default()
+    });
+    assert!(renderer.last_plan().is_none());
+
+    terminal.write_str("\rB").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+
+    let plan = renderer.last_plan().unwrap();
+    assert_eq!(plan.glyphs[0].font_size_px, 20);
+    assert_eq!(plan.clear_regions.len(), 1);
+    assert_eq!(plan.clear_regions[0].rows, 2);
+    assert_eq!(plan.clear_regions[0].cols, 4);
 }
 
 #[test]

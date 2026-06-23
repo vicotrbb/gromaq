@@ -1187,6 +1187,11 @@ impl NativeAppLifecycle {
         &self.config
     }
 
+    /// Apply native app settings that can change without recreating the window.
+    pub fn apply_config(&mut self, config: NativeAppConfig) {
+        self.config = config;
+    }
+
     /// Handle a platform resume notification.
     pub fn on_resumed(&mut self) -> NativeAppAction {
         if self.has_window {
@@ -1368,6 +1373,23 @@ impl NativeTerminalApp {
     /// Access renderer state.
     pub fn renderer(&self) -> &WgpuRenderer {
         &self.renderer
+    }
+
+    /// Apply validated user configuration fields that are reloadable without restarting the PTY.
+    pub fn apply_reloadable_gromaq_config(
+        &mut self,
+        config: &GromaqConfig,
+    ) -> Result<(), NativeAppError> {
+        let app_config = NativeAppConfig::from_gromaq_config(config)?;
+        let renderer_config = RendererConfig::from_gromaq_config(config)
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        let clear_color = self.renderer.config().clear_color;
+        self.lifecycle.apply_config(app_config);
+        self.renderer.reconfigure(RendererConfig {
+            clear_color,
+            ..renderer_config
+        });
+        Ok(())
     }
 
     /// Take a startup error captured from the event handler.

@@ -24,7 +24,7 @@ Implemented and tested:
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
 - Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
-- Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, shell program/args/cwd validation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, deterministic config-file reload checks that preserve the last valid config on invalid changes, native app/runtime/renderer config mapping, and config-file native app launch
+- Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, shell program/args/cwd validation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, deterministic config-file reload checks that preserve the last valid config on invalid changes, native app/runtime/renderer config mapping, reloadable native frame/render settings, and config-file native app launch
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
 - Structured native runtime tracing for startup, PTY pump/input, render, and clean-frame skip diagnostics
@@ -99,7 +99,7 @@ Not yet complete:
 - Hardware-backed 144Hz frame pacing proof
 - Live desktop screenshot/runtime proof of windowed terminal glyph drawing
 - Live desktop OS clipboard paste smoke
-- Native app live config reload wiring
+- Full native app live config reload wiring for terminal dimensions and shell changes
 - Broader alternate-screen mouse workflows beyond scripted Vim and tmux proof paths
 - Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
 - Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows

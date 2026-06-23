@@ -86,12 +86,8 @@ impl NativeAppLaunchConfig {
         let shell = shell_command_from_settings(&config.shell);
         let runtime = NativeTerminalRuntimeConfig::from_gromaq_config(config, shell)
             .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
-        let renderer = RendererConfig {
-            target_fps: config.performance.target_fps,
-            dirty_regions: config.performance.dirty_region_rendering,
-            font_size_px: config.font.renderer_font_size_px(),
-            ..RendererConfig::default()
-        };
+        let renderer = RendererConfig::from_gromaq_config(config)
+            .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
         Ok(Self {
             app,
             runtime,
