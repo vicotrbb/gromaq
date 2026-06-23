@@ -398,7 +398,7 @@ fn render_glyph_frame_to_view(
     format: wgpu::TextureFormat,
     frame: SurfaceGlyphFrame<'_>,
 ) -> std::result::Result<(), SurfaceFrameError> {
-    validate_surface_glyph_frame(frame)?;
+    let atlas_layout = validate_surface_glyph_frame(frame)?;
     let atlas = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("gromaq-surface-glyph-atlas"),
         size: wgpu::Extent3d {
@@ -418,7 +418,7 @@ fn render_glyph_frame_to_view(
         &frame.atlas.rgba,
         wgpu::TexelCopyBufferLayout {
             offset: 0,
-            bytes_per_row: Some(frame.atlas.width * 4),
+            bytes_per_row: Some(atlas_layout.row_bytes),
             rows_per_image: Some(frame.atlas.height),
         },
         wgpu::Extent3d {
@@ -577,9 +577,15 @@ fn render_glyph_frame_to_view(
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct SurfaceGlyphAtlasLayout {
+    row_bytes: u32,
+    expected_len: usize,
+}
+
 fn validate_surface_glyph_frame(
     frame: SurfaceGlyphFrame<'_>,
-) -> std::result::Result<(), SurfaceFrameError> {
+) -> std::result::Result<SurfaceGlyphAtlasLayout, SurfaceFrameError> {
     if frame.width == 0 || frame.height == 0 {
         return Err(SurfaceFrameError::InvalidFrame(
             "surface glyph frame dimensions must be non-zero".to_owned(),
@@ -590,13 +596,22 @@ fn validate_surface_glyph_frame(
             "surface glyph atlas dimensions must be non-zero".to_owned(),
         ));
     }
-    let expected_atlas_len = usize::try_from(frame.atlas.width)
-        .unwrap_or(usize::MAX)
-        .saturating_mul(usize::try_from(frame.atlas.height).unwrap_or(usize::MAX))
-        .saturating_mul(4);
-    if frame.atlas.rgba.len() != expected_atlas_len {
+    let row_bytes = frame.atlas.width.checked_mul(4).ok_or_else(|| {
+        SurfaceFrameError::InvalidFrame("surface glyph atlas row size is too large".to_owned())
+    })?;
+    let expected_len = usize::try_from(row_bytes)
+        .ok()
+        .and_then(|row_bytes| {
+            usize::try_from(frame.atlas.height)
+                .ok()
+                .and_then(|height| row_bytes.checked_mul(height))
+        })
+        .ok_or_else(|| {
+            SurfaceFrameError::InvalidFrame("surface glyph atlas byte size is too large".to_owned())
+        })?;
+    if frame.atlas.rgba.len() != expected_len {
         return Err(SurfaceFrameError::InvalidFrame(format!(
-            "surface glyph atlas has {} bytes, expected {expected_atlas_len}",
+            "surface glyph atlas has {} bytes, expected {expected_len}",
             frame.atlas.rgba.len()
         )));
     }
@@ -605,7 +620,10 @@ fn validate_surface_glyph_frame(
             "surface glyph frame requires non-empty quads and indices".to_owned(),
         ));
     }
-    Ok(())
+    Ok(SurfaceGlyphAtlasLayout {
+        row_bytes,
+        expected_len,
+    })
 }
 
 fn surface_glyph_vertex_bytes(
@@ -1782,5 +1800,96 @@ impl GlyphAtlas {
             .expect("glyph LRU key must exist in entries");
         self.metrics.evictions += 1;
         Ok(GlyphSlot { entry })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn one_quad_batch() -> GlyphQuadBatch {
+        let quad = GlyphQuad {
+            text: "A".to_owned(),
+            ch: 'A',
+            atlas_entry: GlyphEntry {
+                slot: 0,
+                generation: 0,
+            },
+            vertices: [
+                GlyphVertex {
+                    position: [0.0, 0.0],
+                    uv: [0.0, 0.0],
+                },
+                GlyphVertex {
+                    position: [1.0, 0.0],
+                    uv: [1.0, 0.0],
+                },
+                GlyphVertex {
+                    position: [1.0, 1.0],
+                    uv: [1.0, 1.0],
+                },
+                GlyphVertex {
+                    position: [0.0, 1.0],
+                    uv: [0.0, 1.0],
+                },
+            ],
+        };
+        GlyphQuadBatch {
+            quads: vec![quad],
+            indices: vec![0, 1, 2, 0, 2, 3],
+        }
+    }
+
+    #[test]
+    fn surface_glyph_frame_validation_computes_checked_atlas_layout() {
+        let atlas = GlyphAtlasImage {
+            width: 2,
+            height: 2,
+            rgba: vec![255; 16],
+            occupied_slots: 1,
+        };
+        let batch = one_quad_batch();
+
+        let layout = validate_surface_glyph_frame(SurfaceGlyphFrame {
+            atlas: &atlas,
+            batch: &batch,
+            width: 16,
+            height: 16,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+        })
+        .unwrap();
+
+        assert_eq!(
+            layout,
+            SurfaceGlyphAtlasLayout {
+                row_bytes: 8,
+                expected_len: 16,
+            }
+        );
+    }
+
+    #[test]
+    fn surface_glyph_frame_validation_rejects_overflowing_atlas_row_size() {
+        let atlas = GlyphAtlasImage {
+            width: u32::MAX,
+            height: 1,
+            rgba: Vec::new(),
+            occupied_slots: 0,
+        };
+        let batch = one_quad_batch();
+
+        let error = validate_surface_glyph_frame(SurfaceGlyphFrame {
+            atlas: &atlas,
+            batch: &batch,
+            width: 16,
+            height: 16,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+        })
+        .unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame("surface glyph atlas row size is too large".to_owned())
+        );
     }
 }
