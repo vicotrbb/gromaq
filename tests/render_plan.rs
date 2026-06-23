@@ -87,6 +87,29 @@ fn render_plan_preserves_modifier_on_zwj_joined_component_text() {
 }
 
 #[test]
+fn render_plan_preserves_multi_part_zwj_sequence_with_multiple_modifiers() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal.write_str("👨🏽\u{200d}👩🏾\u{200d}👧🏼").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(14);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.glyphs.len(), 1);
+    assert_eq!(plan.glyphs[0].text, "👨🏽\u{200d}👩🏾\u{200d}👧🏼");
+    assert!(plan.glyphs[0].is_wide);
+    assert_eq!(atlas.metrics().entries, 1);
+}
+
+#[test]
 fn render_plan_preserves_tag_sequence_emoji_flag_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
