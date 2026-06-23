@@ -7,7 +7,9 @@ use gromaq::app::{
     NativeTerminalRuntimeConfig,
 };
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
-use gromaq::renderer::{GlyphAtlas, GlyphAtlasConfig, RenderPlanner};
+use gromaq::renderer::{
+    GlyphAtlas, GlyphAtlasConfig, GlyphQuadConfig, GlyphQuadPlanner, RenderPlanner,
+};
 use gromaq::{Terminal, TerminalConfig};
 
 const LARGE_OUTPUT: &str = "\
@@ -112,6 +114,41 @@ fn render_plan_large_dirty_region(c: &mut Criterion) {
     });
 }
 
+fn glyph_quad_generation_large_plan(c: &mut Criterion) {
+    let mut terminal = Terminal::new(TerminalConfig::new(120, 36).unwrap());
+    for _ in 0..128 {
+        terminal.write_str(LARGE_OUTPUT).unwrap();
+    }
+    let dirty_regions = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(4096).unwrap());
+    let mut render_planner = RenderPlanner::new(14);
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty_regions,
+            &mut atlas,
+        )
+        .unwrap();
+    let quad_planner = GlyphQuadPlanner::new(GlyphQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 16,
+        atlas_slot_width_px: 12,
+        atlas_slot_height_px: 20,
+        atlas_columns: 64,
+        atlas_width_px: 768,
+        atlas_height_px: 1280,
+    });
+
+    c.bench_function("glyph_quad_generation_large_plan", |b| {
+        b.iter(|| {
+            let batch = quad_planner.plan(black_box(&plan)).unwrap();
+            black_box(batch.quads.len());
+            black_box(batch.indices.len());
+        });
+    });
+}
+
 fn pty_runtime_pump_large_output(c: &mut Criterion) {
     c.bench_function("pty_runtime_pump_large_output", |b| {
         b.iter(|| {
@@ -151,6 +188,7 @@ criterion_group!(
     parser_large_output,
     scrollback_large_output,
     render_plan_large_dirty_region,
+    glyph_quad_generation_large_plan,
     pty_runtime_pump_large_output
 );
 criterion_main!(benches);

@@ -51,7 +51,7 @@ Compatibility proof is not complete.
 | Deterministic 144Hz frame scheduler | Partial | `tests/frame_scheduler.rs` |
 | Deterministic glyph atlas cache | Partial | `tests/glyph_atlas.rs` |
 | Dirty-region render planning | Partial | `tests/render_plan.rs`, `tests/wgpu_renderer.rs`; render plans retain full multi-codepoint cell text for simple ZWJ clusters and allocate distinct atlas entries for distinct multi-scalar cell text |
-| Terminal glyph quad generation | Partial | `tests/glyph_quads.rs` builds pixel-space quads and atlas UVs, including wide glyphs, from render-plan output |
+| Terminal glyph quad generation | Partial | `tests/glyph_quads.rs` builds pixel-space quads and atlas UVs, including wide glyphs, from render-plan output; `cargo bench` includes `glyph_quad_generation_large_plan` for CPU-side planned-glyph to vertex/index conversion |
 | End-to-end mouse workflows | Not proven | `tmux`, editors, and alternate-screen app scenarios pending |
 | Hardware-backed frame pacing | Not proven | Native surface clear-present loop is wired, but 144Hz frame pacing has not been measured on live hardware |
 | Windowed terminal glyph drawing | Partial | Native redraw events render dirty terminal snapshots through `WgpuRenderer` planning, default native monospace-plus-fallback font discovery creates an app-owned rasterized glyph cache that can rasterize emoji through fallback, prepared surface glyph frames can be built from render plans and rasterized glyph bitmaps, `NativeTerminalApp` wires dirty redraws to glyph-frame presentation, and `WgpuSurfaceBackend` can acquire, draw supplied terminal glyph atlas/quad batches, submit, and present a configured surface frame; live desktop screenshot/runtime proof pending |
