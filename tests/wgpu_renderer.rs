@@ -171,6 +171,8 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     assert_eq!(frame.batch.indices.len(), plan.glyphs.len() * 6);
     assert_eq!(frame.background_batch.quads.len(), 1);
     assert_eq!(frame.background_batch.indices.len(), 6);
+    assert_eq!(frame.cursor_batch.quads.len(), 1);
+    assert_eq!(frame.cursor_batch.indices.len(), 6);
     assert_eq!(frame.atlas.occupied_slots, 2);
     assert!(frame.width > 0);
     assert!(frame.height > 0);

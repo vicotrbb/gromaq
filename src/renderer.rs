@@ -11,7 +11,7 @@ use crate::config::{GromaqConfig, MAX_TARGET_FPS};
 use crate::dirty::DirtyRegion;
 use crate::error::{GromaqError, Result};
 use crate::grid::GridSnapshot;
-use crate::terminal::CursorSnapshot;
+use crate::terminal::{CursorShape, CursorSnapshot};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 14;
@@ -171,6 +171,8 @@ pub struct SurfaceGlyphFrame<'a> {
     pub background_batch: &'a BackgroundQuadBatch,
     /// Textured glyph quads and indices to draw.
     pub batch: &'a GlyphQuadBatch,
+    /// Solid cursor quads drawn after textured glyphs.
+    pub cursor_batch: &'a BackgroundQuadBatch,
     /// Surface frame width in pixels.
     pub width: u32,
     /// Surface frame height in pixels.
@@ -185,6 +187,7 @@ pub struct PreparedSurfaceGlyphFrame {
     atlas: GlyphAtlasImage,
     background_batch: BackgroundQuadBatch,
     batch: GlyphQuadBatch,
+    cursor_batch: BackgroundQuadBatch,
     width: u32,
     height: u32,
     clear_color: [f64; 4],
@@ -264,10 +267,18 @@ impl PreparedSurfaceGlyphFrame {
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
+        let cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
+            cell_width_px: slot_width,
+            cell_height_px: slot_height,
+            color_rgba8: [229, 229, 229, 255],
+        })
+        .plan(plan)
+        .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
         Ok(Self {
             atlas,
             background_batch,
             batch,
+            cursor_batch,
             width,
             height,
             clear_color,
@@ -280,6 +291,7 @@ impl PreparedSurfaceGlyphFrame {
             atlas: &self.atlas,
             background_batch: &self.background_batch,
             batch: &self.batch,
+            cursor_batch: &self.cursor_batch,
             width: self.width,
             height: self.height,
             clear_color: self.clear_color,
@@ -299,6 +311,11 @@ impl PreparedSurfaceGlyphFrame {
     /// Solid background quad batch for this frame.
     pub fn background_batch(&self) -> &BackgroundQuadBatch {
         &self.background_batch
+    }
+
+    /// Solid cursor quad batch for this frame.
+    pub fn cursor_batch(&self) -> &BackgroundQuadBatch {
+        &self.cursor_batch
     }
 }
 
@@ -674,6 +691,91 @@ fn render_glyph_frame_to_view(
         queue.write_buffer(&index_buffer, 0, &index_bytes);
         Some((vertex_buffer, index_buffer, buffer_layout.index_count))
     };
+    let cursor_draw = if frame.cursor_batch.quads.is_empty() {
+        None
+    } else {
+        let cursor_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("gromaq-surface-cursor-shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(SURFACE_BACKGROUND_WGSL)),
+        });
+        let cursor_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("gromaq-surface-cursor-pipeline-layout"),
+                bind_group_layouts: &[],
+                immediate_size: 0,
+            });
+        let cursor_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("gromaq-surface-cursor-pipeline"),
+            layout: Some(&cursor_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &cursor_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: 24,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x2,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 8,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &cursor_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let cursor_vertex_bytes =
+            surface_background_vertex_bytes(frame.cursor_batch, frame.width, frame.height)?;
+        let cursor_index_bytes = surface_background_index_bytes(frame.cursor_batch);
+        let cursor_layout = validate_surface_background_buffers(
+            &cursor_vertex_bytes,
+            &cursor_index_bytes,
+            frame.cursor_batch.indices.len(),
+        )?;
+        let cursor_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-cursor-vertices"),
+            size: cursor_layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let cursor_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-cursor-indices"),
+            size: cursor_layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&cursor_vertex_buffer, 0, &cursor_vertex_bytes);
+        queue.write_buffer(&cursor_index_buffer, 0, &cursor_index_bytes);
+        Some((
+            cursor_pipeline,
+            cursor_vertex_buffer,
+            cursor_index_buffer,
+            cursor_layout.index_count,
+        ))
+    };
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
         label: Some("gromaq-surface-glyph-encoder"),
     });
@@ -710,6 +812,12 @@ fn render_glyph_frame_to_view(
         if let Some((vertex_buffer, index_buffer, index_count)) = &glyph_draw {
             pass.set_pipeline(&pipeline);
             pass.set_bind_group(0, &bind_group, &[]);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
+        if let Some((cursor_pipeline, vertex_buffer, index_buffer, index_count)) = &cursor_draw {
+            pass.set_pipeline(cursor_pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             pass.draw_indexed(0..*index_count, 0, 0..1);
@@ -774,9 +882,17 @@ fn validate_surface_glyph_frame(
             "surface background quads and indices must both be present or both be empty".to_owned(),
         ));
     }
-    if frame.batch.quads.is_empty() && frame.background_batch.quads.is_empty() {
+    if frame.cursor_batch.quads.is_empty() != frame.cursor_batch.indices.is_empty() {
         return Err(SurfaceFrameError::InvalidFrame(
-            "surface glyph frame requires non-empty glyph or background quads".to_owned(),
+            "surface cursor quads and indices must both be present or both be empty".to_owned(),
+        ));
+    }
+    if frame.batch.quads.is_empty()
+        && frame.background_batch.quads.is_empty()
+        && frame.cursor_batch.quads.is_empty()
+    {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface glyph frame requires non-empty glyph, background, or cursor quads".to_owned(),
         ));
     }
     Ok(SurfaceGlyphAtlasLayout {
@@ -1623,6 +1739,105 @@ impl BackgroundQuadPlanner {
             ],
         }
     }
+}
+
+/// Pixel layout used to build solid cursor quads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CursorQuadConfig {
+    /// Terminal cell width in pixels.
+    pub cell_width_px: u32,
+    /// Terminal cell height in pixels.
+    pub cell_height_px: u32,
+    /// Cursor color in RGBA8.
+    pub color_rgba8: [u8; 4],
+}
+
+/// Deterministic CPU-side planner for terminal cursor quads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CursorQuadPlanner {
+    config: CursorQuadConfig,
+}
+
+impl CursorQuadPlanner {
+    /// Create a cursor quad planner.
+    pub fn new(config: CursorQuadConfig) -> Self {
+        Self { config }
+    }
+
+    /// Build a solid cursor quad batch from a render plan.
+    pub fn plan(
+        &self,
+        plan: &RenderPlan,
+    ) -> std::result::Result<BackgroundQuadBatch, BackgroundQuadError> {
+        self.validate_config()?;
+        if !plan.cursor.visible
+            || plan.cursor.row >= plan.viewport_rows
+            || plan.cursor.col >= plan.viewport_cols
+        {
+            return Ok(BackgroundQuadBatch::default());
+        }
+        let quad = self.plan_cursor(plan.cursor);
+        Ok(BackgroundQuadBatch {
+            quads: vec![quad],
+            indices: vec![0, 1, 2, 0, 2, 3],
+        })
+    }
+
+    fn validate_config(&self) -> std::result::Result<(), BackgroundQuadError> {
+        if self.config.cell_width_px == 0 || self.config.cell_height_px == 0 {
+            return Err(BackgroundQuadError::ZeroDimension);
+        }
+        Ok(())
+    }
+
+    fn plan_cursor(&self, cursor: CursorSnapshot) -> BackgroundQuad {
+        let cell_width = self.config.cell_width_px as f32;
+        let cell_height = self.config.cell_height_px as f32;
+        let cell_x0 = f32::from(cursor.col) * cell_width;
+        let cell_y0 = f32::from(cursor.row) * cell_height;
+        let cell_x1 = cell_x0 + cell_width;
+        let cell_y1 = cell_y0 + cell_height;
+        let (x0, y0, x1, y1) = match cursor.shape {
+            CursorShape::Block => (cell_x0, cell_y0, cell_x1, cell_y1),
+            CursorShape::Underline => {
+                let thickness = cursor_stroke_px(cell_height);
+                (cell_x0, cell_y1 - thickness, cell_x1, cell_y1)
+            }
+            CursorShape::Bar => {
+                let thickness = cursor_stroke_px(cell_width);
+                (cell_x0, cell_y0, cell_x0 + thickness, cell_y1)
+            }
+        };
+        let color_rgba = rgba8_to_normalized(self.config.color_rgba8);
+
+        BackgroundQuad {
+            row: cursor.row,
+            col: cursor.col,
+            cols: 1,
+            vertices: [
+                BackgroundVertex {
+                    position: [x0, y0],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x1, y0],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x1, y1],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x0, y1],
+                    color_rgba,
+                },
+            ],
+        }
+    }
+}
+
+fn cursor_stroke_px(cell_dimension: f32) -> f32 {
+    (cell_dimension / 8.0).ceil().clamp(1.0, cell_dimension)
 }
 
 /// Pixel and atlas layout used to build textured glyph quads.
@@ -2898,6 +3113,7 @@ mod tests {
             atlas: &atlas,
             background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
+            cursor_batch: &BackgroundQuadBatch::default(),
             width: 16,
             height: 16,
             clear_color: [0.0, 0.0, 0.0, 1.0],
@@ -2927,6 +3143,7 @@ mod tests {
             atlas: &atlas,
             background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
+            cursor_batch: &BackgroundQuadBatch::default(),
             width: 16,
             height: 16,
             clear_color: [0.0, 0.0, 0.0, 1.0],
@@ -2978,6 +3195,62 @@ mod tests {
             atlas: &atlas,
             background_batch: &background_batch,
             batch: &GlyphQuadBatch::default(),
+            cursor_batch: &BackgroundQuadBatch::default(),
+            width: 1,
+            height: 1,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+        })
+        .unwrap();
+
+        assert_eq!(
+            layout,
+            SurfaceGlyphAtlasLayout {
+                row_bytes: 4,
+                expected_len: 4,
+            }
+        );
+    }
+
+    #[test]
+    fn surface_glyph_frame_validation_accepts_cursor_only_batches() {
+        let atlas = GlyphAtlasImage {
+            width: 1,
+            height: 1,
+            rgba: vec![0; 4],
+            occupied_slots: 0,
+        };
+        let cursor_batch = BackgroundQuadBatch {
+            quads: vec![BackgroundQuad {
+                row: 0,
+                col: 0,
+                cols: 1,
+                vertices: [
+                    BackgroundVertex {
+                        position: [0.0, 0.0],
+                        color_rgba: [1.0, 1.0, 1.0, 1.0],
+                    },
+                    BackgroundVertex {
+                        position: [1.0, 0.0],
+                        color_rgba: [1.0, 1.0, 1.0, 1.0],
+                    },
+                    BackgroundVertex {
+                        position: [1.0, 1.0],
+                        color_rgba: [1.0, 1.0, 1.0, 1.0],
+                    },
+                    BackgroundVertex {
+                        position: [0.0, 1.0],
+                        color_rgba: [1.0, 1.0, 1.0, 1.0],
+                    },
+                ],
+            }],
+            indices: vec![0, 1, 2, 0, 2, 3],
+        };
+
+        let layout = validate_surface_glyph_frame(SurfaceGlyphFrame {
+            atlas: &atlas,
+            background_batch: &BackgroundQuadBatch::default(),
+            batch: &GlyphQuadBatch::default(),
+            cursor_batch: &cursor_batch,
             width: 1,
             height: 1,
             clear_color: [0.0, 0.0, 0.0, 1.0],
