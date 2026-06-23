@@ -16,6 +16,17 @@ fn system_mono_font() -> PathBuf {
     .expect("expected a local macOS monospace font for renderer glyph rasterization proof")
 }
 
+fn system_emoji_font() -> PathBuf {
+    [
+        "/System/Library/Fonts/Apple Color Emoji.ttc",
+        "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
+    ]
+    .into_iter()
+    .map(PathBuf::from)
+    .find(|path| path.exists())
+    .expect("expected a local emoji fallback font for renderer glyph rasterization proof")
+}
+
 #[test]
 fn rasterized_glyph_cache_populates_distinct_plan_glyphs_once() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
@@ -136,4 +147,41 @@ fn rasterized_glyph_cache_renders_full_combining_mark_cell_text() {
     assert_eq!(plain_batch.bitmaps.len(), 1);
     assert_eq!(combined_batch.bitmaps.len(), 1);
     assert_ne!(plain_batch.bitmaps[0].rgba, combined_batch.bitmaps[0].rgba);
+}
+
+#[test]
+fn rasterized_glyph_cache_uses_fallback_font_for_missing_emoji() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("😀").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(24);
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+    let font_bytes = vec![
+        std::fs::read(system_mono_font()).unwrap(),
+        std::fs::read(system_emoji_font()).unwrap(),
+    ];
+    let mut cache = RasterizedGlyphCache::from_font_bytes(font_bytes).unwrap();
+
+    let batch = cache.rasterize_plan(&plan).unwrap();
+
+    assert_eq!(plan.glyphs.len(), 1);
+    assert_eq!(plan.glyphs[0].text, "😀");
+    assert_eq!(batch.rasterized, 1);
+    assert_eq!(batch.bitmaps.len(), 1);
+    assert!(batch.bitmaps[0].width > 0);
+    assert!(batch.bitmaps[0].height > 0);
+    assert!(
+        batch.bitmaps[0]
+            .rgba
+            .chunks_exact(4)
+            .any(|pixel| pixel[3] > 0)
+    );
 }

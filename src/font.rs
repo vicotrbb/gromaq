@@ -279,15 +279,26 @@ pub struct RasterizedGlyphBatch {
 
 /// Cache that turns planned glyph draw commands into real font-backed atlas bitmaps.
 pub struct RasterizedGlyphCache {
-    rasterizer: FontRasterizer,
+    rasterizers: Vec<FontRasterizer>,
     bitmaps: HashMap<GlyphEntry, GlyphBitmap>,
 }
 
 impl RasterizedGlyphCache {
     /// Build a glyph bitmap cache from font or font-collection bytes.
     pub fn from_bytes(font_bytes: Vec<u8>) -> Result<Self, FontRasterError> {
+        Self::from_font_bytes(vec![font_bytes])
+    }
+
+    /// Build a glyph bitmap cache from an ordered primary/fallback font stack.
+    pub fn from_font_bytes(font_bytes: Vec<Vec<u8>>) -> Result<Self, FontRasterError> {
+        if font_bytes.is_empty() {
+            return Err(FontRasterError::InvalidFont);
+        }
         Ok(Self {
-            rasterizer: FontRasterizer::from_bytes(font_bytes)?,
+            rasterizers: font_bytes
+                .into_iter()
+                .map(FontRasterizer::from_bytes)
+                .collect::<Result<Vec<_>, _>>()?,
             bitmaps: HashMap::new(),
         })
     }
@@ -314,7 +325,7 @@ impl RasterizedGlyphCache {
             }
             self.bitmaps
                 .retain(|entry, _| entry.slot != glyph.atlas_entry.slot);
-            let bitmap = self.rasterizer.rasterize_text(
+            let bitmap = self.rasterize_text_with_fallback(
                 &glyph.text,
                 f32::from(glyph.font_size_px),
                 glyph.atlas_entry,
@@ -344,6 +355,23 @@ impl RasterizedGlyphCache {
     /// Whether the cache is empty.
     pub fn is_empty(&self) -> bool {
         self.bitmaps.is_empty()
+    }
+
+    fn rasterize_text_with_fallback(
+        &mut self,
+        text: &str,
+        size_px: f32,
+        entry: GlyphEntry,
+    ) -> Result<GlyphBitmap, FontRasterError> {
+        let mut missing = None;
+        for rasterizer in &mut self.rasterizers {
+            match rasterizer.rasterize_text(text, size_px, entry) {
+                Ok(bitmap) => return Ok(bitmap),
+                Err(FontRasterError::MissingGlyph(ch)) => missing = Some(ch),
+                Err(error) => return Err(error),
+            }
+        }
+        Err(FontRasterError::MissingGlyph(missing.unwrap_or('\0')))
     }
 }
 

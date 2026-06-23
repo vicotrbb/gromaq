@@ -19,12 +19,14 @@ use gromaq::font::RasterizedGlyphCache;
 use gromaq::native_gpu::NativeGpuWindowSurface;
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
-    GlyphAtlasImage, GlyphBitmap, GlyphEntry, GlyphQuad, GlyphQuadBatch, GlyphVertex, GpuRenderer,
-    RendererConfig, SurfaceBackend, SurfaceFrameBackend, SurfaceFrameError, SurfaceGlyphFrame,
-    SurfaceLifecycleAction, WgpuRenderer,
+    GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphBitmap, GlyphEntry, GlyphQuad,
+    GlyphQuadBatch, GlyphVertex, GpuRenderer, RenderPlanner, RendererConfig, SurfaceBackend,
+    SurfaceFrameBackend, SurfaceFrameError, SurfaceGlyphFrame, SurfaceLifecycleAction,
+    WgpuRenderer,
 };
 use gromaq::{
     CursorSnapshot, GridSnapshot, MemoryClipboard, MouseButton, MouseEvent, MouseEventKind,
+    Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
@@ -164,6 +166,35 @@ fn default_native_glyph_cache_loads_system_monospace_font() {
     let cache = load_default_native_glyph_cache().unwrap();
 
     assert!(cache.is_empty());
+}
+
+#[test]
+fn default_native_glyph_cache_rasterizes_emoji_with_fallback_font() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("😀").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(24);
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+    let mut cache = load_default_native_glyph_cache().unwrap();
+
+    let batch = cache.rasterize_plan(&plan).unwrap();
+
+    assert_eq!(batch.rasterized, 1);
+    assert_eq!(batch.bitmaps.len(), 1);
+    assert!(
+        batch.bitmaps[0]
+            .rgba
+            .chunks_exact(4)
+            .any(|pixel| pixel[3] > 0)
+    );
 }
 
 #[test]

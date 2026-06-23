@@ -303,9 +303,18 @@ where
 pub fn load_default_native_glyph_cache() -> Result<RasterizedGlyphCache, NativeAppError> {
     for path in DEFAULT_MONOSPACE_FONT_CANDIDATES {
         if Path::new(path).exists() {
-            let font_bytes =
-                std::fs::read(path).map_err(|error| NativeAppError::Runtime(error.to_string()))?;
-            return RasterizedGlyphCache::from_bytes(font_bytes).map_err(NativeAppError::from);
+            let mut font_bytes = vec![
+                std::fs::read(path).map_err(|error| NativeAppError::Runtime(error.to_string()))?,
+            ];
+            for fallback_path in DEFAULT_FALLBACK_FONT_CANDIDATES {
+                if Path::new(fallback_path).exists() {
+                    font_bytes.push(
+                        std::fs::read(fallback_path)
+                            .map_err(|error| NativeAppError::Runtime(error.to_string()))?,
+                    );
+                }
+            }
+            return RasterizedGlyphCache::from_font_bytes(font_bytes).map_err(NativeAppError::from);
         }
     }
     Err(NativeAppError::Runtime(
@@ -322,6 +331,11 @@ const DEFAULT_MONOSPACE_FONT_CANDIDATES: &[&str] = &[
     "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
     "/usr/share/fonts/liberation/LiberationMono-Regular.ttf",
     "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
+];
+
+const DEFAULT_FALLBACK_FONT_CANDIDATES: &[&str] = &[
+    "/System/Library/Fonts/Apple Color Emoji.ttc",
+    "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
 ];
 
 impl NativeResizeGridMapper {
