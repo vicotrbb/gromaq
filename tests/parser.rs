@@ -72,6 +72,26 @@ fn sgr_sets_and_resets_blink_hidden_and_overline_attributes() {
 }
 
 #[test]
+fn sgr_sets_and_resets_italic_and_inverse_attributes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("\x1b[3;7mA\x1b[23mB\x1b[27mC").unwrap();
+
+    let grid = terminal.dump_grid();
+    let italic_inverse = grid.cell(0, 0).style;
+    assert!(italic_inverse.italic);
+    assert!(italic_inverse.inverse);
+
+    let inverse_only = grid.cell(0, 1).style;
+    assert!(!inverse_only.italic);
+    assert!(inverse_only.inverse);
+
+    let plain = grid.cell(0, 2).style;
+    assert!(!plain.italic);
+    assert!(!plain.inverse);
+}
+
+#[test]
 fn sgr_rapid_blink_sets_blink_attribute_until_reset() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
