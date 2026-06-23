@@ -1,4 +1,5 @@
 use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
+use proptest::prelude::*;
 
 #[test]
 fn printable_run_produces_single_dirty_region() {
@@ -188,4 +189,51 @@ fn dirty_tracker_unions_adjacent_edge_regions_with_widened_bounds() {
             cols: 2,
         }]
     );
+}
+
+proptest! {
+    #[test]
+    fn dirty_tracker_coalesces_marked_regions_into_exact_covering_union(
+        regions in prop::collection::vec((0u16..200, 0u16..200, 1u16..20, 1u16..20), 1..64)
+    ) {
+        let mut dirty = DirtyTracker::default();
+        let mut expected_row_start = u16::MAX;
+        let mut expected_col_start = u16::MAX;
+        let mut expected_row_end = 0u32;
+        let mut expected_col_end = 0u32;
+
+        for (row, col, rows, cols) in &regions {
+            dirty.mark_region(DirtyRegion {
+                row: *row,
+                col: *col,
+                rows: *rows,
+                cols: *cols,
+            });
+            expected_row_start = expected_row_start.min(*row);
+            expected_col_start = expected_col_start.min(*col);
+            expected_row_end = expected_row_end.max(u32::from(*row) + u32::from(*rows));
+            expected_col_end = expected_col_end.max(u32::from(*col) + u32::from(*cols));
+        }
+
+        let expected = DirtyRegion {
+            row: expected_row_start,
+            col: expected_col_start,
+            rows: (expected_row_end - u32::from(expected_row_start)) as u16,
+            cols: (expected_col_end - u32::from(expected_col_start)) as u16,
+        };
+
+        for (row, col, rows, cols) in &regions {
+            let region = DirtyRegion {
+                row: *row,
+                col: *col,
+                rows: *rows,
+                cols: *cols,
+            };
+            prop_assert!(dirty.contains_region(region));
+        }
+
+        let drained = dirty.take();
+        prop_assert_eq!(drained, vec![expected]);
+        prop_assert!(dirty.take().is_empty());
+    }
 }
