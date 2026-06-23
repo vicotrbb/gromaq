@@ -121,6 +121,9 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
             let ch = chars.next()?;
             if chars.next().is_some() {
                 let mut bytes = Vec::new();
+                if key_modifiers.contains(KeyModifiers::ALT) {
+                    bytes.push(0x1b);
+                }
                 for ch in text.chars() {
                     push_char(&mut bytes, ch);
                 }

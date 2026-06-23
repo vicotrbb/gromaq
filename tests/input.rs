@@ -354,6 +354,10 @@ fn encodes_winit_modified_terminal_characters() {
         Some(b"\x1bx".to_vec())
     );
     assert_eq!(
+        encode_winit_key(&Key::Character("xy".into()), ModifiersState::ALT),
+        Some(b"\x1bxy".to_vec())
+    );
+    assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::Space), ModifiersState::ALT),
         Some(b"\x1b ".to_vec())
     );
