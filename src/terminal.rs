@@ -1888,6 +1888,7 @@ impl Terminal {
     }
 
     fn copy_row_range(&self, row: u16, start_col: u16, end_col: u16) -> String {
+        let start_col = self.copy_start_col(row, start_col);
         let Some(end_col) = self
             .last_visible_col_in_row(row)
             .map(|last_col| end_col.min(last_col))
@@ -1912,6 +1913,14 @@ impl Terminal {
             }
         }
         output
+    }
+
+    fn copy_start_col(&self, row: u16, start_col: u16) -> u16 {
+        if start_col > 0 && self.grid.cell(row, start_col).is_wide_trailing {
+            start_col - 1
+        } else {
+            start_col
+        }
     }
 
     fn last_visible_col_in_row(&self, row: u16) -> Option<u16> {
