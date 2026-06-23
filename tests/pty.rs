@@ -395,9 +395,10 @@ fn pty_session_runs_tmux_interactive_pane_when_available() {
         eprintln!("skipping tmux interactive PTY workflow test because tmux is not on PATH");
         return;
     };
-    let socket_name = format!("gromaq-pty-{}", std::process::id());
+    let socket_name = format!("gromaq-pty-interactive-{}", std::process::id());
+    let _guard = TmuxServerGuard::new(socket_name.clone());
     let command = format!(
-        "TERM=xterm-256color tmux -L {} new-session -A -s gromaq-pty",
+        "TERM=xterm-256color tmux -L {} new-session -s gromaq-pty-interactive",
         shell_quote(&socket_name)
     );
     let mut session = spawn_shell_pty_command(command);
@@ -419,6 +420,17 @@ fn pty_session_runs_tmux_interactive_pane_when_available() {
         output.contains("gromaq-tmux-interactive"),
         "tmux interactive output: {output:?}"
     );
+    let kill = Command::new("tmux")
+        .args([
+            "-L",
+            &socket_name,
+            "kill-session",
+            "-t",
+            "gromaq-pty-interactive",
+        ])
+        .status()
+        .unwrap();
+    assert!(kill.success(), "tmux kill-session failed: {kill:?}");
     assert!(
         session
             .wait_timeout(Duration::from_secs(5))
@@ -823,7 +835,7 @@ impl Drop for TmuxServerGuard {
     fn drop(&mut self) {
         let _ = Command::new("tmux")
             .args(["-L", &self.socket_name, "kill-server"])
-            .status();
+            .output();
     }
 }
 
