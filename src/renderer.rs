@@ -1770,7 +1770,7 @@ impl GlyphAtlas {
     pub fn new(config: GlyphAtlasConfig) -> Self {
         let mut free_slots = Vec::with_capacity(config.capacity());
         for slot in (0..config.capacity()).rev() {
-            free_slots.push(u32::try_from(slot).unwrap_or(u32::MAX));
+            free_slots.push(slot as u32);
         }
         Self {
             config,
@@ -1832,11 +1832,15 @@ impl GlyphAtlas {
         let key = self
             .lru
             .pop_front()
-            .expect("glyph atlas full with no LRU key");
+            .ok_or(GromaqError::GlyphAtlasInvariant {
+                reason: "glyph atlas full with no LRU key",
+            })?;
         let entry = self
             .entries
             .remove(&key)
-            .expect("glyph LRU key must exist in entries");
+            .ok_or(GromaqError::GlyphAtlasInvariant {
+                reason: "glyph LRU key must exist in entries",
+            })?;
         self.metrics.evictions += 1;
         Ok(GlyphSlot { entry })
     }
@@ -1896,6 +1900,39 @@ mod tests {
         let error = checked_glyph_quad_base_index(first_invalid_quad).unwrap_err();
 
         assert_eq!(error, GlyphQuadError::IndexCountTooLarge);
+    }
+
+    #[test]
+    fn glyph_atlas_eviction_reports_missing_lru_key_invariant() {
+        let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(1).unwrap());
+        atlas.free_slots.clear();
+
+        let error = atlas.evict_lru().unwrap_err();
+
+        assert_eq!(
+            error,
+            GromaqError::GlyphAtlasInvariant {
+                reason: "glyph atlas full with no LRU key",
+            }
+        );
+    }
+
+    #[test]
+    fn glyph_atlas_eviction_reports_lru_entry_map_mismatch() {
+        let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(1).unwrap());
+        atlas.free_slots.clear();
+        atlas
+            .lru
+            .push_back(GlyphKey::new('A', Style::default(), 14));
+
+        let error = atlas.evict_lru().unwrap_err();
+
+        assert_eq!(
+            error,
+            GromaqError::GlyphAtlasInvariant {
+                reason: "glyph LRU key must exist in entries",
+            }
+        );
     }
 
     #[test]

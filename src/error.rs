@@ -65,4 +65,11 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: usize,
     },
+
+    /// Glyph atlas internal structures diverged.
+    #[error("glyph atlas invariant violation: {reason}")]
+    GlyphAtlasInvariant {
+        /// Invariant that was violated.
+        reason: &'static str,
+    },
 }
