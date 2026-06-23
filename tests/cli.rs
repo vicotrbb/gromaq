@@ -393,6 +393,8 @@ fn runtime_bounded_state_smoke_cli_reports_capped_long_session_without_gpu_boots
     assert!(exit.stdout.contains("pumped bytes:"));
     assert!(exit.stdout.contains("scrollback cap: 128"));
     assert!(exit.stdout.contains("scrollback lines: 128"));
+    assert!(exit.stdout.contains("scrollback cell rows: 128"));
+    assert!(exit.stdout.contains("scrollback cells:"));
     assert!(exit.stdout.contains("rendered frames: 4"));
     assert!(
         exit.stdout

@@ -22,7 +22,8 @@ reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 verified `gromaq-runtime-line-511` in the render plan, and reported render p95
 500000 ns. On the same date, `cargo run -- --runtime-bounded-state-smoke`
 pumped 51200 bytes from 2048 lines across 4 batches, retained 128 scrollback
-lines, rendered 4 CPU-side dirty frames, and verified
+lines and 128 styled scrollback cell rows, kept retained cell data bounded,
+rendered 4 CPU-side dirty frames, and verified
 `gromaq-bounded-line-2047` in the render plan. On the same date,
 `cargo run -- --runtime-alternate-screen-smoke` pumped primary, alternate, and
 restore output stages through the runtime, rendered 3 CPU-side dirty frames,

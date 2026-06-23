@@ -73,7 +73,7 @@ Implemented and tested:
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
-- Deterministic runtime bounded-state smoke with `--runtime-bounded-state-smoke`
+- Deterministic runtime bounded-state smoke with `--runtime-bounded-state-smoke`, including capped scrollback lines, styled cell rows, and retained cell count
 - Deterministic runtime alternate-screen smoke with `--runtime-alternate-screen-smoke`
 - Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
 - Deterministic runtime clean-frame idle smoke with `--runtime-idle-smoke`
