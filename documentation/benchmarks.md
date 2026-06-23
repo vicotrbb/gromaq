@@ -7,8 +7,9 @@ generation, 144Hz frame-scheduler decisions, rasterized glyph cache reuse, prepa
 construction, native input-to-render plumbing, real-font rasterization, PTY
 output pumping, bounded runtime state under repeated output batches, and runtime
 alternate-screen transitions, plus runtime focus/mouse/terminal-response protocol
-input paths, font-backed text-atlas GPU upload/readback, offscreen
-textured-quad GPU draw/readback, and offscreen terminal text GPU draw/readback.
+input paths, texture and glyph-atlas GPU upload/readback, font-backed text-atlas
+GPU upload/readback, offscreen textured-quad GPU draw/readback, and offscreen
+terminal text GPU draw/readback.
 
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
@@ -90,6 +91,8 @@ The benchmark list should include:
 - `gpu_textured_quad_draw_readback`
 - `gpu_terminal_text_draw_readback`
 - `gpu_text_atlas_upload_readback`
+- `gpu_texture_upload_readback`
+- `gpu_glyph_atlas_upload_readback`
 
 Some benchmarks load a local monospace font for real glyph rasterization. The
 benchmark harness checks common macOS and Linux font paths. If no candidate is

@@ -10,8 +10,8 @@ use gromaq::app::{
 };
 use gromaq::font::FontRasterizer;
 use gromaq::native_gpu::{
-    GpuBootstrap, GpuBootstrapConfig, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
-    GpuTexturedQuadRunner, NativeGpuContext,
+    GpuBootstrap, GpuBootstrapConfig, GpuGlyphAtlasUploadRunner, GpuTerminalTextRunner,
+    GpuTextAtlasUploadRunner, GpuTextureUploadRunner, GpuTexturedQuadRunner, NativeGpuContext,
 };
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
@@ -825,6 +825,40 @@ fn gpu_text_atlas_upload_readback(c: &mut Criterion) {
     });
 }
 
+fn gpu_texture_upload_readback(c: &mut Criterion) {
+    let Some(context) = native_gpu_context_for_benchmark(c, "gpu_texture_upload_readback") else {
+        return;
+    };
+
+    c.bench_function("gpu_texture_upload_readback", |b| {
+        b.iter(|| {
+            let report = context.run_texture_upload_smoke().unwrap();
+            black_box(report.width);
+            black_box(report.height);
+            black_box(report.matching_bytes);
+            black_box(report.total_bytes);
+        });
+    });
+}
+
+fn gpu_glyph_atlas_upload_readback(c: &mut Criterion) {
+    let Some(context) = native_gpu_context_for_benchmark(c, "gpu_glyph_atlas_upload_readback")
+    else {
+        return;
+    };
+
+    c.bench_function("gpu_glyph_atlas_upload_readback", |b| {
+        b.iter(|| {
+            let report = context.run_glyph_atlas_upload_smoke().unwrap();
+            black_box(report.width);
+            black_box(report.height);
+            black_box(report.occupied_slots);
+            black_box(report.matching_bytes);
+            black_box(report.total_bytes);
+        });
+    });
+}
+
 criterion_group!(
     benches,
     parser_large_output,
@@ -846,7 +880,9 @@ criterion_group!(
     runtime_protocol_input_reports,
     gpu_textured_quad_draw_readback,
     gpu_terminal_text_draw_readback,
-    gpu_text_atlas_upload_readback
+    gpu_text_atlas_upload_readback,
+    gpu_texture_upload_readback,
+    gpu_glyph_atlas_upload_readback
 );
 criterion_main!(benches);
 
