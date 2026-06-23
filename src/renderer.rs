@@ -1040,6 +1040,24 @@ pub struct RenderPlanner {
     font_size_px: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ClippedDirtyRegion {
+    row_start: u16,
+    row_end: u16,
+    col_start: u16,
+    col_end: u16,
+}
+
+impl ClippedDirtyRegion {
+    fn rows(self) -> u16 {
+        self.row_end - self.row_start
+    }
+
+    fn cols(self) -> u16 {
+        self.col_end - self.col_start
+    }
+}
+
 impl RenderPlanner {
     /// Create a render planner for a fixed font size.
     pub fn new(font_size_px: u16) -> Self {
@@ -1056,26 +1074,16 @@ impl RenderPlanner {
     ) -> Result<RenderPlan> {
         let estimated_dirty_cells = dirty_regions
             .iter()
-            .map(|region| {
-                let rows = region
-                    .row
-                    .saturating_add(region.rows)
-                    .min(grid.rows)
-                    .saturating_sub(region.row);
-                let cols = region
-                    .col
-                    .saturating_add(region.cols)
-                    .min(grid.cols)
-                    .saturating_sub(region.col);
-                usize::from(rows) * usize::from(cols)
-            })
+            .filter_map(|region| clipped_dirty_region(region, grid))
+            .map(|region| usize::from(region.rows()) * usize::from(region.cols()))
             .sum();
         let mut glyphs = Vec::with_capacity(estimated_dirty_cells);
         for region in dirty_regions {
-            let row_end = region.row.saturating_add(region.rows).min(grid.rows);
-            let col_end = region.col.saturating_add(region.cols).min(grid.cols);
-            for row in region.row..row_end {
-                for col in region.col..col_end {
+            let Some(region) = clipped_dirty_region(region, grid) else {
+                continue;
+            };
+            for row in region.row_start..region.row_end {
+                for col in region.col_start..region.col_end {
                     let cell = grid.cell(row, col);
                     if cell.text.is_empty() || cell.is_wide_trailing {
                         continue;
@@ -1110,6 +1118,24 @@ impl RenderPlanner {
             glyphs,
         })
     }
+}
+
+fn clipped_dirty_region(region: &DirtyRegion, grid: &GridSnapshot) -> Option<ClippedDirtyRegion> {
+    let row_start = region.row.min(grid.rows);
+    let col_start = region.col.min(grid.cols);
+    let row_end = (u32::from(region.row) + u32::from(region.rows)).min(u32::from(grid.rows));
+    let col_end = (u32::from(region.col) + u32::from(region.cols)).min(u32::from(grid.cols));
+    let row_end = u16::try_from(row_end).ok()?;
+    let col_end = u16::try_from(col_end).ok()?;
+    if row_start >= row_end || col_start >= col_end {
+        return None;
+    }
+    Some(ClippedDirtyRegion {
+        row_start,
+        row_end,
+        col_start,
+        col_end,
+    })
 }
 
 /// Deterministic CPU-side frame plan consumed by the native renderer.
@@ -1920,6 +1946,7 @@ impl GlyphAtlas {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::terminal::{Terminal, TerminalConfig};
 
     fn one_quad_batch() -> GlyphQuadBatch {
         let quad = GlyphQuad {
@@ -1952,6 +1979,76 @@ mod tests {
             quads: vec![quad],
             indices: vec![0, 1, 2, 0, 2, 3],
         }
+    }
+
+    fn empty_grid_snapshot(rows: u16, cols: u16) -> GridSnapshot {
+        GridSnapshot {
+            rows,
+            cols,
+            hyperlinks: Vec::new(),
+            underline_colors: Vec::new(),
+            cells: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn clipped_dirty_region_uses_widened_bounds_at_u16_edges() {
+        let grid = empty_grid_snapshot(u16::MAX, u16::MAX);
+        let region = DirtyRegion {
+            row: u16::MAX - 1,
+            col: u16::MAX - 2,
+            rows: 8,
+            cols: 9,
+        };
+
+        assert_eq!(
+            clipped_dirty_region(&region, &grid),
+            Some(ClippedDirtyRegion {
+                row_start: u16::MAX - 1,
+                row_end: u16::MAX,
+                col_start: u16::MAX - 2,
+                col_end: u16::MAX,
+            })
+        );
+    }
+
+    #[test]
+    fn clipped_dirty_region_rejects_regions_outside_grid() {
+        let grid = empty_grid_snapshot(10, 10);
+        let region = DirtyRegion {
+            row: 12,
+            col: 0,
+            rows: 1,
+            cols: 1,
+        };
+
+        assert_eq!(clipped_dirty_region(&region, &grid), None);
+    }
+
+    #[test]
+    fn render_planner_ignores_dirty_regions_outside_grid() {
+        let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+        terminal.write_str("AB").unwrap();
+        let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+        let mut planner = RenderPlanner::new(14);
+        let dirty = [DirtyRegion {
+            row: 4,
+            col: 0,
+            rows: 1,
+            cols: 1,
+        }];
+
+        let plan = planner
+            .plan_frame(
+                &terminal.dump_grid(),
+                terminal.dump_cursor(),
+                &dirty,
+                &mut atlas,
+            )
+            .unwrap();
+
+        assert!(plan.glyphs.is_empty());
+        assert_eq!(atlas.metrics().entries, 0);
     }
 
     #[test]
