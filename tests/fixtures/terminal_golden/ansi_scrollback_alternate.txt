@@ -1,0 +1,12 @@
+grid:12x4
+visible[0]:linked
+visible[1]:wide 界
+visible[2]:fifth
+visible[3]:restored
+cursor:row=3,col=8,visible=true,shape=Block,blinking=true
+scrollback:["plain-one", "red-bold"]
+hyperlinks:["https://gromaq.dev"]
+red_cell:text="r",style=fg=ansi-1,bg=default,bold=true,dim=false,italic=false,underline=false,underline_style=single,underline_color_id=0,blink=false,hidden=false,inverse=false,overline=false,strikethrough=false
+linked_cell:text="l",hyperlink=Some("https://gromaq.dev")
+wide_cell:text="界",leading=true,trailing_cell_trailing=true
+perf:parsed_bytes=123,dirty_cells=53,scrolls=2,resizes=0,dirty_batches=0
