@@ -891,6 +891,7 @@ fn runtime_glyph_frame_smoke_exit() -> CliExit {
     if !runtime.render_terminal_frame(&mut renderer) {
         return runtime_glyph_frame_smoke_failure("runtime output did not produce a dirty frame");
     }
+    let atlas_metrics = renderer.glyph_atlas_metrics();
     let Some(plan) = renderer.last_plan() else {
         return runtime_glyph_frame_smoke_failure("renderer did not retain a frame plan");
     };
@@ -920,6 +921,10 @@ fn runtime_glyph_frame_smoke_exit() -> CliExit {
         || surface_frame.batch.indices.is_empty()
         || surface_frame.atlas.occupied_slots == 0
         || surface_frame.atlas.rgba.is_empty()
+        || atlas_metrics.misses == 0
+        || atlas_metrics.hits == 0
+        || atlas_metrics.entries == 0
+        || atlas_metrics.evictions != 0
     {
         return runtime_glyph_frame_smoke_failure(
             "prepared glyph frame did not contain presentable glyph data",
@@ -929,9 +934,12 @@ fn runtime_glyph_frame_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\natlas bytes: {}\nframe size: {}x{}\n",
+            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nrenderer atlas hits: {}\nrenderer atlas misses: {}\nrenderer atlas entries: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\natlas bytes: {}\nframe size: {}x{}\n",
             pumped_bytes,
             plan.glyphs.len(),
+            atlas_metrics.hits,
+            atlas_metrics.misses,
+            atlas_metrics.entries,
             glyphs.rasterized,
             glyphs.reused,
             surface_frame.batch.quads.len(),
