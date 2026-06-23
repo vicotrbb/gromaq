@@ -33,7 +33,7 @@ use crate::renderer::{
 use crate::{Terminal, TerminalConfig};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
-const RENDER_TIME_BUCKETS_NS: [u64; 16] = [
+const RUNTIME_DURATION_BUCKETS_NS: [u64; 16] = [
     100_000,
     250_000,
     500_000,
@@ -603,20 +603,28 @@ pub struct NativeRuntimePerfSnapshot {
     pub render_time_max_ns: u64,
     /// Approximate p95 render-frame duration in nanoseconds, using fixed buckets.
     pub render_time_p95_ns: u64,
+    /// Number of app-input-to-render latency samples.
+    pub input_to_render_samples: u64,
+    /// Total app-input-to-render latency in nanoseconds.
+    pub input_to_render_total_ns: u64,
+    /// Maximum app-input-to-render latency in nanoseconds.
+    pub input_to_render_max_ns: u64,
+    /// Approximate p95 app-input-to-render latency in nanoseconds, using fixed buckets.
+    pub input_to_render_p95_ns: u64,
 }
 
-/// Fixed-size render timing histogram for bounded live-performance probes.
+/// Fixed-size duration histogram for bounded live-performance probes.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-struct RenderTimeHistogram {
-    buckets: [u64; RENDER_TIME_BUCKETS_NS.len()],
+struct RuntimeDurationHistogram {
+    buckets: [u64; RUNTIME_DURATION_BUCKETS_NS.len()],
 }
 
-impl RenderTimeHistogram {
+impl RuntimeDurationHistogram {
     fn record(&mut self, elapsed_ns: u64) {
-        let bucket = RENDER_TIME_BUCKETS_NS
+        let bucket = RUNTIME_DURATION_BUCKETS_NS
             .iter()
             .position(|upper_bound| elapsed_ns <= *upper_bound)
-            .unwrap_or(RENDER_TIME_BUCKETS_NS.len() - 1);
+            .unwrap_or(RUNTIME_DURATION_BUCKETS_NS.len() - 1);
         self.buckets[bucket] = self.buckets[bucket].saturating_add(1);
     }
 
@@ -626,7 +634,7 @@ impl RenderTimeHistogram {
         }
         let target_rank = percentile_rank(samples, 95);
         let mut cumulative = 0_u64;
-        for (bucket, upper_bound) in self.buckets.iter().zip(RENDER_TIME_BUCKETS_NS) {
+        for (bucket, upper_bound) in self.buckets.iter().zip(RUNTIME_DURATION_BUCKETS_NS) {
             cumulative = cumulative.saturating_add(*bucket);
             if cumulative >= target_rank {
                 return upper_bound;
@@ -736,7 +744,9 @@ pub struct NativeTerminalRuntime<S> {
     shell_session: Option<S>,
     last_synced_clipboard_text: Option<String>,
     perf: NativeRuntimePerfSnapshot,
-    render_time_histogram: RenderTimeHistogram,
+    render_time_histogram: RuntimeDurationHistogram,
+    input_to_render_histogram: RuntimeDurationHistogram,
+    pending_input_to_render_started: Option<Instant>,
 }
 
 impl<S> NativeTerminalRuntime<S> {
@@ -749,7 +759,9 @@ impl<S> NativeTerminalRuntime<S> {
             shell_session: None,
             last_synced_clipboard_text: None,
             perf: NativeRuntimePerfSnapshot::default(),
-            render_time_histogram: RenderTimeHistogram::default(),
+            render_time_histogram: RuntimeDurationHistogram::default(),
+            input_to_render_histogram: RuntimeDurationHistogram::default(),
+            pending_input_to_render_started: None,
         })
     }
 
@@ -789,7 +801,23 @@ impl<S> NativeTerminalRuntime<S> {
         self.perf.render_time_p95_ns = self
             .render_time_histogram
             .p95_upper_bound_ns(self.perf.render_time_samples);
+        if let Some(input_started) = self.pending_input_to_render_started.take() {
+            self.record_input_to_render_latency(saturating_duration_nanos(input_started.elapsed()));
+        }
         true
+    }
+
+    fn record_input_to_render_latency(&mut self, elapsed_ns: u64) {
+        self.perf.input_to_render_samples += 1;
+        self.perf.input_to_render_total_ns = self
+            .perf
+            .input_to_render_total_ns
+            .saturating_add(elapsed_ns);
+        self.perf.input_to_render_max_ns = self.perf.input_to_render_max_ns.max(elapsed_ns);
+        self.input_to_render_histogram.record(elapsed_ns);
+        self.perf.input_to_render_p95_ns = self
+            .input_to_render_histogram
+            .p95_upper_bound_ns(self.perf.input_to_render_samples);
     }
 
     /// Write terminal-owned clipboard text, such as OSC 52 payloads, to a host clipboard.
@@ -875,6 +903,9 @@ where
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         self.perf.pty_input_writes += 1;
         add_usize_counter(&mut self.perf.pty_input_bytes, bytes.len());
+        if !bytes.is_empty() && self.pending_input_to_render_started.is_none() {
+            self.pending_input_to_render_started = Some(Instant::now());
+        }
         Ok(())
     }
 
@@ -1665,8 +1696,8 @@ mod tests {
     }
 
     #[test]
-    fn render_time_histogram_reports_bucketed_p95_upper_bound() {
-        let mut histogram = RenderTimeHistogram::default();
+    fn runtime_duration_histogram_reports_bucketed_p95_upper_bound() {
+        let mut histogram = RuntimeDurationHistogram::default();
         for elapsed_ns in [
             50_000_u64, 120_000, 300_000, 900_000, 1_500_000, 3_000_000, 6_500_000, 7_500_000,
             9_500_000, 15_000_000,
@@ -1678,8 +1709,8 @@ mod tests {
     }
 
     #[test]
-    fn render_time_histogram_reports_zero_without_samples() {
-        let histogram = RenderTimeHistogram::default();
+    fn runtime_duration_histogram_reports_zero_without_samples() {
+        let histogram = RuntimeDurationHistogram::default();
 
         assert_eq!(histogram.p95_upper_bound_ns(0), 0);
     }
