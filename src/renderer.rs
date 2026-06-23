@@ -1215,8 +1215,14 @@ impl GlyphQuadPlanner {
     /// Build textured quads and triangle indices from a render plan.
     pub fn plan(&self, plan: &RenderPlan) -> std::result::Result<GlyphQuadBatch, GlyphQuadError> {
         self.validate_config()?;
-        let mut quads = Vec::with_capacity(plan.glyphs.len());
-        let mut indices = Vec::with_capacity(plan.glyphs.len().saturating_mul(6));
+        let mut quads = Vec::new();
+        quads
+            .try_reserve_exact(plan.glyphs.len())
+            .map_err(|_| GlyphQuadError::IndexCountTooLarge)?;
+        let mut indices = Vec::new();
+        indices
+            .try_reserve_exact(checked_glyph_quad_index_capacity(plan.glyphs.len())?)
+            .map_err(|_| GlyphQuadError::IndexCountTooLarge)?;
 
         for glyph in &plan.glyphs {
             let quad = self.plan_glyph(glyph)?;
@@ -1297,6 +1303,14 @@ fn checked_glyph_quad_base_index(quad_index: usize) -> std::result::Result<u32, 
     u32::try_from(quad_index)
         .ok()
         .and_then(|index| index.checked_mul(4))
+        .ok_or(GlyphQuadError::IndexCountTooLarge)
+}
+
+fn checked_glyph_quad_index_capacity(
+    quad_count: usize,
+) -> std::result::Result<usize, GlyphQuadError> {
+    quad_count
+        .checked_mul(6)
         .ok_or(GlyphQuadError::IndexCountTooLarge)
 }
 
@@ -1925,6 +1939,15 @@ mod tests {
         let first_invalid_quad = usize::try_from(u32::MAX / 4).unwrap() + 1;
 
         let error = checked_glyph_quad_base_index(first_invalid_quad).unwrap_err();
+
+        assert_eq!(error, GlyphQuadError::IndexCountTooLarge);
+    }
+
+    #[test]
+    fn glyph_quad_index_capacity_uses_checked_multiplication() {
+        assert_eq!(checked_glyph_quad_index_capacity(7).unwrap(), 42);
+
+        let error = checked_glyph_quad_index_capacity((usize::MAX / 6) + 1).unwrap_err();
 
         assert_eq!(error, GlyphQuadError::IndexCountTooLarge);
     }
