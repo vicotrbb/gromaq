@@ -1482,7 +1482,7 @@ impl FrameScheduler {
             }
         }
         self.last_presented = Some(presented_at);
-        self.metrics.frames_presented += 1;
+        self.metrics.frames_presented = self.metrics.frames_presented.saturating_add(1);
     }
 
     /// Return scheduler metrics.
@@ -2219,6 +2219,16 @@ mod tests {
         scheduler.record_presented(start + Duration::from_secs(4));
 
         assert_eq!(scheduler.metrics().dropped_frames, u64::MAX);
+    }
+
+    #[test]
+    fn frame_scheduler_presented_frame_metrics_saturate() {
+        let mut scheduler = FrameScheduler::new(144).unwrap();
+        scheduler.metrics.frames_presented = u64::MAX;
+
+        scheduler.record_presented(Instant::now());
+
+        assert_eq!(scheduler.metrics().frames_presented, u64::MAX);
     }
 
     #[test]
