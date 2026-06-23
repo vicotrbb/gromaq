@@ -31,7 +31,7 @@ use crate::renderer::{
     SurfaceConfigPlanner, SurfaceConfigurationController, SurfaceFrameBackend, SurfaceFrameError,
     SurfaceGlyphFrame, SurfaceLifecycleAction, WgpuRenderer, WgpuSurfaceBackend,
 };
-use crate::{Terminal, TerminalConfig};
+use crate::{SelectionRange, Terminal, TerminalConfig};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 const RUNTIME_DURATION_BUCKETS_NS: [u64; 16] = [
@@ -899,6 +899,21 @@ impl<S> NativeTerminalRuntime<S> {
         true
     }
 
+    /// Set the active visible-grid selection.
+    pub fn set_selection(&mut self, selection: SelectionRange) {
+        self.terminal.set_selection(selection);
+    }
+
+    /// Copy the active terminal selection into a host clipboard adapter.
+    pub fn copy_selection_to_clipboard<C>(&self, clipboard: &mut C) -> bool
+    where
+        C: HostClipboard,
+    {
+        self.terminal
+            .copy_selection_to_clipboard(clipboard)
+            .is_some()
+    }
+
     /// Access the retained shell session.
     pub fn shell_session(&self) -> Option<&S> {
         self.shell_session.as_ref()
@@ -1734,7 +1749,11 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
             }
             WindowEvent::KeyboardInput { event, .. } => {
                 if event.state.is_pressed() {
-                    let result = if is_native_paste_shortcut(&event.logical_key, self.modifiers) {
+                    let result = if is_native_copy_shortcut(&event.logical_key, self.modifiers) {
+                        let mut clipboard = NativeClipboard::new();
+                        self.runtime.copy_selection_to_clipboard(&mut clipboard);
+                        Ok(())
+                    } else if is_native_paste_shortcut(&event.logical_key, self.modifiers) {
                         let clipboard = NativeClipboard::new();
                         self.runtime.send_clipboard_paste(&clipboard).map(|_| ())
                     } else {
@@ -1885,6 +1904,13 @@ fn wheel_mouse_button(delta: MouseScrollDelta) -> Option<MouseButton> {
     } else {
         None
     }
+}
+
+/// Whether a native key event should copy the active terminal selection.
+pub fn is_native_copy_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
+    matches!(key, Key::Named(NamedKey::Copy))
+        || (matches!(key, Key::Character(character) if character.eq_ignore_ascii_case("c"))
+            && (modifiers.super_key() || (modifiers.control_key() && modifiers.shift_key())))
 }
 
 /// Whether a native key event should paste from the host clipboard.

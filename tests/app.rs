@@ -13,7 +13,7 @@ use gromaq::app::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativePtySessionIo,
     NativePtySpawner, NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeTerminalApp,
     NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowMouseInput,
-    NativeWindowSurface, RealNativePtySpawner, is_native_paste_shortcut,
+    NativeWindowSurface, RealNativePtySpawner, is_native_copy_shortcut, is_native_paste_shortcut,
     load_default_native_glyph_cache, render_and_present_terminal_glyph_frame,
 };
 use gromaq::dirty::DirtyRegion;
@@ -28,7 +28,7 @@ use gromaq::renderer::{
 };
 use gromaq::{
     ConfigFileReloader, CursorSnapshot, GridSnapshot, GromaqConfig, KeyModifiers, MemoryClipboard,
-    MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig,
+    MouseButton, MouseEvent, MouseEventKind, SelectionRange, Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
@@ -2167,11 +2167,60 @@ fn native_paste_shortcut_accepts_control_or_super_v() {
 }
 
 #[test]
+fn native_copy_shortcut_accepts_super_c_or_control_shift_c_without_plain_control_c() {
+    assert!(is_native_copy_shortcut(
+        &Key::Character("c".into()),
+        ModifiersState::SUPER
+    ));
+    assert!(is_native_copy_shortcut(
+        &Key::Character("C".into()),
+        ModifiersState::CONTROL.union(ModifiersState::SHIFT)
+    ));
+    assert!(is_native_copy_shortcut(
+        &Key::Named(NamedKey::Copy),
+        ModifiersState::empty()
+    ));
+    assert!(!is_native_copy_shortcut(
+        &Key::Character("c".into()),
+        ModifiersState::CONTROL
+    ));
+    assert!(!is_native_copy_shortcut(
+        &Key::Character("v".into()),
+        ModifiersState::SUPER
+    ));
+}
+
+#[test]
 fn native_paste_shortcut_accepts_dedicated_paste_key() {
     assert!(is_native_paste_shortcut(
         &Key::Named(NamedKey::Paste),
         ModifiersState::empty()
     ));
+}
+
+#[test]
+fn native_terminal_runtime_copies_selection_to_clipboard() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime.pump_pty_output().unwrap();
+    runtime.set_selection(SelectionRange::new((0, 1), (0, 3)));
+    let mut clipboard = MemoryClipboard::default();
+
+    assert!(runtime.copy_selection_to_clipboard(&mut clipboard));
+    assert_eq!(clipboard.read_text().as_deref(), Some("ell"));
 }
 
 #[test]
