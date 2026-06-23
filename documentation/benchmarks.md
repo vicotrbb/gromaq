@@ -38,8 +38,10 @@ The benchmark list should include:
 - `pty_runtime_pump_large_output`
 
 Some benchmarks load a local monospace font for real glyph rasterization. The
-benchmark harness checks common macOS and Linux font paths and fails fast if no
-candidate is available.
+benchmark harness checks common macOS and Linux font paths. If no candidate is
+available, the font-dependent benchmark name is still registered and emits a
+clear skip message instead of panicking; that skip does not prove rasterization
+throughput on the current machine.
 
 ## Regression Handling
 
