@@ -446,6 +446,7 @@ impl Default for NativeTerminalRuntimeConfig {
 impl NativeTerminalRuntimeConfig {
     fn terminal_config(&self) -> Result<TerminalConfig, NativeAppError> {
         TerminalConfig::new(self.terminal_cols, self.terminal_rows)
+            .and_then(|config| config.with_pixel_size(self.pixel_width, self.pixel_height))
             .and_then(|config| config.with_scrollback_limit(self.scrollback_lines))
             .map_err(|error| NativeAppError::Runtime(error.to_string()))
     }
@@ -735,7 +736,7 @@ where
     /// Resize terminal state and notify the retained PTY session.
     pub fn resize_terminal(&mut self, size: NativePtyResize) -> Result<(), NativeAppError> {
         self.terminal
-            .resize(size.cols, size.rows)
+            .resize_with_pixel_size(size.cols, size.rows, size.pixel_width, size.pixel_height)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         if let Some(session) = self.shell_session.as_mut() {
             session

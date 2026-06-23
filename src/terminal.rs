@@ -26,6 +26,8 @@ const MAX_UNDERLINE_COLORS: usize = u16::MAX as usize;
 pub struct TerminalConfig {
     cols: u16,
     rows: u16,
+    pixel_width: u16,
+    pixel_height: u16,
     scrollback_limit: usize,
 }
 
@@ -35,9 +37,18 @@ impl TerminalConfig {
         Self {
             cols,
             rows,
+            pixel_width: 0,
+            pixel_height: 0,
             scrollback_limit: 10_000,
         }
         .validate()
+    }
+
+    /// Set the current native pixel size, when known.
+    pub fn with_pixel_size(mut self, pixel_width: u16, pixel_height: u16) -> Result<Self> {
+        self.pixel_width = pixel_width;
+        self.pixel_height = pixel_height;
+        self.validate()
     }
 
     /// Set the scrollback line limit.
@@ -54,6 +65,16 @@ impl TerminalConfig {
     /// Number of rows.
     pub fn rows(&self) -> u16 {
         self.rows
+    }
+
+    /// Native pixel width, or zero when unknown.
+    pub fn pixel_width(&self) -> u16 {
+        self.pixel_width
+    }
+
+    /// Native pixel height, or zero when unknown.
+    pub fn pixel_height(&self) -> u16 {
+        self.pixel_height
     }
 
     /// Maximum number of scrollback lines.
@@ -292,9 +313,27 @@ impl Terminal {
 
     /// Resize the visible grid while preserving top-left content.
     pub fn resize(&mut self, cols: u16, rows: u16) -> Result<()> {
+        self.resize_with_pixel_size(
+            cols,
+            rows,
+            self.config.pixel_width,
+            self.config.pixel_height,
+        )
+    }
+
+    /// Resize the visible grid and update native pixel dimensions.
+    pub fn resize_with_pixel_size(
+        &mut self,
+        cols: u16,
+        rows: u16,
+        pixel_width: u16,
+        pixel_height: u16,
+    ) -> Result<()> {
         let config = TerminalConfig {
             cols,
             rows,
+            pixel_width,
+            pixel_height,
             scrollback_limit: self.config.scrollback_limit,
         }
         .validate()?;
@@ -1228,6 +1267,13 @@ impl Terminal {
             13 => self
                 .pending_response_bytes
                 .extend_from_slice(b"\x1b[3;0;0t"),
+            14 => self.pending_response_bytes.extend_from_slice(
+                format!(
+                    "\x1b[4;{};{}t",
+                    self.config.pixel_height, self.config.pixel_width
+                )
+                .as_bytes(),
+            ),
             18 => self.pending_response_bytes.extend_from_slice(
                 format!("\x1b[8;{};{}t", self.config.rows, self.config.cols).as_bytes(),
             ),

@@ -105,6 +105,19 @@ fn window_position_report_returns_origin_when_native_position_is_unknown() {
 }
 
 #[test]
+fn pixel_window_size_report_uses_configured_pixel_dimensions() {
+    let config = TerminalConfig::new(12, 5)
+        .unwrap()
+        .with_pixel_size(960, 540)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    terminal.write_str("\x1b[14t").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[4;540;960t");
+}
+
+#[test]
 fn primary_device_attributes_are_queued_as_terminal_responses() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
