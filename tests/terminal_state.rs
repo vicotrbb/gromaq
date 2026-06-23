@@ -128,12 +128,14 @@ fn dec_private_mode_reports_return_mode_state() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
     terminal
-        .write_str("\x1b[?7$p\x1b[?7l\x1b[?7$p\x1b[?2004h\x1b[?2004$p\x1b[?999$p")
+        .write_str(
+            "\x1b[?7$p\x1b[?7l\x1b[?7$p\x1b[?66$p\x1b[?66h\x1b[?66$p\x1b[?2004h\x1b[?2004$p\x1b[?999$p",
+        )
         .unwrap();
 
     assert_eq!(
         terminal.take_pending_response_bytes(),
-        b"\x1b[?7;1$y\x1b[?7;2$y\x1b[?2004;1$y\x1b[?999;0$y"
+        b"\x1b[?7;1$y\x1b[?7;2$y\x1b[?66;2$y\x1b[?66;1$y\x1b[?2004;1$y\x1b[?999;0$y"
     );
 }
 

@@ -12,7 +12,7 @@ use winit::event::{
     ElementState, Ime, MouseButton as WinitMouseButton, MouseScrollDelta, WindowEvent,
 };
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
-use winit::keyboard::{Key, ModifiersState, NamedKey};
+use winit::keyboard::{Key, ModifiersState, NamedKey, PhysicalKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
 use crate::clipboard::{HostClipboard, NativeClipboard};
@@ -775,7 +775,20 @@ where
         key: &Key,
         modifiers: ModifiersState,
     ) -> Result<bool, NativeAppError> {
-        let Some(bytes) = self.terminal.encode_winit_key_input(key, modifiers) else {
+        self.send_winit_key_event_input(key, None, modifiers)
+    }
+
+    /// Encode a native key event and write it to the PTY when it maps to terminal input.
+    pub fn send_winit_key_event_input(
+        &mut self,
+        key: &Key,
+        physical_key: Option<PhysicalKey>,
+        modifiers: ModifiersState,
+    ) -> Result<bool, NativeAppError> {
+        let Some(bytes) = self
+            .terminal
+            .encode_winit_key_event_input(key, physical_key, modifiers)
+        else {
             return Ok(false);
         };
         let had_session = self.shell_session.is_some();
@@ -1276,7 +1289,11 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                         self.runtime.send_clipboard_paste(&clipboard).map(|_| ())
                     } else {
                         self.runtime
-                            .send_winit_key_input(&event.logical_key, self.modifiers)
+                            .send_winit_key_event_input(
+                                &event.logical_key,
+                                Some(event.physical_key),
+                                self.modifiers,
+                            )
                             .map(|_| ())
                     };
                     if let Err(error) = result {

@@ -1,5 +1,5 @@
-use gromaq::{KeyModifiers, TestKey, encode_keys, encode_winit_key};
-use winit::keyboard::{Key, ModifiersState, NamedKey};
+use gromaq::{KeyModifiers, Terminal, TerminalConfig, TestKey, encode_keys, encode_winit_key};
+use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
 
 #[test]
 fn encodes_common_terminal_keys_to_bytes() {
@@ -71,6 +71,77 @@ fn encodes_winit_printable_and_named_keys() {
     assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::ArrowLeft), ModifiersState::empty()),
         Some(b"\x1b[D".to_vec())
+    );
+}
+
+#[test]
+fn terminal_encodes_physical_numpad_keys_in_numeric_mode() {
+    let terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
+            Some(PhysicalKey::Code(KeyCode::Numpad1)),
+            ModifiersState::empty(),
+        ),
+        Some(b"1".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Named(NamedKey::Enter),
+            Some(PhysicalKey::Code(KeyCode::NumpadEnter)),
+            ModifiersState::empty(),
+        ),
+        Some(b"\r".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("+".into()),
+            Some(PhysicalKey::Code(KeyCode::NumpadAdd)),
+            ModifiersState::ALT,
+        ),
+        Some(b"\x1b+".to_vec())
+    );
+}
+
+#[test]
+fn terminal_encodes_physical_numpad_keys_in_application_keypad_mode() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("\x1b[?66h").unwrap();
+
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
+            Some(PhysicalKey::Code(KeyCode::Numpad1)),
+            ModifiersState::empty(),
+        ),
+        Some(b"\x1bOq".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Named(NamedKey::Enter),
+            Some(PhysicalKey::Code(KeyCode::NumpadEnter)),
+            ModifiersState::empty(),
+        ),
+        Some(b"\x1bOM".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
+            None,
+            ModifiersState::empty(),
+        ),
+        Some(b"1".to_vec())
+    );
+
+    terminal.write_str("\x1b[?66l").unwrap();
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
+            Some(PhysicalKey::Code(KeyCode::Numpad1)),
+            ModifiersState::empty(),
+        ),
+        Some(b"1".to_vec())
     );
 }
 

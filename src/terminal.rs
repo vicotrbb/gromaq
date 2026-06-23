@@ -3,14 +3,14 @@
 use base64::{Engine as _, engine::general_purpose};
 use unicode_width::UnicodeWidthChar;
 use vte::{Params, Parser, Perform};
-use winit::keyboard::{Key, ModifiersState};
+use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
 use crate::cell::{Cell, CellSnapshot, Color, Style, UnderlineStyle};
 use crate::clipboard::HostClipboard;
 use crate::dirty::{DirtyRegion, DirtyTracker};
 use crate::error::{GromaqError, Result};
 use crate::grid::{Grid, GridSnapshot};
-use crate::input::encode_winit_key_with_application_cursor_mode;
+use crate::input::encode_winit_key_with_terminal_modes;
 use crate::mouse::{MouseEvent, MouseReportState};
 use crate::scrollback::{Scrollback, ScrollbackSnapshot};
 use crate::selection::SelectionRange;
@@ -194,6 +194,7 @@ struct SavedScreen {
     auto_wrap: bool,
     origin_mode: bool,
     application_cursor_keys: bool,
+    application_keypad: bool,
     focus_event_reporting: bool,
     insert_mode: bool,
     linefeed_newline_mode: bool,
@@ -229,6 +230,7 @@ pub struct Terminal {
     auto_wrap: bool,
     origin_mode: bool,
     application_cursor_keys: bool,
+    application_keypad: bool,
     focus_event_reporting: bool,
     insert_mode: bool,
     linefeed_newline_mode: bool,
@@ -280,6 +282,7 @@ impl Terminal {
             auto_wrap: true,
             origin_mode: false,
             application_cursor_keys: false,
+            application_keypad: false,
             focus_event_reporting: false,
             insert_mode: false,
             linefeed_newline_mode: false,
@@ -477,7 +480,23 @@ impl Terminal {
 
     /// Encode a native logical key according to terminal input modes.
     pub fn encode_winit_key_input(&self, key: &Key, modifiers: ModifiersState) -> Option<Vec<u8>> {
-        encode_winit_key_with_application_cursor_mode(key, modifiers, self.application_cursor_keys)
+        self.encode_winit_key_event_input(key, None, modifiers)
+    }
+
+    /// Encode a native key event according to terminal input modes.
+    pub fn encode_winit_key_event_input(
+        &self,
+        key: &Key,
+        physical_key: Option<PhysicalKey>,
+        modifiers: ModifiersState,
+    ) -> Option<Vec<u8>> {
+        encode_winit_key_with_terminal_modes(
+            key,
+            physical_key,
+            modifiers,
+            self.application_cursor_keys,
+            self.application_keypad,
+        )
     }
 
     /// Encode a terminal focus event when focus reporting mode is enabled.
@@ -1307,6 +1326,7 @@ impl Terminal {
         self.auto_wrap = false;
         self.origin_mode = false;
         self.application_cursor_keys = false;
+        self.application_keypad = false;
         self.insert_mode = false;
         self.linefeed_newline_mode = false;
         self.cursor.visible = true;
@@ -1348,6 +1368,7 @@ impl Terminal {
         self.auto_wrap = true;
         self.origin_mode = false;
         self.application_cursor_keys = false;
+        self.application_keypad = false;
         self.focus_event_reporting = false;
         self.insert_mode = false;
         self.linefeed_newline_mode = false;
@@ -1470,6 +1491,7 @@ impl Terminal {
             }
             12 => self.cursor.blinking = enabled,
             25 => self.cursor.visible = enabled,
+            66 => self.application_keypad = enabled,
             47 | 1047 if enabled => self.enter_alternate_screen(),
             47 | 1047 => self.leave_alternate_screen(),
             1048 if enabled => self.save_dec_cursor(),
@@ -1499,6 +1521,7 @@ impl Terminal {
             7 => Some(self.auto_wrap),
             12 => Some(self.cursor.blinking),
             25 => Some(self.cursor.visible),
+            66 => Some(self.application_keypad),
             1000 => Some(self.mouse.button_reporting_enabled()),
             1002 => Some(self.mouse.button_motion_reporting_enabled()),
             1003 => Some(self.mouse.any_motion_reporting_enabled()),
@@ -1735,6 +1758,7 @@ impl Terminal {
             auto_wrap: self.auto_wrap,
             origin_mode: self.origin_mode,
             application_cursor_keys: self.application_cursor_keys,
+            application_keypad: self.application_keypad,
             focus_event_reporting: self.focus_event_reporting,
             insert_mode: self.insert_mode,
             linefeed_newline_mode: self.linefeed_newline_mode,
@@ -1755,6 +1779,7 @@ impl Terminal {
         self.auto_wrap = true;
         self.origin_mode = false;
         self.application_cursor_keys = false;
+        self.application_keypad = false;
         self.focus_event_reporting = false;
         self.insert_mode = false;
         self.linefeed_newline_mode = false;
@@ -1776,6 +1801,7 @@ impl Terminal {
             self.auto_wrap = saved.auto_wrap;
             self.origin_mode = saved.origin_mode;
             self.application_cursor_keys = saved.application_cursor_keys;
+            self.application_keypad = saved.application_keypad;
             self.focus_event_reporting = saved.focus_event_reporting;
             self.insert_mode = saved.insert_mode;
             self.linefeed_newline_mode = saved.linefeed_newline_mode;

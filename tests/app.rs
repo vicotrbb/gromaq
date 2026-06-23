@@ -30,7 +30,7 @@ use gromaq::{
     MouseEventKind, Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
-use winit::keyboard::{Key, ModifiersState, NamedKey};
+use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
 
 #[derive(Debug, Default)]
 struct MockPtySession {
@@ -1052,6 +1052,58 @@ fn native_terminal_runtime_returns_to_normal_cursor_key_mode_for_arrows() {
 
     let session = runtime.shell_session().unwrap();
     assert_eq!(session.input.borrow().as_slice(), &[b"\x1b[A".to_vec()]);
+}
+
+#[test]
+fn native_terminal_runtime_uses_application_keypad_mode_for_numpad_keys() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"\x1b[?66h".to_vec());
+    runtime.pump_pty_output().unwrap();
+    runtime.pump_pty_output().unwrap();
+
+    assert!(
+        runtime
+            .send_winit_key_event_input(
+                &Key::Character("1".into()),
+                Some(PhysicalKey::Code(KeyCode::Numpad1)),
+                ModifiersState::empty(),
+            )
+            .unwrap()
+    );
+    assert!(
+        runtime
+            .send_winit_key_event_input(
+                &Key::Named(NamedKey::Enter),
+                Some(PhysicalKey::Code(KeyCode::NumpadEnter)),
+                ModifiersState::empty(),
+            )
+            .unwrap()
+    );
+
+    let session = runtime.shell_session().unwrap();
+    assert_eq!(
+        session.input.borrow().as_slice(),
+        &[b"\x1bOq".to_vec(), b"\x1bOM".to_vec()]
+    );
 }
 
 #[test]

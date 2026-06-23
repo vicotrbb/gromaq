@@ -21,7 +21,7 @@ Implemented and tested:
 - Styled scrollback row reflow during resize
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
-- Keyboard input encoding for common keys, navigation keys, modified named keys, F1-F12 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
+- Keyboard input encoding for common keys, navigation keys, modified named keys, F1-F12 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
 - Configuration validation
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, and measured native render durations
@@ -40,7 +40,7 @@ Implemented and tested:
 - Raw PTY byte ingestion into the terminal parser without lossy string conversion on the pump hot path
 - Native runtime terminal resize with retained PTY resize notification
 - Native window resize mapping to terminal dimensions with redraw request
-- Native keyboard, application cursor-key, focus-report, committed text, clipboard paste, terminal paste, and default/SGR terminal mouse-report bytes written to the retained PTY session
+- Native keyboard, application cursor-key, application keypad, focus-report, committed text, clipboard paste, terminal paste, and default/SGR terminal mouse-report bytes written to the retained PTY session
 - OSC 52 clipboard payload write-through to the host clipboard abstraction plus a native OSC 52 clipboard smoke command
 - Native window mouse coordinates mapped to terminal grid mouse reports
 - Timed native event-loop PTY polling with output-driven redraw requests
