@@ -24,7 +24,7 @@ Implemented and tested:
 - Keyboard input encoding for common keys, navigation keys, modified named keys, F1-F12 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts, mouse reports, and native `winit` key events
 - Configuration validation
 - Structured `TerminalTestApi`
-- Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, and resizes
+- Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, and measured native render durations
 - Deterministic one-pixel-per-cell test API screenshot capture
 - Alternate-screen enter/leave restoration
 - Visible-grid selection and copy

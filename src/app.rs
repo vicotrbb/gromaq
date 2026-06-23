@@ -511,6 +511,12 @@ pub struct NativeRuntimePerfSnapshot {
     pub rendered_frames: u64,
     /// Number of render attempts skipped because no dirty regions were pending.
     pub clean_frame_skips: u64,
+    /// Number of rendered frames with measured render duration samples.
+    pub render_time_samples: u64,
+    /// Total measured render-frame duration in nanoseconds.
+    pub render_time_total_ns: u64,
+    /// Maximum measured render-frame duration in nanoseconds.
+    pub render_time_max_ns: u64,
 }
 
 /// Spawns PTY sessions for the native terminal runtime.
@@ -630,12 +636,17 @@ impl<S> NativeTerminalRuntime<S> {
             self.perf.clean_frame_skips += 1;
             return false;
         }
+        let render_started = Instant::now();
         renderer.render_frame(
             &self.terminal.dump_grid(),
             self.terminal.dump_cursor(),
             &dirty_regions,
         );
+        let elapsed_ns = u64::try_from(render_started.elapsed().as_nanos()).unwrap_or(u64::MAX);
         self.perf.rendered_frames += 1;
+        self.perf.render_time_samples += 1;
+        self.perf.render_time_total_ns = self.perf.render_time_total_ns.saturating_add(elapsed_ns);
+        self.perf.render_time_max_ns = self.perf.render_time_max_ns.max(elapsed_ns);
         true
     }
 

@@ -74,6 +74,7 @@ impl NativePtySpawner for MockPtySpawner {
 #[derive(Debug, Default)]
 struct MockFrameRenderer {
     frames: Vec<RenderedFrame>,
+    render_delay: Duration,
 }
 
 #[derive(Debug)]
@@ -90,6 +91,9 @@ impl GpuRenderer for MockFrameRenderer {
         cursor: CursorSnapshot,
         dirty_regions: &[DirtyRegion],
     ) {
+        if !self.render_delay.is_zero() {
+            std::thread::sleep(self.render_delay);
+        }
         self.frames.push(RenderedFrame {
             first_line: grid.line_text(0),
             cursor,
@@ -721,7 +725,10 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
         .borrow_mut()
         .push_back(b"\x1b[6n".to_vec());
     runtime.pump_pty_output().unwrap();
-    let mut renderer = MockFrameRenderer::default();
+    let mut renderer = MockFrameRenderer {
+        render_delay: Duration::from_millis(1),
+        ..MockFrameRenderer::default()
+    };
     assert!(runtime.render_terminal_frame(&mut renderer));
     assert!(!runtime.render_terminal_frame(&mut renderer));
 
@@ -743,6 +750,10 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
     assert_eq!(metrics.render_attempts, 2);
     assert_eq!(metrics.rendered_frames, 1);
     assert_eq!(metrics.clean_frame_skips, 1);
+    assert_eq!(metrics.render_time_samples, 1);
+    assert!(metrics.render_time_total_ns >= 1_000_000);
+    assert!(metrics.render_time_max_ns >= 1_000_000);
+    assert!(metrics.render_time_total_ns >= metrics.render_time_max_ns);
 }
 
 #[test]
