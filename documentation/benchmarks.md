@@ -1,10 +1,10 @@
 # Benchmarks
 
 Gromaq uses Criterion for deterministic CPU-side benchmark coverage. These
-benchmarks are proof inputs for parser throughput, scrollback throughput, dirty
-region coalescing, glyph atlas cache churn, scrollback viewport navigation,
-render planning, glyph quad generation, 144Hz frame-scheduler decisions,
-rasterized glyph cache reuse, prepared surface glyph-frame
+benchmarks are proof inputs for parser throughput, Unicode cluster ingestion,
+scrollback throughput, dirty region coalescing, glyph atlas cache churn,
+scrollback viewport navigation, render planning, glyph quad generation,
+144Hz frame-scheduler decisions, rasterized glyph cache reuse, prepared surface glyph-frame
 construction, native input-to-render plumbing, real-font rasterization,
 deterministic PTY output pumping, real PTY shell-output bursts, real PTY
 input/output roundtrips, bounded runtime state under repeated output batches,
@@ -74,6 +74,7 @@ cargo bench
 The benchmark list should include:
 
 - `parser_large_output`
+- `unicode_emoji_cluster_output`
 - `scrollback_large_output`
 - `scrollback_view_navigation`
 - `dirty_region_coalescing`

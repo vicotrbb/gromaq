@@ -58,6 +58,7 @@ const SCROLLBACK_NAVIGATION_STEPS: usize = 512;
 const ALTERNATE_SCREEN_STAGES: usize = 3;
 const FRAME_SCHEDULER_TIMELINE_STEPS: usize = 512;
 const REAL_PTY_BENCH_LINES: usize = 512;
+const UNICODE_CLUSTER_BENCH_LINES: usize = 512;
 const GLYPH_ATLAS_HOT_KEYS: usize = 64;
 const GLYPH_ATLAS_CHURN_KEYS: usize = 512;
 const GLYPH_ATLAS_LOOKUPS: usize = 4_096;
@@ -149,6 +150,25 @@ fn parser_large_output(c: &mut Criterion) {
             for _ in 0..256 {
                 terminal.write_str(black_box(LARGE_OUTPUT)).unwrap();
             }
+            black_box(terminal.dump_perf_metrics());
+        });
+    });
+}
+
+fn unicode_emoji_cluster_output(c: &mut Criterion) {
+    let payload = unicode_cluster_output_payload();
+
+    c.bench_function("unicode_emoji_cluster_output", |b| {
+        b.iter(|| {
+            let mut terminal = Terminal::new(
+                TerminalConfig::new(120, 36)
+                    .unwrap()
+                    .with_scrollback_limit(4_096)
+                    .unwrap(),
+            );
+            terminal.write_bytes(black_box(&payload)).unwrap();
+            black_box(terminal.dump_grid());
+            black_box(terminal.dump_scrollback());
             black_box(terminal.dump_perf_metrics());
         });
     });
@@ -1000,6 +1020,7 @@ fn gpu_glyph_atlas_upload_readback(c: &mut Criterion) {
 criterion_group!(
     benches,
     parser_large_output,
+    unicode_emoji_cluster_output,
     scrollback_large_output,
     scrollback_view_navigation,
     dirty_region_coalescing,
@@ -1071,6 +1092,29 @@ fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
     haystack
         .windows(needle.len())
         .any(|window| window == needle)
+}
+
+fn unicode_cluster_output_payload() -> Vec<u8> {
+    let clusters = [
+        "👩\u{200d}❤\u{fe0f}\u{200d}💋\u{200d}👨",
+        "🧑🏾\u{200d}⚕\u{fe0f}",
+        "🏳️\u{200d}🌈",
+        "🇺🇸",
+        "🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}",
+        "A\u{0301}\u{0302}",
+    ];
+    let mut payload = Vec::with_capacity(UNICODE_CLUSTER_BENCH_LINES * 96);
+    for line in 0..UNICODE_CLUSTER_BENCH_LINES {
+        let cluster = clusters[line % clusters.len()];
+        payload.extend_from_slice(
+            format!(
+                "\x1b[3{}mcluster-{line:04} {cluster} {cluster}\x1b[0m\r\n",
+                line % 8
+            )
+            .as_bytes(),
+        );
+    }
+    payload
 }
 
 fn glyph_atlas_bench_keys(count: usize) -> Vec<GlyphKey> {
