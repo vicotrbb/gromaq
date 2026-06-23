@@ -2,6 +2,7 @@ use base64::{Engine, engine::general_purpose};
 use gromaq::{Terminal, TerminalConfig};
 
 const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
+const MAX_METADATA_IDS: u16 = 4096;
 
 #[test]
 fn osc_2_sets_window_title_with_bel_terminator() {
@@ -106,6 +107,26 @@ fn invalid_osc_8_hyperlink_uri_is_ignored_without_clearing_active_link() {
     assert_eq!(grid.cell_hyperlink(0, 0), Some("https://gromaq.dev"));
     assert_eq!(grid.cell_hyperlink(0, 1), Some("https://gromaq.dev"));
     assert_eq!(grid.cell_hyperlink(0, 2), None);
+}
+
+#[test]
+fn osc_8_hyperlink_table_is_bounded_without_panicking() {
+    let mut terminal = Terminal::new(TerminalConfig::new(MAX_METADATA_IDS + 2, 1).unwrap());
+    let mut input = String::new();
+
+    for index in 0..=MAX_METADATA_IDS {
+        input.push_str(&format!("\x1b]8;;https://gromaq.dev/{index}\x1b\\x"));
+    }
+
+    terminal.write_str(&input).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell_hyperlink(0, 0), Some("https://gromaq.dev/0"));
+    assert_eq!(
+        grid.cell_hyperlink(0, MAX_METADATA_IDS - 1),
+        Some("https://gromaq.dev/4095")
+    );
+    assert_eq!(grid.cell_hyperlink(0, MAX_METADATA_IDS), None);
 }
 
 #[test]

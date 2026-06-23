@@ -19,8 +19,9 @@ use crate::selection::{SelectionPoint, SelectionRange};
 const MAX_SCROLLBACK_LINES: usize = 1_000_000;
 const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
 const MAX_OSC8_HYPERLINK_BYTES: usize = 4096;
-const MAX_OSC8_HYPERLINKS: usize = u16::MAX as usize;
-const MAX_UNDERLINE_COLORS: usize = u16::MAX as usize;
+const MAX_METADATA_IDS: usize = 4096;
+const MAX_OSC8_HYPERLINKS: usize = MAX_METADATA_IDS;
+const MAX_UNDERLINE_COLORS: usize = MAX_METADATA_IDS;
 const MAX_DCS_PAYLOAD_BYTES: usize = 64;
 
 /// Core terminal dimensions and scrollback configuration.
@@ -586,7 +587,7 @@ impl Terminal {
         if self.append_zwj_joined_char(ch) {
             return;
         }
-        let width_u16 = u16::try_from(width).expect("character width is clamped to 2");
+        let width_u16 = if width == 2 { 2 } else { 1 };
         if self.auto_wrap && (self.wrap_pending || self.cursor.col + width_u16 > self.config.cols) {
             self.wrap_pending = false;
             self.carriage_return();
@@ -1751,13 +1752,13 @@ impl Terminal {
 
     fn intern_hyperlink(&mut self, uri: String) -> u16 {
         if let Some(index) = self.hyperlinks.iter().position(|existing| existing == &uri) {
-            return u16::try_from(index + 1).expect("hyperlink table length is capped");
+            return metadata_id_for_index(index);
         }
         if self.hyperlinks.len() == MAX_OSC8_HYPERLINKS {
             return 0;
         }
         self.hyperlinks.push(uri);
-        u16::try_from(self.hyperlinks.len()).expect("hyperlink table length is capped")
+        metadata_id_for_index(self.hyperlinks.len() - 1)
     }
 
     fn intern_underline_color(&mut self, color: Color) -> u16 {
@@ -1769,13 +1770,13 @@ impl Terminal {
             .iter()
             .position(|existing| *existing == color)
         {
-            return u16::try_from(index + 1).expect("underline color table length is capped");
+            return metadata_id_for_index(index);
         }
         if self.underline_colors.len() == MAX_UNDERLINE_COLORS {
             return 0;
         }
         self.underline_colors.push(color);
-        u16::try_from(self.underline_colors.len()).expect("underline color table length is capped")
+        metadata_id_for_index(self.underline_colors.len() - 1)
     }
 
     fn enter_alternate_screen(&mut self) {
@@ -2101,8 +2102,7 @@ impl Terminal {
             let width = if cell.is_wide_leading {
                 2
             } else {
-                u16::try_from(visible_width(&cell.text).clamp(1, 2))
-                    .expect("visible width is clamped")
+                if visible_width(&cell.text) >= 2 { 2 } else { 1 }
             };
             units.push(ReflowCell {
                 text: cell.text.clone(),
@@ -2170,6 +2170,14 @@ fn visible_width(text: &str) -> usize {
     text.chars()
         .map(|ch| UnicodeWidthChar::width(ch).unwrap_or(0).min(2))
         .sum()
+}
+
+fn metadata_id_for_index(index: usize) -> u16 {
+    let id = index.saturating_add(1);
+    if id > usize::from(u16::MAX) {
+        return 0;
+    }
+    id as u16
 }
 
 fn is_emoji_modifier(ch: char) -> bool {

@@ -1,5 +1,7 @@
 use gromaq::{Color, Terminal, TerminalConfig, UnderlineStyle};
 
+const MAX_METADATA_IDS: u16 = 4096;
+
 #[test]
 fn sgr_sets_and_resets_color_and_bold_attributes() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
@@ -158,6 +160,31 @@ fn sgr_sets_and_resets_underline_color() {
     let default_color = grid.cell(0, 1).style;
     assert!(default_color.underline);
     assert_eq!(grid.cell_underline_color(0, 1), Color::Default);
+}
+
+#[test]
+fn sgr_underline_color_table_is_bounded_without_panicking() {
+    let mut terminal = Terminal::new(TerminalConfig::new(MAX_METADATA_IDS + 2, 1).unwrap());
+    let mut input = String::new();
+
+    for index in 0..=MAX_METADATA_IDS {
+        let red = ((index >> 8) & 0xff) as u8;
+        let green = (index & 0xff) as u8;
+        input.push_str(&format!("\x1b[4;58:2:{red}:{green}:0mX"));
+    }
+
+    terminal.write_str(&input).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell_underline_color(0, 0), Color::Rgb(0, 0, 0));
+    assert_eq!(
+        grid.cell_underline_color(0, MAX_METADATA_IDS - 1),
+        Color::Rgb(15, 255, 0)
+    );
+    assert_eq!(
+        grid.cell_underline_color(0, MAX_METADATA_IDS),
+        Color::Default
+    );
 }
 
 #[test]
