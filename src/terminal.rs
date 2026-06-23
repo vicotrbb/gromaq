@@ -644,7 +644,9 @@ impl Terminal {
             return false;
         }
 
+        let previous_last_printable = self.last_printable_char;
         self.append_to_previous_cluster(ch, col, span_width, span_width);
+        self.last_printable_char = previous_last_printable;
         true
     }
 

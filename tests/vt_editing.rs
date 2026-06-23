@@ -237,6 +237,21 @@ fn csi_repeat_after_combining_mark_replays_base_printable_character() {
 }
 
 #[test]
+fn csi_repeat_after_emoji_modifier_replays_base_printable_character() {
+    let mut terminal = Terminal::new(TerminalConfig::new(10, 2).unwrap());
+
+    terminal.write_str("👍🏽\x1b[bZ").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "👍🏽");
+    assert_eq!(grid.cell(0, 2).text, "👍");
+    assert_eq!(grid.cell(0, 4).text, "Z");
+    assert_eq!(grid.line_text(0), "👍🏽👍Z");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 5);
+}
+
+#[test]
 fn csi_repeat_preceding_character_defaults_to_one_and_ignores_empty_history() {
     let mut terminal = Terminal::new(TerminalConfig::new(10, 2).unwrap());
 
