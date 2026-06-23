@@ -51,9 +51,15 @@ impl Scrollback {
         if self.limit == 0 {
             return;
         }
-        let Some(last_visible) = last_visible_cell(&cells) else {
+        let Some(mut last_visible) = last_visible_cell(&cells) else {
             return;
         };
+        if cells
+            .get(last_visible + 1)
+            .is_some_and(|cell| cell.is_wide_trailing)
+        {
+            last_visible += 1;
+        }
         let cells = cells[..=last_visible].to_vec();
         if self.lines.len() == self.limit {
             self.lines.pop_front();

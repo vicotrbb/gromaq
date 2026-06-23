@@ -220,3 +220,22 @@ fn scrollback_reflow_preserves_styled_cell_metadata() {
         }
     }
 }
+
+#[test]
+fn scrollback_reflow_preserves_wide_cluster_metadata() {
+    let config = TerminalConfig::new(4, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal.write_str("ab👨\u{200d}👩\r\ncd\r\nef").unwrap();
+
+    terminal.resize(8, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["ab👨\u{200d}👩"]);
+    assert_eq!(scrollback.cells.len(), 1);
+    assert_eq!(scrollback.cells[0][2].text, "👨\u{200d}👩");
+    assert!(scrollback.cells[0][2].is_wide_leading);
+    assert!(scrollback.cells[0][3].is_wide_trailing);
+}
