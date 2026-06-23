@@ -181,7 +181,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -227,6 +227,26 @@ fn runtime_clipboard_paste_smoke_cli_routes_clipboard_text_to_runtime_pty() {
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(clipboard.read_text().as_deref(), Some("previous clipboard"));
+}
+
+#[test]
+fn runtime_glyph_frame_smoke_cli_reports_prepared_frame_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-glyph-frame-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime glyph frame smoke: ok"));
+    assert!(exit.stdout.contains("pumped bytes: 19"));
+    assert!(exit.stdout.contains("planned glyphs:"));
+    assert!(exit.stdout.contains("rasterized glyphs:"));
+    assert!(exit.stdout.contains("prepared quads:"));
+    assert!(exit.stdout.contains("atlas bytes:"));
+    assert!(exit.stdout.contains("frame size:"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
 }
 
 #[test]

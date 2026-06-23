@@ -61,6 +61,7 @@ Implemented and tested:
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
 - Offscreen terminal text GPU draw/readback smoke test with `--gpu-terminal-text-smoke`
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
+- Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
 - Deterministic 144Hz frame-scheduler smoke with `--frame-scheduler-smoke`
@@ -104,6 +105,7 @@ cargo run -- --gpu-terminal-text-smoke
 cargo run -- --clipboard-smoke
 cargo run -- --osc52-clipboard-smoke
 cargo run -- --runtime-clipboard-paste-smoke
+cargo run -- --runtime-glyph-frame-smoke
 cargo run -- --runtime-perf-smoke
 cargo run -- --runtime-large-output-smoke
 cargo run -- --frame-scheduler-smoke
