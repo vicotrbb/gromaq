@@ -1,7 +1,5 @@
 //! Visible-grid text selection.
 
-use crate::error::{GromaqError, Result};
-
 /// A zero-based visible-grid position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SelectionPoint {
@@ -28,17 +26,14 @@ pub struct SelectionRange {
 
 impl SelectionRange {
     /// Create a normalized selection range.
-    pub fn new(start: (u16, u16), end: (u16, u16)) -> Result<Self> {
+    pub fn new(start: (u16, u16), end: (u16, u16)) -> Self {
         let start = SelectionPoint::from(start);
         let end = SelectionPoint::from(end);
-        if start == end {
-            return Err(GromaqError::EmptySelection);
-        }
         let (start, end) = if start <= end {
             (start, end)
         } else {
             (end, start)
         };
-        Ok(Self { start, end })
+        Self { start, end }
     }
 }

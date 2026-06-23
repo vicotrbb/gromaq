@@ -4,7 +4,7 @@ use gromaq::{MemoryClipboard, NativeClipboard, SelectionRange, Terminal, Termina
 fn copy_selection_writes_plain_text_to_host_clipboard_adapter() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
     terminal.write_str("abcdef").unwrap();
-    terminal.set_selection(SelectionRange::new((0, 1), (0, 3)).unwrap());
+    terminal.set_selection(SelectionRange::new((0, 1), (0, 3)));
     let mut clipboard = MemoryClipboard::default();
 
     let copied = terminal.copy_selection_to_clipboard(&mut clipboard);

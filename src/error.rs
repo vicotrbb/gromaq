@@ -46,10 +46,6 @@ pub enum GromaqError {
         actual: u32,
     },
 
-    /// A text selection must contain at least one cell.
-    #[error("selection must contain at least one cell")]
-    EmptySelection,
-
     /// Glyph atlas capacity must be non-zero.
     #[error("glyph atlas capacity must be at least {minimum}, got {actual}")]
     InvalidGlyphAtlasCapacity {
