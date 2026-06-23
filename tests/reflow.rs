@@ -92,6 +92,27 @@ fn reflow_preserves_cell_styles() {
 }
 
 #[test]
+fn reflow_preserves_visible_grid_link_and_underline_metadata() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
+    terminal
+        .write_str(
+            "\x1b]8;;https://gromaq.dev\x1b\\\x1b[4;58:2:17:34:51mhelloworld\x1b[0m\x1b]8;;\x1b\\",
+        )
+        .unwrap();
+
+    terminal.resize(10, 3).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "helloworld");
+    for col in 0..10 {
+        let cell = grid.cell(0, col);
+        assert_eq!(grid.cell_hyperlink(0, col), Some("https://gromaq.dev"));
+        assert!(cell.style.underline);
+        assert_eq!(grid.cell_underline_color(0, col), Color::Rgb(17, 34, 51));
+    }
+}
+
+#[test]
 fn reflow_preserves_wide_cell_metadata() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 4).unwrap());
     terminal.write_str("ab界cd").unwrap();
