@@ -887,7 +887,14 @@ fn runtime_perf_smoke_exit() -> CliExit {
     };
     let metrics = runtime.dump_runtime_perf_metrics();
 
-    if !sent || pumped_bytes == 0 || !rendered || metrics.input_to_render_samples == 0 {
+    if !sent
+        || pumped_bytes == 0
+        || !rendered
+        || metrics.rendered_dirty_regions == 0
+        || metrics.rendered_dirty_cells == 0
+        || metrics.render_time_samples == 0
+        || metrics.input_to_render_samples == 0
+    {
         return CliExit {
             code: 1,
             stdout: String::new(),
@@ -899,15 +906,19 @@ fn runtime_perf_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime perf smoke: ok\npumped bytes: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nrender avg ns: {}\nrender p95 ns: {}\ninput-to-render avg ns: {}\ninput-to-render p95 ns: {}\n",
+            "runtime perf smoke: ok\npumped bytes: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nrender samples: {}\nrender avg ns: {}\nrender max ns: {}\nrender p95 ns: {}\ninput-to-render samples: {}\ninput-to-render avg ns: {}\ninput-to-render max ns: {}\ninput-to-render p95 ns: {}\n",
             pumped_bytes,
             metrics.rendered_frames,
             metrics.rendered_dirty_regions,
             metrics.rendered_dirty_cells,
             metrics.rendered_dirty_cells_max,
+            metrics.render_time_samples,
             metrics.render_time_avg_ns,
+            metrics.render_time_max_ns,
             metrics.render_time_p95_ns,
+            metrics.input_to_render_samples,
             metrics.input_to_render_avg_ns,
+            metrics.input_to_render_max_ns,
             metrics.input_to_render_p95_ns
         ),
         stderr: String::new(),

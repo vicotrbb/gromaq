@@ -22,7 +22,8 @@ estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
-render average/p95, and input-to-render average/p95 counters. On the same date,
+render sample/average/max/p95, and input-to-render sample/average/max/p95
+counters. On the same date,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 reported viewport-capped rendered dirty-region work, verified
