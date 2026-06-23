@@ -219,7 +219,13 @@ fn rasterized_glyph_cache_hot_plan(c: &mut Criterion) {
             &mut atlas,
         )
         .unwrap();
-    let mut glyph_cache = load_default_native_glyph_cache().unwrap();
+    let mut glyph_cache = match load_default_native_glyph_cache() {
+        Ok(glyph_cache) => glyph_cache,
+        Err(error) => {
+            skip_benchmark(c, "rasterized_glyph_cache_hot_plan", &error.to_string());
+            return;
+        }
+    };
     glyph_cache.rasterize_plan(&plan).unwrap();
 
     c.bench_function("rasterized_glyph_cache_hot_plan", |b| {
@@ -247,7 +253,17 @@ fn prepared_surface_glyph_frame_large_plan(c: &mut Criterion) {
             &mut atlas,
         )
         .unwrap();
-    let mut glyph_cache = load_default_native_glyph_cache().unwrap();
+    let mut glyph_cache = match load_default_native_glyph_cache() {
+        Ok(glyph_cache) => glyph_cache,
+        Err(error) => {
+            skip_benchmark(
+                c,
+                "prepared_surface_glyph_frame_large_plan",
+                &error.to_string(),
+            );
+            return;
+        }
+    };
     let glyphs = glyph_cache.rasterize_plan(&plan).unwrap();
 
     c.bench_function("prepared_surface_glyph_frame_large_plan", |b| {
@@ -304,8 +320,20 @@ fn native_input_echo_render_cycle(c: &mut Criterion) {
 }
 
 fn font_rasterizer_combining_cell(c: &mut Criterion) {
-    let font_bytes = bench_monospace_font_bytes();
-    let mut rasterizer = FontRasterizer::from_bytes(font_bytes).unwrap();
+    let font_bytes = match bench_monospace_font_bytes() {
+        Ok(font_bytes) => font_bytes,
+        Err(error) => {
+            skip_benchmark(c, "font_rasterizer_combining_cell", &error);
+            return;
+        }
+    };
+    let mut rasterizer = match FontRasterizer::from_bytes(font_bytes) {
+        Ok(rasterizer) => rasterizer,
+        Err(error) => {
+            skip_benchmark(c, "font_rasterizer_combining_cell", &error.to_string());
+            return;
+        }
+    };
     let mut slot = 0_u32;
 
     c.bench_function("font_rasterizer_combining_cell", |b| {
@@ -378,13 +406,23 @@ criterion_group!(
 );
 criterion_main!(benches);
 
-fn bench_monospace_font_bytes() -> Vec<u8> {
+fn skip_benchmark(c: &mut Criterion, name: &'static str, reason: &str) {
+    eprintln!("skipping {name}: {reason}");
+    c.bench_function(name, |b| b.iter(|| black_box(())));
+}
+
+fn bench_monospace_font_bytes() -> Result<Vec<u8>, String> {
     let Some(path) = BENCH_MONOSPACE_FONT_CANDIDATES
         .iter()
         .map(Path::new)
         .find(|path| path.exists())
     else {
-        panic!("expected a local monospace font for font rasterization benchmark");
+        return Err("no local monospace font candidate found".to_owned());
     };
-    std::fs::read(path).expect("expected readable monospace font bytes")
+    std::fs::read(path).map_err(|error| {
+        format!(
+            "failed to read monospace font candidate {}: {error}",
+            path.display()
+        )
+    })
 }
