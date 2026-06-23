@@ -1882,6 +1882,17 @@ impl Terminal {
     }
 
     fn copy_row_range(&self, row: u16, start_col: u16, end_col: u16) -> String {
+        let Some(end_col) = self
+            .last_visible_col_in_row(row)
+            .map(|last_col| end_col.min(last_col))
+        else {
+            return String::new();
+        };
+
+        if end_col < start_col {
+            return String::new();
+        }
+
         let mut output = String::new();
         for col in start_col..=end_col {
             let cell = self.grid.cell(row, col);
@@ -1894,7 +1905,14 @@ impl Terminal {
                 output.push_str(&cell.text);
             }
         }
-        output.trim_end().to_owned()
+        output
+    }
+
+    fn last_visible_col_in_row(&self, row: u16) -> Option<u16> {
+        (0..self.config.cols).rev().find(|col| {
+            let cell = self.grid.cell(row, *col);
+            !cell.text.is_empty() && !cell.is_wide_trailing
+        })
     }
 
     fn copy_boundary_needs_newline(&self, row: u16, end_col: u16) -> bool {

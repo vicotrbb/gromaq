@@ -71,6 +71,16 @@ fn copy_selection_preserves_wide_cell_text_once() {
 }
 
 #[test]
+fn copy_selection_preserves_selected_spaces_before_later_text() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("a  b").unwrap();
+
+    terminal.set_selection(SelectionRange::new((0, 0), (0, 2)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "a  ");
+}
+
+#[test]
 fn clearing_selection_removes_copy_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
     terminal.write_str("abcdef").unwrap();
