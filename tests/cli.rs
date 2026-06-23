@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 use std::fs;
 
-use gromaq::app::NativeAppConfig;
+use gromaq::app::{NativeAppConfig, NativeTerminalRuntimeConfig};
 use gromaq::cli::{
-    AdapterReport, CliExit, NativeAppLaunchError, NativeAppLauncher, run_with_backend,
-    run_with_backend_and_app, run_with_backend_and_clipboard,
+    AdapterReport, CliExit, NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher,
+    run_with_backend, run_with_backend_and_app, run_with_backend_and_clipboard,
 };
 use gromaq::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrapBackend, GpuBootstrapError, GpuBootstrapRequest,
@@ -27,7 +27,7 @@ struct MockContext {
 
 #[derive(Debug)]
 struct MockAppLauncher {
-    launches: RefCell<Vec<NativeAppConfig>>,
+    launches: RefCell<Vec<NativeAppLaunchConfig>>,
 }
 
 #[derive(Debug)]
@@ -62,7 +62,7 @@ impl AdapterReport for MockContext {
 }
 
 impl NativeAppLauncher for MockAppLauncher {
-    fn launch(&self, config: NativeAppConfig) -> Result<(), NativeAppLaunchError> {
+    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
         self.launches.borrow_mut().push(config);
         Ok(())
     }
@@ -182,7 +182,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -592,7 +592,86 @@ fn no_arguments_launches_native_terminal_app() {
     );
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
-    assert_eq!(app.launches.borrow()[0], NativeAppConfig::default());
+    assert_eq!(app.launches.borrow()[0], NativeAppLaunchConfig::default());
+}
+
+#[test]
+fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("launch-config.toml");
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 132
+        rows = 40
+        scrollback_lines = 4096
+
+        [performance]
+        target_fps = 120
+        "#,
+    )
+    .unwrap();
+
+    let path_arg = path.to_string_lossy().into_owned();
+    let exit = run_with_backend_and_app(["gromaq", "--config", path_arg.as_str()], &backend, &app);
+
+    assert_eq!(
+        exit,
+        CliExit {
+            code: 0,
+            stdout: String::new(),
+            stderr: String::new(),
+        }
+    );
+    assert!(backend.requests.borrow().is_empty());
+    let launches = app.launches.borrow();
+    assert_eq!(launches.len(), 1);
+    assert_eq!(
+        launches[0].app,
+        NativeAppConfig {
+            target_fps: 120,
+            ..NativeAppConfig::default()
+        }
+    );
+    assert_eq!(
+        launches[0].runtime,
+        NativeTerminalRuntimeConfig {
+            terminal_cols: 132,
+            terminal_rows: 40,
+            scrollback_lines: 4096,
+            ..NativeTerminalRuntimeConfig::default()
+        }
+    );
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn config_launch_cli_reports_invalid_config_without_launch_or_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("invalid-launch-config.toml");
+    fs::write(&path, "[terminal]\ncols = 0\n").unwrap();
+
+    let path_arg = path.to_string_lossy().into_owned();
+    let exit = run_with_backend_and_app(["gromaq", "--config", path_arg.as_str()], &backend, &app);
+
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.contains("config launch failed:"));
+    assert!(exit.stderr.contains("columns"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(app.launches.borrow().is_empty());
+    let _ = fs::remove_file(path);
 }
 
 fn test_cli_config_path(name: &str) -> std::path::PathBuf {

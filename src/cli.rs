@@ -11,7 +11,8 @@ use winit::keyboard::{Key, ModifiersState};
 
 use crate::app::{
     NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig, load_default_native_glyph_cache, run_native_app,
+    NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
+    run_native_app_with_runtime_config,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::GromaqConfig;
@@ -65,10 +66,31 @@ impl NativeAppLaunchError {
     }
 }
 
+/// Native launch configuration derived from defaults or a user config file.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct NativeAppLaunchConfig {
+    /// Window and frame-pacing configuration.
+    pub app: NativeAppConfig,
+    /// Terminal, scrollback, and shell runtime configuration.
+    pub runtime: NativeTerminalRuntimeConfig,
+}
+
+impl NativeAppLaunchConfig {
+    /// Build a launch configuration from a validated user configuration.
+    pub fn from_gromaq_config(config: &GromaqConfig) -> Result<Self, NativeAppLaunchError> {
+        let app = NativeAppConfig::from_gromaq_config(config)
+            .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
+        let runtime =
+            NativeTerminalRuntimeConfig::from_gromaq_config(config, ShellCommand::default_shell())
+                .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
+        Ok(Self { app, runtime })
+    }
+}
+
 /// Launches the native terminal app for the no-argument CLI path.
 pub trait NativeAppLauncher {
     /// Launch the native app using `config`.
-    fn launch(&self, config: NativeAppConfig) -> Result<(), NativeAppLaunchError>;
+    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError>;
 }
 
 /// Production native app launcher.
@@ -76,8 +98,9 @@ pub trait NativeAppLauncher {
 pub struct RealNativeAppLauncher;
 
 impl NativeAppLauncher for RealNativeAppLauncher {
-    fn launch(&self, config: NativeAppConfig) -> Result<(), NativeAppLaunchError> {
-        run_native_app(config).map_err(|error| NativeAppLaunchError::new(error.to_string()))
+    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
+        run_native_app_with_runtime_config(config.app, config.runtime)
+            .map_err(|error| NativeAppLaunchError::new(error.to_string()))
     }
 }
 
@@ -169,18 +192,7 @@ where
     let _program = args.next();
     let Some(arg) = args.next() else {
         if let Some(app_launcher) = app_launcher {
-            return match app_launcher.launch(NativeAppConfig::default()) {
-                Ok(()) => CliExit {
-                    code: 0,
-                    stdout: String::new(),
-                    stderr: String::new(),
-                },
-                Err(error) => CliExit {
-                    code: 1,
-                    stdout: String::new(),
-                    stderr: format!("{error}\n"),
-                },
-            };
+            return launch_native_app_exit(app_launcher, NativeAppLaunchConfig::default());
         }
         return CliExit {
             code: 0,
@@ -197,6 +209,7 @@ where
         && arg != "--gpu-textured-quad-smoke"
         && arg != "--gpu-terminal-text-smoke"
         && arg != "--clipboard-smoke"
+        && arg != "--config"
         && arg != "--config-check"
         && arg != "--osc52-clipboard-smoke"
         && arg != "--runtime-clipboard-paste-smoke"
@@ -231,6 +244,30 @@ where
             };
         }
         return config_check_exit(path.as_ref());
+    }
+    if arg == "--config" {
+        let Some(path) = args.next() else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}missing config path for --config\n", usage()),
+            };
+        };
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        let Some(app_launcher) = app_launcher else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}native app launch unavailable for --config\n", usage()),
+            };
+        };
+        return launch_config_file_exit(path.as_ref(), app_launcher);
     }
     if let Some(extra) = args.next() {
         return CliExit {
@@ -473,7 +510,52 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+}
+
+fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
+where
+    A: NativeAppLauncher,
+{
+    let config = match GromaqConfig::from_toml_file(path) {
+        Ok(config) => config,
+        Err(error) => {
+            return CliExit {
+                code: 1,
+                stdout: String::new(),
+                stderr: format!("config launch failed: {error}\n"),
+            };
+        }
+    };
+    let launch_config = match NativeAppLaunchConfig::from_gromaq_config(&config) {
+        Ok(launch_config) => launch_config,
+        Err(error) => {
+            return CliExit {
+                code: 1,
+                stdout: String::new(),
+                stderr: format!("{error}\n"),
+            };
+        }
+    };
+    launch_native_app_exit(app_launcher, launch_config)
+}
+
+fn launch_native_app_exit<A>(app_launcher: &A, config: NativeAppLaunchConfig) -> CliExit
+where
+    A: NativeAppLauncher,
+{
+    match app_launcher.launch(config) {
+        Ok(()) => CliExit {
+            code: 0,
+            stdout: String::new(),
+            stderr: String::new(),
+        },
+        Err(error) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!("{error}\n"),
+        },
+    }
 }
 
 fn config_check_exit(path: &str) -> CliExit {

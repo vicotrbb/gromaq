@@ -1702,9 +1702,17 @@ impl From<NativeGlyphFrameError> for NativeAppError {
 
 /// Run the native `winit` terminal application loop.
 pub fn run_native_app(config: NativeAppConfig) -> Result<(), NativeAppError> {
+    run_native_app_with_runtime_config(config, NativeTerminalRuntimeConfig::default())
+}
+
+/// Run the native `winit` terminal application loop with explicit runtime configuration.
+pub fn run_native_app_with_runtime_config(
+    config: NativeAppConfig,
+    runtime_config: NativeTerminalRuntimeConfig,
+) -> Result<(), NativeAppError> {
     let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
     let event_proxy = event_loop.create_proxy();
-    let mut app = NativeTerminalApp::new(config)?;
+    let mut app = NativeTerminalApp::new_with_runtime_config(config, runtime_config)?;
     app.set_event_proxy(NativeAppEventProxy::from(event_proxy));
     event_loop.run_app(&mut app)?;
     if let Some(error) = app.take_startup_error() {

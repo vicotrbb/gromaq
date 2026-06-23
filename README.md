@@ -24,7 +24,7 @@ Implemented and tested:
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
 - Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
-- Configuration validation, including bounded visible-grid area before allocation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, and native app/runtime config mapping
+- Configuration validation, including bounded visible-grid area before allocation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, native app/runtime config mapping, and config-file native app launch
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
 - Deterministic one-pixel-per-cell test API screenshot capture
@@ -64,6 +64,7 @@ Implemented and tested:
 - Deterministic glyph atlas image packing and GPU upload/readback smoke test with `--gpu-glyph-atlas-smoke`
 - Font-backed terminal text atlas packing and GPU upload/readback smoke test with `--gpu-text-atlas-smoke`
 - TOML config validation command with `--config-check <path>`
+- TOML config native app launch with `--config <path>`
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
 - Offscreen terminal text GPU draw/readback smoke test with `--gpu-terminal-text-smoke`
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
