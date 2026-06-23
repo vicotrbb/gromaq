@@ -34,6 +34,7 @@ Implemented and tested:
 - Interactive `/bin/sh` PTY input/output workflow through the native PTY writer and background reader
 - Real PTY command workflow tests for available `bash` and `zsh`
 - Real PTY command lifecycle checks for available `fish`, `nushell`, `vim`, `nvim`, `tmux`, `less`, `top`, `htop`, `btop`, `ssh`, `kubectl`, and `cargo test`
+- Scripted interactive PTY workflow checks for available `bash`, `zsh`, `fish`, and `nushell`
 - Scripted interactive PTY workflow checks for available `vim`, `tmux`, and `less`
 - Real PTY background-reader large-output burst drain test
 - No-argument binary dispatch to the native terminal app loop

@@ -124,16 +124,17 @@ fn pty_session_background_reader_drains_available_output() {
     let mut session = PtySession::spawn(config).unwrap();
     session.start_output_reader().unwrap();
 
-    let mut output = Vec::new();
-    for _ in 0..30 {
-        output.extend(session.drain_available_output().unwrap());
-        if String::from_utf8_lossy(&output).contains("gromaq-bg-reader") {
-            break;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
+    let output = drain_until_contains(
+        &mut session,
+        "gromaq-bg-reader",
+        100,
+        Duration::from_millis(20),
+    );
 
-    assert!(String::from_utf8_lossy(&output).contains("gromaq-bg-reader"));
+    assert!(
+        output.contains("gromaq-bg-reader"),
+        "background reader output: {output:?}"
+    );
     assert!(
         session
             .wait_timeout(Duration::from_secs(3))
@@ -164,16 +165,17 @@ fn pty_session_background_reader_notifies_when_output_arrives() {
         })
         .unwrap();
 
-    let mut output = Vec::new();
-    for _ in 0..30 {
-        output.extend(session.drain_available_output().unwrap());
-        if String::from_utf8_lossy(&output).contains("gromaq-wakeup") {
-            break;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
+    let output = drain_until_contains(
+        &mut session,
+        "gromaq-wakeup",
+        100,
+        Duration::from_millis(20),
+    );
 
-    assert!(String::from_utf8_lossy(&output).contains("gromaq-wakeup"));
+    assert!(
+        output.contains("gromaq-wakeup"),
+        "background reader wakeup output: {output:?}"
+    );
     assert!(wakeups.load(Ordering::Relaxed) > 0);
 }
 
@@ -224,8 +226,26 @@ fn pty_session_runs_bash_command_when_available() {
 }
 
 #[test]
+fn pty_session_runs_bash_interactive_workflow_when_available() {
+    assert_interactive_shell_outputs_when_available(
+        "bash",
+        b"printf 'gromaq-bash-interactive\\n'\nexit\n",
+        "gromaq-bash-interactive",
+    );
+}
+
+#[test]
 fn pty_session_runs_zsh_command_when_available() {
     assert_shell_command_outputs("zsh", "gromaq-zsh");
+}
+
+#[test]
+fn pty_session_runs_zsh_interactive_workflow_when_available() {
+    assert_interactive_shell_outputs_when_available(
+        "zsh",
+        b"printf 'gromaq-zsh-interactive\\n'\nexit\n",
+        "gromaq-zsh-interactive",
+    );
 }
 
 #[test]
@@ -234,8 +254,26 @@ fn pty_session_runs_fish_command_when_available() {
 }
 
 #[test]
+fn pty_session_runs_fish_interactive_workflow_when_available() {
+    assert_interactive_shell_outputs_when_available(
+        "fish",
+        b"printf 'gromaq-fish-interactive\\n'\nexit\n",
+        "gromaq-fish-interactive",
+    );
+}
+
+#[test]
 fn pty_session_runs_nushell_command_when_available() {
     assert_program_outputs_when_available("nu", &["-c", "print gromaq-nushell"], "gromaq-nushell");
+}
+
+#[test]
+fn pty_session_runs_nushell_interactive_workflow_when_available() {
+    assert_interactive_shell_outputs_when_available(
+        "nu",
+        b"print gromaq-nushell-interactive\nexit\n",
+        "gromaq-nushell-interactive",
+    );
 }
 
 #[test]
@@ -431,6 +469,44 @@ fn assert_shell_command_outputs(shell_name: &str, expected: &str) {
     assert!(
         session
             .wait_timeout(Duration::from_secs(3))
+            .unwrap()
+            .is_some()
+    );
+}
+
+fn assert_interactive_shell_outputs_when_available(shell_name: &str, input: &[u8], expected: &str) {
+    let Some(program) = find_program(shell_name) else {
+        eprintln!(
+            "skipping {shell_name} interactive PTY workflow test because {shell_name} is not on PATH"
+        );
+        return;
+    };
+    let config = PtyConfig {
+        rows: 24,
+        cols: 80,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program,
+            args: Vec::new(),
+            cwd: Some(std::env::current_dir().unwrap()),
+        },
+    };
+
+    let mut session = PtySession::spawn(config).unwrap();
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+    session.write_all(input).unwrap();
+    let output =
+        drain_until_contains_stripped(&mut session, expected, 100, Duration::from_millis(20));
+
+    assert!(
+        output.contains(expected),
+        "{shell_name} interactive output: {output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
             .unwrap()
             .is_some()
     );
