@@ -10,7 +10,7 @@ Implemented and tested:
 
 - Terminal grid/state engine
 - ANSI SGR colors/text attributes including bold, dim, italic, inverse video, slow/rapid blink, hidden, overline, strikethrough, colon-form underline styles, and SGR underline color/reset; cursor movement, erase-line, erase-display, DEC autowrap/origin modes, RIS full reset handling, and DECSTR soft reset handling
-- VT editing/navigation subset: default and configurable tab stops, C0 LF/VT/FF linefeed controls, C1 8-bit IND/NEL/HTS/RI/DECID equivalents, DEC special graphics G0/G1 box-drawing charsets with SI/SO shifting, DECALN screen alignment pattern, cursor forward/backward tabs, insert/delete/erase/repeat characters, insert/replace mode, insert/delete lines with scroll-margin bounds, viewport scroll up/down including the ECMA-48 scroll-down alias with scroll-margin bounds, DECSTBM linefeed, index/next-line, and reverse-index scroll margins, cursor absolute/relative row and column positioning including DEC origin mode, cursor next/previous line movement, cursor visibility/blink mode and DECSCUSR shape/blink state, DEC cursor/rendition save/restore, and SCO/private-mode cursor save/restore
+- VT editing/navigation subset: default and configurable tab stops, C0 LF/VT/FF linefeed controls, C1 8-bit IND/NEL/HTS/RI/DECID equivalents, DEC special graphics G0/G1 box-drawing charsets with SI/SO shifting, DECALN screen alignment pattern, cursor forward/backward tabs, insert/delete/erase/repeat characters, insert/replace mode, insert/delete lines with scroll-margin bounds, viewport scroll up/down including the ECMA-48 scroll-down alias with scroll-margin bounds, DECSTBM linefeed, index/next-line, and reverse-index scroll margins, cursor absolute/relative row and column positioning including DEC origin mode, cursor next/previous line movement, cursor visibility/blink mode and DECSCUSR shape/blink state, DEC cursor/rendition save/restore, and SCO/private-mode cursor/rendition save/restore
 - Terminal-generated Primary/Secondary DA, DECID, regular and DEC private DSR cursor-position/status replies, ANSI/DEC private mode-state replies, DECRQSS SGR/scroll-margin/cursor-shape status replies, and xterm window-state/window-position/pixel-size/text-area/screen size/icon-label/title reports with native PTY write-back
 - OSC icon-label/title handling, OSC 8 hyperlink cell metadata, and bounded OSC 52 clipboard-text decoding
 - Bracketed paste mode encoding
@@ -26,7 +26,7 @@ Implemented and tested:
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, and measured native render durations
 - Deterministic one-pixel-per-cell test API screenshot capture
-- Alternate-screen enter/leave restoration
+- Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
 - Visible-grid selection and copy
 - Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
 - Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding

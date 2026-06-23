@@ -1,4 +1,4 @@
-use gromaq::{Terminal, TerminalConfig};
+use gromaq::{Color, Terminal, TerminalConfig};
 
 #[test]
 fn alternate_screen_restores_primary_grid_and_cursor() {
@@ -13,6 +13,22 @@ fn alternate_screen_restores_primary_grid_and_cursor() {
 
     assert_eq!(terminal.dump_grid().line_text(0), "primary");
     assert_eq!(terminal.dump_cursor().col, 7);
+}
+
+#[test]
+fn alternate_screen_1049_restores_saved_rendition_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[31;1mprimary\x1b[?1049h\x1b[0malternate\x1b[?1049lZ")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "primaryZ");
+    let restored = grid.cell(0, 7);
+    assert_eq!(restored.text, "Z");
+    assert_eq!(restored.style.foreground, Color::Ansi(1));
+    assert!(restored.style.bold);
 }
 
 #[test]

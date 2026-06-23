@@ -1452,10 +1452,18 @@ impl Terminal {
             }
             12 => self.cursor.blinking = enabled,
             25 => self.cursor.visible = enabled,
-            47 | 1047 | 1049 if enabled => self.enter_alternate_screen(),
-            47 | 1047 | 1049 => self.leave_alternate_screen(),
-            1048 if enabled => self.save_cursor(),
-            1048 => self.restore_cursor(),
+            47 | 1047 if enabled => self.enter_alternate_screen(),
+            47 | 1047 => self.leave_alternate_screen(),
+            1048 if enabled => self.save_dec_cursor(),
+            1048 => self.restore_dec_cursor(),
+            1049 if enabled => {
+                self.save_dec_cursor();
+                self.enter_alternate_screen();
+            }
+            1049 => {
+                self.leave_alternate_screen();
+                self.restore_dec_cursor();
+            }
             1000 => self.mouse.set_button_reporting(enabled),
             1002 => self.mouse.set_button_motion_reporting(enabled),
             1003 => self.mouse.set_any_motion_reporting(enabled),

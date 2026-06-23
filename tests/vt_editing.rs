@@ -340,6 +340,26 @@ fn dec_private_1048_saves_and_restores_cursor_without_alternate_screen() {
 }
 
 #[test]
+fn dec_private_1048_restores_rendition_attributes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[34;1m\x1b[?1048h\x1b[0mplain\x1b[?1048lZ")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let restored = grid.cell(0, 0);
+    assert_eq!(restored.text, "Z");
+    assert_eq!(restored.style.foreground, gromaq::Color::Ansi(4));
+    assert!(restored.style.bold);
+
+    let plain = grid.cell(0, 1);
+    assert_eq!(plain.text, "l");
+    assert_eq!(plain.style.foreground, gromaq::Color::Default);
+    assert!(!plain.style.bold);
+}
+
+#[test]
 fn csi_cursor_character_absolute_moves_within_current_row() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
