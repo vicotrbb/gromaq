@@ -760,6 +760,7 @@ impl Terminal {
         let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
             return;
         };
+        let previous_last_printable = self.last_printable_char;
         let requested_span_width =
             if self.combining_mark_requests_emoji_width(ch, self.grid.cell(self.cursor.row, col)) {
                 2
@@ -768,6 +769,7 @@ impl Terminal {
             };
 
         self.append_to_previous_cluster(ch, col, span_width, requested_span_width);
+        self.last_printable_char = previous_last_printable;
     }
 
     fn combining_mark_requests_emoji_width(&self, ch: char, cell: &Cell) -> bool {

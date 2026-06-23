@@ -226,6 +226,17 @@ fn csi_repeat_preceding_character_replays_last_printable_character() {
 }
 
 #[test]
+fn csi_repeat_after_combining_mark_replays_base_printable_character() {
+    let mut terminal = Terminal::new(TerminalConfig::new(10, 2).unwrap());
+
+    terminal.write_str("e\u{0301}\x1b[2bZ").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "e\u{0301}eeZ");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 4);
+}
+
+#[test]
 fn csi_repeat_preceding_character_defaults_to_one_and_ignores_empty_history() {
     let mut terminal = Terminal::new(TerminalConfig::new(10, 2).unwrap());
 
