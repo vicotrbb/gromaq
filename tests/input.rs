@@ -73,6 +73,13 @@ fn encodes_winit_printable_and_named_keys() {
         Some(b"\x1b[Z".to_vec())
     );
     assert_eq!(
+        encode_winit_key(
+            &Key::Named(NamedKey::Tab),
+            ModifiersState::SHIFT | ModifiersState::CONTROL,
+        ),
+        Some(b"\x1b[1;6Z".to_vec())
+    );
+    assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::ArrowLeft), ModifiersState::empty()),
         Some(b"\x1b[D".to_vec())
     );

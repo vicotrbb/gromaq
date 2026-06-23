@@ -166,6 +166,9 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
         Key::Named(NamedKey::Tab) if key_modifiers == KeyModifiers::SHIFT => {
             return Some(b"\x1b[Z".to_vec());
         }
+        Key::Named(NamedKey::Tab) if key_modifiers.contains(KeyModifiers::SHIFT) => {
+            return encode_modified_csi_final(b'Z', key_modifiers);
+        }
         Key::Named(NamedKey::Tab) => TestKey::Tab,
         Key::Named(NamedKey::Home) => {
             return Some(
