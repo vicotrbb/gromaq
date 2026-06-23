@@ -33,6 +33,10 @@ lines across 32 small PTY batches, rendered each dirty batch, verified the
 configured 64-line scrollback cap, reported viewport-capped rendered dirty-region
 work and render p95 500000 ns, and checked that `gromaq-continuous-line-255`
 reached the latest visible render plan. On the same date,
+`cargo run -- --runtime-scrollback-smoke` pumped 32 bytes, used Shift+PageUp and
+Shift+PageDown through `NativeTerminalRuntime`, locally scrolled 4 retained
+history rows without PTY writes, rendered 3 CPU-side dirty frames, and restored
+the live visible lines `four|five|six`. On the same date,
 `cargo run -- --runtime-alternate-screen-smoke` pumped primary, alternate, and
 restore output stages through the runtime, rendered 3 CPU-side dirty frames,
 restored primary visible content, and suppressed alternate-screen scrollback.

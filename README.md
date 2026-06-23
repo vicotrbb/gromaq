@@ -72,6 +72,7 @@ Implemented and tested:
 - Offscreen terminal text GPU draw/readback smoke test with `--gpu-terminal-text-smoke`
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
+- Deterministic runtime local scrollback navigation smoke with `--runtime-scrollback-smoke`
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
 - Deterministic runtime state-footprint snapshot and bounded-state smoke with `--runtime-bounded-state-smoke`, including capped scrollback lines, styled cell rows, retained cell count, and retained-cell cap
@@ -124,6 +125,7 @@ cargo run -- --config-template
 cargo run -- --osc52-clipboard-smoke
 cargo run -- --runtime-clipboard-paste-smoke
 cargo run -- --runtime-glyph-frame-smoke
+cargo run -- --runtime-scrollback-smoke
 cargo run -- --runtime-perf-smoke
 cargo run -- --runtime-large-output-smoke
 cargo run -- --runtime-bounded-state-smoke
