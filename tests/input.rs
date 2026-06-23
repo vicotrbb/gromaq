@@ -331,6 +331,18 @@ fn encodes_winit_modified_terminal_characters() {
         Some(vec![0x00])
     );
     assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Enter), ModifiersState::ALT),
+        Some(b"\x1b\r".to_vec())
+    );
+    assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Backspace), ModifiersState::ALT),
+        Some(b"\x1b\x7f".to_vec())
+    );
+    assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Escape), ModifiersState::ALT),
+        Some(b"\x1b\x1b".to_vec())
+    );
+    assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::Shift), ModifiersState::SHIFT),
         None
     );

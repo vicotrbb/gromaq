@@ -128,9 +128,13 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
                 modifiers: key_modifiers,
             }
         }
-        Key::Named(NamedKey::Enter) => TestKey::Enter,
-        Key::Named(NamedKey::Backspace) => TestKey::Backspace,
-        Key::Named(NamedKey::Escape) => TestKey::Escape,
+        Key::Named(NamedKey::Enter) => return Some(encode_alt_prefixed_key(b"\r", key_modifiers)),
+        Key::Named(NamedKey::Backspace) => {
+            return Some(encode_alt_prefixed_key(b"\x7f", key_modifiers));
+        }
+        Key::Named(NamedKey::Escape) => {
+            return Some(encode_alt_prefixed_key(b"\x1b", key_modifiers));
+        }
         Key::Named(NamedKey::Space) => TestKey::ModifiedChar {
             ch: ' ',
             modifiers: key_modifiers,
@@ -312,6 +316,16 @@ fn encode_function_key(final_byte: u8, tilde_prefix: u8, modifiers: KeyModifiers
         b'S' => b"\x1bOS".to_vec(),
         _ => encode_tilde_key(tilde_prefix, modifiers),
     }
+}
+
+fn encode_alt_prefixed_key(base: &[u8], modifiers: KeyModifiers) -> Vec<u8> {
+    let mut bytes =
+        Vec::with_capacity(base.len() + usize::from(modifiers.contains(KeyModifiers::ALT)));
+    if modifiers.contains(KeyModifiers::ALT) {
+        bytes.push(0x1b);
+    }
+    bytes.extend_from_slice(base);
+    bytes
 }
 
 fn encode_shifted_function_key(function_number: u8, modifiers: KeyModifiers) -> Vec<u8> {
