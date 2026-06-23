@@ -29,6 +29,16 @@ fn test_api_perf_metrics_track_dirty_batches_and_resizes() {
 }
 
 #[test]
+fn test_api_perf_metrics_count_combining_mark_dirty_span() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+
+    TerminalTestApi::paste_text(&mut terminal, "界\u{0301}").unwrap();
+
+    let metrics = TerminalTestApi::dump_perf_metrics(&terminal);
+    assert_eq!(metrics.dirty_cells, 4);
+}
+
+#[test]
 fn test_api_encodes_keys_without_mutating_grid() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
 

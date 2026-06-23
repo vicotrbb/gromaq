@@ -639,7 +639,7 @@ impl Terminal {
         let cell = self.grid.cell_mut(self.cursor.row, col);
         cell.text.push(ch);
         self.mark_print_span(self.cursor.row, col, span_width);
-        self.perf.dirty_cells += 1;
+        self.perf.dirty_cells += u64::from(span_width);
     }
 
     fn clear_stale_wide_neighbors(&mut self, row: u16, col: u16) {
