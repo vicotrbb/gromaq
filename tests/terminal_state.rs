@@ -323,6 +323,18 @@ fn combining_mark_after_wide_unicode_stays_on_wide_leading_cell() {
 }
 
 #[test]
+fn combining_mark_after_right_edge_print_stays_on_last_cell() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("abcd\u{0301}E").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 2).text, "c");
+    assert_eq!(grid.cell(0, 3).text, "d\u{0301}");
+    assert_eq!(grid.line_text(1), "E");
+}
+
+#[test]
 fn zwj_emoji_sequence_stays_in_one_wide_cell_cluster() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
@@ -363,6 +375,18 @@ fn regional_indicator_pair_stays_in_one_wide_cell_cluster() {
     assert_eq!(grid.cell(0, 2).text, "A");
     assert_eq!(grid.line_text(0), "🇺🇸A");
     assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
+fn regional_indicator_pair_after_right_edge_print_stays_clustered() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("abc🇺🇸Z").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 2).text, "c");
+    assert_eq!(grid.cell(0, 3).text, "🇺🇸");
+    assert_eq!(grid.line_text(1), "Z");
 }
 
 #[test]

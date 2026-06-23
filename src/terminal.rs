@@ -704,10 +704,14 @@ impl Terminal {
     }
 
     fn previous_visible_cell_with_span(&self) -> Option<(u16, u16)> {
-        if self.cursor.col == 0 {
-            return None;
-        }
-        let mut col = self.cursor.col - 1;
+        let mut col = if self.wrap_pending {
+            self.cursor.col
+        } else {
+            if self.cursor.col == 0 {
+                return None;
+            }
+            self.cursor.col - 1
+        };
         if self.grid.cell(self.cursor.row, col).is_wide_trailing && col > 0 {
             col -= 1;
         }
