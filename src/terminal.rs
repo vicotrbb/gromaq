@@ -1182,6 +1182,7 @@ impl Terminal {
                     self.wrap_pending = false;
                 }
             }
+            12 => self.cursor.blinking = enabled,
             25 => self.cursor.visible = enabled,
             47 | 1047 | 1049 if enabled => self.enter_alternate_screen(),
             47 | 1047 | 1049 => self.leave_alternate_screen(),

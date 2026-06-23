@@ -672,6 +672,18 @@ fn dec_private_cursor_visibility_mode_toggles_cursor_snapshot() {
 }
 
 #[test]
+fn dec_private_cursor_blink_mode_toggles_cursor_snapshot() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    assert!(terminal.dump_cursor().blinking);
+
+    terminal.write_str("\x1b[?12l").unwrap();
+    assert!(!terminal.dump_cursor().blinking);
+
+    terminal.write_str("\x1b[?12h").unwrap();
+    assert!(terminal.dump_cursor().blinking);
+}
+
+#[test]
 fn decscusr_sets_cursor_shape_and_blinking_state() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
