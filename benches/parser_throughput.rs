@@ -1,14 +1,16 @@
 use std::collections::VecDeque;
 use std::hint::black_box;
+use std::path::Path;
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use gromaq::app::{
     NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
     NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
 };
+use gromaq::font::FontRasterizer;
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, GlyphQuadConfig, GlyphQuadPlanner, RenderPlanner,
+    GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner, RenderPlanner,
 };
 use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
 
@@ -23,6 +25,17 @@ error status 0123456789 ABC xyz\n\
 normal log line with attributes\n\
 prompt $ cargo test --all\n\
 ";
+
+const BENCH_MONOSPACE_FONT_CANDIDATES: &[&str] = &[
+    "/System/Library/Fonts/SFNSMono.ttf",
+    "/System/Library/Fonts/Menlo.ttc",
+    "/System/Library/Fonts/Supplemental/Courier New.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+    "/usr/share/fonts/dejavu-sans-fonts/DejaVuSansMono.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
+    "/usr/share/fonts/liberation/LiberationMono-Regular.ttf",
+    "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
+];
 
 #[derive(Debug)]
 struct BenchPtySession {
@@ -208,6 +221,29 @@ fn rasterized_glyph_cache_hot_plan(c: &mut Criterion) {
     });
 }
 
+fn font_rasterizer_combining_cell(c: &mut Criterion) {
+    let font_bytes = bench_monospace_font_bytes();
+    let mut rasterizer = FontRasterizer::from_bytes(font_bytes).unwrap();
+    let mut slot = 0_u32;
+
+    c.bench_function("font_rasterizer_combining_cell", |b| {
+        b.iter(|| {
+            slot += 1;
+            let bitmap = rasterizer
+                .rasterize_text(
+                    black_box("A\u{0301}"),
+                    black_box(24.0),
+                    GlyphEntry {
+                        slot,
+                        generation: 0,
+                    },
+                )
+                .unwrap();
+            black_box(bitmap.rgba.len());
+        });
+    });
+}
+
 fn pty_runtime_pump_large_output(c: &mut Criterion) {
     c.bench_function("pty_runtime_pump_large_output", |b| {
         b.iter(|| {
@@ -250,6 +286,18 @@ criterion_group!(
     render_plan_large_dirty_region,
     glyph_quad_generation_large_plan,
     rasterized_glyph_cache_hot_plan,
+    font_rasterizer_combining_cell,
     pty_runtime_pump_large_output
 );
 criterion_main!(benches);
+
+fn bench_monospace_font_bytes() -> Vec<u8> {
+    let Some(path) = BENCH_MONOSPACE_FONT_CANDIDATES
+        .iter()
+        .map(Path::new)
+        .find(|path| path.exists())
+    else {
+        panic!("expected a local monospace font for font rasterization benchmark");
+    };
+    std::fs::read(path).expect("expected readable monospace font bytes")
+}
