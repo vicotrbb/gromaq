@@ -22,7 +22,9 @@ verified `gromaq-runtime-line-511` in the render plan, and reported render p95
 500000 ns. On the same date, `cargo run -- --runtime-reflow-smoke` pumped 80
 bytes, reported 1 resize event, preserved 2 reflowed scrollback lines with
 styled metadata, rendered visible lines `klmno|pqrst`, and rendered 1 CPU-side
-dirty frame. On the same date,
+dirty frame. On the same date, `cargo run -- --runtime-idle-smoke` pumped 0
+bytes, reported 16 render attempts, 16 clean-frame skips, and 0 rendered frames
+through the deterministic CPU-side path. On the same date,
 `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz target
 interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
 frames. These are deterministic smoke results, not live hardware acceptance

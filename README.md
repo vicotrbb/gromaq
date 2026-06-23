@@ -68,6 +68,7 @@ Implemented and tested:
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
 - Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
+- Deterministic runtime clean-frame idle smoke with `--runtime-idle-smoke`
 - Deterministic 144Hz frame-scheduler smoke with `--frame-scheduler-smoke`
 - GPU renderer boundary with deterministic render-plan and glyph-quad generation
 - Owned surface glyph-frame preparation from render plans and rasterized glyph bitmaps
@@ -113,6 +114,7 @@ cargo run -- --runtime-glyph-frame-smoke
 cargo run -- --runtime-perf-smoke
 cargo run -- --runtime-large-output-smoke
 cargo run -- --runtime-reflow-smoke
+cargo run -- --runtime-idle-smoke
 cargo run -- --frame-scheduler-smoke
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings

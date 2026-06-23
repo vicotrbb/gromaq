@@ -33,6 +33,7 @@ const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
 const RUNTIME_LARGE_OUTPUT_LINES: usize = 512;
 const RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES: usize = 128;
 const RUNTIME_REFLOW_SMOKE_LINK: &str = "https://gromaq.dev";
+const RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS: u64 = 16;
 
 /// Captured CLI result for tests and the binary wrapper.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -199,6 +200,7 @@ where
         && arg != "--runtime-perf-smoke"
         && arg != "--runtime-large-output-smoke"
         && arg != "--runtime-reflow-smoke"
+        && arg != "--runtime-idle-smoke"
         && arg != "--frame-scheduler-smoke"
     {
         return CliExit {
@@ -235,6 +237,9 @@ where
     }
     if arg == "--runtime-reflow-smoke" {
         return runtime_reflow_smoke_exit();
+    }
+    if arg == "--runtime-idle-smoke" {
+        return runtime_idle_smoke_exit();
     }
     if arg == "--frame-scheduler-smoke" {
         return frame_scheduler_smoke_exit();
@@ -439,7 +444,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-reflow-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn frame_scheduler_smoke_exit() -> CliExit {
@@ -605,6 +610,79 @@ fn runtime_perf_smoke_error(error: impl std::fmt::Display) -> CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("runtime perf smoke failed: {error}\n"),
+    }
+}
+
+fn runtime_idle_smoke_exit() -> CliExit {
+    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 24,
+        terminal_rows: 4,
+        scrollback_lines: 128,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    }) {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_idle_smoke_error(error),
+    };
+    if let Err(error) = runtime.start_shell(&RuntimePerfSmokePtySpawner) {
+        return runtime_idle_smoke_error(error);
+    }
+    let pumped_bytes = match runtime.pump_pty_output() {
+        Ok(bytes) => bytes,
+        Err(error) => return runtime_idle_smoke_error(error),
+    };
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    for _ in 0..RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS {
+        if runtime.render_terminal_frame(&mut renderer) {
+            return runtime_idle_smoke_failure("clean runtime produced a rendered frame");
+        }
+    }
+    let metrics = runtime.dump_runtime_perf_metrics();
+    if pumped_bytes != 0
+        || metrics.pty_output_batches != 0
+        || metrics.pty_output_bytes != 0
+        || metrics.render_attempts != RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS
+        || metrics.clean_frame_skips != RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS
+        || metrics.rendered_frames != 0
+        || metrics.render_time_samples != 0
+        || metrics.input_to_render_samples != 0
+    {
+        return runtime_idle_smoke_failure(
+            "idle runtime counters did not prove clean-frame suppression",
+        );
+    }
+
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "runtime idle smoke: ok\npumped bytes: {}\nrender attempts: {}\nclean frame skips: {}\nrendered frames: {}\n",
+            pumped_bytes,
+            metrics.render_attempts,
+            metrics.clean_frame_skips,
+            metrics.rendered_frames
+        ),
+        stderr: String::new(),
+    }
+}
+
+fn runtime_idle_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime idle smoke failed: {error}\n"),
+    }
+}
+
+fn runtime_idle_smoke_failure(reason: &str) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime idle smoke failed: {reason}\n"),
     }
 }
 
