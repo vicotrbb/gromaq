@@ -8,9 +8,9 @@ use thiserror::Error;
 
 use crate::font::{RasterizedGlyphBatch, RasterizedGlyphCache};
 use crate::renderer::{
-    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, GlyphAtlas, GlyphAtlasConfig,
-    GlyphAtlasImage, GlyphQuadBatch, GlyphQuadConfig, GlyphQuadPlanner, RenderPlan, RenderPlanner,
-    WgpuSurfaceBackend,
+    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, CursorQuadConfig,
+    CursorQuadPlanner, GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphQuadBatch,
+    GlyphQuadConfig, GlyphQuadPlanner, RenderPlan, RenderPlanner, WgpuSurfaceBackend,
 };
 use crate::{Terminal, TerminalConfig};
 
@@ -475,6 +475,13 @@ impl GpuTerminalTextRunner for NativeGpuContext {
         })
         .plan(&frame.plan)
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
+        let cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
+            cell_width_px: frame.slot_width,
+            cell_height_px: frame.slot_height,
+            color_rgba8: [229, 229, 229, 255],
+        })
+        .plan(&frame.plan)
+        .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
         let (target_width, target_height) = checked_terminal_text_target_dimensions(
             frame.plan.viewport_cols,
             frame.plan.viewport_rows,
@@ -484,11 +491,14 @@ impl GpuTerminalTextRunner for NativeGpuContext {
         let pixels = draw_glyph_quads_rgba8(
             &self.device,
             &self.queue,
-            &frame.image,
-            &background_batch,
-            &quad_batch,
-            target_width,
-            target_height,
+            GlyphDrawInput {
+                image: &frame.image,
+                background_batch: &background_batch,
+                batch: &quad_batch,
+                cursor_batch: &cursor_batch,
+                width: target_width,
+                height: target_height,
+            },
         )?;
         Ok(GpuTerminalTextReport {
             width: target_width,
@@ -496,9 +506,11 @@ impl GpuTerminalTextRunner for NativeGpuContext {
             glyphs: frame.plan.glyphs.len(),
             background_quads: background_batch.quads.len(),
             quads: quad_batch.quads.len(),
+            cursor_quads: cursor_batch.quads.len(),
             rasterized_glyphs: frame.batch.rasterized,
             reused_glyphs: frame.batch.reused,
             first_drawn_pixel: first_nontransparent_pixel(&pixels),
+            cursor_pixel: first_cursor_pixel(&cursor_batch, &pixels, target_width)?,
             drawn_pixels: pixels.chunks_exact(4).filter(|pixel| pixel[3] != 0).count(),
         })
     }
@@ -765,12 +777,16 @@ pub struct GpuTerminalTextReport {
     pub background_quads: usize,
     /// Number of textured glyph quads drawn.
     pub quads: usize,
+    /// Number of solid cursor quads drawn after glyph quads.
+    pub cursor_quads: usize,
     /// Count of distinct glyphs rasterized from the font.
     pub rasterized_glyphs: usize,
     /// Count of planned glyphs reused from the rasterized glyph cache.
     pub reused_glyphs: usize,
     /// First non-transparent RGBA8 output pixel after drawing.
     pub first_drawn_pixel: [u8; 4],
+    /// First sampled RGBA8 pixel from the cursor quad after drawing.
+    pub cursor_pixel: [u8; 4],
     /// Number of output pixels with non-zero alpha after drawing.
     pub drawn_pixels: usize,
 }
@@ -907,6 +923,24 @@ fn first_nontransparent_pixel(pixels: &[u8]) -> [u8; 4] {
         .find(|pixel| pixel[3] != 0)
         .map(|pixel| [pixel[0], pixel[1], pixel[2], pixel[3]])
         .unwrap_or([0, 0, 0, 0])
+}
+
+fn first_cursor_pixel(
+    cursor_batch: &BackgroundQuadBatch,
+    pixels: &[u8],
+    width: u32,
+) -> std::result::Result<[u8; 4], GpuBootstrapError> {
+    let Some(cursor) = cursor_batch.quads.first() else {
+        return Ok([0, 0, 0, 0]);
+    };
+    let x = cursor.vertices[0].position[0] as u32;
+    let y = cursor.vertices[0].position[1] as u32;
+    let pixel_index =
+        usize::try_from(u64::from(y) * u64::from(width) + u64::from(x)).map_err(|_| {
+            GpuBootstrapError::SmokeReadback("cursor pixel offset is too large".to_owned())
+        })?;
+    let pixel = rgba_pixel_at(pixels, pixel_index, "cursor pixel")?;
+    Ok([pixel[0], pixel[1], pixel[2], pixel[3]])
 }
 
 async fn request_native_wgpu_context(
@@ -1082,6 +1116,7 @@ fn draw_textured_quad_rgba8(
             pattern,
             source_layout,
             background: None,
+            cursor: None,
             vertex_bytes: &textured_quad_vertex_bytes(),
             index_bytes: &textured_quad_index_bytes(),
             index_count: 6,
@@ -1095,29 +1130,42 @@ fn draw_textured_quad_rgba8(
 fn draw_glyph_quads_rgba8(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
-    image: &GlyphAtlasImage,
-    background_batch: &BackgroundQuadBatch,
-    batch: &GlyphQuadBatch,
-    width: u32,
-    height: u32,
+    input: GlyphDrawInput<'_>,
 ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
-    if batch.quads.is_empty() {
+    if input.batch.quads.is_empty() {
         return Err(GpuBootstrapError::SmokeReadback(
             "terminal text draw batch is empty".to_owned(),
         ));
     }
-    let pattern = UploadPattern::from_glyph_atlas_image(image);
+    let pattern = UploadPattern::from_glyph_atlas_image(input.image);
     let source_layout = validate_textured_source_pattern(&pattern)?;
-    let vertices = glyph_quad_vertex_bytes(batch, width, height)?;
-    let indices = glyph_quad_index_bytes(batch);
-    let index_count = checked_textured_index_count(batch.indices.len())?;
-    let background = if background_batch.quads.is_empty() {
+    let vertices = glyph_quad_vertex_bytes(input.batch, input.width, input.height)?;
+    let indices = glyph_quad_index_bytes(input.batch);
+    let index_count = checked_textured_index_count(input.batch.indices.len())?;
+    let background = if input.background_batch.quads.is_empty() {
         None
     } else {
         Some(BackgroundDrawInput {
-            vertex_bytes: background_quad_vertex_bytes(background_batch, width, height)?,
-            index_bytes: background_quad_index_bytes(background_batch),
-            index_count: checked_textured_index_count(background_batch.indices.len())?,
+            vertex_bytes: background_quad_vertex_bytes(
+                input.background_batch,
+                input.width,
+                input.height,
+            )?,
+            index_bytes: background_quad_index_bytes(input.background_batch),
+            index_count: checked_textured_index_count(input.background_batch.indices.len())?,
+        })
+    };
+    let cursor = if input.cursor_batch.quads.is_empty() {
+        None
+    } else {
+        Some(BackgroundDrawInput {
+            vertex_bytes: background_quad_vertex_bytes(
+                input.cursor_batch,
+                input.width,
+                input.height,
+            )?,
+            index_bytes: background_quad_index_bytes(input.cursor_batch),
+            index_count: checked_textured_index_count(input.cursor_batch.indices.len())?,
         })
     };
     draw_textured_vertices_rgba8(
@@ -1127,20 +1175,31 @@ fn draw_glyph_quads_rgba8(
             pattern: &pattern,
             source_layout,
             background,
+            cursor,
             vertex_bytes: &vertices,
             index_bytes: &indices,
             index_count,
             index_format: wgpu::IndexFormat::Uint32,
-            width,
-            height,
+            width: input.width,
+            height: input.height,
         },
     )
+}
+
+struct GlyphDrawInput<'a> {
+    image: &'a GlyphAtlasImage,
+    background_batch: &'a BackgroundQuadBatch,
+    batch: &'a GlyphQuadBatch,
+    cursor_batch: &'a BackgroundQuadBatch,
+    width: u32,
+    height: u32,
 }
 
 struct TexturedDrawInput<'a> {
     pattern: &'a UploadPattern,
     source_layout: UploadPatternLayout,
     background: Option<BackgroundDrawInput>,
+    cursor: Option<BackgroundDrawInput>,
     vertex_bytes: &'a [u8],
     index_bytes: &'a [u8],
     index_count: u32,
@@ -1218,6 +1277,11 @@ fn draw_textured_vertices_rgba8(
     let buffer_layout = validate_textured_draw_buffers(&input)?;
     let background_layout = input
         .background
+        .as_ref()
+        .map(validate_background_draw_buffers)
+        .transpose()?;
+    let cursor_layout = input
+        .cursor
         .as_ref()
         .map(validate_background_draw_buffers)
         .transpose()?;
@@ -1445,6 +1509,83 @@ fn draw_textured_vertices_rgba8(
     } else {
         None
     };
+    let cursor_draw = if let (Some(cursor), Some(layout)) = (&input.cursor, cursor_layout) {
+        let cursor_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("gromaq-cursor-quad-shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(BACKGROUND_QUAD_WGSL)),
+        });
+        let cursor_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("gromaq-cursor-quad-pipeline-layout"),
+                bind_group_layouts: &[],
+                immediate_size: 0,
+            });
+        let cursor_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("gromaq-cursor-quad-pipeline"),
+            layout: Some(&cursor_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &cursor_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: 24,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x2,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 8,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &cursor_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let cursor_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-cursor-quad-vertices"),
+            size: layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let cursor_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-cursor-quad-indices"),
+            size: layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&cursor_vertex_buffer, 0, &cursor.vertex_bytes);
+        queue.write_buffer(&cursor_index_buffer, 0, &cursor.index_bytes);
+        Some((
+            cursor_pipeline,
+            cursor_vertex_buffer,
+            cursor_index_buffer,
+            layout.index_count,
+        ))
+    } else {
+        None
+    };
     let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("gromaq-textured-quad-vertices"),
         size: buffer_layout.vertex_buffer_size,
@@ -1493,6 +1634,12 @@ fn draw_textured_vertices_rgba8(
         pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_index_buffer(index_buffer.slice(..), input.index_format);
         pass.draw_indexed(0..buffer_layout.index_count, 0, 0..1);
+        if let Some((cursor_pipeline, vertex_buffer, index_buffer, index_count)) = &cursor_draw {
+            pass.set_pipeline(cursor_pipeline);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
     }
     queue.submit([encoder.finish()]);
     read_texture_rgba8(device, queue, &target, input.width, input.height)
@@ -1800,6 +1947,7 @@ mod tests {
             pattern,
             source_layout,
             background: None,
+            cursor: None,
             vertex_bytes,
             index_bytes,
             index_count,
