@@ -702,7 +702,7 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
     terminal
-        .write_str("ABA")
+        .write_str("AA\u{0301}A")
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(
