@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use gromaq::font::FontRasterizer;
+use gromaq::font::{FontRasterError, FontRasterizer};
 use gromaq::renderer::{GlyphAtlasImage, GlyphEntry};
 
 fn system_mono_font() -> PathBuf {
@@ -38,4 +38,18 @@ fn font_rasterizer_renders_real_font_glyph_to_atlas_bitmap() {
     let atlas = GlyphAtlasImage::pack_rgba8(glyph.width, glyph.height, 1, &[glyph]).unwrap();
     assert_eq!(atlas.occupied_slots, 1);
     assert!(atlas.rgba.chunks_exact(4).any(|pixel| pixel[3] > 0));
+}
+
+#[test]
+fn font_rasterizer_reports_missing_visible_glyph() {
+    let font_bytes = std::fs::read(system_mono_font()).unwrap();
+    let mut rasterizer = FontRasterizer::from_bytes(font_bytes).unwrap();
+    let entry = GlyphEntry {
+        slot: 0,
+        generation: 0,
+    };
+
+    let error = rasterizer.rasterize('\u{10ffff}', 18.0, entry).unwrap_err();
+
+    assert_eq!(error, FontRasterError::MissingGlyph('\u{10ffff}'));
 }

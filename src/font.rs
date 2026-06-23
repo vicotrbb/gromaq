@@ -8,6 +8,7 @@ use swash::shape::ShapeContext;
 use swash::zeno::Format;
 use swash::{CacheKey, FontRef, GlyphId};
 use thiserror::Error;
+use unicode_width::UnicodeWidthChar;
 
 use crate::renderer::{GlyphBitmap, GlyphEntry, RenderPlan};
 
@@ -81,6 +82,9 @@ impl FontRasterizer {
             .chars()
             .next()
             .ok_or(FontRasterError::RenderFailed('\0'))?;
+        if let Some(ch) = self.missing_visible_char(text) {
+            return Err(FontRasterError::MissingGlyph(ch));
+        }
         let glyphs = self.shape_text(text, size_px);
         if glyphs.is_empty() {
             return Err(FontRasterError::MissingGlyph(first_char));
@@ -153,6 +157,17 @@ impl FontRasterizer {
             }
         });
         glyphs
+    }
+
+    fn missing_visible_char(&self, text: &str) -> Option<char> {
+        let font = FontRef {
+            data: &self.font_bytes,
+            offset: self.offset,
+            key: self.key,
+        };
+        let charmap = font.charmap();
+        text.chars()
+            .find(|ch| UnicodeWidthChar::width(*ch).unwrap_or(0) > 0 && charmap.map(*ch) == 0)
     }
 }
 
