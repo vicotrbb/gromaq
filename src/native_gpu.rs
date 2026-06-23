@@ -1343,7 +1343,14 @@ fn glyph_quad_vertex_bytes(
     }
     let width = width as f32;
     let height = height as f32;
-    let mut bytes = Vec::with_capacity(batch.quads.len().saturating_mul(4 * 4 * 4));
+    let mut bytes = Vec::new();
+    bytes
+        .try_reserve_exact(glyph_quad_vertex_byte_capacity(batch.quads.len())?)
+        .map_err(|_| {
+            GpuBootstrapError::SmokeReadback(
+                "terminal text vertex bytes are too large to allocate".to_owned(),
+            )
+        })?;
     for quad in &batch.quads {
         for vertex in quad.vertices {
             let ndc_x = (vertex.position[0] / width * 2.0) - 1.0;
@@ -1354,6 +1361,14 @@ fn glyph_quad_vertex_bytes(
         }
     }
     Ok(bytes)
+}
+
+fn glyph_quad_vertex_byte_capacity(
+    quad_count: usize,
+) -> std::result::Result<usize, GpuBootstrapError> {
+    quad_count.checked_mul(4 * 4 * 4).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback("terminal text vertex bytes are too large".to_owned())
+    })
 }
 
 fn glyph_quad_index_bytes(batch: &GlyphQuadBatch) -> Vec<u8> {
@@ -1572,6 +1587,18 @@ mod tests {
             GpuBootstrapError::SmokeReadback(
                 "terminal text target height is too large to represent".to_owned()
             )
+        );
+    }
+
+    #[test]
+    fn glyph_quad_vertex_byte_capacity_uses_checked_multiplication() {
+        assert_eq!(glyph_quad_vertex_byte_capacity(2).unwrap(), 128);
+
+        let error = glyph_quad_vertex_byte_capacity((usize::MAX / 64) + 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback("terminal text vertex bytes are too large".to_owned())
         );
     }
 
