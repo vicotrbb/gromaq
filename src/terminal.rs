@@ -245,6 +245,7 @@ pub struct Terminal {
     underline_colors: Vec<Color>,
     bracketed_paste: bool,
     dcs_handler: Option<DcsHandler>,
+    dcs_payload_overflowed: bool,
     dcs_payload: Vec<u8>,
     pending_response_bytes: Vec<u8>,
     style: Style,
@@ -297,6 +298,7 @@ impl Terminal {
             underline_colors: Vec::new(),
             bracketed_paste: false,
             dcs_handler: None,
+            dcs_payload_overflowed: false,
             dcs_payload: Vec::new(),
             pending_response_bytes: Vec::new(),
             style: Style::default(),
@@ -1420,6 +1422,9 @@ impl Terminal {
         self.current_hyperlink_id = 0;
         self.underline_colors.clear();
         self.bracketed_paste = false;
+        self.dcs_handler = None;
+        self.dcs_payload_overflowed = false;
+        self.dcs_payload.clear();
         self.pending_response_bytes.clear();
         self.style = Style::default();
         self.last_printable_char = None;
@@ -2317,6 +2322,7 @@ fn map_dec_special_graphics(ch: char) -> char {
 impl Perform for Terminal {
     fn hook(&mut self, _params: &Params, intermediates: &[u8], ignore: bool, action: char) {
         self.dcs_payload.clear();
+        self.dcs_payload_overflowed = false;
         self.dcs_handler = if !ignore && intermediates == b"$" && action == 'q' {
             Some(DcsHandler::Decrqss)
         } else {
@@ -2325,21 +2331,35 @@ impl Perform for Terminal {
     }
 
     fn put(&mut self, byte: u8) {
-        if self.dcs_handler.is_some() && self.dcs_payload.len() < MAX_DCS_PAYLOAD_BYTES {
-            self.dcs_payload.push(byte);
-        } else {
-            self.dcs_handler = None;
+        if self.dcs_handler.is_none() {
             self.dcs_payload.clear();
+            return;
         }
+        if self.dcs_payload_overflowed {
+            return;
+        }
+        if self.dcs_payload.len() == MAX_DCS_PAYLOAD_BYTES {
+            self.dcs_payload_overflowed = true;
+            self.dcs_payload.clear();
+            return;
+        }
+        self.dcs_payload.push(byte);
     }
 
     fn unhook(&mut self) {
         let Some(DcsHandler::Decrqss) = self.dcs_handler.take() else {
             self.dcs_payload.clear();
+            self.dcs_payload_overflowed = false;
             return;
         };
-        let request = std::mem::take(&mut self.dcs_payload);
-        self.report_decrqss(&request);
+        if self.dcs_payload_overflowed {
+            self.dcs_payload.clear();
+            self.dcs_payload_overflowed = false;
+            self.report_decrqss(&[]);
+        } else {
+            let request = std::mem::take(&mut self.dcs_payload);
+            self.report_decrqss(&request);
+        }
     }
 
     fn print(&mut self, c: char) {

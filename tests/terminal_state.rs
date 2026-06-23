@@ -221,6 +221,21 @@ fn decrqss_rejects_unsupported_status_strings() {
 }
 
 #[test]
+fn decrqss_rejects_oversized_status_strings_without_leaking_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
+    let oversized = "z".repeat(65);
+
+    terminal
+        .write_str(&format!("\x1bP$q{oversized}\x1b\\\x1bP$qm\x1b\\"))
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1bP0$r\x1b\\\x1bP1$r0m\x1b\\"
+    );
+}
+
+#[test]
 fn text_area_size_report_uses_current_terminal_dimensions() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
