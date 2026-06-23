@@ -64,6 +64,29 @@ fn render_plan_preserves_multi_codepoint_cell_text() {
 }
 
 #[test]
+fn render_plan_preserves_modifier_on_zwj_joined_component_text() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal.write_str("👨\u{200d}👩🏽").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(14);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.glyphs.len(), 1);
+    assert_eq!(plan.glyphs[0].text, "👨\u{200d}👩🏽");
+    assert!(plan.glyphs[0].is_wide);
+    assert_eq!(atlas.metrics().entries, 1);
+}
+
+#[test]
 fn render_plan_allocates_distinct_atlas_entries_for_different_cell_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal.write_str("AA\u{0301}").unwrap();
