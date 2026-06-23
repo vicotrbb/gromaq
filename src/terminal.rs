@@ -1183,6 +1183,14 @@ impl Terminal {
         }
     }
 
+    fn report_private_device_status(&mut self, mode: u16) {
+        if mode == 6 {
+            self.pending_response_bytes.extend_from_slice(
+                format!("\x1b[?{};{}R", self.cursor.row + 1, self.cursor.col + 1).as_bytes(),
+            );
+        }
+    }
+
     fn report_primary_device_attributes(&mut self, mode: u16) {
         if mode == 0 {
             self.pending_response_bytes.extend_from_slice(b"\x1b[?1;2c");
@@ -1736,7 +1744,8 @@ impl Perform for Terminal {
             'J' => self.erase_display(first),
             'K' => self.erase_line(first),
             'm' => self.apply_sgr(params),
-            'n' => self.report_device_status(first),
+            'n' if intermediates.is_empty() => self.report_device_status(first),
+            'n' if intermediates == b"?" => self.report_private_device_status(first),
             'q' if intermediates == b" " => self.set_cursor_shape(first),
             'r' => {
                 let top = values.first().copied().unwrap_or(1);
