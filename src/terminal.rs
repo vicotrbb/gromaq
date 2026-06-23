@@ -1,7 +1,5 @@
 //! Deterministic terminal state engine.
 
-use base64::{Engine as _, engine::general_purpose};
-use unicode_width::UnicodeWidthChar;
 use vte::{Params, Parser, Perform};
 use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
@@ -15,6 +13,26 @@ use crate::input::encode_winit_key_with_terminal_modes;
 use crate::mouse::{MouseEvent, MouseReportState};
 use crate::scrollback::{Scrollback, ScrollbackSnapshot};
 use crate::selection::{SelectionPoint, SelectionRange};
+
+mod osc;
+mod params;
+mod snapshot;
+mod width;
+
+use osc::{
+    Osc8HyperlinkAction, decode_bounded_osc_text, decode_osc8_hyperlink, decode_osc52_clipboard,
+};
+use params::{
+    apply_grouped_sgr_param, default_tab_stops, first_value, first_values, grouped_extended_color,
+    is_invalid_grouped_extended_color_param, parse_extended_color, push_sgr_color_parameters,
+    push_sgr_extended_color_parameter,
+};
+use snapshot::{cell_screenshot_color, push_snapshot_row};
+use width::{
+    char_width, is_combining_enclosing_keycap, is_emoji_modifier, is_emoji_modifier_base_candidate,
+    is_emoji_presentation_base_candidate, is_keycap_base_sequence, is_regional_indicator,
+    is_variation_selector_16, map_dec_special_graphics, metadata_id_for_index, visible_width,
+};
 
 const MAX_SCROLLBACK_LINES: usize = 1_000_000;
 const MAX_OSC_TITLE_BYTES: usize = 4096;
@@ -678,7 +696,7 @@ impl Terminal {
     }
 
     fn put_char(&mut self, ch: char) {
-        let width = UnicodeWidthChar::width(ch).unwrap_or(0).min(2);
+        let width = char_width(ch);
         if width == 0 {
             self.append_combining_mark(ch);
             return;
@@ -2361,153 +2379,6 @@ struct ReflowCell {
     width: u16,
 }
 
-fn visible_width(text: &str) -> usize {
-    text.chars()
-        .map(|ch| UnicodeWidthChar::width(ch).unwrap_or(0).min(2))
-        .sum()
-}
-
-fn metadata_id_for_index(index: usize) -> u16 {
-    let id = index.saturating_add(1);
-    if id > usize::from(u16::MAX) {
-        return 0;
-    }
-    id as u16
-}
-
-fn is_emoji_modifier(ch: char) -> bool {
-    matches!(ch, '\u{1f3fb}'..='\u{1f3ff}')
-}
-
-fn is_emoji_modifier_base_candidate(ch: char) -> bool {
-    matches!(
-        ch,
-        '\u{2600}'..='\u{27bf}' | '\u{1f000}'..='\u{1faff}'
-    )
-}
-
-fn is_emoji_presentation_base_candidate(ch: char) -> bool {
-    is_emoji_modifier_base_candidate(ch) || matches!(ch, '\u{00a9}' | '\u{00ae}' | '\u{2122}')
-}
-
-fn is_variation_selector_16(ch: char) -> bool {
-    ch == '\u{fe0f}'
-}
-
-fn is_combining_enclosing_keycap(ch: char) -> bool {
-    ch == '\u{20e3}'
-}
-
-fn is_keycap_base_sequence(text: &str) -> bool {
-    let mut chars = text.chars();
-    let Some(base) = chars.next() else {
-        return false;
-    };
-    if !matches!(base, '#' | '*' | '0'..='9') {
-        return false;
-    }
-    matches!(chars.next(), None | Some('\u{fe0f}')) && chars.next().is_none()
-}
-
-fn is_regional_indicator(ch: char) -> bool {
-    matches!(ch, '\u{1f1e6}'..='\u{1f1ff}')
-}
-
-fn cell_screenshot_color(cell: &CellSnapshot) -> [u8; 4] {
-    if cell.is_wide_trailing {
-        return [255, 255, 255, 255];
-    }
-    if cell.text.is_empty() {
-        return color_to_rgba(cell.style.background, [0, 0, 0, 255]);
-    }
-    color_to_rgba(cell.style.foreground, [255, 255, 255, 255])
-}
-
-fn color_to_rgba(color: Color, default: [u8; 4]) -> [u8; 4] {
-    match color {
-        Color::Default => default,
-        Color::Ansi(index) => ansi_color_to_rgba(index),
-        Color::Indexed(index) => indexed_color_to_rgba(index),
-        Color::Rgb(red, green, blue) => [red, green, blue, 255],
-    }
-}
-
-fn ansi_color_to_rgba(index: u8) -> [u8; 4] {
-    const ANSI: [[u8; 4]; 16] = [
-        [0, 0, 0, 255],
-        [205, 49, 49, 255],
-        [13, 188, 121, 255],
-        [229, 229, 16, 255],
-        [36, 114, 200, 255],
-        [188, 63, 188, 255],
-        [17, 168, 205, 255],
-        [229, 229, 229, 255],
-        [102, 102, 102, 255],
-        [241, 76, 76, 255],
-        [35, 209, 139, 255],
-        [245, 245, 67, 255],
-        [59, 142, 234, 255],
-        [214, 112, 214, 255],
-        [41, 184, 219, 255],
-        [255, 255, 255, 255],
-    ];
-    ANSI[usize::from(index.min(15))]
-}
-
-fn indexed_color_to_rgba(index: u8) -> [u8; 4] {
-    if index < 16 {
-        return ansi_color_to_rgba(index);
-    }
-    if index < 232 {
-        let offset = index - 16;
-        let red = color_cube_component(offset / 36);
-        let green = color_cube_component((offset / 6) % 6);
-        let blue = color_cube_component(offset % 6);
-        return [red, green, blue, 255];
-    }
-    let gray = 8 + (index - 232) * 10;
-    [gray, gray, gray, 255]
-}
-
-fn color_cube_component(value: u8) -> u8 {
-    if value == 0 { 0 } else { 55 + value * 40 }
-}
-
-#[cold]
-#[inline(never)]
-fn map_dec_special_graphics(ch: char) -> char {
-    match ch {
-        '`' => '◆',
-        'a' => '▒',
-        'f' => '°',
-        'g' => '±',
-        'h' => '␤',
-        'i' => '␋',
-        'j' => '┘',
-        'k' => '┐',
-        'l' => '┌',
-        'm' => '└',
-        'n' => '┼',
-        'o' => '⎺',
-        'p' => '⎻',
-        'q' => '─',
-        'r' => '⎼',
-        's' => '⎽',
-        't' => '├',
-        'u' => '┤',
-        'v' => '┴',
-        'w' => '┬',
-        'x' => '│',
-        'y' => '≤',
-        'z' => '≥',
-        '{' => 'π',
-        '|' => '≠',
-        '}' => '£',
-        '~' => '·',
-        _ => ch,
-    }
-}
-
 impl Perform for Terminal {
     fn hook(&mut self, _params: &Params, intermediates: &[u8], ignore: bool, action: char) {
         self.dcs_payload.clear();
@@ -2747,237 +2618,4 @@ impl Perform for Terminal {
             _ => {}
         }
     }
-}
-
-fn first_value(params: &Params, index: usize) -> Option<u16> {
-    params
-        .iter()
-        .nth(index)
-        .and_then(|param| param.first().copied())
-}
-
-fn first_values(params: &Params) -> impl Iterator<Item = u16> + '_ {
-    params
-        .iter()
-        .map(|param| param.first().copied().unwrap_or(0))
-}
-
-fn default_tab_stops(cols: u16) -> Vec<bool> {
-    let mut tab_stops = vec![false; usize::from(cols)];
-    for col in (8..usize::from(cols)).step_by(8) {
-        tab_stops[col] = true;
-    }
-    tab_stops
-}
-
-fn push_sgr_color_parameters(
-    params: &mut Vec<String>,
-    normal_base: u16,
-    bright_base: u16,
-    extended_prefix: u16,
-    color: Color,
-) {
-    match color {
-        Color::Default => {}
-        Color::Ansi(index) if index < 8 => {
-            params.push((normal_base + u16::from(index)).to_string());
-        }
-        Color::Ansi(index) if index < 16 => {
-            params.push((bright_base + u16::from(index - 8)).to_string());
-        }
-        Color::Ansi(index) | Color::Indexed(index) => {
-            params.push(format!("{extended_prefix}:5:{index}"));
-        }
-        Color::Rgb(red, green, blue) => {
-            params.push(format!("{extended_prefix}:2:{red}:{green}:{blue}"));
-        }
-    }
-}
-
-fn push_sgr_extended_color_parameter(params: &mut Vec<String>, prefix: u16, color: Color) {
-    match color {
-        Color::Default => {}
-        Color::Ansi(index) | Color::Indexed(index) => {
-            params.push(format!("{prefix}:5:{index}"));
-        }
-        Color::Rgb(red, green, blue) => {
-            params.push(format!("{prefix}:2:{red}:{green}:{blue}"));
-        }
-    }
-}
-
-fn parse_extended_color<I>(iter: &mut std::iter::Peekable<I>) -> Option<Color>
-where
-    I: Iterator<Item = u16>,
-{
-    match iter.next()? {
-        5 => {
-            let index = u8::try_from(iter.next()?).ok()?;
-            Some(Color::Indexed(index))
-        }
-        2 => {
-            let r = iter.next()?;
-            let g = iter.next()?;
-            let b = iter.next()?;
-            let r = u8::try_from(r).ok()?;
-            let g = u8::try_from(g).ok()?;
-            let b = u8::try_from(b).ok()?;
-            Some(Color::Rgb(r, g, b))
-        }
-        _ => {
-            let _ = iter.next();
-            None
-        }
-    }
-}
-
-fn grouped_extended_color(param: &[u16]) -> Option<(u16, Color)> {
-    match param {
-        [target @ (38 | 48 | 58), 5, index] => {
-            let index = u8::try_from(*index).ok()?;
-            Some((*target, Color::Indexed(index)))
-        }
-        [target @ (38 | 48 | 58), 2, red, green, blue] => {
-            let red = u8::try_from(*red).ok()?;
-            let green = u8::try_from(*green).ok()?;
-            let blue = u8::try_from(*blue).ok()?;
-            Some((*target, Color::Rgb(red, green, blue)))
-        }
-        [target @ (38 | 48 | 58), 2, _colorspace, red, green, blue] => {
-            let red = u8::try_from(*red).ok()?;
-            let green = u8::try_from(*green).ok()?;
-            let blue = u8::try_from(*blue).ok()?;
-            Some((*target, Color::Rgb(red, green, blue)))
-        }
-        _ => None,
-    }
-}
-
-fn is_invalid_grouped_extended_color_param(param: &[u16]) -> bool {
-    match param {
-        [38 | 48 | 58] => false,
-        [38 | 48 | 58, 5, index] => u8::try_from(*index).is_err(),
-        [38 | 48 | 58, 2, red, green, blue] => {
-            u8::try_from(*red).is_err()
-                || u8::try_from(*green).is_err()
-                || u8::try_from(*blue).is_err()
-        }
-        [38 | 48 | 58, 2, _colorspace, red, green, blue] => {
-            u8::try_from(*red).is_err()
-                || u8::try_from(*green).is_err()
-                || u8::try_from(*blue).is_err()
-        }
-        [38 | 48 | 58, ..] => true,
-        _ => false,
-    }
-}
-
-fn apply_grouped_sgr_param(style: &mut Style, param: &[u16]) -> bool {
-    match param {
-        [4, underline_style] => {
-            match underline_style {
-                0 => {
-                    style.underline = false;
-                    style.underline_style = UnderlineStyle::Single;
-                }
-                1 => {
-                    style.underline = true;
-                    style.underline_style = UnderlineStyle::Single;
-                }
-                2 => {
-                    style.underline = true;
-                    style.underline_style = UnderlineStyle::Double;
-                }
-                3 => {
-                    style.underline = true;
-                    style.underline_style = UnderlineStyle::Curly;
-                }
-                4 => {
-                    style.underline = true;
-                    style.underline_style = UnderlineStyle::Dotted;
-                }
-                5 => {
-                    style.underline = true;
-                    style.underline_style = UnderlineStyle::Dashed;
-                }
-                _ => {}
-            }
-            true
-        }
-        _ => false,
-    }
-}
-
-fn push_snapshot_row(target: &mut Vec<CellSnapshot>, row: Option<&[CellSnapshot]>, cols: u16) {
-    let blank = CellSnapshot {
-        text: String::new(),
-        style: Style::default(),
-        hyperlink_id: 0,
-        is_wide_leading: false,
-        is_wide_trailing: false,
-    };
-    for col in 0..usize::from(cols) {
-        target.push(
-            row.and_then(|cells| cells.get(col))
-                .cloned()
-                .unwrap_or_else(|| blank.clone()),
-        );
-    }
-}
-
-fn decode_bounded_osc_text(bytes: &[u8]) -> Option<&str> {
-    if bytes.len() > MAX_OSC_TITLE_BYTES {
-        return None;
-    }
-    std::str::from_utf8(bytes).ok()
-}
-
-fn decode_osc52_clipboard(params: &[&[u8]]) -> Option<String> {
-    let selector = params
-        .get(1)
-        .and_then(|bytes| std::str::from_utf8(bytes).ok())?;
-    if !selector.is_empty() && !selector.chars().any(|ch| ch == 'c') {
-        return None;
-    }
-    let payload = params
-        .get(2)
-        .and_then(|bytes| std::str::from_utf8(bytes).ok())?;
-    if payload == "?" {
-        return None;
-    }
-    let max_encoded_len = MAX_OSC52_CLIPBOARD_BYTES.div_ceil(3) * 4;
-    if payload.len() > max_encoded_len {
-        return None;
-    }
-    let decoded = general_purpose::STANDARD
-        .decode(payload)
-        .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(payload))
-        .ok()?;
-    if decoded.len() > MAX_OSC52_CLIPBOARD_BYTES {
-        return None;
-    }
-    String::from_utf8(decoded).ok()
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Osc8HyperlinkAction {
-    Open(String),
-    Close,
-    Ignore,
-}
-
-fn decode_osc8_hyperlink(params: &[&[u8]]) -> Osc8HyperlinkAction {
-    let Some(uri) = params.get(2) else {
-        return Osc8HyperlinkAction::Ignore;
-    };
-    if uri.is_empty() {
-        return Osc8HyperlinkAction::Close;
-    }
-    if uri.len() > MAX_OSC8_HYPERLINK_BYTES {
-        return Osc8HyperlinkAction::Ignore;
-    }
-    let Ok(uri) = std::str::from_utf8(uri) else {
-        return Osc8HyperlinkAction::Ignore;
-    };
-    Osc8HyperlinkAction::Open(uri.to_owned())
 }
