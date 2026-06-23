@@ -1,4 +1,7 @@
+use base64::{Engine, engine::general_purpose};
 use gromaq::{Terminal, TerminalConfig};
+
+const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
 
 #[test]
 fn osc_2_sets_window_title_with_bel_terminator() {
@@ -112,6 +115,33 @@ fn invalid_osc_52_payload_is_ignored_without_side_effects() {
 
     terminal.write_str("\x1b]52;c;not base64!!\x07").unwrap();
     terminal.write_str("\x1b]52;c;?\x07").unwrap();
+
+    assert_eq!(terminal.dump_clipboard_text().as_deref(), Some("Hello"));
+}
+
+#[test]
+fn oversized_osc_52_encoded_payload_is_ignored_without_side_effects() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b]52;c;SGVsbG8=\x07").unwrap();
+    let max_encoded_len = MAX_OSC52_CLIPBOARD_BYTES.div_ceil(3) * 4;
+    let payload = "A".repeat(max_encoded_len + 4);
+
+    terminal
+        .write_str(&format!("\x1b]52;c;{payload}\x07"))
+        .unwrap();
+
+    assert_eq!(terminal.dump_clipboard_text().as_deref(), Some("Hello"));
+}
+
+#[test]
+fn oversized_osc_52_decoded_payload_is_ignored_without_side_effects() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b]52;c;SGVsbG8=\x07").unwrap();
+    let payload = general_purpose::STANDARD.encode(vec![b'x'; MAX_OSC52_CLIPBOARD_BYTES + 1]);
+
+    terminal
+        .write_str(&format!("\x1b]52;c;{payload}\x07"))
+        .unwrap();
 
     assert_eq!(terminal.dump_clipboard_text().as_deref(), Some("Hello"));
 }
