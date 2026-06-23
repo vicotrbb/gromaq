@@ -36,6 +36,26 @@ const FORBIDDEN_DEPENDENCIES: &[&str] = &[
 
 const UNSAFE_FORBIDDEN_CRATE_ROOTS: &[&str] = &["src/lib.rs", "src/main.rs"];
 
+const REQUIRED_REPOSITORY_FILES: &[&str] = &[
+    "README.md",
+    "ARCHITECTURE.md",
+    "CONTRIBUTING.md",
+    "BENCHMARKS.md",
+    "COMPATIBILITY.md",
+    "ROADMAP.md",
+    "LICENSE",
+    "TESTING.md",
+    "DEBUGGING.md",
+    "GOOD_FIRST_ISSUES.md",
+    "documentation/benchmarks.md",
+    "tests/fixtures/README.md",
+    ".github/workflows/ci.yml",
+    ".github/labels.yml",
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/compatibility_gap.md",
+    ".github/ISSUE_TEMPLATE/performance_proof.md",
+];
+
 const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo fmt --check",
     "git diff --check",
@@ -56,6 +76,19 @@ fn project_remains_native_rust_without_frontend_runtime_files() {
         violations.is_empty(),
         "frontend runtime files are not allowed in native-only Gromaq: {violations:#?}"
     );
+}
+
+#[test]
+fn repository_keeps_required_release_readiness_files() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    for required_file in REQUIRED_REPOSITORY_FILES {
+        let path = root.join(required_file);
+        assert!(
+            path.is_file(),
+            "{required_file} must exist for repository release readiness"
+        );
+    }
 }
 
 #[test]
