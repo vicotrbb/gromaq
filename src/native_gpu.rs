@@ -538,6 +538,15 @@ pub struct UploadPattern {
     pub rgba: Vec<u8>,
 }
 
+/// Checked dense RGBA8 upload layout.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UploadPatternLayout {
+    /// Dense bytes per row.
+    pub row_bytes: u32,
+    /// Expected total dense RGBA8 byte length.
+    pub expected_len: usize,
+}
+
 impl UploadPattern {
     /// Build a 2x2 RGBA checker pattern.
     pub fn checker_rgba8_2x2() -> Self {
@@ -557,6 +566,32 @@ impl UploadPattern {
             height: image.height,
             rgba: image.rgba.clone(),
         }
+    }
+
+    /// Validate dimensions and return the dense RGBA8 upload layout.
+    pub fn rgba8_layout(&self) -> std::result::Result<UploadPatternLayout, GpuBootstrapError> {
+        if self.width == 0 || self.height == 0 {
+            return Err(GpuBootstrapError::SmokeReadback(
+                "upload pattern dimensions must be non-zero".to_owned(),
+            ));
+        }
+        let row_bytes = self.width.checked_mul(4).ok_or_else(|| {
+            GpuBootstrapError::SmokeReadback("upload pattern row byte size is too large".to_owned())
+        })?;
+        let expected_len = usize::try_from(row_bytes)
+            .ok()
+            .and_then(|row_bytes| {
+                usize::try_from(self.height)
+                    .ok()
+                    .and_then(|height| row_bytes.checked_mul(height))
+            })
+            .ok_or_else(|| {
+                GpuBootstrapError::SmokeReadback("upload pattern byte size is too large".to_owned())
+            })?;
+        Ok(UploadPatternLayout {
+            row_bytes,
+            expected_len,
+        })
     }
 }
 
@@ -900,14 +935,12 @@ fn upload_rgba8_and_readback(
     queue: &wgpu::Queue,
     pattern: &UploadPattern,
 ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
-    let expected_len = usize::try_from(pattern.width)
-        .unwrap_or(usize::MAX)
-        .saturating_mul(usize::try_from(pattern.height).unwrap_or(usize::MAX))
-        .saturating_mul(4);
-    if pattern.rgba.len() != expected_len {
+    let layout = pattern.rgba8_layout()?;
+    if pattern.rgba.len() != layout.expected_len {
         return Err(GpuBootstrapError::SmokeReadback(format!(
-            "upload pattern has {} bytes, expected {expected_len}",
-            pattern.rgba.len()
+            "upload pattern has {} bytes, expected {}",
+            pattern.rgba.len(),
+            layout.expected_len
         )));
     }
 
@@ -930,7 +963,7 @@ fn upload_rgba8_and_readback(
         &pattern.rgba,
         wgpu::TexelCopyBufferLayout {
             offset: 0,
-            bytes_per_row: Some(pattern.width * 4),
+            bytes_per_row: Some(layout.row_bytes),
             rows_per_image: Some(pattern.height),
         },
         wgpu::Extent3d {
@@ -942,6 +975,20 @@ fn upload_rgba8_and_readback(
     read_texture_rgba8(device, queue, &texture, pattern.width, pattern.height)
 }
 
+fn validate_textured_source_pattern(
+    pattern: &UploadPattern,
+) -> std::result::Result<UploadPatternLayout, GpuBootstrapError> {
+    let layout = pattern.rgba8_layout()?;
+    if pattern.rgba.len() != layout.expected_len {
+        return Err(GpuBootstrapError::SmokeReadback(format!(
+            "textured quad source has {} bytes, expected {}",
+            pattern.rgba.len(),
+            layout.expected_len
+        )));
+    }
+    Ok(layout)
+}
+
 fn draw_textured_quad_rgba8(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
@@ -949,27 +996,19 @@ fn draw_textured_quad_rgba8(
     width: u32,
     height: u32,
 ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
-    let expected_len = usize::try_from(pattern.width)
-        .unwrap_or(usize::MAX)
-        .saturating_mul(usize::try_from(pattern.height).unwrap_or(usize::MAX))
-        .saturating_mul(4);
-    if pattern.width == 0 || pattern.height == 0 || width == 0 || height == 0 {
+    if width == 0 || height == 0 {
         return Err(GpuBootstrapError::SmokeReadback(
             "textured quad dimensions must be non-zero".to_owned(),
         ));
     }
-    if pattern.rgba.len() != expected_len {
-        return Err(GpuBootstrapError::SmokeReadback(format!(
-            "textured quad source has {} bytes, expected {expected_len}",
-            pattern.rgba.len()
-        )));
-    }
+    let source_layout = validate_textured_source_pattern(pattern)?;
 
     draw_textured_vertices_rgba8(
         device,
         queue,
         TexturedDrawInput {
             pattern,
+            source_layout,
             vertex_bytes: &textured_quad_vertex_bytes(),
             index_bytes: &textured_quad_index_bytes(),
             index_count: 6,
@@ -994,6 +1033,7 @@ fn draw_glyph_quads_rgba8(
         ));
     }
     let pattern = UploadPattern::from_glyph_atlas_image(image);
+    let source_layout = validate_textured_source_pattern(&pattern)?;
     let vertices = glyph_quad_vertex_bytes(batch, width, height)?;
     let indices = glyph_quad_index_bytes(batch);
     draw_textured_vertices_rgba8(
@@ -1001,6 +1041,7 @@ fn draw_glyph_quads_rgba8(
         queue,
         TexturedDrawInput {
             pattern: &pattern,
+            source_layout,
             vertex_bytes: &vertices,
             index_bytes: &indices,
             index_count: u32::try_from(batch.indices.len()).unwrap_or(u32::MAX),
@@ -1013,6 +1054,7 @@ fn draw_glyph_quads_rgba8(
 
 struct TexturedDrawInput<'a> {
     pattern: &'a UploadPattern,
+    source_layout: UploadPatternLayout,
     vertex_bytes: &'a [u8],
     index_bytes: &'a [u8],
     index_count: u32,
@@ -1051,7 +1093,7 @@ fn draw_textured_vertices_rgba8(
         &input.pattern.rgba,
         wgpu::TexelCopyBufferLayout {
             offset: 0,
-            bytes_per_row: Some(input.pattern.width * 4),
+            bytes_per_row: Some(input.source_layout.row_bytes),
             rows_per_image: Some(input.pattern.height),
         },
         wgpu::Extent3d {

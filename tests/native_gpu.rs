@@ -155,6 +155,48 @@ fn upload_pattern_builds_deterministic_rgba_checker() {
     );
 }
 
+#[test]
+fn upload_pattern_reports_checked_rgba8_layout() {
+    let pattern = UploadPattern::checker_rgba8_2x2();
+
+    let layout = pattern.rgba8_layout().unwrap();
+
+    assert_eq!(layout.row_bytes, 8);
+    assert_eq!(layout.expected_len, 16);
+}
+
+#[test]
+fn upload_pattern_rejects_zero_dimensions_before_upload() {
+    let pattern = UploadPattern {
+        width: 0,
+        height: 2,
+        rgba: Vec::new(),
+    };
+
+    let error = pattern.rgba8_layout().unwrap_err();
+
+    assert_eq!(
+        error,
+        GpuBootstrapError::SmokeReadback("upload pattern dimensions must be non-zero".to_owned())
+    );
+}
+
+#[test]
+fn upload_pattern_rejects_overflowing_rgba8_row_size() {
+    let pattern = UploadPattern {
+        width: u32::MAX,
+        height: 1,
+        rgba: Vec::new(),
+    };
+
+    let error = pattern.rgba8_layout().unwrap_err();
+
+    assert_eq!(
+        error,
+        GpuBootstrapError::SmokeReadback("upload pattern row byte size is too large".to_owned())
+    );
+}
+
 fn supported_surface_capabilities() -> wgpu::SurfaceCapabilities {
     wgpu::SurfaceCapabilities {
         formats: vec![wgpu::TextureFormat::Bgra8UnormSrgb],
