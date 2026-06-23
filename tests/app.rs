@@ -1225,10 +1225,15 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
     assert_eq!(metrics.clean_frame_skips, 1);
     assert_eq!(metrics.render_time_samples, 1);
     assert!(metrics.render_time_total_ns >= 1_000_000);
+    assert_eq!(metrics.render_time_avg_ns, metrics.render_time_total_ns);
     assert!(metrics.render_time_max_ns >= 1_000_000);
     assert!(metrics.render_time_p95_ns >= metrics.render_time_max_ns);
     assert!(metrics.render_time_total_ns >= metrics.render_time_max_ns);
     assert_eq!(metrics.input_to_render_samples, 1);
+    assert_eq!(
+        metrics.input_to_render_avg_ns,
+        metrics.input_to_render_total_ns
+    );
     assert!(metrics.input_to_render_total_ns >= metrics.input_to_render_max_ns);
     assert!(metrics.input_to_render_p95_ns >= metrics.input_to_render_max_ns);
 }

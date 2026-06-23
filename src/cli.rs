@@ -822,10 +822,12 @@ fn runtime_perf_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime perf smoke: ok\npumped bytes: {}\nrendered frames: {}\nrender p95 ns: {}\ninput-to-render p95 ns: {}\n",
+            "runtime perf smoke: ok\npumped bytes: {}\nrendered frames: {}\nrender avg ns: {}\nrender p95 ns: {}\ninput-to-render avg ns: {}\ninput-to-render p95 ns: {}\n",
             pumped_bytes,
             metrics.rendered_frames,
+            metrics.render_time_avg_ns,
             metrics.render_time_p95_ns,
+            metrics.input_to_render_avg_ns,
             metrics.input_to_render_p95_ns
         ),
         stderr: String::new(),

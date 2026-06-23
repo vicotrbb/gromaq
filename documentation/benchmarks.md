@@ -11,12 +11,12 @@ They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
 growth, and live window runtime proof still require separate live measurements.
 The native runtime exposes bounded render-time and app-input-to-render latency
-counters, including sample count, total, max, and bucketed p95 estimates, so
-live-window measurements can be reported from structured counters instead of
-subjective observation.
+counters, including sample count, total, average, max, and bucketed p95
+estimates, so live-window measurements can be reported from structured counters
+instead of subjective observation.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
-echo byte, rendered 1 CPU-side frame, and reported render p95 4000000 ns plus
-input-to-render p95 6940000 ns. On the same date,
+echo byte, rendered 1 CPU-side frame, and reported render average/p95 plus
+input-to-render average/p95 counters. On the same date,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 verified `gromaq-runtime-line-511` in the render plan, and reported render p95

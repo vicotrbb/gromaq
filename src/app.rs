@@ -634,6 +634,8 @@ pub struct NativeRuntimePerfSnapshot {
     pub render_time_samples: u64,
     /// Total measured render-frame duration in nanoseconds.
     pub render_time_total_ns: u64,
+    /// Average measured render-frame duration in nanoseconds.
+    pub render_time_avg_ns: u64,
     /// Maximum measured render-frame duration in nanoseconds.
     pub render_time_max_ns: u64,
     /// Approximate p95 render-frame duration in nanoseconds, using fixed buckets.
@@ -642,6 +644,8 @@ pub struct NativeRuntimePerfSnapshot {
     pub input_to_render_samples: u64,
     /// Total app-input-to-render latency in nanoseconds.
     pub input_to_render_total_ns: u64,
+    /// Average app-input-to-render latency in nanoseconds.
+    pub input_to_render_avg_ns: u64,
     /// Maximum app-input-to-render latency in nanoseconds.
     pub input_to_render_max_ns: u64,
     /// Approximate p95 app-input-to-render latency in nanoseconds, using fixed buckets.
@@ -692,6 +696,13 @@ fn saturating_usize_to_u64(value: usize) -> u64 {
 
 fn saturating_duration_nanos(duration: Duration) -> u64 {
     u64::try_from(duration.as_nanos()).unwrap_or(u64::MAX)
+}
+
+fn average_duration_nanos(total_ns: u64, samples: u64) -> u64 {
+    if samples == 0 {
+        return 0;
+    }
+    total_ns / samples
 }
 
 fn add_usize_counter(counter: &mut u64, value: usize) {
@@ -851,6 +862,10 @@ impl<S> NativeTerminalRuntime<S> {
         self.perf.rendered_frames += 1;
         self.perf.render_time_samples += 1;
         self.perf.render_time_total_ns = self.perf.render_time_total_ns.saturating_add(elapsed_ns);
+        self.perf.render_time_avg_ns = average_duration_nanos(
+            self.perf.render_time_total_ns,
+            self.perf.render_time_samples,
+        );
         self.perf.render_time_max_ns = self.perf.render_time_max_ns.max(elapsed_ns);
         self.render_time_histogram.record(elapsed_ns);
         self.perf.render_time_p95_ns = self
@@ -880,6 +895,10 @@ impl<S> NativeTerminalRuntime<S> {
             .perf
             .input_to_render_total_ns
             .saturating_add(elapsed_ns);
+        self.perf.input_to_render_avg_ns = average_duration_nanos(
+            self.perf.input_to_render_total_ns,
+            self.perf.input_to_render_samples,
+        );
         self.perf.input_to_render_max_ns = self.perf.input_to_render_max_ns.max(elapsed_ns);
         self.input_to_render_histogram.record(elapsed_ns);
         self.perf.input_to_render_p95_ns = self
@@ -2148,6 +2167,12 @@ mod tests {
         let duration = Duration::from_nanos(42);
 
         assert_eq!(saturating_duration_nanos(duration), 42);
+    }
+
+    #[test]
+    fn runtime_perf_average_duration_reports_zero_without_samples() {
+        assert_eq!(average_duration_nanos(42, 0), 0);
+        assert_eq!(average_duration_nanos(42, 3), 14);
     }
 
     #[test]
