@@ -1,4 +1,4 @@
-use gromaq::{MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig};
+use gromaq::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig};
 
 #[test]
 fn mouse_reporting_is_disabled_by_default() {
@@ -68,6 +68,34 @@ fn default_mouse_protocol_reports_wheel_button_codes() {
     let event = MouseEvent::new(MouseEventKind::Press, MouseButton::WheelDown, 0, 0);
 
     assert_eq!(terminal.encode_mouse_event(event).unwrap(), b"\x1b[Ma!!");
+}
+
+#[test]
+fn mouse_reports_include_keyboard_modifier_bits() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?1000h\x1b[?1006h").unwrap();
+
+    let event = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 2, 1)
+        .with_modifiers(KeyModifiers::SHIFT | KeyModifiers::ALT | KeyModifiers::CTRL);
+
+    assert_eq!(
+        terminal.encode_mouse_event(event).unwrap(),
+        b"\x1b[<28;3;2M"
+    );
+}
+
+#[test]
+fn default_mouse_protocol_reports_keyboard_modifier_bits() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?1000h").unwrap();
+
+    let press = MouseEvent::new(MouseEventKind::Press, MouseButton::Right, 2, 1)
+        .with_modifiers(KeyModifiers::SHIFT | KeyModifiers::CTRL);
+    let release = MouseEvent::new(MouseEventKind::Release, MouseButton::Right, 2, 1)
+        .with_modifiers(KeyModifiers::SHIFT | KeyModifiers::CTRL);
+
+    assert_eq!(terminal.encode_mouse_event(press).unwrap(), b"\x1b[M6#\"");
+    assert_eq!(terminal.encode_mouse_event(release).unwrap(), b"\x1b[M7#\"");
 }
 
 #[test]

@@ -18,6 +18,7 @@ use winit::window::{Window, WindowAttributes, WindowId};
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::GromaqConfig;
 use crate::font::{FontRasterError, RasterizedGlyphCache};
+use crate::input::key_modifiers_from_winit;
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
 use crate::native_gpu::{
     GpuBootstrap, GpuBootstrapConfig, GpuBootstrapError, GpuSurfaceError, NativeGpuContext,
@@ -153,6 +154,25 @@ pub struct NativeMouseGridMapper {
     window_height_px: u32,
     cols: u16,
     rows: u16,
+}
+
+/// Native window mouse input before terminal grid mapping.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct NativeWindowMouseInput {
+    /// Window-relative x coordinate in physical pixels.
+    pub x: f64,
+    /// Window-relative y coordinate in physical pixels.
+    pub y: f64,
+    /// Current window width in physical pixels.
+    pub window_width_px: u32,
+    /// Current window height in physical pixels.
+    pub window_height_px: u32,
+    /// Mouse event kind.
+    pub kind: MouseEventKind,
+    /// Mouse button identity.
+    pub button: MouseButton,
+    /// Active keyboard modifiers.
+    pub modifiers: ModifiersState,
 }
 
 /// Terminal and PTY size requested by a native resize event.
@@ -423,6 +443,19 @@ impl NativeMouseGridMapper {
             col.min(self.cols - 1),
             row.min(self.rows - 1),
         ))
+    }
+
+    /// Convert a window pixel position to a grid-relative mouse event with modifiers.
+    pub fn mouse_event_at_with_modifiers(
+        self,
+        x: f64,
+        y: f64,
+        kind: MouseEventKind,
+        button: MouseButton,
+        modifiers: ModifiersState,
+    ) -> Option<MouseEvent> {
+        self.mouse_event_at(x, y, kind, button)
+            .map(|event| event.with_modifiers(key_modifiers_from_winit(modifiers)))
     }
 }
 
@@ -789,13 +822,38 @@ where
         kind: MouseEventKind,
         button: MouseButton,
     ) -> Result<bool, NativeAppError> {
+        self.send_window_mouse_input_event(NativeWindowMouseInput {
+            x,
+            y,
+            window_width_px,
+            window_height_px,
+            kind,
+            button,
+            modifiers: ModifiersState::empty(),
+        })
+    }
+
+    /// Map native window mouse input to a terminal event and write its report.
+    pub fn send_window_mouse_input_event(
+        &mut self,
+        input: NativeWindowMouseInput,
+    ) -> Result<bool, NativeAppError> {
         let grid = self.terminal.dump_grid();
-        let Some(mapper) =
-            NativeMouseGridMapper::new(window_width_px, window_height_px, grid.cols, grid.rows)
-        else {
+        let Some(mapper) = NativeMouseGridMapper::new(
+            input.window_width_px,
+            input.window_height_px,
+            grid.cols,
+            grid.rows,
+        ) else {
             return Ok(false);
         };
-        let Some(event) = mapper.mouse_event_at(x, y, kind, button) else {
+        let Some(event) = mapper.mouse_event_at_with_modifiers(
+            input.x,
+            input.y,
+            input.kind,
+            input.button,
+            input.modifiers,
+        ) else {
             return Ok(false);
         };
         self.send_mouse_input(event)
@@ -1298,14 +1356,15 @@ impl NativeTerminalApp {
         };
         let size = window.inner_size();
         self.runtime
-            .send_window_mouse_input(
-                position.x,
-                position.y,
-                size.width,
-                size.height,
+            .send_window_mouse_input_event(NativeWindowMouseInput {
+                x: position.x,
+                y: position.y,
+                window_width_px: size.width,
+                window_height_px: size.height,
                 kind,
                 button,
-            )
+                modifiers: self.modifiers,
+            })
             .map(|_| ())
     }
 

@@ -11,7 +11,7 @@ use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
     NativeMouseGridMapper, NativePtyResize, NativePtySessionIo, NativePtySpawner,
     NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig, NativeWindowSurface, RealNativePtySpawner,
+    NativeTerminalRuntimeConfig, NativeWindowMouseInput, NativeWindowSurface, RealNativePtySpawner,
     is_native_paste_shortcut, load_default_native_glyph_cache,
     render_and_present_terminal_glyph_frame,
 };
@@ -26,8 +26,8 @@ use gromaq::renderer::{
     WgpuRenderer,
 };
 use gromaq::{
-    CursorSnapshot, GridSnapshot, MemoryClipboard, MouseButton, MouseEvent, MouseEventKind,
-    Terminal, TerminalConfig,
+    CursorSnapshot, GridSnapshot, KeyModifiers, MemoryClipboard, MouseButton, MouseEvent,
+    MouseEventKind, Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
@@ -332,6 +332,19 @@ fn native_mouse_grid_mapper_converts_window_pixels_to_terminal_cells() {
             79,
             19
         ))
+    );
+    assert_eq!(
+        mapper.mouse_event_at_with_modifiers(
+            25.0,
+            39.0,
+            MouseEventKind::Press,
+            MouseButton::Left,
+            ModifiersState::SHIFT.union(ModifiersState::ALT)
+        ),
+        Some(
+            MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 2, 1)
+                .with_modifiers(KeyModifiers::SHIFT | KeyModifiers::ALT)
+        )
     );
     assert_eq!(
         mapper.mouse_event_at(800.0, 399.0, MouseEventKind::Press, MouseButton::Left),
@@ -1194,6 +1207,53 @@ fn native_terminal_runtime_encodes_default_mouse_protocol_to_pty() {
     assert_eq!(
         session.input.borrow().last().unwrap().as_slice(),
         b"\x1b[M #\""
+    );
+}
+
+#[test]
+fn native_terminal_runtime_encodes_window_mouse_modifiers_to_pty() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"\x1b[?1000h\x1b[?1006h".to_vec());
+    runtime.pump_pty_output().unwrap();
+    runtime.pump_pty_output().unwrap();
+
+    assert!(
+        runtime
+            .send_window_mouse_input_event(NativeWindowMouseInput {
+                x: 100.0,
+                y: 150.0,
+                window_width_px: 800,
+                window_height_px: 400,
+                kind: MouseEventKind::Press,
+                button: MouseButton::Left,
+                modifiers: ModifiersState::SHIFT.union(ModifiersState::CONTROL),
+            })
+            .unwrap()
+    );
+
+    let session = runtime.shell_session().unwrap();
+    assert_eq!(
+        session.input.borrow().last().unwrap().as_slice(),
+        b"\x1b[<20;3;2M"
     );
 }
 

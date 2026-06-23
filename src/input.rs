@@ -177,7 +177,8 @@ pub(crate) fn encode_winit_key_with_application_cursor_mode(
     ))
 }
 
-fn key_modifiers_from_winit(modifiers: ModifiersState) -> KeyModifiers {
+/// Convert `winit` modifier state to terminal modifier flags.
+pub(crate) fn key_modifiers_from_winit(modifiers: ModifiersState) -> KeyModifiers {
     let mut encoded = KeyModifiers::empty();
     if modifiers.shift_key() {
         encoded |= KeyModifiers::SHIFT;
