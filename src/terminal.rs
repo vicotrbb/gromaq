@@ -2525,11 +2525,14 @@ where
     I: Iterator<Item = u16>,
 {
     match iter.next()? {
-        5 => iter.next().map(|index| Color::Indexed(index as u8)),
+        5 => {
+            let index = u8::try_from(iter.next()?).ok()?;
+            Some(Color::Indexed(index))
+        }
         2 => {
-            let r = iter.next()? as u8;
-            let g = iter.next()? as u8;
-            let b = iter.next()? as u8;
+            let r = u8::try_from(iter.next()?).ok()?;
+            let g = u8::try_from(iter.next()?).ok()?;
+            let b = u8::try_from(iter.next()?).ok()?;
             Some(Color::Rgb(r, g, b))
         }
         _ => None,

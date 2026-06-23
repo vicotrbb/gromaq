@@ -181,6 +181,24 @@ fn sgr_accepts_colon_delimited_truecolor_and_indexed_colors() {
 }
 
 #[test]
+fn sgr_ignores_out_of_range_extended_color_components() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[31;44mA\x1b[38;5;300mB\x1b[48:2:1:2:999mC")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let indexed_out_of_range = grid.cell(0, 1);
+    assert_eq!(indexed_out_of_range.style.foreground, Color::Ansi(1));
+    assert_eq!(indexed_out_of_range.style.background, Color::Ansi(4));
+
+    let truecolor_out_of_range = grid.cell(0, 2);
+    assert_eq!(truecolor_out_of_range.style.foreground, Color::Ansi(1));
+    assert_eq!(truecolor_out_of_range.style.background, Color::Ansi(4));
+}
+
+#[test]
 fn csi_cursor_movement_and_erase_line_are_applied() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
