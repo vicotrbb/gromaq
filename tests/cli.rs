@@ -181,9 +181,28 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn frame_scheduler_smoke_cli_reports_144hz_timeline_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--frame-scheduler-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("frame scheduler smoke: ok"));
+    assert!(exit.stdout.contains("target fps: 144"));
+    assert!(exit.stdout.contains("target interval ns: 6944444"));
+    assert!(exit.stdout.contains("frame-paced wait ns:"));
+    assert!(exit.stdout.contains("frames presented: 3"));
+    assert!(exit.stdout.contains("dropped frames: 2"));
+    assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
 
