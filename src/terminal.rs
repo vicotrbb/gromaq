@@ -1954,6 +1954,7 @@ impl Terminal {
         self.g0_dec_special_graphics = false;
         self.g1_dec_special_graphics = false;
         self.active_charset = CharacterSet::G0;
+        self.scrollback_view_offset = 0;
         self.selection = None;
         self.dirty.mark_viewport(self.config.rows, self.config.cols);
     }

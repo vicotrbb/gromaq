@@ -45,6 +45,25 @@ fn repeated_1049_enter_keeps_original_primary_cursor() {
 }
 
 #[test]
+fn alternate_screen_entry_exits_scrollback_view() {
+    let mut terminal = Terminal::new(
+        TerminalConfig::new(8, 3)
+            .unwrap()
+            .with_scrollback_limit(8)
+            .unwrap(),
+    );
+    terminal.write_str("one\r\ntwo\r\nthree\r\nfour").unwrap();
+    assert!(terminal.scroll_display_up(1));
+    assert_eq!(terminal.dump_grid().line_text(0), "one");
+    assert!(!terminal.dump_cursor().visible);
+
+    terminal.write_str("\x1b[?1049halt").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "alt");
+    assert!(terminal.dump_cursor().visible);
+}
+
+#[test]
 fn inactive_1049_exit_does_not_restore_unrelated_saved_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 
