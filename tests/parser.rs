@@ -181,6 +181,20 @@ fn sgr_accepts_colon_delimited_truecolor_and_indexed_colors() {
 }
 
 #[test]
+fn sgr_accepts_semicolon_delimited_extended_colors_before_grouped_params() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("\x1b[38;5;45;48:2:1:2:3;4:3mA").unwrap();
+
+    let style = terminal.dump_grid().cell(0, 0).style;
+    assert_eq!(style.foreground, Color::Indexed(45));
+    assert_eq!(style.background, Color::Rgb(1, 2, 3));
+    assert!(!style.blink);
+    assert!(style.underline);
+    assert_eq!(style.underline_style, UnderlineStyle::Curly);
+}
+
+#[test]
 fn sgr_ignores_out_of_range_extended_color_components() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
