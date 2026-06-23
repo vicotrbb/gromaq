@@ -219,13 +219,7 @@ fn compose_rendered_glyphs(entry: GlyphEntry, glyphs: &[RenderedGlyph]) -> Optio
         return None;
     }
 
-    let mut rgba = vec![
-        0;
-        usize::try_from(width)
-            .unwrap_or(usize::MAX)
-            .saturating_mul(usize::try_from(height).unwrap_or(usize::MAX))
-            .saturating_mul(4)
-    ];
+    let mut rgba = zeroed_rgba_buffer(width, height)?;
     for glyph in glyphs {
         blend_glyph_into_canvas(glyph, min_x, min_y, width, &mut rgba);
     }
@@ -249,11 +243,18 @@ fn blend_glyph_into_canvas(
     let offset_y = u32::try_from(glyph.y.saturating_sub(min_y)).unwrap_or(0);
     for source_y in 0..glyph.height {
         for source_x in 0..glyph.width {
-            let source_index =
-                usize::try_from((source_y * glyph.width + source_x) * 4).unwrap_or(usize::MAX);
-            let target_index =
-                usize::try_from(((offset_y + source_y) * canvas_width + offset_x + source_x) * 4)
-                    .unwrap_or(usize::MAX);
+            let Some(source_index) = rgba_offset(glyph.width, source_x, source_y) else {
+                continue;
+            };
+            let Some(target_x) = offset_x.checked_add(source_x) else {
+                continue;
+            };
+            let Some(target_y) = offset_y.checked_add(source_y) else {
+                continue;
+            };
+            let Some(target_index) = rgba_offset(canvas_width, target_x, target_y) else {
+                continue;
+            };
             if source_index + 3 >= glyph.rgba.len() || target_index + 3 >= canvas.len() {
                 continue;
             }
@@ -264,6 +265,42 @@ fn blend_glyph_into_canvas(
             }
         }
     }
+}
+
+fn rgba_pixel_count(width: u32, height: u32) -> Option<usize> {
+    usize::try_from(width).ok().and_then(|width| {
+        usize::try_from(height)
+            .ok()
+            .and_then(|height| width.checked_mul(height))
+    })
+}
+
+fn rgba_byte_len(width: u32, height: u32) -> Option<usize> {
+    rgba_pixel_count(width, height).and_then(|pixels| pixels.checked_mul(4))
+}
+
+fn zeroed_rgba_buffer(width: u32, height: u32) -> Option<Vec<u8>> {
+    let len = rgba_byte_len(width, height)?;
+    let mut rgba = Vec::new();
+    rgba.try_reserve_exact(len).ok()?;
+    rgba.resize(len, 0);
+    Some(rgba)
+}
+
+fn rgba_offset(width: u32, x: u32, y: u32) -> Option<usize> {
+    usize::try_from(y)
+        .ok()
+        .and_then(|y| {
+            usize::try_from(width)
+                .ok()
+                .and_then(|width| y.checked_mul(width))
+        })
+        .and_then(|row_start| {
+            usize::try_from(x)
+                .ok()
+                .and_then(|x| row_start.checked_add(x))
+        })
+        .and_then(|pixel_offset| pixel_offset.checked_mul(4))
 }
 
 /// Rasterized glyph bitmaps needed to draw a render plan.
@@ -381,9 +418,12 @@ fn image_to_rgba8(
     height: u32,
     data: &[u8],
 ) -> Result<Vec<u8>, FontRasterError> {
-    let pixel_count = usize::try_from(width)
-        .unwrap_or(usize::MAX)
-        .saturating_mul(usize::try_from(height).unwrap_or(usize::MAX));
+    let pixel_count =
+        rgba_pixel_count(width, height).ok_or(FontRasterError::InvalidImageBuffer {
+            width,
+            height,
+            content,
+        })?;
     match content {
         Content::Mask => {
             if data.len() != pixel_count {
@@ -393,14 +433,32 @@ fn image_to_rgba8(
                     content,
                 });
             }
-            let mut rgba = Vec::with_capacity(pixel_count.saturating_mul(4));
+            let expected_len =
+                rgba_byte_len(width, height).ok_or(FontRasterError::InvalidImageBuffer {
+                    width,
+                    height,
+                    content,
+                })?;
+            let mut rgba = Vec::new();
+            rgba.try_reserve_exact(expected_len).map_err(|_| {
+                FontRasterError::InvalidImageBuffer {
+                    width,
+                    height,
+                    content,
+                }
+            })?;
             for alpha in data {
                 rgba.extend_from_slice(&[255, 255, 255, *alpha]);
             }
             Ok(rgba)
         }
         Content::SubpixelMask | Content::Color => {
-            let expected_len = pixel_count.saturating_mul(4);
+            let expected_len =
+                rgba_byte_len(width, height).ok_or(FontRasterError::InvalidImageBuffer {
+                    width,
+                    height,
+                    content,
+                })?;
             if data.len() != expected_len {
                 return Err(FontRasterError::InvalidImageBuffer {
                     width,
@@ -410,5 +468,38 @@ fn image_to_rgba8(
             }
             Ok(data.to_vec())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn image_to_rgba8_rejects_oversized_mask_dimensions_before_allocation() {
+        let error = image_to_rgba8(Content::Mask, u32::MAX, u32::MAX, &[]).unwrap_err();
+
+        assert_eq!(
+            error,
+            FontRasterError::InvalidImageBuffer {
+                width: u32::MAX,
+                height: u32::MAX,
+                content: Content::Mask,
+            }
+        );
+    }
+
+    #[test]
+    fn image_to_rgba8_rejects_oversized_color_dimensions_before_allocation() {
+        let error = image_to_rgba8(Content::Color, u32::MAX, u32::MAX, &[]).unwrap_err();
+
+        assert_eq!(
+            error,
+            FontRasterError::InvalidImageBuffer {
+                width: u32::MAX,
+                height: u32::MAX,
+                content: Content::Color,
+            }
+        );
     }
 }
