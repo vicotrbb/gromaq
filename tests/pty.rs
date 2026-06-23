@@ -1,4 +1,5 @@
 use std::ffi::OsString;
+use std::fs;
 use std::path::Path;
 use std::sync::{
     Arc,
@@ -243,6 +244,37 @@ fn pty_session_runs_vim_version_when_available() {
 }
 
 #[test]
+fn pty_session_runs_vim_interactive_edit_when_available() {
+    let Some(_program) = find_program("vim") else {
+        eprintln!("skipping vim interactive PTY workflow test because vim is not on PATH");
+        return;
+    };
+    let file = test_temp_path("vim-interactive.txt");
+    let _ = fs::remove_file(&file);
+    let command = format!(
+        "TERM=xterm-256color vim -Nu NONE -n -i NONE -N --noplugin {}",
+        shell_quote_path(&file)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session
+        .write_all(b"igromaq-vim-interactive\x1b:wq\r")
+        .unwrap();
+
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let edited = fs::read_to_string(&file).unwrap();
+    assert_eq!(edited, "gromaq-vim-interactive\n");
+    let _ = fs::remove_file(file);
+}
+
+#[test]
 fn pty_session_runs_nvim_version_when_available() {
     assert_program_outputs_when_available("nvim", &["--version"], "NVIM");
 }
@@ -253,8 +285,84 @@ fn pty_session_runs_tmux_version_when_available() {
 }
 
 #[test]
+fn pty_session_runs_tmux_interactive_pane_when_available() {
+    let Some(_program) = find_program("tmux") else {
+        eprintln!("skipping tmux interactive PTY workflow test because tmux is not on PATH");
+        return;
+    };
+    let socket_name = format!("gromaq-pty-{}", std::process::id());
+    let command = format!(
+        "TERM=xterm-256color tmux -L {} new-session -A -s gromaq-pty",
+        shell_quote(&socket_name)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session
+        .write_all(b"printf 'gromaq-tmux-interactive\\n'\r")
+        .unwrap();
+    let output = drain_until_contains_stripped(
+        &mut session,
+        "gromaq-tmux-interactive",
+        100,
+        Duration::from_millis(20),
+    );
+    session.write_all(b"exit\r").unwrap();
+
+    assert!(
+        output.contains("gromaq-tmux-interactive"),
+        "tmux interactive output: {output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+}
+
+#[test]
 fn pty_session_runs_less_version_when_available() {
     assert_program_outputs_when_available("less", &["--version"], "less");
+}
+
+#[test]
+fn pty_session_runs_less_interactive_search_when_available() {
+    let Some(_program) = find_program("less") else {
+        eprintln!("skipping less interactive PTY workflow test because less is not on PATH");
+        return;
+    };
+    let file = test_temp_path("less-interactive.txt");
+    let lines = (0..80)
+        .map(|index| format!("gromaq-less-line-{index:03}\n"))
+        .collect::<String>();
+    fs::write(&file, lines).unwrap();
+    let command = format!("TERM=xterm-256color less -S {}", shell_quote_path(&file));
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session.write_all(b"/gromaq-less-line-040\r").unwrap();
+    let output = drain_until_contains_stripped(
+        &mut session,
+        "gromaq-less-line-040",
+        100,
+        Duration::from_millis(20),
+    );
+    session.write_all(b"q").unwrap();
+
+    assert!(
+        output.contains("gromaq-less-line-040"),
+        "less interactive output: {output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let _ = fs::remove_file(file);
 }
 
 #[test]
@@ -377,6 +485,22 @@ fn assert_program_outputs_when_available_with_timeout(
     );
 }
 
+fn spawn_shell_pty_command(command: String) -> PtySession {
+    let config = PtyConfig {
+        rows: 24,
+        cols: 80,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: vec!["-lc".into(), command.into()],
+            cwd: Some(std::env::current_dir().unwrap()),
+        },
+    };
+
+    PtySession::spawn(config).unwrap()
+}
+
 fn drain_until_contains(
     session: &mut PtySession,
     expected: &str,
@@ -392,6 +516,36 @@ fn drain_until_contains(
         std::thread::sleep(pause);
     }
     String::from_utf8_lossy(&output).into_owned()
+}
+
+fn drain_until_contains_stripped(
+    session: &mut PtySession,
+    expected: &str,
+    attempts: usize,
+    pause: Duration,
+) -> String {
+    let mut output = Vec::new();
+    for _ in 0..attempts {
+        output.extend(session.drain_available_output().unwrap());
+        let normalized = strip_ansi_sequences(&String::from_utf8_lossy(&output));
+        if normalized.contains(expected) {
+            return normalized;
+        }
+        std::thread::sleep(pause);
+    }
+    strip_ansi_sequences(&String::from_utf8_lossy(&output))
+}
+
+fn drain_until_any_output(session: &mut PtySession, attempts: usize, pause: Duration) -> Vec<u8> {
+    let mut output = Vec::new();
+    for _ in 0..attempts {
+        output.extend(session.drain_available_output().unwrap());
+        if !output.is_empty() {
+            break;
+        }
+        std::thread::sleep(pause);
+    }
+    output
 }
 
 fn top_snapshot_args() -> &'static [&'static str] {
@@ -412,6 +566,23 @@ fn find_program(program: &str) -> Option<OsString> {
 
 fn is_executable_file(path: &Path) -> bool {
     path.is_file()
+}
+
+fn test_temp_path(name: &str) -> std::path::PathBuf {
+    let directory = std::env::current_dir()
+        .unwrap()
+        .join("target")
+        .join("gromaq-pty-tests");
+    fs::create_dir_all(&directory).unwrap();
+    directory.join(format!("{}-{name}", std::process::id()))
+}
+
+fn shell_quote_path(path: &Path) -> String {
+    shell_quote(&path.to_string_lossy())
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 fn strip_ansi_sequences(output: &str) -> String {

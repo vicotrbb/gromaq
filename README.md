@@ -34,6 +34,7 @@ Implemented and tested:
 - Interactive `/bin/sh` PTY input/output workflow through the native PTY writer and background reader
 - Real PTY command workflow tests for available `bash` and `zsh`
 - Real PTY command lifecycle checks for available `fish`, `nushell`, `vim`, `nvim`, `tmux`, `less`, `top`, `htop`, `btop`, `ssh`, `kubectl`, and `cargo test`
+- Scripted interactive PTY workflow checks for available `vim`, `tmux`, and `less`
 - Real PTY background-reader large-output burst drain test
 - No-argument binary dispatch to the native terminal app loop
 - Launched native app runtime starts and retains a shell PTY session
@@ -80,7 +81,7 @@ Not yet complete:
 - Live desktop screenshot/runtime proof of windowed terminal glyph drawing
 - Live desktop OS clipboard paste smoke
 - End-to-end mouse workflows in `tmux`, editors, and alternate screen apps
-- Full VT compatibility coverage for editors, multiplexers, and pagers
+- Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
 - Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows
 - Performance acceptance proof for 144Hz, frame time, input latency, idle CPU, and memory growth
 
