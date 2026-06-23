@@ -167,6 +167,8 @@ pub trait SurfaceFrameBackend {
 pub struct SurfaceGlyphFrame<'a> {
     /// Packed glyph atlas image sampled by the frame.
     pub atlas: &'a GlyphAtlasImage,
+    /// Solid background quads drawn before textured glyphs.
+    pub background_batch: &'a BackgroundQuadBatch,
     /// Textured glyph quads and indices to draw.
     pub batch: &'a GlyphQuadBatch,
     /// Surface frame width in pixels.
@@ -181,6 +183,7 @@ pub struct SurfaceGlyphFrame<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreparedSurfaceGlyphFrame {
     atlas: GlyphAtlasImage,
+    background_batch: BackgroundQuadBatch,
     batch: GlyphQuadBatch,
     width: u32,
     height: u32,
@@ -255,8 +258,15 @@ impl PreparedSurfaceGlyphFrame {
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
+        let background_batch = BackgroundQuadPlanner::new(BackgroundQuadConfig {
+            cell_width_px: slot_width,
+            cell_height_px: slot_height,
+        })
+        .plan(plan)
+        .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
         Ok(Self {
             atlas,
+            background_batch,
             batch,
             width,
             height,
@@ -268,6 +278,7 @@ impl PreparedSurfaceGlyphFrame {
     pub fn as_surface_glyph_frame(&self) -> SurfaceGlyphFrame<'_> {
         SurfaceGlyphFrame {
             atlas: &self.atlas,
+            background_batch: &self.background_batch,
             batch: &self.batch,
             width: self.width,
             height: self.height,
@@ -283,6 +294,11 @@ impl PreparedSurfaceGlyphFrame {
     /// Glyph quad batch for this frame.
     pub fn batch(&self) -> &GlyphQuadBatch {
         &self.batch
+    }
+
+    /// Solid background quad batch for this frame.
+    pub fn background_batch(&self) -> &BackgroundQuadBatch {
+        &self.background_batch
     }
 }
 
@@ -550,24 +566,114 @@ fn render_glyph_frame_to_view(
         multiview_mask: None,
         cache: None,
     });
-    let vertex_bytes = surface_glyph_vertex_bytes(frame.batch, frame.width, frame.height)?;
-    let index_bytes = surface_glyph_index_bytes(frame.batch);
-    let buffer_layout =
-        validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, frame.batch.indices.len())?;
-    let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-        label: Some("gromaq-surface-glyph-vertices"),
-        size: buffer_layout.vertex_buffer_size,
-        usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-        mapped_at_creation: false,
-    });
-    let index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-        label: Some("gromaq-surface-glyph-indices"),
-        size: buffer_layout.index_buffer_size,
-        usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-        mapped_at_creation: false,
-    });
-    queue.write_buffer(&vertex_buffer, 0, &vertex_bytes);
-    queue.write_buffer(&index_buffer, 0, &index_bytes);
+    let background_draw = if frame.background_batch.quads.is_empty() {
+        None
+    } else {
+        let background_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("gromaq-surface-background-shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(SURFACE_BACKGROUND_WGSL)),
+        });
+        let background_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("gromaq-surface-background-pipeline-layout"),
+                bind_group_layouts: &[],
+                immediate_size: 0,
+            });
+        let background_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("gromaq-surface-background-pipeline"),
+            layout: Some(&background_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &background_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: 24,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x2,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 8,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &background_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let background_vertex_bytes =
+            surface_background_vertex_bytes(frame.background_batch, frame.width, frame.height)?;
+        let background_index_bytes = surface_background_index_bytes(frame.background_batch);
+        let background_layout = validate_surface_background_buffers(
+            &background_vertex_bytes,
+            &background_index_bytes,
+            frame.background_batch.indices.len(),
+        )?;
+        let background_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-background-vertices"),
+            size: background_layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let background_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-background-indices"),
+            size: background_layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&background_vertex_buffer, 0, &background_vertex_bytes);
+        queue.write_buffer(&background_index_buffer, 0, &background_index_bytes);
+        Some((
+            background_pipeline,
+            background_vertex_buffer,
+            background_index_buffer,
+            background_layout.index_count,
+        ))
+    };
+    let glyph_draw = if frame.batch.quads.is_empty() {
+        None
+    } else {
+        let vertex_bytes = surface_glyph_vertex_bytes(frame.batch, frame.width, frame.height)?;
+        let index_bytes = surface_glyph_index_bytes(frame.batch);
+        let buffer_layout =
+            validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, frame.batch.indices.len())?;
+        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-glyph-vertices"),
+            size: buffer_layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-glyph-indices"),
+            size: buffer_layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&vertex_buffer, 0, &vertex_bytes);
+        queue.write_buffer(&index_buffer, 0, &index_bytes);
+        Some((vertex_buffer, index_buffer, buffer_layout.index_count))
+    };
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
         label: Some("gromaq-surface-glyph-encoder"),
     });
@@ -593,11 +699,21 @@ fn render_glyph_frame_to_view(
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        pass.set_pipeline(&pipeline);
-        pass.set_bind_group(0, &bind_group, &[]);
-        pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-        pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        pass.draw_indexed(0..buffer_layout.index_count, 0, 0..1);
+        if let Some((background_pipeline, vertex_buffer, index_buffer, index_count)) =
+            &background_draw
+        {
+            pass.set_pipeline(background_pipeline);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
+        if let Some((vertex_buffer, index_buffer, index_count)) = &glyph_draw {
+            pass.set_pipeline(&pipeline);
+            pass.set_bind_group(0, &bind_group, &[]);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
     }
     queue.submit([encoder.finish()]);
     Ok(())
@@ -648,14 +764,50 @@ fn validate_surface_glyph_frame(
             frame.atlas.rgba.len()
         )));
     }
-    if frame.batch.quads.is_empty() || frame.batch.indices.is_empty() {
+    if frame.batch.quads.is_empty() != frame.batch.indices.is_empty() {
         return Err(SurfaceFrameError::InvalidFrame(
-            "surface glyph frame requires non-empty quads and indices".to_owned(),
+            "surface glyph quads and indices must both be present or both be empty".to_owned(),
+        ));
+    }
+    if frame.background_batch.quads.is_empty() != frame.background_batch.indices.is_empty() {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface background quads and indices must both be present or both be empty".to_owned(),
+        ));
+    }
+    if frame.batch.quads.is_empty() && frame.background_batch.quads.is_empty() {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface glyph frame requires non-empty glyph or background quads".to_owned(),
         ));
     }
     Ok(SurfaceGlyphAtlasLayout {
         row_bytes,
         expected_len,
+    })
+}
+
+fn validate_surface_background_buffers(
+    vertex_bytes: &[u8],
+    index_bytes: &[u8],
+    index_count: usize,
+) -> std::result::Result<SurfaceGlyphBufferLayout, SurfaceFrameError> {
+    if vertex_bytes.is_empty() || index_bytes.is_empty() || index_count == 0 {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface background draw buffers must be non-empty".to_owned(),
+        ));
+    }
+    let vertex_buffer_size = u64::try_from(vertex_bytes.len()).map_err(|_| {
+        SurfaceFrameError::InvalidFrame("surface background vertex buffer is too large".to_owned())
+    })?;
+    let index_buffer_size = u64::try_from(index_bytes.len()).map_err(|_| {
+        SurfaceFrameError::InvalidFrame("surface background index buffer is too large".to_owned())
+    })?;
+    let index_count = u32::try_from(index_count).map_err(|_| {
+        SurfaceFrameError::InvalidFrame("surface background index count is too large".to_owned())
+    })?;
+    Ok(SurfaceGlyphBufferLayout {
+        vertex_buffer_size,
+        index_buffer_size,
+        index_count,
     })
 }
 
@@ -683,6 +835,61 @@ fn validate_surface_glyph_buffers(
         index_buffer_size,
         index_count,
     })
+}
+
+fn surface_background_vertex_bytes(
+    batch: &BackgroundQuadBatch,
+    width: u32,
+    height: u32,
+) -> std::result::Result<Vec<u8>, SurfaceFrameError> {
+    if width == 0 || height == 0 {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface glyph frame dimensions must be non-zero".to_owned(),
+        ));
+    }
+    let width = width as f32;
+    let height = height as f32;
+    let mut bytes = Vec::new();
+    bytes
+        .try_reserve_exact(surface_background_vertex_byte_capacity(batch.quads.len())?)
+        .map_err(|_| {
+            SurfaceFrameError::InvalidFrame(
+                "surface background vertex bytes are too large to allocate".to_owned(),
+            )
+        })?;
+    for quad in &batch.quads {
+        for vertex in quad.vertices {
+            let ndc_x = (vertex.position[0] / width * 2.0) - 1.0;
+            let ndc_y = 1.0 - (vertex.position[1] / height * 2.0);
+            for value in [
+                ndc_x,
+                ndc_y,
+                vertex.color_rgba[0],
+                vertex.color_rgba[1],
+                vertex.color_rgba[2],
+                vertex.color_rgba[3],
+            ] {
+                bytes.extend_from_slice(&value.to_le_bytes());
+            }
+        }
+    }
+    Ok(bytes)
+}
+
+fn surface_background_vertex_byte_capacity(
+    quad_count: usize,
+) -> std::result::Result<usize, SurfaceFrameError> {
+    quad_count.checked_mul(4 * 6 * 4).ok_or_else(|| {
+        SurfaceFrameError::InvalidFrame("surface background vertex bytes are too large".to_owned())
+    })
+}
+
+fn surface_background_index_bytes(batch: &BackgroundQuadBatch) -> Vec<u8> {
+    batch
+        .indices
+        .iter()
+        .flat_map(|index| index.to_le_bytes())
+        .collect()
 }
 
 fn surface_glyph_vertex_bytes(
@@ -741,6 +948,31 @@ fn surface_glyph_index_bytes(batch: &GlyphQuadBatch) -> Vec<u8> {
         .flat_map(|index| index.to_le_bytes())
         .collect()
 }
+
+const SURFACE_BACKGROUND_WGSL: &str = r#"
+struct VertexIn {
+    @location(0) position: vec2<f32>,
+    @location(1) color: vec4<f32>,
+};
+
+struct VertexOut {
+    @builtin(position) position: vec4<f32>,
+    @location(0) color: vec4<f32>,
+};
+
+@vertex
+fn vs_main(input: VertexIn) -> VertexOut {
+    var output: VertexOut;
+    output.position = vec4<f32>(input.position, 0.0, 1.0);
+    output.color = input.color;
+    return output;
+}
+
+@fragment
+fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
+    return input.color;
+}
+"#;
 
 const SURFACE_GLYPH_WGSL: &str = r#"
 struct VertexIn {
@@ -1123,6 +1355,7 @@ impl RenderPlanner {
             .map(|region| usize::from(region.rows()) * usize::from(region.cols()))
             .sum();
         let mut glyphs = Vec::with_capacity(estimated_dirty_cells);
+        let mut backgrounds = Vec::new();
         for region in dirty_regions {
             let Some(region) = clipped_dirty_region(region, grid) else {
                 continue;
@@ -1130,6 +1363,9 @@ impl RenderPlanner {
             for row in region.row_start..region.row_end {
                 for col in region.col_start..region.col_end {
                     let cell = grid.cell(row, col);
+                    if let Some(color_rgba8) = style_background_rgba8(cell.style) {
+                        append_background_fill(&mut backgrounds, row, col, color_rgba8);
+                    }
                     if cell.text.is_empty() || cell.is_wide_trailing {
                         continue;
                     }
@@ -1160,9 +1396,32 @@ impl RenderPlanner {
             viewport_rows: grid.rows,
             cursor,
             clear_regions: dirty_regions.to_vec(),
+            backgrounds,
             glyphs,
         })
     }
+}
+
+fn append_background_fill(
+    backgrounds: &mut Vec<PlannedBackground>,
+    row: u16,
+    col: u16,
+    color_rgba8: [u8; 4],
+) {
+    if let Some(last) = backgrounds.last_mut()
+        && last.row == row
+        && last.col.saturating_add(last.cols) == col
+        && last.color_rgba8 == color_rgba8
+    {
+        last.cols = last.cols.saturating_add(1);
+        return;
+    }
+    backgrounds.push(PlannedBackground {
+        row,
+        col,
+        cols: 1,
+        color_rgba8,
+    });
 }
 
 fn clipped_dirty_region(region: &DirtyRegion, grid: &GridSnapshot) -> Option<ClippedDirtyRegion> {
@@ -1194,8 +1453,23 @@ pub struct RenderPlan {
     pub cursor: CursorSnapshot,
     /// Dirty rectangles to clear before drawing glyphs.
     pub clear_regions: Vec<DirtyRegion>,
+    /// Styled cell background fills in row-major order.
+    pub backgrounds: Vec<PlannedBackground>,
     /// Glyph draw commands in row-major order.
     pub glyphs: Vec<PlannedGlyph>,
+}
+
+/// One solid background fill command inside a render plan.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlannedBackground {
+    /// Grid row.
+    pub row: u16,
+    /// Starting grid column.
+    pub col: u16,
+    /// Number of adjacent cells covered by this fill.
+    pub cols: u16,
+    /// Background color in RGBA8.
+    pub color_rgba8: [u8; 4],
 }
 
 /// One glyph draw command inside a render plan.
@@ -1217,6 +1491,138 @@ pub struct PlannedGlyph {
     pub is_wide: bool,
     /// Glyph atlas handle allocated for this glyph.
     pub atlas_entry: GlyphEntry,
+}
+
+/// Pixel layout used to build solid background quads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BackgroundQuadConfig {
+    /// Terminal cell width in pixels.
+    pub cell_width_px: u32,
+    /// Terminal cell height in pixels.
+    pub cell_height_px: u32,
+}
+
+/// Errors produced while building solid background quads.
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum BackgroundQuadError {
+    /// Pixel dimensions must be non-zero.
+    #[error("background quad dimensions must be non-zero")]
+    ZeroDimension,
+    /// The planned background batch cannot be represented in `u32` GPU indices.
+    #[error("background quad count is too large for u32 GPU indices")]
+    IndexCountTooLarge,
+}
+
+/// One vertex for a solid background quad.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BackgroundVertex {
+    /// Pixel-space output position.
+    pub position: [f32; 2],
+    /// Solid background color in normalized RGBA.
+    pub color_rgba: [f32; 4],
+}
+
+/// One solid background quad derived from styled terminal cells.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BackgroundQuad {
+    /// Grid row represented by this quad.
+    pub row: u16,
+    /// Starting grid column represented by this quad.
+    pub col: u16,
+    /// Number of adjacent cells represented by this quad.
+    pub cols: u16,
+    /// Quad vertices in top-left, top-right, bottom-right, bottom-left order.
+    pub vertices: [BackgroundVertex; 4],
+}
+
+/// Indexed solid background quad batch ready for GPU vertex/index buffer upload.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct BackgroundQuadBatch {
+    /// Solid background quads.
+    pub quads: Vec<BackgroundQuad>,
+    /// Triangle indices for all quads.
+    pub indices: Vec<u32>,
+}
+
+/// Deterministic CPU-side planner for terminal background fill quads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BackgroundQuadPlanner {
+    config: BackgroundQuadConfig,
+}
+
+impl BackgroundQuadPlanner {
+    /// Create a background quad planner.
+    pub fn new(config: BackgroundQuadConfig) -> Self {
+        Self { config }
+    }
+
+    /// Build solid background quads and triangle indices from a render plan.
+    pub fn plan(
+        &self,
+        plan: &RenderPlan,
+    ) -> std::result::Result<BackgroundQuadBatch, BackgroundQuadError> {
+        self.validate_config()?;
+        let mut quads = Vec::new();
+        quads
+            .try_reserve_exact(plan.backgrounds.len())
+            .map_err(|_| BackgroundQuadError::IndexCountTooLarge)?;
+        let mut indices = Vec::new();
+        indices
+            .try_reserve_exact(checked_background_quad_index_capacity(
+                plan.backgrounds.len(),
+            )?)
+            .map_err(|_| BackgroundQuadError::IndexCountTooLarge)?;
+
+        for background in &plan.backgrounds {
+            let quad = self.plan_background(*background);
+            let base = checked_background_quad_base_index(quads.len())?;
+            indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
+            quads.push(quad);
+        }
+
+        Ok(BackgroundQuadBatch { quads, indices })
+    }
+
+    fn validate_config(&self) -> std::result::Result<(), BackgroundQuadError> {
+        if self.config.cell_width_px == 0 || self.config.cell_height_px == 0 {
+            return Err(BackgroundQuadError::ZeroDimension);
+        }
+        Ok(())
+    }
+
+    fn plan_background(&self, background: PlannedBackground) -> BackgroundQuad {
+        let cell_width = self.config.cell_width_px as f32;
+        let cell_height = self.config.cell_height_px as f32;
+        let x0 = f32::from(background.col) * cell_width;
+        let y0 = f32::from(background.row) * cell_height;
+        let x1 = x0 + (cell_width * f32::from(background.cols));
+        let y1 = y0 + cell_height;
+        let color_rgba = rgba8_to_normalized(background.color_rgba8);
+
+        BackgroundQuad {
+            row: background.row,
+            col: background.col,
+            cols: background.cols,
+            vertices: [
+                BackgroundVertex {
+                    position: [x0, y0],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x1, y0],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x1, y1],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x0, y1],
+                    color_rgba,
+                },
+            ],
+        }
+    }
 }
 
 /// Pixel and atlas layout used to build textured glyph quads.
@@ -1280,7 +1686,7 @@ pub struct GlyphQuad {
 }
 
 /// Indexed glyph quad batch ready for GPU vertex/index buffer upload.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct GlyphQuadBatch {
     /// Textured glyph quads.
     pub quads: Vec<GlyphQuad>,
@@ -1419,6 +1825,28 @@ fn style_foreground_rgba(style: Style) -> [f32; 4] {
     ]
 }
 
+fn style_background_rgba8(style: Style) -> Option<[u8; 4]> {
+    let color = if style.inverse {
+        style.foreground
+    } else {
+        style.background
+    };
+    if color == Color::Default && !style.inverse {
+        return None;
+    }
+    let [red, green, blue] = color_rgb8(color);
+    Some([red, green, blue, 255])
+}
+
+fn rgba8_to_normalized([red, green, blue, alpha]: [u8; 4]) -> [f32; 4] {
+    [
+        f32::from(red) / 255.0,
+        f32::from(green) / 255.0,
+        f32::from(blue) / 255.0,
+        f32::from(alpha) / 255.0,
+    ]
+}
+
 fn color_rgb8(color: Color) -> [u8; 3] {
     match color {
         Color::Default => [229, 229, 229],
@@ -1473,6 +1901,23 @@ fn indexed_color_rgb8(index: u8) -> [u8; 3] {
 
 fn color_cube_component(value: u8) -> u8 {
     if value == 0 { 0 } else { 55 + (value * 40) }
+}
+
+fn checked_background_quad_base_index(
+    quad_index: usize,
+) -> std::result::Result<u32, BackgroundQuadError> {
+    u32::try_from(quad_index)
+        .ok()
+        .and_then(|index| index.checked_mul(4))
+        .ok_or(BackgroundQuadError::IndexCountTooLarge)
+}
+
+fn checked_background_quad_index_capacity(
+    quad_count: usize,
+) -> std::result::Result<usize, BackgroundQuadError> {
+    quad_count
+        .checked_mul(6)
+        .ok_or(BackgroundQuadError::IndexCountTooLarge)
 }
 
 fn checked_glyph_quad_base_index(quad_index: usize) -> std::result::Result<u32, GlyphQuadError> {
@@ -2386,6 +2831,7 @@ mod tests {
                 blinking: true,
             },
             clear_regions: Vec::new(),
+            backgrounds: Vec::new(),
             glyphs: vec![PlannedGlyph {
                 row: 0,
                 col: 0,
@@ -2450,6 +2896,7 @@ mod tests {
 
         let layout = validate_surface_glyph_frame(SurfaceGlyphFrame {
             atlas: &atlas,
+            background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
             width: 16,
             height: 16,
@@ -2478,6 +2925,7 @@ mod tests {
 
         let error = validate_surface_glyph_frame(SurfaceGlyphFrame {
             atlas: &atlas,
+            background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
             width: 16,
             height: 16,
@@ -2492,11 +2940,82 @@ mod tests {
     }
 
     #[test]
+    fn surface_glyph_frame_validation_accepts_background_only_batches() {
+        let atlas = GlyphAtlasImage {
+            width: 1,
+            height: 1,
+            rgba: vec![0; 4],
+            occupied_slots: 0,
+        };
+        let background_batch = BackgroundQuadBatch {
+            quads: vec![BackgroundQuad {
+                row: 0,
+                col: 0,
+                cols: 1,
+                vertices: [
+                    BackgroundVertex {
+                        position: [0.0, 0.0],
+                        color_rgba: [1.0, 0.0, 0.0, 1.0],
+                    },
+                    BackgroundVertex {
+                        position: [1.0, 0.0],
+                        color_rgba: [1.0, 0.0, 0.0, 1.0],
+                    },
+                    BackgroundVertex {
+                        position: [1.0, 1.0],
+                        color_rgba: [1.0, 0.0, 0.0, 1.0],
+                    },
+                    BackgroundVertex {
+                        position: [0.0, 1.0],
+                        color_rgba: [1.0, 0.0, 0.0, 1.0],
+                    },
+                ],
+            }],
+            indices: vec![0, 1, 2, 0, 2, 3],
+        };
+
+        let layout = validate_surface_glyph_frame(SurfaceGlyphFrame {
+            atlas: &atlas,
+            background_batch: &background_batch,
+            batch: &GlyphQuadBatch::default(),
+            width: 1,
+            height: 1,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+        })
+        .unwrap();
+
+        assert_eq!(
+            layout,
+            SurfaceGlyphAtlasLayout {
+                row_bytes: 4,
+                expected_len: 4,
+            }
+        );
+    }
+
+    #[test]
     fn surface_glyph_buffer_validation_reports_checked_sizes() {
         let vertex_bytes = [1_u8, 2, 3, 4];
         let index_bytes = [5_u8, 6, 7, 8];
 
         let layout = validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, 1).unwrap();
+
+        assert_eq!(
+            layout,
+            SurfaceGlyphBufferLayout {
+                vertex_buffer_size: 4,
+                index_buffer_size: 4,
+                index_count: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn surface_background_buffer_validation_reports_checked_sizes() {
+        let vertex_bytes = [1_u8, 2, 3, 4];
+        let index_bytes = [5_u8, 6, 7, 8];
+
+        let layout = validate_surface_background_buffers(&vertex_bytes, &index_bytes, 1).unwrap();
 
         assert_eq!(
             layout,
@@ -2521,6 +3040,20 @@ mod tests {
     }
 
     #[test]
+    fn surface_background_vertex_byte_capacity_uses_checked_multiplication() {
+        assert_eq!(surface_background_vertex_byte_capacity(2).unwrap(), 192);
+
+        let error = surface_background_vertex_byte_capacity((usize::MAX / 96) + 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame(
+                "surface background vertex bytes are too large".to_owned()
+            )
+        );
+    }
+
+    #[test]
     fn surface_glyph_buffer_validation_rejects_empty_buffers() {
         let vertex_bytes = [];
         let index_bytes = [1_u8, 2, 3, 4];
@@ -2531,6 +3064,22 @@ mod tests {
             error,
             SurfaceFrameError::InvalidFrame(
                 "surface glyph draw buffers must be non-empty".to_owned()
+            )
+        );
+    }
+
+    #[test]
+    fn surface_background_buffer_validation_rejects_empty_buffers() {
+        let vertex_bytes = [];
+        let index_bytes = [1_u8, 2, 3, 4];
+
+        let error =
+            validate_surface_background_buffers(&vertex_bytes, &index_bytes, 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame(
+                "surface background draw buffers must be non-empty".to_owned()
             )
         );
     }

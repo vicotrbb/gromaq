@@ -93,7 +93,7 @@ Implemented and tested:
 - App-owned native window surface state for initial configuration, resize, and zero-size suspension
 - Safe `wgpu` window surface creation from `NativeGpuContext` for app handoff
 - Presentable `wgpu` surface backend path for clear-pass frame acquisition, queue submission, and present
-- Presentable `wgpu` surface backend path for supplied terminal glyph atlas and quad batches
+- Presentable `wgpu` surface backend path for supplied terminal background, glyph atlas, and quad batches
 - Native app wiring that creates, configures, resizes, and presents prepared terminal glyph frames to the window surface
 - Default native monospace font discovery for app-owned glyph rasterization cache
 - Deterministic 144Hz frame scheduler foundation

@@ -64,6 +64,36 @@ fn render_plan_preserves_multi_codepoint_cell_text() {
 }
 
 #[test]
+fn render_plan_collects_styled_background_fills_for_dirty_cells() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal
+        .write_str("\x1b[48:2:1:2:3mAB \x1b[0mC\x1b[31;7mD")
+        .unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(14);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.backgrounds.len(), 2);
+    assert_eq!(plan.backgrounds[0].row, 0);
+    assert_eq!(plan.backgrounds[0].col, 0);
+    assert_eq!(plan.backgrounds[0].cols, 3);
+    assert_eq!(plan.backgrounds[0].color_rgba8, [1, 2, 3, 255]);
+    assert_eq!(plan.backgrounds[1].row, 0);
+    assert_eq!(plan.backgrounds[1].col, 4);
+    assert_eq!(plan.backgrounds[1].cols, 1);
+    assert_eq!(plan.backgrounds[1].color_rgba8, [205, 49, 49, 255]);
+}
+
+#[test]
 fn render_plan_preserves_modifier_on_zwj_joined_component_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal.write_str("👨\u{200d}👩🏽").unwrap();

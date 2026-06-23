@@ -22,10 +22,10 @@ use gromaq::font::RasterizedGlyphCache;
 use gromaq::native_gpu::NativeGpuWindowSurface;
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphBitmap, GlyphEntry, GlyphQuad,
-    GlyphQuadBatch, GlyphVertex, GpuRenderer, RenderPlanner, RendererConfig, SurfaceBackend,
-    SurfaceFrameBackend, SurfaceFrameError, SurfaceGlyphFrame, SurfaceLifecycleAction,
-    WgpuRenderer,
+    BackgroundQuadBatch, GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphBitmap, GlyphEntry,
+    GlyphQuad, GlyphQuadBatch, GlyphVertex, GpuRenderer, RenderPlanner, RendererConfig,
+    SurfaceBackend, SurfaceFrameBackend, SurfaceFrameError, SurfaceGlyphFrame,
+    SurfaceLifecycleAction, WgpuRenderer,
 };
 use gromaq::{
     ConfigFileReloader, CursorSnapshot, GridSnapshot, GromaqConfig, GromaqError, KeyModifiers,
@@ -914,6 +914,7 @@ fn native_window_surface_presents_terminal_glyph_frame_through_backend() {
     surface
         .present_glyph_frame(SurfaceGlyphFrame {
             atlas: &atlas,
+            background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
             width: 2,
             height: 2,
