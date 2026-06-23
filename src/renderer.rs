@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cell::{Color, Style, UnderlineStyle};
-use crate::config::GromaqConfig;
+use crate::config::{GromaqConfig, MAX_TARGET_FPS};
 use crate::dirty::DirtyRegion;
 use crate::error::{GromaqError, Result};
 use crate::grid::GridSnapshot;
@@ -1459,9 +1459,10 @@ pub struct FrameScheduler {
 impl FrameScheduler {
     /// Create a frame scheduler for `target_fps`.
     pub fn new(target_fps: u32) -> Result<Self> {
-        if target_fps == 0 {
+        if !(1..=MAX_TARGET_FPS).contains(&target_fps) {
             return Err(GromaqError::InvalidTargetFps {
                 minimum: 1,
+                maximum: MAX_TARGET_FPS,
                 actual: target_fps,
             });
         }

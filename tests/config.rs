@@ -18,11 +18,13 @@ fn invalid_dimensions_are_rejected() {
 
 #[test]
 fn invalid_frame_target_is_rejected() {
-    let mut config = GromaqConfig::default();
-    config.performance.target_fps = 0;
+    for target_fps in [0, 1_001] {
+        let mut config = GromaqConfig::default();
+        config.performance.target_fps = target_fps;
 
-    let error = config.validate().unwrap_err();
-    assert!(error.to_string().contains("target fps"));
+        let error = config.validate().unwrap_err();
+        assert!(error.to_string().contains("target fps"));
+    }
 }
 
 #[test]

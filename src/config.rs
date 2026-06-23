@@ -12,6 +12,8 @@ pub const MAX_TERMINAL_CELLS: u64 = 1_000_000;
 pub const MIN_FONT_SIZE_PX: f32 = 6.0;
 /// Maximum renderable configured font size in pixels.
 pub const MAX_FONT_SIZE_PX: f32 = 512.0;
+/// Maximum supported target refresh rate for deterministic frame pacing.
+pub const MAX_TARGET_FPS: u32 = 1_000;
 
 /// Top-level Gromaq configuration.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -69,9 +71,10 @@ impl GromaqConfig {
                 actual: self.font.size_px,
             });
         }
-        if self.performance.target_fps == 0 {
+        if !(1..=MAX_TARGET_FPS).contains(&self.performance.target_fps) {
             return Err(GromaqError::InvalidTargetFps {
                 minimum: 1,
+                maximum: MAX_TARGET_FPS,
                 actual: self.performance.target_fps,
             });
         }

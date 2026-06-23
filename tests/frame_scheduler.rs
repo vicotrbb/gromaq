@@ -72,7 +72,9 @@ fn late_frame_records_dropped_intervals_when_presented() {
 
 #[test]
 fn invalid_target_fps_is_rejected() {
-    let error = FrameScheduler::new(0).unwrap_err();
+    for target_fps in [0, 1_001] {
+        let error = FrameScheduler::new(target_fps).unwrap_err();
 
-    assert!(error.to_string().contains("target fps"));
+        assert!(error.to_string().contains("target fps"));
+    }
 }

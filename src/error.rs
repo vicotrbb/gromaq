@@ -48,11 +48,13 @@ pub enum GromaqError {
         actual: f32,
     },
 
-    /// Frame target must be non-zero.
-    #[error("target fps must be at least {minimum}, got {actual}")]
+    /// Frame target must stay within supported deterministic pacing bounds.
+    #[error("target fps must be between {minimum} and {maximum}, got {actual}")]
     InvalidTargetFps {
         /// Inclusive lower bound.
         minimum: u32,
+        /// Inclusive upper bound.
+        maximum: u32,
         /// Actual invalid value.
         actual: u32,
     },
