@@ -30,6 +30,11 @@ impl Scrollback {
         }
     }
 
+    /// Number of retained scrollback rows.
+    pub(crate) fn len(&self) -> usize {
+        self.lines.len()
+    }
+
     /// Push one hard-break line, evicting the oldest line when capacity is reached.
     pub fn push(&mut self, line: String) {
         let cells = line

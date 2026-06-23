@@ -232,6 +232,7 @@ pub struct Terminal {
     saved_cursor: Option<Cursor>,
     saved_dec_cursor: Option<SavedCursorState>,
     saved_primary: Option<SavedScreen>,
+    scrollback_view_offset: usize,
     saved_private_modes: Vec<(u16, bool)>,
     selection: Option<SelectionRange>,
     dirty: DirtyTracker,
@@ -285,6 +286,7 @@ impl Terminal {
             saved_cursor: None,
             saved_dec_cursor: None,
             saved_primary: None,
+            scrollback_view_offset: 0,
             saved_private_modes: Vec::new(),
             selection: None,
             dirty: DirtyTracker::default(),
@@ -315,6 +317,9 @@ impl Terminal {
 
     /// Feed raw terminal bytes and escape sequences into the terminal parser.
     pub fn write_bytes(&mut self, input: &[u8]) -> Result<()> {
+        if !input.is_empty() {
+            self.scroll_display_to_bottom();
+        }
         let mut parser = std::mem::take(&mut self.parser);
         parser.advance(self, input);
         self.parser = parser;
@@ -367,6 +372,7 @@ impl Terminal {
         self.cursor.row = self.cursor.row.min(config.rows - 1);
         self.cursor.col = self.cursor.col.min(config.cols - 1);
         self.wrap_pending = false;
+        self.scrollback_view_offset = 0;
         self.selection = None;
         self.dirty.mark_viewport(config.rows, config.cols);
         self.config = config;
@@ -376,6 +382,9 @@ impl Terminal {
 
     /// Return a grid snapshot.
     pub fn dump_grid(&self) -> GridSnapshot {
+        if self.scrollback_view_offset != 0 {
+            return self.dump_scrollback_view_grid();
+        }
         GridSnapshot {
             cols: self.config.cols,
             rows: self.config.rows,
@@ -387,6 +396,38 @@ impl Terminal {
                         .map(move |col| self.snapshot_cell(self.grid.cell(row, col)))
                 })
                 .collect(),
+        }
+    }
+
+    fn dump_scrollback_view_grid(&self) -> GridSnapshot {
+        let scrollback = self.scrollback.snapshot();
+        let history_rows = scrollback.cells.len();
+        let visible_rows = usize::from(self.config.rows);
+        let offset = self.scrollback_view_offset.min(history_rows);
+        let start = (history_rows + visible_rows).saturating_sub(visible_rows + offset);
+        let mut cells = Vec::with_capacity(visible_rows * usize::from(self.config.cols));
+
+        for row in 0..visible_rows {
+            let source_row = start + row;
+            if source_row < history_rows {
+                push_snapshot_row(
+                    &mut cells,
+                    scrollback.cells.get(source_row).map(Vec::as_slice),
+                    self.config.cols,
+                );
+            } else {
+                let grid_row = (source_row - history_rows) as u16;
+                let live_row = self.trimmed_visible_row_snapshot(grid_row);
+                push_snapshot_row(&mut cells, Some(&live_row), self.config.cols);
+            }
+        }
+
+        GridSnapshot {
+            cols: self.config.cols,
+            rows: self.config.rows,
+            hyperlinks: self.hyperlinks.clone(),
+            underline_colors: self.underline_colors.clone(),
+            cells,
         }
     }
 
@@ -432,10 +473,50 @@ impl Terminal {
         CursorSnapshot {
             row: self.cursor.row,
             col: self.cursor.col,
-            visible: self.cursor.visible,
+            visible: self.cursor.visible && self.scrollback_view_offset == 0,
             shape: self.cursor.shape,
             blinking: self.cursor.blinking,
         }
+    }
+
+    /// Scroll the displayed viewport upward into retained scrollback rows.
+    pub fn scroll_display_up(&mut self, rows: u16) -> bool {
+        if rows == 0 || self.saved_primary.is_some() {
+            return false;
+        }
+        let max_offset = self.scrollback.len();
+        let next = self
+            .scrollback_view_offset
+            .saturating_add(usize::from(rows))
+            .min(max_offset);
+        self.set_scrollback_view_offset(next)
+    }
+
+    /// Scroll the displayed viewport downward toward the live grid.
+    pub fn scroll_display_down(&mut self, rows: u16) -> bool {
+        if rows == 0 {
+            return false;
+        }
+        let next = self
+            .scrollback_view_offset
+            .saturating_sub(usize::from(rows));
+        self.set_scrollback_view_offset(next)
+    }
+
+    fn scroll_display_to_bottom(&mut self) -> bool {
+        self.set_scrollback_view_offset(0)
+    }
+
+    fn set_scrollback_view_offset(&mut self, offset: usize) -> bool {
+        let offset = offset.min(self.scrollback.len());
+        if offset == self.scrollback_view_offset {
+            return false;
+        }
+        self.scrollback_view_offset = offset;
+        self.selection = None;
+        self.flush_dirty_run();
+        self.dirty.mark_viewport(self.config.rows, self.config.cols);
+        true
     }
 
     /// Return performance counters.
@@ -1410,6 +1491,7 @@ impl Terminal {
         self.saved_cursor = None;
         self.saved_dec_cursor = None;
         self.saved_primary = None;
+        self.scrollback_view_offset = 0;
         self.saved_private_modes.clear();
         self.selection = None;
         self.dirty = DirtyTracker::default();
@@ -2731,6 +2813,23 @@ fn apply_grouped_sgr_param(style: &mut Style, param: &[u16]) -> bool {
             true
         }
         _ => false,
+    }
+}
+
+fn push_snapshot_row(target: &mut Vec<CellSnapshot>, row: Option<&[CellSnapshot]>, cols: u16) {
+    let blank = CellSnapshot {
+        text: String::new(),
+        style: Style::default(),
+        hyperlink_id: 0,
+        is_wide_leading: false,
+        is_wide_trailing: false,
+    };
+    for col in 0..usize::from(cols) {
+        target.push(
+            row.and_then(|cells| cells.get(col))
+                .cloned()
+                .unwrap_or_else(|| blank.clone()),
+        );
     }
 }
 
