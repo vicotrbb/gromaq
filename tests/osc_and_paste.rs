@@ -33,6 +33,20 @@ fn csi_window_title_report_returns_current_title() {
 }
 
 #[test]
+fn csi_window_icon_label_report_returns_current_title_label() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b]0;Gromaq Terminal\x07\x1b[20t")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]LGromaq Terminal\x1b\\"
+    );
+}
+
+#[test]
 fn osc_52_decodes_clipboard_text_without_changing_title() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     terminal.write_str("\x1b]2;safe title\x07").unwrap();
