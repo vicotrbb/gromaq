@@ -1359,6 +1359,14 @@ fn native_paste_shortcut_accepts_control_or_super_v() {
 }
 
 #[test]
+fn native_paste_shortcut_accepts_dedicated_paste_key() {
+    assert!(is_native_paste_shortcut(
+        &Key::Named(NamedKey::Paste),
+        ModifiersState::empty()
+    ));
+}
+
+#[test]
 fn native_terminal_runtime_reads_clipboard_and_encodes_paste_to_pty() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {

@@ -12,7 +12,7 @@ use winit::event::{
     ElementState, Ime, MouseButton as WinitMouseButton, MouseScrollDelta, WindowEvent,
 };
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
-use winit::keyboard::{Key, ModifiersState};
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
 use crate::clipboard::{HostClipboard, NativeClipboard};
@@ -1413,8 +1413,9 @@ fn wheel_mouse_button(delta: MouseScrollDelta) -> Option<MouseButton> {
 
 /// Whether a native key event should paste from the host clipboard.
 pub fn is_native_paste_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
-    matches!(key, Key::Character(character) if character.eq_ignore_ascii_case("v"))
-        && (modifiers.control_key() || modifiers.super_key())
+    matches!(key, Key::Named(NamedKey::Paste))
+        || (matches!(key, Key::Character(character) if character.eq_ignore_ascii_case("v"))
+            && (modifiers.control_key() || modifiers.super_key()))
 }
 
 /// Errors from launching the native application loop.
