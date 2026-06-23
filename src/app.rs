@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use thiserror::Error;
+use tracing::{debug, trace};
 use winit::application::ApplicationHandler;
 use winit::dpi::{LogicalSize, PhysicalPosition};
 use winit::error::{EventLoopError, OsError};
@@ -784,6 +785,13 @@ impl<S> NativeTerminalRuntime<S> {
     /// Create runtime state with terminal grid and shell settings.
     pub fn new(config: NativeTerminalRuntimeConfig) -> Result<Self, NativeAppError> {
         let terminal = Terminal::new(config.terminal_config()?);
+        debug!(
+            terminal_cols = config.terminal_cols,
+            terminal_rows = config.terminal_rows,
+            scrollback_lines = config.scrollback_lines,
+            shell = ?config.shell.program,
+            "created native terminal runtime"
+        );
         Ok(Self {
             config,
             terminal,
@@ -815,6 +823,11 @@ impl<S> NativeTerminalRuntime<S> {
         let dirty_regions = self.terminal.take_dirty_regions();
         if dirty_regions.is_empty() {
             self.perf.clean_frame_skips += 1;
+            trace!(
+                render_attempts = self.perf.render_attempts,
+                clean_frame_skips = self.perf.clean_frame_skips,
+                "skipped clean native terminal frame"
+            );
             return false;
         }
         let render_started = Instant::now();
@@ -832,6 +845,13 @@ impl<S> NativeTerminalRuntime<S> {
         self.perf.render_time_p95_ns = self
             .render_time_histogram
             .p95_upper_bound_ns(self.perf.render_time_samples);
+        trace!(
+            dirty_regions = dirty_regions.len(),
+            render_time_ns = elapsed_ns,
+            rendered_frames = self.perf.rendered_frames,
+            render_time_p95_ns = self.perf.render_time_p95_ns,
+            "rendered native terminal frame"
+        );
         if let Some(input_started) = self.pending_input_to_render_started.take() {
             self.record_input_to_render_latency(saturating_duration_nanos(input_started.elapsed()));
         }
@@ -885,10 +905,20 @@ impl<S> NativeTerminalRuntime<S> {
         if self.shell_session.is_some() {
             return Ok(());
         }
+        let pty_config = self.config.pty_config();
+        debug!(
+            cols = pty_config.cols,
+            rows = pty_config.rows,
+            pixel_width = pty_config.pixel_width,
+            pixel_height = pty_config.pixel_height,
+            shell = ?pty_config.shell.program,
+            "starting native shell PTY"
+        );
         let session = spawner
-            .spawn(self.config.pty_config())
+            .spawn(pty_config)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         self.shell_session = Some(session);
+        debug!("native shell PTY started");
         Ok(())
     }
 }
@@ -921,6 +951,13 @@ where
             self.perf.pty_response_writes += 1;
             add_usize_counter(&mut self.perf.pty_response_bytes, response.len());
         }
+        trace!(
+            output_bytes = output.len(),
+            response_bytes = response.len(),
+            output_batches = self.perf.pty_output_batches,
+            total_output_bytes = self.perf.pty_output_bytes,
+            "pumped native PTY output"
+        );
         Ok(output.len())
     }
 
@@ -934,6 +971,12 @@ where
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         self.perf.pty_input_writes += 1;
         add_usize_counter(&mut self.perf.pty_input_bytes, bytes.len());
+        trace!(
+            input_bytes = bytes.len(),
+            input_writes = self.perf.pty_input_writes,
+            total_input_bytes = self.perf.pty_input_bytes,
+            "wrote native PTY input"
+        );
         if !bytes.is_empty() && self.pending_input_to_render_started.is_none() {
             self.pending_input_to_render_started = Some(Instant::now());
         }

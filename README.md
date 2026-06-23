@@ -27,6 +27,7 @@ Implemented and tested:
 - Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, native app/runtime/renderer config mapping, and config-file native app launch
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
+- Structured native runtime tracing for startup, PTY pump/input, render, and clean-frame skip diagnostics
 - Deterministic one-pixel-per-cell test API screenshot capture
 - Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
 - Visible-grid selection and copy
