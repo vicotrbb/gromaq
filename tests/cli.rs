@@ -181,9 +181,27 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_perf_smoke_cli_reports_structured_metrics_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-perf-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime perf smoke: ok"));
+    assert!(exit.stdout.contains("pumped bytes: 1"));
+    assert!(exit.stdout.contains("rendered frames: 1"));
+    assert!(exit.stdout.contains("render p95 ns:"));
+    assert!(exit.stdout.contains("input-to-render p95 ns:"));
+    assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
 

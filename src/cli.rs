@@ -1,15 +1,23 @@
 //! Command-line entry points for the native application.
 
+use std::collections::VecDeque;
+
 use base64::{Engine as _, engine::general_purpose};
 use thiserror::Error;
+use winit::keyboard::{Key, ModifiersState};
 
-use crate::app::{NativeAppConfig, run_native_app};
+use crate::app::{
+    NativeAppConfig, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
+    NativeTerminalRuntimeConfig, run_native_app,
+};
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
     GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
     GpuTextureUploadRunner, GpuTexturedQuadRunner,
 };
+use crate::pty::{PtyConfig, PtyError, ShellCommand};
+use crate::renderer::{RendererConfig, WgpuRenderer};
 use crate::terminal::{Terminal, TerminalConfig};
 
 const CLIPBOARD_SMOKE_TEXT: &str = "gromaq clipboard smoke";
@@ -175,6 +183,7 @@ where
         && arg != "--gpu-terminal-text-smoke"
         && arg != "--clipboard-smoke"
         && arg != "--osc52-clipboard-smoke"
+        && arg != "--runtime-perf-smoke"
     {
         return CliExit {
             code: 2,
@@ -195,6 +204,9 @@ where
     }
     if arg == "--osc52-clipboard-smoke" {
         return osc52_clipboard_smoke_exit(clipboard);
+    }
+    if arg == "--runtime-perf-smoke" {
+        return runtime_perf_smoke_exit();
     }
 
     let bootstrap = GpuBootstrap::new(GpuBootstrapConfig::native_default());
@@ -396,7 +408,101 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke]\n".to_owned()
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct RuntimePerfSmokePtySpawner;
+
+#[derive(Debug, Default)]
+struct RuntimePerfSmokePtySession {
+    output: VecDeque<Vec<u8>>,
+}
+
+impl NativePtySpawner for RuntimePerfSmokePtySpawner {
+    type Session = RuntimePerfSmokePtySession;
+
+    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
+        Ok(RuntimePerfSmokePtySession::default())
+    }
+}
+
+impl NativePtySessionIo for RuntimePerfSmokePtySession {
+    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
+        Ok(self.output.pop_front().unwrap_or_default())
+    }
+
+    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
+        self.output.push_back(bytes.to_vec());
+        Ok(())
+    }
+
+    fn resize(&mut self, _size: crate::app::NativePtyResize) -> Result<(), PtyError> {
+        Ok(())
+    }
+}
+
+fn runtime_perf_smoke_exit() -> CliExit {
+    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 24,
+        terminal_rows: 4,
+        scrollback_lines: 128,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    }) {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_perf_smoke_error(error),
+    };
+    if let Err(error) = runtime.start_shell(&RuntimePerfSmokePtySpawner) {
+        return runtime_perf_smoke_error(error);
+    }
+
+    let key = Key::Character("x".into());
+    let sent = match runtime.send_winit_key_input(&key, ModifiersState::empty()) {
+        Ok(sent) => sent,
+        Err(error) => return runtime_perf_smoke_error(error),
+    };
+    let pumped_bytes = match runtime.pump_pty_output() {
+        Ok(bytes) => bytes,
+        Err(error) => return runtime_perf_smoke_error(error),
+    };
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let rendered = runtime.render_terminal_frame(&mut renderer);
+    let metrics = runtime.dump_runtime_perf_metrics();
+
+    if !sent || pumped_bytes == 0 || !rendered || metrics.input_to_render_samples == 0 {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: "runtime perf smoke failed: input echo did not reach a rendered frame\n"
+                .to_owned(),
+        };
+    }
+
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "runtime perf smoke: ok\npumped bytes: {}\nrendered frames: {}\nrender p95 ns: {}\ninput-to-render p95 ns: {}\n",
+            pumped_bytes,
+            metrics.rendered_frames,
+            metrics.render_time_p95_ns,
+            metrics.input_to_render_p95_ns
+        ),
+        stderr: String::new(),
+    }
+}
+
+fn runtime_perf_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime perf smoke failed: {error}\n"),
+    }
 }
 
 fn clipboard_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> CliExit {

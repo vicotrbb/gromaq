@@ -24,7 +24,7 @@ Implemented and tested:
 - Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
 - Configuration validation, including bounded visible-grid area before allocation
 - Structured `TerminalTestApi`
-- Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, and measured native render durations
+- Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
 - Deterministic one-pixel-per-cell test API screenshot capture
 - Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
 - Visible-grid selection and copy
@@ -56,6 +56,7 @@ Implemented and tested:
 - Font-backed terminal text atlas packing and GPU upload/readback smoke test with `--gpu-text-atlas-smoke`
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
 - Offscreen terminal text GPU draw/readback smoke test with `--gpu-terminal-text-smoke`
+- Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - GPU renderer boundary with deterministic render-plan and glyph-quad generation
 - Owned surface glyph-frame preparation from render plans and rasterized glyph bitmaps
 - Deterministic `wgpu` surface configuration planner
@@ -95,6 +96,7 @@ cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
 cargo run -- --clipboard-smoke
 cargo run -- --osc52-clipboard-smoke
+cargo run -- --runtime-perf-smoke
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
