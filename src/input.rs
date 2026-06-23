@@ -137,6 +137,9 @@ pub(crate) fn encode_winit_key_with_application_cursor_mode(
             }
             TestKey::ArrowLeft
         }
+        Key::Named(NamedKey::Tab) if key_modifiers == KeyModifiers::SHIFT => {
+            return Some(b"\x1b[Z".to_vec());
+        }
         Key::Named(NamedKey::Tab) => TestKey::Tab,
         Key::Named(NamedKey::Home) => {
             return Some(
@@ -254,6 +257,15 @@ fn control_byte(ch: char) -> Option<u8> {
     if lower.is_ascii_lowercase() {
         Some((lower as u8) - b'a' + 1)
     } else {
-        None
+        match ch {
+            ' ' | '2' | '@' => Some(0x00),
+            '[' | '3' => Some(0x1b),
+            '\\' | '4' => Some(0x1c),
+            ']' | '5' => Some(0x1d),
+            '^' | '6' => Some(0x1e),
+            '_' | '7' | '/' => Some(0x1f),
+            '8' | '?' => Some(0x7f),
+            _ => None,
+        }
     }
 }

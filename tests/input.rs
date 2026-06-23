@@ -25,6 +25,36 @@ fn encodes_control_modified_ascii_characters() {
 }
 
 #[test]
+fn encodes_control_modified_ascii_punctuation() {
+    let cases = [
+        (' ', 0x00),
+        ('@', 0x00),
+        ('2', 0x00),
+        ('[', 0x1b),
+        ('3', 0x1b),
+        (']', 0x1d),
+        ('5', 0x1d),
+        ('\\', 0x1c),
+        ('4', 0x1c),
+        ('^', 0x1e),
+        ('6', 0x1e),
+        ('_', 0x1f),
+        ('/', 0x1f),
+        ('7', 0x1f),
+        ('?', 0x7f),
+        ('8', 0x7f),
+    ];
+
+    for (ch, expected) in cases {
+        let keys = [TestKey::ModifiedChar {
+            ch,
+            modifiers: KeyModifiers::CTRL,
+        }];
+        assert_eq!(encode_keys(&keys), vec![expected], "Ctrl+{ch}");
+    }
+}
+
+#[test]
 fn encodes_winit_printable_and_named_keys() {
     assert_eq!(
         encode_winit_key(&Key::Character("x".into()), ModifiersState::empty()),
@@ -33,6 +63,10 @@ fn encodes_winit_printable_and_named_keys() {
     assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::Enter), ModifiersState::empty()),
         Some(b"\r".to_vec())
+    );
+    assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Tab), ModifiersState::SHIFT),
+        Some(b"\x1b[Z".to_vec())
     );
     assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::ArrowLeft), ModifiersState::empty()),
