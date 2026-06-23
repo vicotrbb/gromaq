@@ -137,6 +137,34 @@ fn clearing_selection_removes_copy_text() {
 }
 
 #[test]
+fn resizing_visible_grid_clears_stale_selection() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+    terminal.write_str("abcdef").unwrap();
+    terminal.set_selection(SelectionRange::new((0, 1), (0, 3)));
+
+    terminal.resize(4, 2).unwrap();
+
+    assert_eq!(terminal.copy_selection(), None);
+}
+
+#[test]
+fn alternate_screen_transitions_clear_visible_grid_selection() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("primary").unwrap();
+    terminal.set_selection(SelectionRange::new((0, 0), (0, 2)));
+
+    terminal.write_str("\x1b[?1049h").unwrap();
+
+    assert_eq!(terminal.copy_selection(), None);
+
+    terminal.write_str("alt").unwrap();
+    terminal.set_selection(SelectionRange::new((0, 0), (0, 2)));
+    terminal.write_str("\x1b[?1049l").unwrap();
+
+    assert_eq!(terminal.copy_selection(), None);
+}
+
+#[test]
 fn copy_selection_clamps_rows_below_visible_grid() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 2).unwrap());
     terminal.write_str("abcde\r\nvwxyz").unwrap();
