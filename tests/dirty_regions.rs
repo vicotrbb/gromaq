@@ -96,6 +96,57 @@ fn resize_marks_entire_new_viewport_dirty() {
 }
 
 #[test]
+fn linefeed_at_scroll_bottom_marks_entire_viewport_dirty() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 3).unwrap());
+    terminal.write_str("\x1b[3;1H").unwrap();
+    terminal.take_dirty_regions();
+
+    terminal.write_str("\n").unwrap();
+
+    let regions = terminal.take_dirty_regions();
+    assert_eq!(regions.len(), 1);
+    assert_eq!(regions[0].row, 0);
+    assert_eq!(regions[0].col, 0);
+    assert_eq!(regions[0].rows, 3);
+    assert_eq!(regions[0].cols, 6);
+    assert_eq!(terminal.dump_perf_metrics().scrolls, 1);
+}
+
+#[test]
+fn linefeed_at_scroll_margin_bottom_marks_only_scroll_region_dirty() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 4).unwrap());
+    terminal.write_str("\x1b[2;3r\x1b[3;1H").unwrap();
+    terminal.take_dirty_regions();
+
+    terminal.write_str("\n").unwrap();
+
+    let regions = terminal.take_dirty_regions();
+    assert_eq!(regions.len(), 1);
+    assert_eq!(regions[0].row, 1);
+    assert_eq!(regions[0].col, 0);
+    assert_eq!(regions[0].rows, 2);
+    assert_eq!(regions[0].cols, 6);
+    assert_eq!(terminal.dump_perf_metrics().scrolls, 1);
+}
+
+#[test]
+fn reverse_index_at_scroll_margin_top_marks_only_scroll_region_dirty() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 4).unwrap());
+    terminal.write_str("\x1b[2;3r\x1b[2;1H").unwrap();
+    terminal.take_dirty_regions();
+
+    terminal.write_str("\x1bM").unwrap();
+
+    let regions = terminal.take_dirty_regions();
+    assert_eq!(regions.len(), 1);
+    assert_eq!(regions[0].row, 1);
+    assert_eq!(regions[0].col, 0);
+    assert_eq!(regions[0].rows, 2);
+    assert_eq!(regions[0].cols, 6);
+    assert_eq!(terminal.dump_perf_metrics().scrolls, 1);
+}
+
+#[test]
 fn dirty_tracker_contains_regions_at_u16_edges_without_overflow() {
     let mut dirty = DirtyTracker::default();
     let edge = DirtyRegion {
