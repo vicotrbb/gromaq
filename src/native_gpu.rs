@@ -340,6 +340,22 @@ fn last_rgba_pixel<'a>(
     })
 }
 
+fn rgba_pixel_at<'a>(
+    pixels: &'a [u8],
+    pixel_index: usize,
+    label: &'static str,
+) -> std::result::Result<&'a [u8], GpuBootstrapError> {
+    let start = pixel_index.checked_mul(4).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(format!("{label} byte offset is too large"))
+    })?;
+    let end = start.checked_add(4).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(format!("{label} byte offset is too large"))
+    })?;
+    pixels.get(start..end).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(format!("{label} is missing from readback"))
+    })
+}
+
 impl GpuGlyphAtlasUploadRunner for NativeGpuContext {
     fn run_glyph_atlas_upload_smoke(
         &self,
@@ -349,12 +365,7 @@ impl GpuGlyphAtlasUploadRunner for NativeGpuContext {
         let first_pixel = pixels.get(0..4).ok_or_else(|| {
             GpuBootstrapError::SmokeReadback("empty glyph atlas readback".to_owned())
         })?;
-        let second_slot_offset = usize::try_from(2 * 4).unwrap_or(usize::MAX);
-        let second_slot_first_pixel = pixels
-            .get(second_slot_offset..second_slot_offset + 4)
-            .ok_or_else(|| {
-                GpuBootstrapError::SmokeReadback("missing second glyph slot".to_owned())
-            })?;
+        let second_slot_first_pixel = rgba_pixel_at(&pixels, 2, "second glyph slot")?;
         let matching_bytes = pixels
             .iter()
             .zip(image.rgba.iter())
@@ -1631,6 +1642,34 @@ mod tests {
         assert_eq!(
             error,
             GpuBootstrapError::SmokeReadback("readback is shorter than one RGBA pixel".to_owned())
+        );
+    }
+
+    #[test]
+    fn rgba_pixel_at_reports_checked_slice() {
+        assert_eq!(
+            rgba_pixel_at(&[1, 2, 3, 4, 5, 6, 7, 8], 1, "pixel").unwrap(),
+            &[5, 6, 7, 8]
+        );
+    }
+
+    #[test]
+    fn rgba_pixel_at_rejects_missing_pixel() {
+        let error = rgba_pixel_at(&[1, 2, 3, 4], 1, "pixel").unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback("pixel is missing from readback".to_owned())
+        );
+    }
+
+    #[test]
+    fn rgba_pixel_at_rejects_overflowing_offset() {
+        let error = rgba_pixel_at(&[], usize::MAX, "pixel").unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback("pixel byte offset is too large".to_owned())
         );
     }
 
