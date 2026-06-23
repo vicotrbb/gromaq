@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 use std::hint::black_box;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 use gromaq::app::{
@@ -10,7 +11,7 @@ use gromaq::app::{
 use gromaq::font::FontRasterizer;
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
+    FrameScheduler, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
     PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
 };
 use gromaq::{
@@ -50,6 +51,7 @@ const CONTINUOUS_OUTPUT_SCROLLBACK_LINES: usize = 64;
 const SCROLLBACK_NAVIGATION_LINES: usize = 4_096;
 const SCROLLBACK_NAVIGATION_STEPS: usize = 512;
 const ALTERNATE_SCREEN_STAGES: usize = 3;
+const FRAME_SCHEDULER_TIMELINE_STEPS: usize = 512;
 const RUNTIME_PROTOCOL_INPUT_PAYLOAD: &[u8] =
     b"\x1b[?1004h\x1b[?1000h\x1b[?1006h\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
@@ -226,6 +228,47 @@ fn dirty_region_coalescing(c: &mut Criterion) {
                 cols: 80,
             }));
             black_box(dirty.take());
+        });
+    });
+}
+
+fn frame_scheduler_144hz_timeline(c: &mut Criterion) {
+    c.bench_function("frame_scheduler_144hz_timeline", |b| {
+        b.iter(|| {
+            let mut scheduler = FrameScheduler::new(144).unwrap();
+            let target_interval = scheduler.target_interval();
+            let start = Instant::now();
+            let first = scheduler.decide(start, true);
+            scheduler.record_presented(start);
+            let mut now = start;
+            let mut render_decisions = usize::from(first.should_render);
+            let mut paced_decisions = 0_usize;
+
+            for step in 1..FRAME_SCHEDULER_TIMELINE_STEPS {
+                let paced = scheduler.decide(now + Duration::from_millis(2), true);
+                if paced.wait_for.is_some() {
+                    paced_decisions += 1;
+                }
+
+                now = if step % 32 == 0 {
+                    now + target_interval + target_interval + target_interval
+                } else {
+                    now + target_interval
+                };
+                let decision = scheduler.decide(now, true);
+                if decision.should_render {
+                    render_decisions += 1;
+                    scheduler.record_presented(now);
+                }
+            }
+
+            let idle = scheduler.decide(now + Duration::from_nanos(1), false);
+            let metrics = scheduler.metrics();
+            black_box(render_decisions);
+            black_box(paced_decisions);
+            black_box(idle);
+            black_box(metrics.frames_presented);
+            black_box(metrics.dropped_frames);
         });
     });
 }
@@ -727,6 +770,7 @@ criterion_group!(
     scrollback_large_output,
     scrollback_view_navigation,
     dirty_region_coalescing,
+    frame_scheduler_144hz_timeline,
     render_plan_large_dirty_region,
     glyph_quad_generation_large_plan,
     rasterized_glyph_cache_hot_plan,
