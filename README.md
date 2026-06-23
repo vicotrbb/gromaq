@@ -16,6 +16,7 @@ Implemented and tested:
 - Bracketed paste mode encoding
 - Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, and simple emoji ZWJ clusters
 - Bounded scrollback
+- Long-output scrollback eviction capped to the configured scrollback limit
 - Scrollback clearing via erase-display mode 3
 - Visible-grid resize reflow for soft wraps, hard newlines, styled cells, and wide cells
 - Styled scrollback row reflow during resize

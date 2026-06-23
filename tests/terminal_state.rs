@@ -503,6 +503,37 @@ fn newline_at_bottom_moves_oldest_line_to_scrollback() {
 }
 
 #[test]
+fn long_output_keeps_scrollback_bounded_to_recent_lines() {
+    let config = TerminalConfig::new(16, 4)
+        .unwrap()
+        .with_scrollback_limit(32)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    for index in 0..200 {
+        terminal
+            .write_str(&format!("gromaq-{index:03}\r\n"))
+            .unwrap();
+    }
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines.len(), 32);
+    assert_eq!(scrollback.cells.len(), 32);
+    assert_eq!(
+        scrollback.lines.first().map(String::as_str),
+        Some("gromaq-165")
+    );
+    assert_eq!(
+        scrollback.lines.last().map(String::as_str),
+        Some("gromaq-196")
+    );
+    assert!(!scrollback.lines.iter().any(|line| line == "gromaq-000"));
+    assert_eq!(terminal.dump_grid().line_text(1), "gromaq-198");
+    assert_eq!(terminal.dump_grid().line_text(2), "gromaq-199");
+    assert!(terminal.dump_perf_metrics().scrolls > 32);
+}
+
+#[test]
 fn scrollback_preserves_wide_cell_metadata_when_row_scrolls_offscreen() {
     let config = TerminalConfig::new(4, 2)
         .unwrap()
