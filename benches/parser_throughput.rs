@@ -11,9 +11,10 @@ use gromaq::font::FontRasterizer;
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
     GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
-    PreparedSurfaceGlyphFrame, RenderPlanner,
+    PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
 };
 use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
+use winit::keyboard::{Key, ModifiersState};
 
 const LARGE_OUTPUT: &str = "\
 \x1b[31;1merror\x1b[0m line one\n\
@@ -41,6 +42,7 @@ const BENCH_MONOSPACE_FONT_CANDIDATES: &[&str] = &[
 #[derive(Debug)]
 struct BenchPtySession {
     output: VecDeque<Vec<u8>>,
+    echo_input: bool,
 }
 
 impl NativePtySessionIo for BenchPtySession {
@@ -48,7 +50,10 @@ impl NativePtySessionIo for BenchPtySession {
         Ok(self.output.pop_front().unwrap_or_default())
     }
 
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
+    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
+        if self.echo_input {
+            self.output.push_back(bytes.to_vec());
+        }
         Ok(())
     }
 
@@ -60,6 +65,7 @@ impl NativePtySessionIo for BenchPtySession {
 #[derive(Debug, Clone, Copy)]
 struct BenchPtySpawner {
     chunks: usize,
+    echo_input: bool,
 }
 
 impl NativePtySpawner for BenchPtySpawner {
@@ -70,7 +76,10 @@ impl NativePtySpawner for BenchPtySpawner {
         for _ in 0..self.chunks {
             output.push_back(LARGE_OUTPUT.as_bytes().to_vec());
         }
-        Ok(BenchPtySession { output })
+        Ok(BenchPtySession {
+            output,
+            echo_input: self.echo_input,
+        })
     }
 }
 
@@ -257,6 +266,43 @@ fn prepared_surface_glyph_frame_large_plan(c: &mut Criterion) {
     });
 }
 
+fn native_input_echo_render_cycle(c: &mut Criterion) {
+    let spawner = BenchPtySpawner {
+        chunks: 0,
+        echo_input: true,
+    };
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 120,
+        terminal_rows: 36,
+        scrollback_lines: 20_000,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let key = Key::Character("x".into());
+
+    c.bench_function("native_input_echo_render_cycle", |b| {
+        b.iter(|| {
+            let sent = runtime
+                .send_winit_key_input(black_box(&key), black_box(ModifiersState::empty()))
+                .unwrap();
+            let pumped = runtime.pump_pty_output().unwrap();
+            let rendered = runtime.render_terminal_frame(&mut renderer);
+            black_box(sent);
+            black_box(pumped);
+            black_box(rendered);
+            black_box(renderer.glyph_atlas_metrics());
+        });
+    });
+}
+
 fn font_rasterizer_combining_cell(c: &mut Criterion) {
     let font_bytes = bench_monospace_font_bytes();
     let mut rasterizer = FontRasterizer::from_bytes(font_bytes).unwrap();
@@ -283,7 +329,10 @@ fn font_rasterizer_combining_cell(c: &mut Criterion) {
 fn pty_runtime_pump_large_output(c: &mut Criterion) {
     c.bench_function("pty_runtime_pump_large_output", |b| {
         b.iter(|| {
-            let spawner = BenchPtySpawner { chunks: 256 };
+            let spawner = BenchPtySpawner {
+                chunks: 256,
+                echo_input: false,
+            };
             let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
                 terminal_cols: 120,
                 terminal_rows: 36,
@@ -323,6 +372,7 @@ criterion_group!(
     glyph_quad_generation_large_plan,
     rasterized_glyph_cache_hot_plan,
     prepared_surface_glyph_frame_large_plan,
+    native_input_echo_render_cycle,
     font_rasterizer_combining_cell,
     pty_runtime_pump_large_output
 );
