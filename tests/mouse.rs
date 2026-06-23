@@ -196,3 +196,40 @@ fn any_motion_reporting_survives_button_motion_reset() {
         b"\x1b[<35;2;2M"
     );
 }
+
+#[test]
+fn dec_private_restore_restores_button_reporting_and_sgr_protocol() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal
+        .write_str("\x1b[?1000h\x1b[?1006h\x1b[?1000s\x1b[?1006s")
+        .unwrap();
+    terminal.write_str("\x1b[?1000l\x1b[?1006l").unwrap();
+
+    let press = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 1, 1);
+    assert_eq!(terminal.encode_mouse_event(press), None);
+
+    terminal.write_str("\x1b[?1000r\x1b[?1006r").unwrap();
+
+    assert_eq!(terminal.encode_mouse_event(press).unwrap(), b"\x1b[<0;2;2M");
+}
+
+#[test]
+fn dec_private_restore_keeps_button_motion_and_any_motion_independent() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal
+        .write_str("\x1b[?1002h\x1b[?1002s\x1b[?1003s\x1b[?1006h")
+        .unwrap();
+    terminal.write_str("\x1b[?1002l\x1b[?1003h").unwrap();
+
+    let drag = MouseEvent::new(MouseEventKind::Drag, MouseButton::Left, 1, 1);
+    let motion = MouseEvent::new(MouseEventKind::Motion, MouseButton::None, 1, 1);
+    assert_eq!(
+        terminal.encode_mouse_event(motion).unwrap(),
+        b"\x1b[<35;2;2M"
+    );
+
+    terminal.write_str("\x1b[?1002r\x1b[?1003r").unwrap();
+
+    assert_eq!(terminal.encode_mouse_event(drag).unwrap(), b"\x1b[<32;2;2M");
+    assert_eq!(terminal.encode_mouse_event(motion), None);
+}
