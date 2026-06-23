@@ -1205,6 +1205,12 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
     };
     assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
     assert!(!runtime.render_terminal_frame(&mut renderer).unwrap());
+    let rendered_dirty_regions = renderer.frames[0].dirty_regions.len() as u64;
+    let rendered_dirty_cells = renderer.frames[0]
+        .dirty_regions
+        .iter()
+        .map(|region| u64::from(region.rows) * u64::from(region.cols))
+        .sum::<u64>();
 
     let metrics = runtime.dump_runtime_perf_metrics();
     assert_eq!(metrics.pty_output_batches, 2);
@@ -1223,6 +1229,9 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
     assert_eq!(metrics.resize_events, 1);
     assert_eq!(metrics.render_attempts, 2);
     assert_eq!(metrics.rendered_frames, 1);
+    assert_eq!(metrics.rendered_dirty_regions, rendered_dirty_regions);
+    assert_eq!(metrics.rendered_dirty_cells, rendered_dirty_cells);
+    assert_eq!(metrics.rendered_dirty_cells_max, rendered_dirty_cells);
     assert_eq!(metrics.clean_frame_skips, 1);
     assert_eq!(metrics.render_time_samples, 1);
     assert!(metrics.render_time_total_ns >= 1_000_000);

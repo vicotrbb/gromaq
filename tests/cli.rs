@@ -506,6 +506,9 @@ fn runtime_perf_smoke_cli_reports_structured_metrics_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("runtime perf smoke: ok"));
     assert!(exit.stdout.contains("pumped bytes: 1"));
     assert!(exit.stdout.contains("rendered frames: 1"));
+    assert!(exit.stdout.contains("rendered dirty regions:"));
+    assert!(exit.stdout.contains("rendered dirty cells:"));
+    assert!(exit.stdout.contains("rendered dirty cells max:"));
     assert!(exit.stdout.contains("render avg ns:"));
     assert!(exit.stdout.contains("render p95 ns:"));
     assert!(exit.stdout.contains("input-to-render avg ns:"));

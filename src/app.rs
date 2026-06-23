@@ -18,6 +18,7 @@ use winit::window::{Window, WindowAttributes, WindowId};
 
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::{ConfigFileReloader, GromaqConfig};
+use crate::dirty::DirtyRegion;
 use crate::error::{GromaqError, Result as GromaqResult};
 use crate::font::{FontRasterError, RasterizedGlyphCache};
 use crate::input::key_modifiers_from_winit;
@@ -629,6 +630,12 @@ pub struct NativeRuntimePerfSnapshot {
     pub render_attempts: u64,
     /// Number of dirty terminal frames rendered through the renderer boundary.
     pub rendered_frames: u64,
+    /// Total dirty regions consumed by successful render passes.
+    pub rendered_dirty_regions: u64,
+    /// Total dirty cells covered by successful render passes.
+    pub rendered_dirty_cells: u64,
+    /// Maximum dirty cells covered by one successful render pass.
+    pub rendered_dirty_cells_max: u64,
     /// Number of render attempts skipped because no dirty regions were pending.
     pub clean_frame_skips: u64,
     /// Number of rendered frames with measured render duration samples.
@@ -733,6 +740,12 @@ fn add_usize_counter(counter: &mut u64, value: usize) {
 
 fn scrollback_cell_count(scrollback: &ScrollbackSnapshot) -> usize {
     scrollback.cells.iter().map(Vec::len).sum()
+}
+
+fn dirty_region_cell_count(regions: &[DirtyRegion]) -> u64 {
+    regions.iter().fold(0_u64, |total, region| {
+        total.saturating_add(u64::from(region.rows).saturating_mul(u64::from(region.cols)))
+    })
 }
 
 /// Spawns PTY sessions for the native terminal runtime.
@@ -904,7 +917,11 @@ impl<S> NativeTerminalRuntime<S> {
             return Err(error);
         }
         let elapsed_ns = saturating_duration_nanos(render_started.elapsed());
+        let dirty_cells = dirty_region_cell_count(&dirty_regions);
         self.perf.rendered_frames += 1;
+        add_usize_counter(&mut self.perf.rendered_dirty_regions, dirty_regions.len());
+        self.perf.rendered_dirty_cells = self.perf.rendered_dirty_cells.saturating_add(dirty_cells);
+        self.perf.rendered_dirty_cells_max = self.perf.rendered_dirty_cells_max.max(dirty_cells);
         self.perf.render_time_samples += 1;
         self.perf.render_time_total_ns = self.perf.render_time_total_ns.saturating_add(elapsed_ns);
         self.perf.render_time_avg_ns = average_duration_nanos(
@@ -918,6 +935,7 @@ impl<S> NativeTerminalRuntime<S> {
             .p95_upper_bound_ns(self.perf.render_time_samples);
         trace!(
             dirty_regions = dirty_regions.len(),
+            dirty_cells,
             render_time_ns = elapsed_ns,
             rendered_frames = self.perf.rendered_frames,
             render_time_p95_ns = self.perf.render_time_p95_ns,
@@ -2218,6 +2236,29 @@ mod tests {
     fn runtime_perf_average_duration_reports_zero_without_samples() {
         assert_eq!(average_duration_nanos(42, 0), 0);
         assert_eq!(average_duration_nanos(42, 3), 14);
+    }
+
+    #[test]
+    fn runtime_dirty_region_cell_count_uses_widened_region_math() {
+        let regions = [
+            DirtyRegion {
+                row: 0,
+                col: 0,
+                rows: u16::MAX,
+                cols: u16::MAX,
+            },
+            DirtyRegion {
+                row: 0,
+                col: 0,
+                rows: 2,
+                cols: 3,
+            },
+        ];
+
+        assert_eq!(
+            dirty_region_cell_count(&regions),
+            u64::from(u16::MAX) * u64::from(u16::MAX) + 6
+        );
     }
 
     #[test]
