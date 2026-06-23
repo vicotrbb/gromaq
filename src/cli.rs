@@ -1159,7 +1159,7 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime bounded-state smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nscrollback cell rows: {}\nscrollback cells: {}\nrendered frames: {}\nlast visible line: {}\n",
+            "runtime bounded-state smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nscrollback cell rows: {}\nscrollback cells: {}\nscrollback max cells: {}\nrendered frames: {}\nlast visible line: {}\n",
             RUNTIME_BOUNDED_STATE_BATCHES,
             total_lines,
             pumped_bytes,
@@ -1167,6 +1167,7 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
             scrollback.lines.len(),
             scrollback.cells.len(),
             retained_cells,
+            max_retained_cells,
             metrics.rendered_frames,
             last_line
         ),
