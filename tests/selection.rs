@@ -81,6 +81,21 @@ fn copy_selection_preserves_emoji_modifier_zwj_cluster_text_once() {
 }
 
 #[test]
+fn copy_selection_preserves_tag_sequence_emoji_flag_text_once() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+    terminal
+        .write_str("a🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}b")
+        .unwrap();
+
+    terminal.set_selection(SelectionRange::new((0, 0), (0, 3)));
+
+    assert_eq!(
+        terminal.copy_selection().unwrap(),
+        "a🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}b"
+    );
+}
+
+#[test]
 fn copy_selection_preserves_selected_spaces_before_later_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("a  b").unwrap();

@@ -516,6 +516,29 @@ fn regional_indicator_pair_after_right_edge_print_stays_clustered() {
 }
 
 #[test]
+fn tag_sequence_emoji_flag_stays_in_one_wide_cell_cluster() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}Z")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(
+        grid.cell(0, 0).text,
+        "🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}"
+    );
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(grid.cell(0, 2).text, "Z");
+    assert_eq!(
+        grid.line_text(0),
+        "🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}Z"
+    );
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
 fn newline_at_bottom_moves_oldest_line_to_scrollback() {
     let config = TerminalConfig::new(8, 2)
         .unwrap()
