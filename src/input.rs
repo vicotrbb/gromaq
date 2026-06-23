@@ -265,7 +265,7 @@ fn encode_winit_keypad_key(
         KeyCode::NumpadSubtract => '-',
         KeyCode::NumpadAdd => '+',
         KeyCode::NumpadEqual => '=',
-        KeyCode::NumpadEnter => return Some(vec![b'\r']),
+        KeyCode::NumpadEnter => return Some(encode_alt_prefixed_key(b"\r", modifiers)),
         _ => return None,
     };
 

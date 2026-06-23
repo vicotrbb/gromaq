@@ -100,6 +100,14 @@ fn terminal_encodes_physical_numpad_keys_in_numeric_mode() {
     );
     assert_eq!(
         terminal.encode_winit_key_event_input(
+            &Key::Named(NamedKey::Enter),
+            Some(PhysicalKey::Code(KeyCode::NumpadEnter)),
+            ModifiersState::ALT,
+        ),
+        Some(b"\x1b\r".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
             &Key::Character("+".into()),
             Some(PhysicalKey::Code(KeyCode::NumpadAdd)),
             ModifiersState::ALT,
