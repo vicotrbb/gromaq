@@ -2626,9 +2626,12 @@ where
             Some(Color::Indexed(index))
         }
         2 => {
-            let r = u8::try_from(iter.next()?).ok()?;
-            let g = u8::try_from(iter.next()?).ok()?;
-            let b = u8::try_from(iter.next()?).ok()?;
+            let r = iter.next()?;
+            let g = iter.next()?;
+            let b = iter.next()?;
+            let r = u8::try_from(r).ok()?;
+            let g = u8::try_from(g).ok()?;
+            let b = u8::try_from(b).ok()?;
             Some(Color::Rgb(r, g, b))
         }
         _ => None,

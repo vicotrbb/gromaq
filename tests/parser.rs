@@ -240,6 +240,21 @@ fn sgr_ignores_out_of_range_extended_color_components() {
 }
 
 #[test]
+fn sgr_invalid_semicolon_truecolor_does_not_leak_components_as_attributes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[31;44mA\x1b[38;2;999;1;2mB")
+        .unwrap();
+
+    let style = terminal.dump_grid().cell(0, 1).style;
+    assert_eq!(style.foreground, Color::Ansi(1));
+    assert_eq!(style.background, Color::Ansi(4));
+    assert!(!style.bold);
+    assert!(!style.dim);
+}
+
+#[test]
 fn sgr_ignores_invalid_grouped_extended_color_params() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
