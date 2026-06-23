@@ -13,8 +13,8 @@ use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::app::{
     NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalApp,
-    NativeTerminalRuntime, NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
-    run_native_app_with_runtime_renderer_and_config_file,
+    NativeTerminalRuntime, NativeTerminalRuntimeConfig, is_native_paste_shortcut,
+    load_default_native_glyph_cache, run_native_app_with_runtime_renderer_and_config_file,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::{ConfigFileReloader, GromaqConfig, ShellSettings};
@@ -1900,6 +1900,16 @@ impl NativePtySessionIo for RuntimeClipboardPasteSmokePtySession {
 }
 
 fn runtime_clipboard_paste_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> CliExit {
+    let paste_key_recognized =
+        is_native_paste_shortcut(&Key::Named(NamedKey::Paste), ModifiersState::empty());
+    if !paste_key_recognized {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: "runtime clipboard paste smoke failed: OS Paste key was not recognized\n"
+                .to_owned(),
+        };
+    }
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 24,
         terminal_rows: 4,
@@ -1952,7 +1962,8 @@ fn runtime_clipboard_paste_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> Cl
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime clipboard paste smoke: ok\npasted bytes: {}\nclipboard pastes: {}\nprevious text restored: {}\n",
+            "runtime clipboard paste smoke: ok\npaste key recognized: {}\npasted bytes: {}\nclipboard pastes: {}\nprevious text restored: {}\n",
+            paste_key_recognized,
             RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT.len(),
             metrics.clipboard_pastes,
             restored_previous_text

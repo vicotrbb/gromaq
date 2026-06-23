@@ -99,7 +99,7 @@ Implemented and tested:
 
 Not yet complete:
 
-- Live desktop OS paste key/menu smoke
+- Live desktop OS paste menu smoke
 - Hardware-backed 144Hz frame pacing proof
 - Live desktop screenshot/runtime proof of windowed terminal glyph drawing
 - Live desktop OS clipboard paste smoke
