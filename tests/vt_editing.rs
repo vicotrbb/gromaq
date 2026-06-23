@@ -302,6 +302,28 @@ fn csi_cursor_character_absolute_moves_within_current_row() {
 }
 
 #[test]
+fn csi_horizontal_position_absolute_moves_within_current_row() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("abcdef\r\x1b[5`Z").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "abcdZf");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 5);
+}
+
+#[test]
+fn csi_horizontal_position_relative_moves_within_current_row() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("ab\x1b[3aZ").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "ab   Z");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 6);
+}
+
+#[test]
 fn csi_vertical_position_absolute_moves_within_current_column() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
 
@@ -310,6 +332,17 @@ fn csi_vertical_position_absolute_moves_within_current_column() {
     assert_eq!(terminal.dump_grid().line_text(0), "abZ");
     assert_eq!(terminal.dump_grid().line_text(1), "cd");
     assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
+fn csi_vertical_position_relative_moves_within_current_column() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
+
+    terminal.write_str("\x1b[2;3H\x1b[2eZ").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(3), "  Z");
+    assert_eq!(terminal.dump_cursor().row, 3);
     assert_eq!(terminal.dump_cursor().col, 3);
 }
 

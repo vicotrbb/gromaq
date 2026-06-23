@@ -1716,6 +1716,8 @@ impl Perform for Terminal {
             'M' => self.delete_lines(count),
             'S' => self.scroll_viewport_up(count),
             'T' => self.scroll_viewport_down(count),
+            '`' => self.set_cursor_col(count),
+            'a' => self.move_cursor_right(count),
             'H' | 'f' => {
                 let row = values.first().copied().unwrap_or(1);
                 let col = values.get(1).copied().unwrap_or(1);
@@ -1724,6 +1726,7 @@ impl Perform for Terminal {
             'G' => self.set_cursor_col(count),
             'g' => self.clear_tab_stop(first),
             'd' => self.set_cursor_row(count),
+            'e' => self.move_cursor_down(count),
             'J' => self.erase_display(first),
             'K' => self.erase_line(first),
             'm' => self.apply_sgr(params),
