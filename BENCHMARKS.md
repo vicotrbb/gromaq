@@ -5,8 +5,12 @@ Benchmarks use Criterion.
 Run:
 
 ```bash
+cargo bench --bench parser_throughput -- --list
 cargo bench
 ```
+
+CI runs the benchmark list command so the harness keeps compiling without
+running full Criterion measurements on every push.
 
 Current benchmarks:
 
@@ -25,7 +29,7 @@ Dirty-region tracking is unit-tested and benchmarked for coalescing/containment/
 Frame-scheduler decisions are unit-tested with injected timestamps; they do not yet prove hardware-backed 144Hz rendering.
 PTY background reader, runtime pump behavior, and timed event-loop pump scheduling are integration-tested. PTY runtime pump throughput is benchmarked with deterministic queued output and feeds raw PTY bytes directly into the terminal parser. Native input echo-to-render latency is benchmarked with a deterministic PTY echo session and CPU-side renderer planning; real PTY throughput and live input-to-present latency are not yet benchmarked.
 Glyph-atlas cache behavior is unit-tested for identity, LRU eviction, and metrics; it does not yet prove rasterization speed or GPU upload performance.
-Font rasterization, renderer-plan glyph bitmap population, and text-atlas GPU upload/readback are integration-tested with a real local font; direct shaped-cell font rasterization, cached render-plan glyph bitmap population, and prepared terminal glyph-frame construction are benchmarked for CPU-side paths, but GPU upload performance is not yet benchmarked and is not yet integrated into a terminal draw pipeline.
+Font rasterization, renderer-plan glyph bitmap population, and text-atlas GPU upload/readback are integration-tested with a real local font. Font-dependent benchmarks register their names and emit a clear skip message when no supported local monospace font is available, so a skipped run does not prove rasterization throughput on that machine. Direct shaped-cell font rasterization, cached render-plan glyph bitmap population, and prepared terminal glyph-frame construction are benchmarked for CPU-side paths, but GPU upload performance is not yet benchmarked and is not yet integrated into a terminal draw pipeline.
 Render-plan generation is unit-tested against dirty-region and full-viewport modes and benchmarked for CPU-side command generation. Glyph-quad generation is integration-tested for pixel positions, wide-cell geometry, atlas UVs, and triangle indices, and benchmarked both directly and through prepared terminal glyph-frame construction; it does not yet prove GPU draw performance. The offscreen textured-quad and terminal-text smoke tests prove sampled draw pipelines and readback, but they are not benchmarked and do not yet prove windowed terminal frame time.
 
 ## Acceptance Targets
