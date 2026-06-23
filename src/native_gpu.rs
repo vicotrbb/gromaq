@@ -360,7 +360,8 @@ impl GpuGlyphAtlasUploadRunner for NativeGpuContext {
     fn run_glyph_atlas_upload_smoke(
         &self,
     ) -> std::result::Result<GpuGlyphAtlasUploadReport, GpuBootstrapError> {
-        let image = GlyphAtlasImage::smoke_rgba8().map_err(GpuBootstrapError::SmokeReadback)?;
+        let image = GlyphAtlasImage::smoke_rgba8()
+            .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
         let pixels = self.upload_glyph_atlas_and_readback(&image)?;
         let first_pixel = pixels.get(0..4).ok_or_else(|| {
             GpuBootstrapError::SmokeReadback("empty glyph atlas readback".to_owned())
@@ -829,11 +830,11 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
         .map(|glyph| {
             glyph
                 .padded_to(slot_width, slot_height)
-                .map_err(GpuBootstrapError::SmokeReadback)
+                .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))
         })
         .collect::<std::result::Result<Vec<_>, _>>()?;
     let image = GlyphAtlasImage::pack_rgba8(slot_width, slot_height, 2, &padded)
-        .map_err(GpuBootstrapError::SmokeReadback)?;
+        .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     Ok(TextAtlasSmokeFrame {
         image,
         batch,

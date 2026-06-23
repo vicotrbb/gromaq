@@ -1,4 +1,4 @@
-use gromaq::renderer::{GlyphAtlasImage, GlyphBitmap, GlyphEntry};
+use gromaq::renderer::{GlyphAtlasImage, GlyphBitmap, GlyphEntry, GlyphImageError};
 
 #[test]
 fn glyph_atlas_image_packs_bitmaps_by_slot() {
@@ -46,7 +46,15 @@ fn glyph_atlas_image_rejects_wrong_bitmap_size() {
 
     let error = GlyphAtlasImage::pack_rgba8(2, 2, 1, &[bad]).unwrap_err();
 
-    assert!(error.contains("expected 16 rgba bytes"));
+    assert_eq!(
+        error,
+        GlyphImageError::InvalidAtlasGlyphSize {
+            slot: 0,
+            expected_len: 16,
+            slot_width: 2,
+            slot_height: 2
+        }
+    );
 }
 
 #[test]
@@ -62,13 +70,13 @@ fn solid_glyph_bitmap_rejects_overflowing_dimensions_before_allocation() {
     )
     .unwrap_err();
 
-    assert!(error.contains("image dimensions are too large"));
+    assert_eq!(error, GlyphImageError::RgbaImageDimensionsTooLarge);
 }
 
 #[test]
 fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
     let width_error = GlyphAtlasImage::pack_rgba8(u32::MAX, 1, 2, &[]).unwrap_err();
-    assert!(width_error.contains("width is too large"));
+    assert_eq!(width_error, GlyphImageError::AtlasWidthTooLarge);
 
     let tall_glyph = GlyphBitmap {
         entry: GlyphEntry {
@@ -80,7 +88,7 @@ fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
         rgba: Vec::new(),
     };
     let height_error = GlyphAtlasImage::pack_rgba8(1, u32::MAX, 1, &[tall_glyph]).unwrap_err();
-    assert!(height_error.contains("height is too large"));
+    assert_eq!(height_error, GlyphImageError::AtlasHeightTooLarge);
 
     let huge_slot = GlyphBitmap {
         entry: GlyphEntry {
@@ -92,7 +100,7 @@ fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
         rgba: Vec::new(),
     };
     let image_error = GlyphAtlasImage::pack_rgba8(u32::MAX, 1, 1, &[huge_slot]).unwrap_err();
-    assert!(image_error.contains("image dimensions are too large"));
+    assert_eq!(image_error, GlyphImageError::RgbaImageDimensionsTooLarge);
 }
 
 #[test]
@@ -110,5 +118,5 @@ fn glyph_bitmap_padding_rejects_oversized_target_before_allocation() {
 
     let error = glyph.padded_to(u32::MAX, u32::MAX).unwrap_err();
 
-    assert!(error.contains("image dimensions are too large"));
+    assert_eq!(error, GlyphImageError::RgbaImageDimensionsTooLarge);
 }
