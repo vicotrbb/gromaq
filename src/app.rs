@@ -77,6 +77,17 @@ impl Default for NativeAppConfig {
 }
 
 impl NativeAppConfig {
+    /// Build native app configuration from validated user configuration.
+    pub fn from_gromaq_config(config: &GromaqConfig) -> Result<Self, NativeAppError> {
+        config
+            .validate()
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        Ok(Self {
+            target_fps: config.performance.target_fps,
+            ..Self::default()
+        })
+    }
+
     /// Build `winit` window attributes for the terminal window.
     pub fn window_attributes(&self) -> WindowAttributes {
         Window::default_attributes()
@@ -542,6 +553,26 @@ impl Default for NativeTerminalRuntimeConfig {
 }
 
 impl NativeTerminalRuntimeConfig {
+    /// Build runtime configuration from validated user configuration and shell command.
+    pub fn from_gromaq_config(
+        config: &GromaqConfig,
+        shell: ShellCommand,
+    ) -> Result<Self, NativeAppError> {
+        config
+            .validate()
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        let runtime_config = Self {
+            terminal_cols: config.terminal.cols,
+            terminal_rows: config.terminal.rows,
+            scrollback_lines: config.terminal.scrollback_lines,
+            pixel_width: 0,
+            pixel_height: 0,
+            shell,
+        };
+        runtime_config.terminal_config()?;
+        Ok(runtime_config)
+    }
+
     fn terminal_config(&self) -> Result<TerminalConfig, NativeAppError> {
         TerminalConfig::new(self.terminal_cols, self.terminal_rows)
             .and_then(|config| config.with_pixel_size(self.pixel_width, self.pixel_height))
@@ -1230,7 +1261,14 @@ pub struct NativeTerminalApp {
 impl NativeTerminalApp {
     /// Create a native terminal app handler.
     pub fn new(config: NativeAppConfig) -> Result<Self, NativeAppError> {
-        let runtime_config = NativeTerminalRuntimeConfig::default();
+        Self::new_with_runtime_config(config, NativeTerminalRuntimeConfig::default())
+    }
+
+    /// Create a native terminal app handler with an explicit runtime configuration.
+    pub fn new_with_runtime_config(
+        config: NativeAppConfig,
+        runtime_config: NativeTerminalRuntimeConfig,
+    ) -> Result<Self, NativeAppError> {
         let resize_mapper = NativeResizeGridMapper::new(
             config.width,
             config.height,

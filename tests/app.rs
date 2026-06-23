@@ -10,10 +10,10 @@ use std::time::Duration;
 use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativePtySessionIo,
-    NativePtySpawner, NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig, NativeWindowMouseInput, NativeWindowSurface, RealNativePtySpawner,
-    is_native_paste_shortcut, load_default_native_glyph_cache,
-    render_and_present_terminal_glyph_frame,
+    NativePtySpawner, NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeTerminalApp,
+    NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowMouseInput,
+    NativeWindowSurface, RealNativePtySpawner, is_native_paste_shortcut,
+    load_default_native_glyph_cache, render_and_present_terminal_glyph_frame,
 };
 use gromaq::dirty::DirtyRegion;
 use gromaq::font::RasterizedGlyphCache;
@@ -26,8 +26,8 @@ use gromaq::renderer::{
     WgpuRenderer,
 };
 use gromaq::{
-    CursorSnapshot, GridSnapshot, KeyModifiers, MemoryClipboard, MouseButton, MouseEvent,
-    MouseEventKind, Terminal, TerminalConfig,
+    CursorSnapshot, GridSnapshot, GromaqConfig, KeyModifiers, MemoryClipboard, MouseButton,
+    MouseEvent, MouseEventKind, Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
@@ -164,6 +164,75 @@ fn native_app_config_builds_terminal_window_attributes() {
         config.target_frame_interval(),
         Duration::from_nanos(6_944_444)
     );
+}
+
+#[test]
+fn native_app_config_uses_validated_gromaq_performance_target() {
+    let mut user_config = GromaqConfig::default();
+    user_config.performance.target_fps = 120;
+
+    let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
+
+    assert_eq!(app_config.target_fps, 120);
+    assert_eq!(
+        app_config.target_frame_interval(),
+        Duration::from_nanos(8_333_333)
+    );
+}
+
+#[test]
+fn native_app_config_rejects_invalid_gromaq_performance_target() {
+    let mut user_config = GromaqConfig::default();
+    user_config.performance.target_fps = 0;
+
+    let error = NativeAppConfig::from_gromaq_config(&user_config).unwrap_err();
+
+    assert!(error.to_string().contains("target fps"));
+}
+
+#[test]
+fn native_runtime_config_uses_validated_gromaq_terminal_settings() {
+    let mut user_config = GromaqConfig::default();
+    user_config.terminal.cols = 100;
+    user_config.terminal.rows = 28;
+    user_config.terminal.scrollback_lines = 2048;
+    let shell = ShellCommand {
+        program: "/bin/zsh".into(),
+        args: vec!["-l".into()],
+        cwd: Some("/tmp".into()),
+    };
+
+    let runtime_config =
+        NativeTerminalRuntimeConfig::from_gromaq_config(&user_config, shell.clone()).unwrap();
+
+    assert_eq!(runtime_config.terminal_cols, 100);
+    assert_eq!(runtime_config.terminal_rows, 28);
+    assert_eq!(runtime_config.scrollback_lines, 2048);
+    assert_eq!(runtime_config.shell, shell);
+}
+
+#[test]
+fn native_app_can_start_with_explicit_runtime_config() {
+    let runtime_config = NativeTerminalRuntimeConfig {
+        terminal_cols: 40,
+        terminal_rows: 10,
+        scrollback_lines: 64,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    };
+
+    let app =
+        NativeTerminalApp::new_with_runtime_config(NativeAppConfig::default(), runtime_config)
+            .unwrap();
+
+    let grid = app.runtime().terminal().dump_grid();
+    assert_eq!(grid.cols, 40);
+    assert_eq!(grid.rows, 10);
 }
 
 #[test]
