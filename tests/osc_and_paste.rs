@@ -88,6 +88,24 @@ fn osc_8_hyperlink_applies_uri_to_printed_cells_until_reset() {
 }
 
 #[test]
+fn invalid_osc_8_hyperlink_uri_is_ignored_without_clearing_active_link() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    let overlong_uri = "x".repeat(4097);
+
+    terminal
+        .write_str(&format!(
+            "\x1b]8;;https://gromaq.dev\x1b\\A\x1b]8;;{overlong_uri}\x1b\\B\x1b]8;;\x1b\\C"
+        ))
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "ABC");
+    assert_eq!(grid.cell_hyperlink(0, 0), Some("https://gromaq.dev"));
+    assert_eq!(grid.cell_hyperlink(0, 1), Some("https://gromaq.dev"));
+    assert_eq!(grid.cell_hyperlink(0, 2), None);
+}
+
+#[test]
 fn invalid_osc_52_payload_is_ignored_without_side_effects() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     terminal.write_str("\x1b]52;c;SGVsbG8=\x07").unwrap();

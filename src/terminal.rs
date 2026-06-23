@@ -2377,8 +2377,11 @@ impl Perform for Terminal {
                 }
             }
             "8" => match decode_osc8_hyperlink(params) {
-                Some(uri) => self.current_hyperlink_id = self.intern_hyperlink(uri),
-                None => self.current_hyperlink_id = 0,
+                Osc8HyperlinkAction::Open(uri) => {
+                    self.current_hyperlink_id = self.intern_hyperlink(uri);
+                }
+                Osc8HyperlinkAction::Close => self.current_hyperlink_id = 0,
+                Osc8HyperlinkAction::Ignore => {}
             },
             _ => {}
         }
@@ -2515,12 +2518,25 @@ fn decode_osc52_clipboard(params: &[&[u8]]) -> Option<String> {
     String::from_utf8(decoded).ok()
 }
 
-fn decode_osc8_hyperlink(params: &[&[u8]]) -> Option<String> {
-    let uri = params
-        .get(2)
-        .and_then(|bytes| std::str::from_utf8(bytes).ok())?;
-    if uri.is_empty() || uri.len() > MAX_OSC8_HYPERLINK_BYTES {
-        return None;
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Osc8HyperlinkAction {
+    Open(String),
+    Close,
+    Ignore,
+}
+
+fn decode_osc8_hyperlink(params: &[&[u8]]) -> Osc8HyperlinkAction {
+    let Some(uri) = params.get(2) else {
+        return Osc8HyperlinkAction::Ignore;
+    };
+    if uri.is_empty() {
+        return Osc8HyperlinkAction::Close;
     }
-    Some(uri.to_owned())
+    if uri.len() > MAX_OSC8_HYPERLINK_BYTES {
+        return Osc8HyperlinkAction::Ignore;
+    }
+    let Ok(uri) = std::str::from_utf8(uri) else {
+        return Osc8HyperlinkAction::Ignore;
+    };
+    Osc8HyperlinkAction::Open(uri.to_owned())
 }
