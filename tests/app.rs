@@ -236,6 +236,24 @@ fn native_app_can_start_with_explicit_runtime_config() {
 }
 
 #[test]
+fn native_app_can_start_with_explicit_renderer_config() {
+    let renderer_config = RendererConfig {
+        font_size_px: 18,
+        dirty_regions: false,
+        ..RendererConfig::default()
+    };
+
+    let app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        renderer_config.clone(),
+    )
+    .unwrap();
+
+    assert_eq!(app.renderer().config(), &renderer_config);
+}
+
+#[test]
 fn default_native_glyph_cache_loads_system_monospace_font() {
     let cache = load_default_native_glyph_cache().unwrap();
 

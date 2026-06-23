@@ -38,10 +38,12 @@ pub enum GromaqError {
     },
 
     /// Font size must be useful for rendering.
-    #[error("font size must be at least {minimum}, got {actual}")]
+    #[error("font size must be finite and between {minimum} and {maximum}, got {actual}")]
     InvalidFontSize {
         /// Inclusive lower bound.
         minimum: f32,
+        /// Inclusive upper bound.
+        maximum: f32,
         /// Actual invalid value.
         actual: f32,
     },

@@ -41,6 +41,24 @@ fn wgpu_renderer_records_last_planned_frame() {
 }
 
 #[test]
+fn wgpu_renderer_uses_configured_font_size_for_render_plan() {
+    let config = RendererConfig {
+        font_size_px: 18,
+        ..RendererConfig::default()
+    };
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+    terminal.write_str("A").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut renderer = WgpuRenderer::new(config);
+
+    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+
+    let plan = renderer.last_plan().unwrap();
+    assert_eq!(plan.glyphs.len(), 1);
+    assert_eq!(plan.glyphs[0].font_size_px, 18);
+}
+
+#[test]
 fn wgpu_renderer_can_plan_full_viewport_when_dirty_regions_are_disabled() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("abcd").unwrap();

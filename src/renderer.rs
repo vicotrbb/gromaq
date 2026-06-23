@@ -24,6 +24,8 @@ pub struct RendererConfig {
     pub target_fps: u32,
     /// Whether dirty-region rendering is required.
     pub dirty_regions: bool,
+    /// Font size in pixels used for glyph planning and cache keys.
+    pub font_size_px: u16,
     /// Clear color in RGBA linear space.
     pub clear_color: [f64; 4],
 }
@@ -953,6 +955,7 @@ impl Default for RendererConfig {
         Self {
             target_fps: 144,
             dirty_regions: true,
+            font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
             clear_color: [0.02, 0.02, 0.025, 1.0],
         }
     }
@@ -984,8 +987,8 @@ impl WgpuRenderer {
         let atlas_config = GlyphAtlasConfig::new(DEFAULT_GLYPH_ATLAS_CAPACITY)
             .expect("default glyph atlas capacity is non-zero");
         Self {
+            planner: RenderPlanner::new(config.font_size_px),
             config,
-            planner: RenderPlanner::new(DEFAULT_RENDERER_FONT_SIZE_PX),
             glyph_atlas: GlyphAtlas::new(atlas_config),
             last_plan: None,
         }

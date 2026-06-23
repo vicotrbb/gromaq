@@ -8,6 +8,10 @@ use crate::error::{GromaqError, Result};
 
 /// Maximum supported visible terminal grid cells.
 pub const MAX_TERMINAL_CELLS: u64 = 1_000_000;
+/// Minimum renderable configured font size in pixels.
+pub const MIN_FONT_SIZE_PX: f32 = 6.0;
+/// Maximum renderable configured font size in pixels.
+pub const MAX_FONT_SIZE_PX: f32 = 512.0;
 
 /// Top-level Gromaq configuration.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -58,9 +62,12 @@ impl GromaqConfig {
                 actual: self.terminal.scrollback_lines,
             });
         }
-        if self.font.size_px < 6.0 {
+        if !self.font.size_px.is_finite()
+            || !(MIN_FONT_SIZE_PX..=MAX_FONT_SIZE_PX).contains(&self.font.size_px)
+        {
             return Err(GromaqError::InvalidFontSize {
-                minimum: 6.0,
+                minimum: MIN_FONT_SIZE_PX,
+                maximum: MAX_FONT_SIZE_PX,
                 actual: self.font.size_px,
             });
         }
@@ -137,6 +144,13 @@ impl Default for FontSettings {
             family: "monospace".to_owned(),
             size_px: 14.0,
         }
+    }
+}
+
+impl FontSettings {
+    /// Deterministic renderer font size used for glyph cache keys and render planning.
+    pub fn renderer_font_size_px(&self) -> u16 {
+        self.size_px.round() as u16
     }
 }
 

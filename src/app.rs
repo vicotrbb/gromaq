@@ -1269,6 +1269,19 @@ impl NativeTerminalApp {
         config: NativeAppConfig,
         runtime_config: NativeTerminalRuntimeConfig,
     ) -> Result<Self, NativeAppError> {
+        Self::new_with_runtime_and_renderer_config(
+            config,
+            runtime_config,
+            RendererConfig::default(),
+        )
+    }
+
+    /// Create a native terminal app handler with explicit runtime and renderer configuration.
+    pub fn new_with_runtime_and_renderer_config(
+        config: NativeAppConfig,
+        runtime_config: NativeTerminalRuntimeConfig,
+        renderer_config: RendererConfig,
+    ) -> Result<Self, NativeAppError> {
         let resize_mapper = NativeResizeGridMapper::new(
             config.width,
             config.height,
@@ -1284,7 +1297,7 @@ impl NativeTerminalApp {
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
-            renderer: WgpuRenderer::new(RendererConfig::default()),
+            renderer: WgpuRenderer::new(renderer_config),
             glyph_cache: load_default_native_glyph_cache().ok(),
             pty_spawner: RealNativePtySpawner::default(),
             gpu_context: None,
@@ -1307,6 +1320,11 @@ impl NativeTerminalApp {
     /// Access runtime state.
     pub fn runtime(&self) -> &NativeTerminalRuntime<PtySession> {
         &self.runtime
+    }
+
+    /// Access renderer state.
+    pub fn renderer(&self) -> &WgpuRenderer {
+        &self.renderer
     }
 
     /// Take a startup error captured from the event handler.
@@ -1710,9 +1728,26 @@ pub fn run_native_app_with_runtime_config(
     config: NativeAppConfig,
     runtime_config: NativeTerminalRuntimeConfig,
 ) -> Result<(), NativeAppError> {
+    run_native_app_with_runtime_and_renderer_config(
+        config,
+        runtime_config,
+        RendererConfig::default(),
+    )
+}
+
+/// Run the native `winit` terminal application loop with explicit runtime and renderer config.
+pub fn run_native_app_with_runtime_and_renderer_config(
+    config: NativeAppConfig,
+    runtime_config: NativeTerminalRuntimeConfig,
+    renderer_config: RendererConfig,
+) -> Result<(), NativeAppError> {
     let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
     let event_proxy = event_loop.create_proxy();
-    let mut app = NativeTerminalApp::new_with_runtime_config(config, runtime_config)?;
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        config,
+        runtime_config,
+        renderer_config,
+    )?;
     app.set_event_proxy(NativeAppEventProxy::from(event_proxy));
     event_loop.run_app(&mut app)?;
     if let Some(error) = app.take_startup_error() {

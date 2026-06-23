@@ -12,7 +12,7 @@ use winit::keyboard::{Key, ModifiersState};
 use crate::app::{
     NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
     NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
-    run_native_app_with_runtime_config,
+    run_native_app_with_runtime_and_renderer_config,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::GromaqConfig;
@@ -67,12 +67,14 @@ impl NativeAppLaunchError {
 }
 
 /// Native launch configuration derived from defaults or a user config file.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct NativeAppLaunchConfig {
     /// Window and frame-pacing configuration.
     pub app: NativeAppConfig,
     /// Terminal, scrollback, and shell runtime configuration.
     pub runtime: NativeTerminalRuntimeConfig,
+    /// Renderer configuration for glyph planning and frame presentation.
+    pub renderer: RendererConfig,
 }
 
 impl NativeAppLaunchConfig {
@@ -83,7 +85,17 @@ impl NativeAppLaunchConfig {
         let runtime =
             NativeTerminalRuntimeConfig::from_gromaq_config(config, ShellCommand::default_shell())
                 .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
-        Ok(Self { app, runtime })
+        let renderer = RendererConfig {
+            target_fps: config.performance.target_fps,
+            dirty_regions: config.performance.dirty_region_rendering,
+            font_size_px: config.font.renderer_font_size_px(),
+            ..RendererConfig::default()
+        };
+        Ok(Self {
+            app,
+            runtime,
+            renderer,
+        })
     }
 }
 
@@ -99,7 +111,7 @@ pub struct RealNativeAppLauncher;
 
 impl NativeAppLauncher for RealNativeAppLauncher {
     fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
-        run_native_app_with_runtime_config(config.app, config.runtime)
+        run_native_app_with_runtime_and_renderer_config(config.app, config.runtime, config.renderer)
             .map_err(|error| NativeAppLaunchError::new(error.to_string()))
     }
 }

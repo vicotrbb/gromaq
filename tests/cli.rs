@@ -13,6 +13,7 @@ use gromaq::native_gpu::{
     GpuTextAtlasUploadRunner, GpuTextureUploadReport, GpuTextureUploadRunner,
     GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
+use gromaq::renderer::RendererConfig;
 use gromaq::{HostClipboard, MemoryClipboard};
 
 #[derive(Debug)]
@@ -614,6 +615,10 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
 
         [performance]
         target_fps = 120
+        dirty_region_rendering = false
+
+        [font]
+        size_px = 16.5
         "#,
     )
     .unwrap();
@@ -646,6 +651,15 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             terminal_rows: 40,
             scrollback_lines: 4096,
             ..NativeTerminalRuntimeConfig::default()
+        }
+    );
+    assert_eq!(
+        launches[0].renderer,
+        RendererConfig {
+            target_fps: 120,
+            dirty_regions: false,
+            font_size_px: 17,
+            ..RendererConfig::default()
         }
     );
     let _ = fs::remove_file(path);

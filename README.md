@@ -24,7 +24,7 @@ Implemented and tested:
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
 - Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
-- Configuration validation, including bounded visible-grid area before allocation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, native app/runtime config mapping, and config-file native app launch
+- Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, native app/runtime/renderer config mapping, and config-file native app launch
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
 - Deterministic one-pixel-per-cell test API screenshot capture
@@ -114,6 +114,7 @@ cargo run -- --gpu-text-atlas-smoke
 cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
 cargo run -- --clipboard-smoke
+cargo run -- --config path/to/gromaq.toml
 cargo run -- --config-check path/to/gromaq.toml
 cargo run -- --osc52-clipboard-smoke
 cargo run -- --runtime-clipboard-paste-smoke
