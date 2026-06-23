@@ -839,11 +839,14 @@ impl<S> NativeTerminalRuntime<S> {
             return Ok(false);
         }
         let render_started = Instant::now();
-        renderer.render_frame(
+        if let Err(error) = renderer.render_frame(
             &self.terminal.dump_grid(),
             self.terminal.dump_cursor(),
             &dirty_regions,
-        )?;
+        ) {
+            self.terminal.invalidate_viewport();
+            return Err(error);
+        }
         let elapsed_ns = saturating_duration_nanos(render_started.elapsed());
         self.perf.rendered_frames += 1;
         self.perf.render_time_samples += 1;

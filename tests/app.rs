@@ -388,7 +388,7 @@ fn native_terminal_runtime_invalidates_clean_frame_for_redraw() {
 }
 
 #[test]
-fn native_terminal_runtime_propagates_renderer_errors_without_counting_frame() {
+fn native_terminal_runtime_keeps_frame_dirty_after_renderer_error() {
     let mut runtime =
         NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig::default())
             .unwrap();
@@ -410,6 +410,13 @@ fn native_terminal_runtime_propagates_renderer_errors_without_counting_frame() {
     assert_eq!(metrics.render_attempts, 1);
     assert_eq!(metrics.rendered_frames, 0);
     assert_eq!(metrics.render_time_samples, 0);
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+    let metrics = runtime.dump_runtime_perf_metrics();
+    assert_eq!(metrics.render_attempts, 2);
+    assert_eq!(metrics.rendered_frames, 1);
+    assert_eq!(metrics.render_time_samples, 1);
+    assert_eq!(renderer.frames.len(), 1);
 }
 
 #[test]
