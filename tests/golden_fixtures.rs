@@ -83,6 +83,29 @@ fn terminal_state_matches_vt_editing_status_golden() {
     );
 }
 
+#[test]
+fn terminal_state_matches_osc_clipboard_paste_golden() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str(
+            "\
+\x1b]0;Icon Title\x1b\\\
+\x1b]1;Icon Only\x1b\\\
+\x1b]2;Window Title\x07\
+\x1b]52;c;SGVsbG8=\x07\
+\x1b[?2004h\
+\x1b[21t\x1b[20t\
+ok",
+        )
+        .unwrap();
+
+    assert_eq!(
+        format_osc_clipboard_paste_golden(&mut terminal),
+        include_str!("fixtures/terminal_golden/osc_clipboard_paste.txt")
+    );
+}
+
 fn format_terminal_golden(terminal: &Terminal) -> String {
     let grid = terminal.dump_grid();
     let cursor = terminal.dump_cursor();
@@ -198,6 +221,41 @@ perf:parsed_bytes={parsed_bytes},dirty_cells={dirty_cells},scrolls={scrolls},res
         scrolls = metrics.scrolls,
         resizes = metrics.resizes,
         dirty_batches = metrics.dirty_region_batches,
+    )
+}
+
+fn format_osc_clipboard_paste_golden(terminal: &mut Terminal) -> String {
+    let grid = terminal.dump_grid();
+    let cursor = terminal.dump_cursor();
+    let pending_response = terminal.take_pending_response_bytes();
+    let encoded_paste = terminal.encode_paste_text("multi\npaste");
+
+    format!(
+        "\
+grid:{cols}x{rows}
+visible[0]:{line0:?}
+visible[1]:{line1:?}
+visible[2]:{line2:?}
+title:{title:?}
+clipboard:{clipboard:?}
+cursor:row={cursor_row},col={cursor_col},visible={cursor_visible},shape={cursor_shape:?},blinking={cursor_blinking}
+pending_response:{pending_response}
+encoded_paste:{encoded_paste}
+",
+        cols = grid.cols,
+        rows = grid.rows,
+        line0 = grid.line_text(0),
+        line1 = grid.line_text(1),
+        line2 = grid.line_text(2),
+        title = terminal.dump_title(),
+        clipboard = terminal.dump_clipboard_text(),
+        cursor_row = cursor.row,
+        cursor_col = cursor.col,
+        cursor_visible = cursor.visible,
+        cursor_shape = cursor.shape,
+        cursor_blinking = cursor.blinking,
+        pending_response = format_response_bytes(&pending_response),
+        encoded_paste = format_response_bytes(&encoded_paste),
     )
 }
 

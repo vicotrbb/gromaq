@@ -1,0 +1,9 @@
+grid:12x3
+visible[0]:"ok"
+visible[1]:""
+visible[2]:""
+title:Some("Window Title")
+clipboard:Some("Hello")
+cursor:row=0,col=2,visible=true,shape=Block,blinking=true
+pending_response:\x1b]lWindow Title\x1b\\\x1b]LIcon Only\x1b\\
+encoded_paste:\x1b[200~multi\x0apaste\x1b[201~
