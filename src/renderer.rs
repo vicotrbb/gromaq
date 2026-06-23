@@ -689,7 +689,14 @@ fn surface_glyph_vertex_bytes(
     }
     let width = width as f32;
     let height = height as f32;
-    let mut bytes = Vec::with_capacity(batch.quads.len().saturating_mul(4 * 4 * 4));
+    let mut bytes = Vec::new();
+    bytes
+        .try_reserve_exact(surface_glyph_vertex_byte_capacity(batch.quads.len())?)
+        .map_err(|_| {
+            SurfaceFrameError::InvalidFrame(
+                "surface glyph vertex bytes are too large to allocate".to_owned(),
+            )
+        })?;
     for quad in &batch.quads {
         for vertex in quad.vertices {
             let ndc_x = (vertex.position[0] / width * 2.0) - 1.0;
@@ -700,6 +707,14 @@ fn surface_glyph_vertex_bytes(
         }
     }
     Ok(bytes)
+}
+
+fn surface_glyph_vertex_byte_capacity(
+    quad_count: usize,
+) -> std::result::Result<usize, SurfaceFrameError> {
+    quad_count.checked_mul(4 * 4 * 4).ok_or_else(|| {
+        SurfaceFrameError::InvalidFrame("surface glyph vertex bytes are too large".to_owned())
+    })
 }
 
 fn surface_glyph_index_bytes(batch: &GlyphQuadBatch) -> Vec<u8> {
@@ -2111,6 +2126,18 @@ mod tests {
                 index_buffer_size: 4,
                 index_count: 1,
             }
+        );
+    }
+
+    #[test]
+    fn surface_glyph_vertex_byte_capacity_uses_checked_multiplication() {
+        assert_eq!(surface_glyph_vertex_byte_capacity(2).unwrap(), 128);
+
+        let error = surface_glyph_vertex_byte_capacity((usize::MAX / 64) + 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame("surface glyph vertex bytes are too large".to_owned())
         );
     }
 
