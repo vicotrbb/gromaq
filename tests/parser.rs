@@ -208,6 +208,21 @@ fn sgr_accepts_colon_delimited_truecolor_and_indexed_colors() {
 }
 
 #[test]
+fn sgr_accepts_colon_truecolor_with_colorspace_slot() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[38:2::17:34:51;48:2:0:1:2:3;58:2::4:5:6mA")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let colored = grid.cell(0, 0);
+    assert_eq!(colored.style.foreground, Color::Rgb(17, 34, 51));
+    assert_eq!(colored.style.background, Color::Rgb(1, 2, 3));
+    assert_eq!(grid.cell_underline_color(0, 0), Color::Rgb(4, 5, 6));
+}
+
+#[test]
 fn sgr_accepts_semicolon_delimited_extended_colors_before_grouped_params() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 

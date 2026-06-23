@@ -1446,6 +1446,9 @@ impl Terminal {
             if apply_grouped_sgr_param(&mut self.style, param) {
                 continue;
             }
+            if self.apply_grouped_extended_color_param(param) {
+                continue;
+            }
             if is_invalid_grouped_extended_color_param(param) {
                 continue;
             }
@@ -1508,6 +1511,19 @@ impl Terminal {
                 _ => {}
             }
         }
+    }
+
+    fn apply_grouped_extended_color_param(&mut self, param: &[u16]) -> bool {
+        let Some((target, color)) = grouped_extended_color(param) else {
+            return false;
+        };
+        match target {
+            38 => self.style.foreground = color,
+            48 => self.style.background = color,
+            58 => self.style.underline_color_id = self.intern_underline_color(color),
+            _ => unreachable!("extended color SGR parameter is matched by grouped parser"),
+        }
+        true
     }
 
     fn set_private_mode(&mut self, mode: u16, enabled: bool) {
@@ -2641,11 +2657,38 @@ where
     }
 }
 
+fn grouped_extended_color(param: &[u16]) -> Option<(u16, Color)> {
+    match param {
+        [target @ (38 | 48 | 58), 5, index] => {
+            let index = u8::try_from(*index).ok()?;
+            Some((*target, Color::Indexed(index)))
+        }
+        [target @ (38 | 48 | 58), 2, red, green, blue] => {
+            let red = u8::try_from(*red).ok()?;
+            let green = u8::try_from(*green).ok()?;
+            let blue = u8::try_from(*blue).ok()?;
+            Some((*target, Color::Rgb(red, green, blue)))
+        }
+        [target @ (38 | 48 | 58), 2, _colorspace, red, green, blue] => {
+            let red = u8::try_from(*red).ok()?;
+            let green = u8::try_from(*green).ok()?;
+            let blue = u8::try_from(*blue).ok()?;
+            Some((*target, Color::Rgb(red, green, blue)))
+        }
+        _ => None,
+    }
+}
+
 fn is_invalid_grouped_extended_color_param(param: &[u16]) -> bool {
     match param {
         [38 | 48 | 58] => false,
         [38 | 48 | 58, 5, index] => u8::try_from(*index).is_err(),
         [38 | 48 | 58, 2, red, green, blue] => {
+            u8::try_from(*red).is_err()
+                || u8::try_from(*green).is_err()
+                || u8::try_from(*blue).is_err()
+        }
+        [38 | 48 | 58, 2, _colorspace, red, green, blue] => {
             u8::try_from(*red).is_err()
                 || u8::try_from(*green).is_err()
                 || u8::try_from(*blue).is_err()
