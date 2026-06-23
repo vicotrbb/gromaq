@@ -155,6 +155,20 @@ fn reflow_preserves_multi_part_zwj_cluster_metadata() {
 }
 
 #[test]
+fn reflow_preserves_emoji_modifier_zwj_cluster_metadata() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 4).unwrap());
+    terminal.write_str("ab👩🏽\u{200d}💻cd").unwrap();
+
+    terminal.resize(8, 3).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "ab👩🏽\u{200d}💻cd");
+    assert_eq!(grid.cell(0, 2).text, "👩🏽\u{200d}💻");
+    assert!(grid.cell(0, 2).is_wide_leading);
+    assert!(grid.cell(0, 3).is_wide_trailing);
+}
+
+#[test]
 fn narrowing_reflows_existing_scrollback_lines() {
     let config = TerminalConfig::new(10, 2)
         .unwrap()
