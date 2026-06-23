@@ -489,6 +489,7 @@ impl GpuTerminalTextRunner for NativeGpuContext {
             quads: quad_batch.quads.len(),
             rasterized_glyphs: frame.batch.rasterized,
             reused_glyphs: frame.batch.reused,
+            first_drawn_pixel: first_nontransparent_pixel(&pixels),
             drawn_pixels: pixels.chunks_exact(4).filter(|pixel| pixel[3] != 0).count(),
         })
     }
@@ -757,6 +758,8 @@ pub struct GpuTerminalTextReport {
     pub rasterized_glyphs: usize,
     /// Count of planned glyphs reused from the rasterized glyph cache.
     pub reused_glyphs: usize,
+    /// First non-transparent RGBA8 output pixel after drawing.
+    pub first_drawn_pixel: [u8; 4],
     /// Number of output pixels with non-zero alpha after drawing.
     pub drawn_pixels: usize,
 }
@@ -791,7 +794,7 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
     terminal
-        .write_str("A😀A")
+        .write_str("\x1b[31mA😀A")
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(
@@ -885,6 +888,14 @@ fn system_smoke_font_bytes() -> std::result::Result<Vec<Vec<u8>>, GpuBootstrapEr
         }
     }
     Ok(font_bytes)
+}
+
+fn first_nontransparent_pixel(pixels: &[u8]) -> [u8; 4] {
+    pixels
+        .chunks_exact(4)
+        .find(|pixel| pixel[3] != 0)
+        .map(|pixel| [pixel[0], pixel[1], pixel[2], pixel[3]])
+        .unwrap_or([0, 0, 0, 0])
 }
 
 async fn request_native_wgpu_context(
@@ -1259,7 +1270,7 @@ fn draw_textured_vertices_rgba8(
             entry_point: Some("vs_main"),
             compilation_options: wgpu::PipelineCompilationOptions::default(),
             buffers: &[wgpu::VertexBufferLayout {
-                array_stride: 16,
+                array_stride: 32,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     wgpu::VertexAttribute {
@@ -1271,6 +1282,11 @@ fn draw_textured_vertices_rgba8(
                         format: wgpu::VertexFormat::Float32x2,
                         offset: 8,
                         shader_location: 1,
+                    },
+                    wgpu::VertexAttribute {
+                        format: wgpu::VertexFormat::Float32x4,
+                        offset: 16,
+                        shader_location: 2,
                     },
                 ],
             }],
@@ -1341,10 +1357,10 @@ fn draw_textured_vertices_rgba8(
 
 fn textured_quad_vertex_bytes() -> Vec<u8> {
     [
-        [-1.0_f32, 1.0, 0.0, 0.0],
-        [1.0, 1.0, 1.0, 0.0],
-        [1.0, -1.0, 1.0, 1.0],
-        [-1.0, -1.0, 0.0, 1.0],
+        [-1.0_f32, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+        [1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        [-1.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0],
     ]
     .into_iter()
     .flat_map(|vertex| vertex.into_iter().flat_map(f32::to_le_bytes))
@@ -1382,7 +1398,16 @@ fn glyph_quad_vertex_bytes(
         for vertex in quad.vertices {
             let ndc_x = (vertex.position[0] / width * 2.0) - 1.0;
             let ndc_y = 1.0 - (vertex.position[1] / height * 2.0);
-            for value in [ndc_x, ndc_y, vertex.uv[0], vertex.uv[1]] {
+            for value in [
+                ndc_x,
+                ndc_y,
+                vertex.uv[0],
+                vertex.uv[1],
+                vertex.foreground_rgba[0],
+                vertex.foreground_rgba[1],
+                vertex.foreground_rgba[2],
+                vertex.foreground_rgba[3],
+            ] {
                 bytes.extend_from_slice(&value.to_le_bytes());
             }
         }
@@ -1393,7 +1418,7 @@ fn glyph_quad_vertex_bytes(
 fn glyph_quad_vertex_byte_capacity(
     quad_count: usize,
 ) -> std::result::Result<usize, GpuBootstrapError> {
-    quad_count.checked_mul(4 * 4 * 4).ok_or_else(|| {
+    quad_count.checked_mul(4 * 8 * 4).ok_or_else(|| {
         GpuBootstrapError::SmokeReadback("terminal text vertex bytes are too large".to_owned())
     })
 }
@@ -1410,11 +1435,13 @@ const TEXTURED_QUAD_WGSL: &str = r#"
 struct VertexIn {
     @location(0) position: vec2<f32>,
     @location(1) uv: vec2<f32>,
+    @location(2) foreground: vec4<f32>,
 };
 
 struct VertexOut {
     @builtin(position) position: vec4<f32>,
     @location(0) uv: vec2<f32>,
+    @location(1) foreground: vec4<f32>,
 };
 
 @vertex
@@ -1422,6 +1449,7 @@ fn vs_main(input: VertexIn) -> VertexOut {
     var output: VertexOut;
     output.position = vec4<f32>(input.position, 0.0, 1.0);
     output.uv = input.uv;
+    output.foreground = input.foreground;
     return output;
 }
 
@@ -1430,7 +1458,12 @@ fn vs_main(input: VertexIn) -> VertexOut {
 
 @fragment
 fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
-    return textureSample(atlas_texture, atlas_sampler, input.uv);
+    let sample = textureSample(atlas_texture, atlas_sampler, input.uv);
+    var rgb = sample.rgb;
+    if (abs(sample.r - sample.g) + abs(sample.g - sample.b) < 0.03) {
+        rgb = sample.rgb * input.foreground.rgb;
+    }
+    return vec4<f32>(rgb, sample.a * input.foreground.a);
 }
 "#;
 
@@ -1619,9 +1652,9 @@ mod tests {
 
     #[test]
     fn glyph_quad_vertex_byte_capacity_uses_checked_multiplication() {
-        assert_eq!(glyph_quad_vertex_byte_capacity(2).unwrap(), 128);
+        assert_eq!(glyph_quad_vertex_byte_capacity(2).unwrap(), 256);
 
-        let error = glyph_quad_vertex_byte_capacity((usize::MAX / 64) + 1).unwrap_err();
+        let error = glyph_quad_vertex_byte_capacity((usize::MAX / 128) + 1).unwrap_err();
 
         assert_eq!(
             error,

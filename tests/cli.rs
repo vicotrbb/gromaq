@@ -150,6 +150,7 @@ impl GpuTerminalTextRunner for MockContext {
             quads: 3,
             rasterized_glyphs: 2,
             reused_glyphs: 1,
+            first_drawn_pixel: [205, 49, 49, 180],
             drawn_pixels: 96,
         })
     }
@@ -942,6 +943,10 @@ fn gpu_terminal_text_smoke_cli_reports_draw_result() {
     assert!(exit.stdout.contains("GPU terminal text smoke: ok"));
     assert!(exit.stdout.contains("glyphs: 3"));
     assert!(exit.stdout.contains("quads: 3"));
+    assert!(
+        exit.stdout
+            .contains("first drawn pixel: [205, 49, 49, 180]")
+    );
     assert!(exit.stdout.contains("drawn pixels: 96"));
     assert!(exit.stderr.is_empty());
     assert_eq!(backend.requests.borrow().len(), 1);

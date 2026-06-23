@@ -510,7 +510,7 @@ fn render_glyph_frame_to_view(
             entry_point: Some("vs_main"),
             compilation_options: wgpu::PipelineCompilationOptions::default(),
             buffers: &[wgpu::VertexBufferLayout {
-                array_stride: 16,
+                array_stride: 32,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     wgpu::VertexAttribute {
@@ -522,6 +522,11 @@ fn render_glyph_frame_to_view(
                         format: wgpu::VertexFormat::Float32x2,
                         offset: 8,
                         shader_location: 1,
+                    },
+                    wgpu::VertexAttribute {
+                        format: wgpu::VertexFormat::Float32x4,
+                        offset: 16,
+                        shader_location: 2,
                     },
                 ],
             }],
@@ -704,7 +709,16 @@ fn surface_glyph_vertex_bytes(
         for vertex in quad.vertices {
             let ndc_x = (vertex.position[0] / width * 2.0) - 1.0;
             let ndc_y = 1.0 - (vertex.position[1] / height * 2.0);
-            for value in [ndc_x, ndc_y, vertex.uv[0], vertex.uv[1]] {
+            for value in [
+                ndc_x,
+                ndc_y,
+                vertex.uv[0],
+                vertex.uv[1],
+                vertex.foreground_rgba[0],
+                vertex.foreground_rgba[1],
+                vertex.foreground_rgba[2],
+                vertex.foreground_rgba[3],
+            ] {
                 bytes.extend_from_slice(&value.to_le_bytes());
             }
         }
@@ -715,7 +729,7 @@ fn surface_glyph_vertex_bytes(
 fn surface_glyph_vertex_byte_capacity(
     quad_count: usize,
 ) -> std::result::Result<usize, SurfaceFrameError> {
-    quad_count.checked_mul(4 * 4 * 4).ok_or_else(|| {
+    quad_count.checked_mul(4 * 8 * 4).ok_or_else(|| {
         SurfaceFrameError::InvalidFrame("surface glyph vertex bytes are too large".to_owned())
     })
 }
@@ -732,11 +746,13 @@ const SURFACE_GLYPH_WGSL: &str = r#"
 struct VertexIn {
     @location(0) position: vec2<f32>,
     @location(1) uv: vec2<f32>,
+    @location(2) foreground: vec4<f32>,
 };
 
 struct VertexOut {
     @builtin(position) position: vec4<f32>,
     @location(0) uv: vec2<f32>,
+    @location(1) foreground: vec4<f32>,
 };
 
 @vertex
@@ -744,6 +760,7 @@ fn vs_main(input: VertexIn) -> VertexOut {
     var output: VertexOut;
     output.position = vec4<f32>(input.position, 0.0, 1.0);
     output.uv = input.uv;
+    output.foreground = input.foreground;
     return output;
 }
 
@@ -752,7 +769,12 @@ fn vs_main(input: VertexIn) -> VertexOut {
 
 @fragment
 fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
-    return textureSample(atlas_texture, atlas_sampler, input.uv);
+    let sample = textureSample(atlas_texture, atlas_sampler, input.uv);
+    var rgb = sample.rgb;
+    if (abs(sample.r - sample.g) + abs(sample.g - sample.b) < 0.03) {
+        rgb = sample.rgb * input.foreground.rgb;
+    }
+    return vec4<f32>(rgb, sample.a * input.foreground.a);
 }
 "#;
 
@@ -1240,6 +1262,8 @@ pub struct GlyphVertex {
     pub position: [f32; 2],
     /// Atlas texture coordinate.
     pub uv: [f32; 2],
+    /// Foreground text color in normalized RGBA.
+    pub foreground_rgba: [f32; 4],
 }
 
 /// One textured glyph quad derived from a planned glyph.
@@ -1344,6 +1368,7 @@ impl GlyphQuadPlanner {
         let v0 = atlas_y0 as f32 / self.config.atlas_height_px as f32;
         let u1 = atlas_x1 as f32 / self.config.atlas_width_px as f32;
         let v1 = atlas_y1 as f32 / self.config.atlas_height_px as f32;
+        let foreground_rgba = style_foreground_rgba(glyph.style);
 
         Ok(GlyphQuad {
             text: glyph.text.clone(),
@@ -1353,22 +1378,101 @@ impl GlyphQuadPlanner {
                 GlyphVertex {
                     position: [x0, y0],
                     uv: [u0, v0],
+                    foreground_rgba,
                 },
                 GlyphVertex {
                     position: [x1, y0],
                     uv: [u1, v0],
+                    foreground_rgba,
                 },
                 GlyphVertex {
                     position: [x1, y1],
                     uv: [u1, v1],
+                    foreground_rgba,
                 },
                 GlyphVertex {
                     position: [x0, y1],
                     uv: [u0, v1],
+                    foreground_rgba,
                 },
             ],
         })
     }
+}
+
+fn style_foreground_rgba(style: Style) -> [f32; 4] {
+    if style.hidden {
+        return [0.0, 0.0, 0.0, 0.0];
+    }
+    let color = if style.inverse {
+        style.background
+    } else {
+        style.foreground
+    };
+    let [red, green, blue] = color_rgb8(color);
+    let alpha = if style.dim { 0.66 } else { 1.0 };
+    [
+        f32::from(red) / 255.0,
+        f32::from(green) / 255.0,
+        f32::from(blue) / 255.0,
+        alpha,
+    ]
+}
+
+fn color_rgb8(color: Color) -> [u8; 3] {
+    match color {
+        Color::Default => [229, 229, 229],
+        Color::Ansi(index) => ansi_color_rgb8(index),
+        Color::Indexed(index) => indexed_color_rgb8(index),
+        Color::Rgb(red, green, blue) => [red, green, blue],
+    }
+}
+
+fn ansi_color_rgb8(index: u8) -> [u8; 3] {
+    const ANSI_COLORS: [[u8; 3]; 16] = [
+        [0, 0, 0],
+        [205, 49, 49],
+        [13, 188, 121],
+        [229, 229, 16],
+        [36, 114, 200],
+        [188, 63, 188],
+        [17, 168, 205],
+        [229, 229, 229],
+        [102, 102, 102],
+        [241, 76, 76],
+        [35, 209, 139],
+        [245, 245, 67],
+        [59, 142, 234],
+        [214, 112, 214],
+        [41, 184, 219],
+        [255, 255, 255],
+    ];
+    ANSI_COLORS[usize::from(index.min(15))]
+}
+
+fn indexed_color_rgb8(index: u8) -> [u8; 3] {
+    match index {
+        0..=15 => ansi_color_rgb8(index),
+        16..=231 => {
+            let cube = index - 16;
+            let red = cube / 36;
+            let green = (cube % 36) / 6;
+            let blue = cube % 6;
+            [
+                color_cube_component(red),
+                color_cube_component(green),
+                color_cube_component(blue),
+            ]
+        }
+        232..=255 => {
+            let shade = 8 + ((index - 232) * 10);
+            [shade, shade, shade]
+        }
+    }
+}
+
+fn color_cube_component(value: u8) -> u8 {
+    if value == 0 { 0 } else { 55 + (value * 40) }
 }
 
 fn checked_glyph_quad_base_index(quad_index: usize) -> std::result::Result<u32, GlyphQuadError> {
@@ -2059,18 +2163,22 @@ mod tests {
                 GlyphVertex {
                     position: [0.0, 0.0],
                     uv: [0.0, 0.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
                 GlyphVertex {
                     position: [1.0, 0.0],
                     uv: [1.0, 0.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
                 GlyphVertex {
                     position: [1.0, 1.0],
                     uv: [1.0, 1.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
                 GlyphVertex {
                     position: [0.0, 1.0],
                     uv: [0.0, 1.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
             ],
         };
@@ -2402,9 +2510,9 @@ mod tests {
 
     #[test]
     fn surface_glyph_vertex_byte_capacity_uses_checked_multiplication() {
-        assert_eq!(surface_glyph_vertex_byte_capacity(2).unwrap(), 128);
+        assert_eq!(surface_glyph_vertex_byte_capacity(2).unwrap(), 256);
 
-        let error = surface_glyph_vertex_byte_capacity((usize::MAX / 64) + 1).unwrap_err();
+        let error = surface_glyph_vertex_byte_capacity((usize::MAX / 128) + 1).unwrap_err();
 
         assert_eq!(
             error,

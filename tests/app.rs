@@ -889,18 +889,22 @@ fn native_window_surface_presents_terminal_glyph_frame_through_backend() {
                 GlyphVertex {
                     position: [0.0, 0.0],
                     uv: [0.0, 0.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
                 GlyphVertex {
                     position: [2.0, 0.0],
                     uv: [1.0, 0.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
                 GlyphVertex {
                     position: [2.0, 2.0],
                     uv: [1.0, 1.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
                 GlyphVertex {
                     position: [0.0, 2.0],
                     uv: [0.0, 1.0],
+                    foreground_rgba: [1.0, 1.0, 1.0, 1.0],
                 },
             ],
         }],

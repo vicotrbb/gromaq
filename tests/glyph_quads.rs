@@ -4,6 +4,15 @@ use gromaq::renderer::{
 };
 use gromaq::{CursorShape, CursorSnapshot, Style, Terminal, TerminalConfig};
 
+fn rgba(red: u8, green: u8, blue: u8, alpha: f32) -> [f32; 4] {
+    [
+        f32::from(red) / 255.0,
+        f32::from(green) / 255.0,
+        f32::from(blue) / 255.0,
+        alpha,
+    ]
+}
+
 #[test]
 fn glyph_quad_planner_builds_positioned_quads_with_atlas_uvs() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
@@ -84,6 +93,64 @@ fn glyph_quad_planner_preserves_multi_codepoint_cell_text() {
     assert_eq!(batch.quads[0].text, "👨\u{200d}👩");
     assert_eq!(batch.quads[0].ch, '👨');
     assert_eq!(batch.quads[0].vertices[1].position, [16.0, 0.0]);
+}
+
+#[test]
+fn glyph_quad_planner_maps_terminal_style_to_foreground_rgba() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal
+        .write_str(
+            "\x1b[31mA\
+             \x1b[38:2:17:34:51mB\
+             \x1b[48:2:1:2:3;7mC\
+             \x1b[27;2;38:2:100:120:140mD\
+             \x1b[8mE",
+        )
+        .unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut render_planner = RenderPlanner::new(14);
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+    let quad_config = GlyphQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 16,
+        atlas_slot_width_px: 10,
+        atlas_slot_height_px: 20,
+        atlas_columns: 5,
+        atlas_width_px: 50,
+        atlas_height_px: 20,
+    };
+
+    let batch = GlyphQuadPlanner::new(quad_config).plan(&plan).unwrap();
+
+    assert_eq!(batch.quads.len(), 5);
+    assert_eq!(
+        batch.quads[0].vertices[0].foreground_rgba,
+        rgba(205, 49, 49, 1.0)
+    );
+    assert_eq!(
+        batch.quads[1].vertices[0].foreground_rgba,
+        rgba(17, 34, 51, 1.0)
+    );
+    assert_eq!(
+        batch.quads[2].vertices[0].foreground_rgba,
+        rgba(1, 2, 3, 1.0)
+    );
+    assert_eq!(
+        batch.quads[3].vertices[0].foreground_rgba,
+        rgba(100, 120, 140, 0.66)
+    );
+    assert_eq!(
+        batch.quads[4].vertices[0].foreground_rgba,
+        [0.0, 0.0, 0.0, 0.0]
+    );
 }
 
 #[test]
