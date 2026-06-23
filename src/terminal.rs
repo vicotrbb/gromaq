@@ -1018,6 +1018,35 @@ impl Terminal {
         }
     }
 
+    #[cold]
+    #[inline(never)]
+    fn soft_reset(&mut self) {
+        self.wrap_pending = false;
+        self.origin_mode = false;
+        self.application_cursor_keys = false;
+        self.insert_mode = false;
+        self.cursor.visible = true;
+        self.g0_dec_special_graphics = false;
+        self.g1_dec_special_graphics = false;
+        self.active_charset = CharacterSet::G0;
+        self.scroll_top = 0;
+        self.scroll_bottom = self.config.rows - 1;
+        self.style = Style::default();
+        self.saved_dec_cursor = Some(SavedCursorState {
+            cursor: Cursor {
+                row: 0,
+                col: 0,
+                visible: true,
+                shape: CursorShape::Block,
+                blinking: true,
+            },
+            style: Style::default(),
+            g0_dec_special_graphics: false,
+            g1_dec_special_graphics: false,
+            active_charset: CharacterSet::G0,
+        });
+    }
+
     fn reset_to_initial_state(&mut self) {
         self.flush_dirty_run();
         self.grid = Grid::new(self.config.cols, self.config.rows);
@@ -1754,6 +1783,7 @@ impl Perform for Terminal {
             'm' => self.apply_sgr(params),
             'n' if intermediates.is_empty() => self.report_device_status(first),
             'n' if intermediates == b"?" => self.report_private_device_status(first),
+            'p' if intermediates == b"!" => self.soft_reset(),
             'q' if intermediates == b" " => self.set_cursor_shape(first),
             'r' => {
                 let top = values.first().copied().unwrap_or(1);

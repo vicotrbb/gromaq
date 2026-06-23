@@ -249,6 +249,36 @@ fn ris_resets_terminal_state_to_initial_defaults() {
 }
 
 #[test]
+fn decstr_soft_reset_restores_modes_without_clearing_screen() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("xy\x1b[1;1H\x1b[31;1m\x1b[?25l\x1b(0\x1b[4h\x1b[!pq")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let reset_cell = grid.cell(0, 0);
+    assert_eq!(grid.line_text(0), "qy");
+    assert_eq!(reset_cell.text, "q");
+    assert_eq!(reset_cell.style.foreground, Color::Default);
+    assert!(!reset_cell.style.bold);
+    assert!(terminal.dump_cursor().visible);
+}
+
+#[test]
+fn decstr_soft_reset_resets_dec_saved_cursor_to_home_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[2;3H\x1b7\x1b[!p\x1b[3;4H\x1b8Z")
+        .unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "Z");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
 fn csi_erase_display_mode_0_clears_from_cursor_to_screen_end() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
