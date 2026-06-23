@@ -1760,7 +1760,7 @@ impl Terminal {
     fn copy_range(&self, selection: SelectionRange) -> String {
         let start_row = selection.start.row.min(self.config.rows - 1);
         let end_row = selection.end.row.min(self.config.rows - 1);
-        let mut rows = Vec::new();
+        let mut output = String::new();
         for row in start_row..=end_row {
             let start_col = if row == selection.start.row {
                 selection.start.col.min(self.config.cols - 1)
@@ -1772,9 +1772,12 @@ impl Terminal {
             } else {
                 self.config.cols - 1
             };
-            rows.push(self.copy_row_range(row, start_col, end_col));
+            output.push_str(&self.copy_row_range(row, start_col, end_col));
+            if row < end_row && self.copy_boundary_needs_newline(row, end_col) {
+                output.push('\n');
+            }
         }
-        rows.join("\n")
+        output
     }
 
     fn copy_row_range(&self, row: u16, start_col: u16, end_col: u16) -> String {
@@ -1791,6 +1794,14 @@ impl Terminal {
             }
         }
         output.trim_end().to_owned()
+    }
+
+    fn copy_boundary_needs_newline(&self, row: u16, end_col: u16) -> bool {
+        self.hard_breaks
+            .get(usize::from(row))
+            .copied()
+            .unwrap_or(false)
+            || end_col < self.config.cols - 1
     }
 
     fn mark_print_span(&mut self, row: u16, col: u16, cols: u16) {

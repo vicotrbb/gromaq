@@ -31,6 +31,26 @@ fn copy_selection_spans_visible_rows_in_grid_order() {
 }
 
 #[test]
+fn copy_selection_omits_newline_across_soft_wrapped_rows() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 3).unwrap());
+    terminal.write_str("helloworld").unwrap();
+
+    terminal.set_selection(SelectionRange::new((0, 0), (1, 4)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "helloworld");
+}
+
+#[test]
+fn copy_selection_preserves_newline_at_hard_breaks() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 3).unwrap());
+    terminal.write_str("hello\nworld").unwrap();
+
+    terminal.set_selection(SelectionRange::new((0, 0), (1, 4)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "hello\nworld");
+}
+
+#[test]
 fn reversed_selection_is_normalized() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
     terminal.write_str("abcdef").unwrap();
