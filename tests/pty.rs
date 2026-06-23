@@ -314,6 +314,41 @@ fn pty_session_runs_vim_interactive_edit_when_available() {
 }
 
 #[test]
+fn pty_session_runs_vim_mouse_window_selection_when_available() {
+    let Some(_program) = find_program("vim") else {
+        eprintln!("skipping vim mouse PTY workflow test because vim is not on PATH");
+        return;
+    };
+    let result_file = test_temp_path("vim-mouse-window.txt");
+    let _ = fs::remove_file(&result_file);
+    let command = "TERM=xterm-256color vim -Nu NONE -n -i NONE -N --noplugin".to_owned();
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session
+        .write_all(b":set mouse=a ttymouse=sgr\r:vsplit\r:wincmd l\r")
+        .unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+    session.write_all(b"\x1b[<0;2;2M\x1b[<0;2;2m").unwrap();
+    let command = format!(
+        ":call writefile([string(winnr())], {})|qa!\r",
+        shell_quote_path(&result_file)
+    );
+    session.write_all(command.as_bytes()).unwrap();
+
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let selected_window = fs::read_to_string(&result_file).unwrap();
+    assert_eq!(selected_window.trim(), "1");
+    let _ = fs::remove_file(result_file);
+}
+
+#[test]
 fn pty_session_runs_nvim_version_when_available() {
     assert_program_outputs_when_available("nvim", &["--version"], "NVIM");
 }
