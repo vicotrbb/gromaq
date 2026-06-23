@@ -1527,8 +1527,11 @@ impl Terminal {
                 self.enter_alternate_screen();
             }
             1049 => {
+                let was_in_alternate_screen = self.saved_primary.is_some();
                 self.leave_alternate_screen();
-                self.restore_dec_cursor();
+                if was_in_alternate_screen {
+                    self.restore_dec_cursor();
+                }
             }
             1000 => self.mouse.set_button_reporting(enabled),
             1002 => self.mouse.set_button_motion_reporting(enabled),

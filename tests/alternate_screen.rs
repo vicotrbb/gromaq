@@ -45,6 +45,17 @@ fn repeated_1049_enter_keeps_original_primary_cursor() {
 }
 
 #[test]
+fn inactive_1049_exit_does_not_restore_unrelated_saved_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal.write_str("abc\x1b[?1048hdef\x1b[?1049lZ").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abcdefZ");
+    assert_eq!(terminal.dump_cursor().col, 7);
+}
+
+#[test]
 fn alternate_screen_does_not_append_to_scrollback() {
     let mut terminal = Terminal::new(
         TerminalConfig::new(8, 2)
