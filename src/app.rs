@@ -1060,11 +1060,12 @@ where
     ) -> Result<bool, NativeAppError> {
         if let Some(direction) = native_scrollback_key_direction(key, modifiers) {
             let rows = self.terminal.dump_grid().rows.saturating_sub(1).max(1);
-            let scrolled = match direction {
+            if match direction {
                 ScrollbackKeyDirection::Up => self.terminal.scroll_display_up(rows),
                 ScrollbackKeyDirection::Down => self.terminal.scroll_display_down(rows),
-            };
-            return Ok(scrolled);
+            } {
+                return Ok(true);
+            }
         }
 
         let Some(bytes) = self
