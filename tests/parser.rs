@@ -113,23 +113,56 @@ fn sgr_rapid_blink_sets_blink_attribute_until_reset() {
 fn sgr_accepts_colon_delimited_underline_styles_without_italic_side_effects() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
-    terminal.write_str("\x1b[4:3mA\x1b[4:4mB\x1b[24mC").unwrap();
+    terminal
+        .write_str("\x1b[4:1mA\x1b[4:2mB\x1b[4:3mC\x1b[4:4mD\x1b[4:5mE\x1b[4:0mF")
+        .unwrap();
 
     let grid = terminal.dump_grid();
-    let curly = grid.cell(0, 0).style;
+    let single = grid.cell(0, 0).style;
+    assert!(single.underline);
+    assert_eq!(single.underline_style, UnderlineStyle::Single);
+    assert!(!single.italic);
+
+    let double = grid.cell(0, 1).style;
+    assert!(double.underline);
+    assert_eq!(double.underline_style, UnderlineStyle::Double);
+    assert!(!double.italic);
+
+    let curly = grid.cell(0, 2).style;
     assert!(curly.underline);
     assert_eq!(curly.underline_style, UnderlineStyle::Curly);
     assert!(!curly.italic);
 
-    let dotted = grid.cell(0, 1).style;
+    let dotted = grid.cell(0, 3).style;
     assert!(dotted.underline);
     assert_eq!(dotted.underline_style, UnderlineStyle::Dotted);
     assert!(!dotted.italic);
 
-    let plain = grid.cell(0, 2).style;
+    let dashed = grid.cell(0, 4).style;
+    assert!(dashed.underline);
+    assert_eq!(dashed.underline_style, UnderlineStyle::Dashed);
+    assert!(!dashed.italic);
+
+    let plain = grid.cell(0, 5).style;
     assert!(!plain.underline);
     assert_eq!(plain.underline_style, UnderlineStyle::Single);
     assert!(!plain.italic);
+}
+
+#[test]
+fn sgr_21_sets_double_underline_until_underline_reset() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("\x1b[21mA\x1b[24mB").unwrap();
+
+    let grid = terminal.dump_grid();
+    let double = grid.cell(0, 0).style;
+    assert!(double.underline);
+    assert_eq!(double.underline_style, UnderlineStyle::Double);
+
+    let plain = grid.cell(0, 1).style;
+    assert!(!plain.underline);
+    assert_eq!(plain.underline_style, UnderlineStyle::Single);
 }
 
 #[test]
