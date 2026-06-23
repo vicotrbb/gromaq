@@ -38,6 +38,7 @@ Implemented and tested:
 - Real PTY `cargo test -- --nocapture` fixture workflow with deterministic large output
 - Scripted interactive PTY workflow checks for available `bash`, `zsh`, `fish`, and `nushell`
 - Scripted interactive PTY workflow checks for available `vim`, `nvim`, `tmux`, and `less`
+- Real PTY `less` alternate-screen enter/exit workflow when `less` is available
 - Real PTY Vim SGR mouse-click split-window selection workflow when `vim` is available
 - Real PTY tmux SGR mouse-click pane selection workflow when `tmux` is available
 - Real PTY background-reader large-output burst drain test

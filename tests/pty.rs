@@ -504,6 +504,45 @@ fn pty_session_runs_less_interactive_search_when_available() {
 }
 
 #[test]
+fn pty_session_runs_less_alternate_screen_enter_exit_when_available() {
+    let Some(_program) = find_program("less") else {
+        eprintln!("skipping less alternate-screen PTY workflow test because less is not on PATH");
+        return;
+    };
+    let file = test_temp_path("less-alternate-screen.txt");
+    fs::write(&file, "gromaq-less-alt-screen\nsecond line\n").unwrap();
+    let command = format!(
+        "TERM=xterm-256color LESS= less -S {}",
+        shell_quote_path(&file)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+
+    let enter_output =
+        drain_until_contains(&mut session, "\x1b[?1049h", 100, Duration::from_millis(20));
+    assert!(
+        enter_output.contains("\x1b[?1049h"),
+        "less did not enter alternate screen: {enter_output:?}"
+    );
+
+    session.write_all(b"q").unwrap();
+    let leave_output =
+        drain_until_contains(&mut session, "\x1b[?1049l", 100, Duration::from_millis(20));
+
+    assert!(
+        leave_output.contains("\x1b[?1049l"),
+        "less did not leave alternate screen: {leave_output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let _ = fs::remove_file(file);
+}
+
+#[test]
 fn pty_session_runs_top_snapshot_when_available() {
     assert_program_outputs_when_available("top", top_snapshot_args(), "Processes");
 }
