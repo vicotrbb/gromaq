@@ -1560,6 +1560,7 @@ fn runtime_reflow_smoke_exit() -> CliExit {
         || !rendered
         || metrics.rendered_frames != 1
         || scrollback.lines != vec!["abcde".to_owned(), "fghij".to_owned()]
+        || scrollback.hard_breaks != vec![false, true]
         || scrollback.hyperlinks != vec![RUNTIME_REFLOW_SMOKE_LINK.to_owned()]
         || scrollback.underline_colors != vec![crate::Color::Rgb(17, 34, 51)]
         || scrollback.cells.len() != 2
@@ -1583,10 +1584,11 @@ fn runtime_reflow_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime reflow smoke: ok\npumped bytes: {}\nresize events: {}\nscrollback lines: {}\nvisible lines: {}|{}\nrendered frames: {}\n",
+            "runtime reflow smoke: ok\npumped bytes: {}\nresize events: {}\nscrollback lines: {}\nscrollback hard breaks: {:?}\nvisible lines: {}|{}\nrendered frames: {}\n",
             pumped_bytes,
             metrics.resize_events,
             scrollback.lines.len(),
+            scrollback.hard_breaks,
             grid.line_text(0),
             grid.line_text(1),
             metrics.rendered_frames
