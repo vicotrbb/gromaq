@@ -512,10 +512,13 @@ impl Terminal {
         if offset == self.scrollback_view_offset {
             return false;
         }
+        let moved_rows = self.scrollback_view_offset.abs_diff(offset);
         self.scrollback_view_offset = offset;
         self.selection = None;
         self.flush_dirty_run();
         self.dirty.mark_viewport(self.config.rows, self.config.cols);
+        self.perf.scrolls += u64::try_from(moved_rows).unwrap_or(u64::MAX);
+        self.perf.dirty_cells += u64::from(self.config.rows) * u64::from(self.config.cols);
         true
     }
 

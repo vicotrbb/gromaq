@@ -54,6 +54,31 @@ fn scrollback_view_screenshot_uses_displayed_history_rows() {
     assert_ne!(pixel(&screenshot, 3, 2), [64, 160, 255, 255]);
 }
 
+#[test]
+fn scrollback_view_navigation_updates_perf_and_dirty_viewport() {
+    let mut terminal = Terminal::new(
+        TerminalConfig::new(6, 3)
+            .unwrap()
+            .with_scrollback_limit(8)
+            .unwrap(),
+    );
+    terminal.write_str("one\r\ntwo\r\nthree\r\nfour").unwrap();
+    terminal.take_dirty_regions();
+    let before = terminal.dump_perf_metrics();
+
+    assert!(terminal.scroll_display_up(1));
+
+    let dirty = terminal.take_dirty_regions();
+    let after = terminal.dump_perf_metrics();
+    assert_eq!(after.scrolls, before.scrolls + 1);
+    assert_eq!(after.dirty_cells, before.dirty_cells + 18);
+    assert_eq!(dirty.len(), 1);
+    assert_eq!(dirty[0].row, 0);
+    assert_eq!(dirty[0].col, 0);
+    assert_eq!(dirty[0].rows, 3);
+    assert_eq!(dirty[0].cols, 6);
+}
+
 fn pixel(screenshot: &gromaq::terminal::Screenshot, x: u32, y: u32) -> [u8; 4] {
     let index = usize::try_from((y * screenshot.width + x) * 4).unwrap();
     [
