@@ -6,7 +6,7 @@ fn glyph_cache_reuses_existing_entry_for_same_key() {
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(4).unwrap());
     let key = GlyphKey::new('A', Style::default(), 14);
 
-    let first = atlas.lookup_or_insert(key).unwrap();
+    let first = atlas.lookup_or_insert(key.clone()).unwrap();
     let second = atlas.lookup_or_insert(key).unwrap();
 
     assert_eq!(first, second);
@@ -62,8 +62,8 @@ fn glyph_cache_evicts_least_recently_used_entry_when_full() {
     let b = GlyphKey::new('B', Style::default(), 14);
     let c = GlyphKey::new('C', Style::default(), 14);
 
-    let a_first = atlas.lookup_or_insert(a).unwrap();
-    let b_entry = atlas.lookup_or_insert(b).unwrap();
+    let a_first = atlas.lookup_or_insert(a.clone()).unwrap();
+    let b_entry = atlas.lookup_or_insert(b.clone()).unwrap();
     assert_eq!(atlas.lookup_or_insert(a).unwrap(), a_first);
 
     let c_entry = atlas.lookup_or_insert(c).unwrap();

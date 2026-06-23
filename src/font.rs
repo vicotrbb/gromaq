@@ -4,8 +4,9 @@ use std::collections::HashMap;
 
 use swash::scale::image::Content;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
+use swash::shape::ShapeContext;
 use swash::zeno::Format;
-use swash::{CacheKey, FontRef};
+use swash::{CacheKey, FontRef, GlyphId};
 use thiserror::Error;
 
 use crate::renderer::{GlyphBitmap, GlyphEntry, RenderPlan};
@@ -39,6 +40,8 @@ pub struct FontRasterizer {
     font_bytes: Vec<u8>,
     offset: u32,
     key: CacheKey,
+    shape_context: ShapeContext,
+    scale_context: ScaleContext,
 }
 
 impl FontRasterizer {
@@ -52,6 +55,8 @@ impl FontRasterizer {
             font_bytes,
             offset,
             key,
+            shape_context: ShapeContext::new(),
+            scale_context: ScaleContext::new(),
         })
     }
 
@@ -62,39 +67,186 @@ impl FontRasterizer {
         size_px: f32,
         entry: GlyphEntry,
     ) -> Result<GlyphBitmap, FontRasterError> {
-        let font = self.font_ref();
-        let glyph_id = font.charmap().map(ch);
-        if glyph_id == 0 {
-            return Err(FontRasterError::MissingGlyph(ch));
-        }
-
-        let mut context = ScaleContext::new();
-        let mut scaler = context.builder(font).size(size_px).hint(true).build();
-        let image = Render::new(&[
-            Source::ColorOutline(0),
-            Source::ColorBitmap(StrikeWith::BestFit),
-            Source::Outline,
-        ])
-        .format(Format::Alpha)
-        .render(&mut scaler, glyph_id)
-        .ok_or(FontRasterError::RenderFailed(ch))?;
-
-        let width = image.placement.width;
-        let height = image.placement.height;
-        let rgba = image_to_rgba8(image.content, width, height, &image.data)?;
-        Ok(GlyphBitmap {
-            entry,
-            width,
-            height,
-            rgba,
-        })
+        self.rasterize_text(&ch.to_string(), size_px, entry)
     }
 
-    fn font_ref(&self) -> FontRef<'_> {
-        FontRef {
+    /// Rasterize one terminal cell text cluster at the requested pixel size.
+    pub fn rasterize_text(
+        &mut self,
+        text: &str,
+        size_px: f32,
+        entry: GlyphEntry,
+    ) -> Result<GlyphBitmap, FontRasterError> {
+        let first_char = text
+            .chars()
+            .next()
+            .ok_or(FontRasterError::RenderFailed('\0'))?;
+        let glyphs = self.shape_text(text, size_px);
+        if glyphs.is_empty() {
+            return Err(FontRasterError::MissingGlyph(first_char));
+        }
+
+        let font = FontRef {
             data: &self.font_bytes,
             offset: self.offset,
             key: self.key,
+        };
+        let mut scaler = self
+            .scale_context
+            .builder(font)
+            .size(size_px)
+            .hint(true)
+            .build();
+        let mut renderer = Render::new(&[
+            Source::ColorOutline(0),
+            Source::ColorBitmap(StrikeWith::BestFit),
+            Source::Outline,
+        ]);
+        let renderer = renderer.format(Format::Alpha);
+        let mut rendered = Vec::with_capacity(glyphs.len());
+        for glyph in glyphs {
+            let image = renderer
+                .render(&mut scaler, glyph.id)
+                .ok_or(FontRasterError::RenderFailed(first_char))?;
+            if image.placement.width == 0 || image.placement.height == 0 {
+                continue;
+            }
+            let x = (glyph.x + image.placement.left as f32).floor() as i32;
+            let y = -(glyph.y + image.placement.top as f32).floor() as i32;
+            let rgba = image_to_rgba8(
+                image.content,
+                image.placement.width,
+                image.placement.height,
+                &image.data,
+            )?;
+            rendered.push(RenderedGlyph {
+                x,
+                y,
+                width: image.placement.width,
+                height: image.placement.height,
+                rgba,
+            });
+        }
+
+        compose_rendered_glyphs(entry, &rendered).ok_or(FontRasterError::RenderFailed(first_char))
+    }
+
+    fn shape_text(&mut self, text: &str, size_px: f32) -> Vec<ShapedGlyph> {
+        let font = FontRef {
+            data: &self.font_bytes,
+            offset: self.offset,
+            key: self.key,
+        };
+        let mut shaper = self.shape_context.builder(font).size(size_px).build();
+        shaper.add_str(text);
+
+        let mut glyphs = Vec::new();
+        let mut pen_x = 0.0;
+        shaper.shape_with(|cluster| {
+            for glyph in cluster.glyphs {
+                glyphs.push(ShapedGlyph {
+                    id: glyph.id,
+                    x: pen_x + glyph.x,
+                    y: glyph.y,
+                });
+                pen_x += glyph.advance;
+            }
+        });
+        glyphs
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct ShapedGlyph {
+    id: GlyphId,
+    x: f32,
+    y: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RenderedGlyph {
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+    rgba: Vec<u8>,
+}
+
+fn compose_rendered_glyphs(entry: GlyphEntry, glyphs: &[RenderedGlyph]) -> Option<GlyphBitmap> {
+    let first = glyphs.first()?;
+    let mut min_x = first.x;
+    let mut min_y = first.y;
+    let mut max_x = first
+        .x
+        .saturating_add(i32::try_from(first.width).unwrap_or(i32::MAX));
+    let mut max_y = first
+        .y
+        .saturating_add(i32::try_from(first.height).unwrap_or(i32::MAX));
+
+    for glyph in &glyphs[1..] {
+        min_x = min_x.min(glyph.x);
+        min_y = min_y.min(glyph.y);
+        max_x = max_x.max(
+            glyph
+                .x
+                .saturating_add(i32::try_from(glyph.width).unwrap_or(i32::MAX)),
+        );
+        max_y = max_y.max(
+            glyph
+                .y
+                .saturating_add(i32::try_from(glyph.height).unwrap_or(i32::MAX)),
+        );
+    }
+
+    let width = u32::try_from(max_x.saturating_sub(min_x)).ok()?;
+    let height = u32::try_from(max_y.saturating_sub(min_y)).ok()?;
+    if width == 0 || height == 0 {
+        return None;
+    }
+
+    let mut rgba = vec![
+        0;
+        usize::try_from(width)
+            .unwrap_or(usize::MAX)
+            .saturating_mul(usize::try_from(height).unwrap_or(usize::MAX))
+            .saturating_mul(4)
+    ];
+    for glyph in glyphs {
+        blend_glyph_into_canvas(glyph, min_x, min_y, width, &mut rgba);
+    }
+
+    Some(GlyphBitmap {
+        entry,
+        width,
+        height,
+        rgba,
+    })
+}
+
+fn blend_glyph_into_canvas(
+    glyph: &RenderedGlyph,
+    min_x: i32,
+    min_y: i32,
+    canvas_width: u32,
+    canvas: &mut [u8],
+) {
+    let offset_x = u32::try_from(glyph.x.saturating_sub(min_x)).unwrap_or(0);
+    let offset_y = u32::try_from(glyph.y.saturating_sub(min_y)).unwrap_or(0);
+    for source_y in 0..glyph.height {
+        for source_x in 0..glyph.width {
+            let source_index =
+                usize::try_from((source_y * glyph.width + source_x) * 4).unwrap_or(usize::MAX);
+            let target_index =
+                usize::try_from(((offset_y + source_y) * canvas_width + offset_x + source_x) * 4)
+                    .unwrap_or(usize::MAX);
+            if source_index + 3 >= glyph.rgba.len() || target_index + 3 >= canvas.len() {
+                continue;
+            }
+            let source_alpha = glyph.rgba[source_index + 3];
+            if source_alpha > canvas[target_index + 3] {
+                canvas[target_index..target_index + 4]
+                    .copy_from_slice(&glyph.rgba[source_index..source_index + 4]);
+            }
         }
     }
 }
@@ -147,8 +299,8 @@ impl RasterizedGlyphCache {
             }
             self.bitmaps
                 .retain(|entry, _| entry.slot != glyph.atlas_entry.slot);
-            let bitmap = self.rasterizer.rasterize(
-                glyph.ch,
+            let bitmap = self.rasterizer.rasterize_text(
+                &glyph.text,
                 f32::from(glyph.font_size_px),
                 glyph.atlas_entry,
             )?;

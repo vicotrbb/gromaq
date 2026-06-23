@@ -95,3 +95,45 @@ fn rasterized_glyph_cache_returns_cached_bitmaps_for_reused_plan() {
     assert_eq!(second.bitmaps.len(), 2);
     assert!(second.bitmaps.iter().all(|glyph| glyph.width > 0));
 }
+
+#[test]
+fn rasterized_glyph_cache_renders_full_combining_mark_cell_text() {
+    let font_bytes = std::fs::read(system_mono_font()).unwrap();
+
+    let mut plain_terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    plain_terminal.write_str("A").unwrap();
+    let plain_dirty = plain_terminal.take_dirty_regions();
+    let mut plain_atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut plain_planner = RenderPlanner::new(24);
+    let plain_plan = plain_planner
+        .plan_frame(
+            &plain_terminal.dump_grid(),
+            plain_terminal.dump_cursor(),
+            &plain_dirty,
+            &mut plain_atlas,
+        )
+        .unwrap();
+    let mut plain_cache = RasterizedGlyphCache::from_bytes(font_bytes.clone()).unwrap();
+    let plain_batch = plain_cache.rasterize_plan(&plain_plan).unwrap();
+
+    let mut combined_terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    combined_terminal.write_str("A\u{0301}").unwrap();
+    let combined_dirty = combined_terminal.take_dirty_regions();
+    let mut combined_atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut combined_planner = RenderPlanner::new(24);
+    let combined_plan = combined_planner
+        .plan_frame(
+            &combined_terminal.dump_grid(),
+            combined_terminal.dump_cursor(),
+            &combined_dirty,
+            &mut combined_atlas,
+        )
+        .unwrap();
+    let mut combined_cache = RasterizedGlyphCache::from_bytes(font_bytes).unwrap();
+    let combined_batch = combined_cache.rasterize_plan(&combined_plan).unwrap();
+
+    assert_eq!(combined_plan.glyphs[0].text, "A\u{0301}");
+    assert_eq!(plain_batch.bitmaps.len(), 1);
+    assert_eq!(combined_batch.bitmaps.len(), 1);
+    assert_ne!(plain_batch.bitmaps[0].rgba, combined_batch.bitmaps[0].rgba);
+}

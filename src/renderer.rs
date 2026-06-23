@@ -999,7 +999,7 @@ impl RenderPlanner {
                         continue;
                     };
                     let text = cell.text.clone();
-                    let glyph_key = GlyphKey::new(ch, cell.style, self.font_size_px);
+                    let glyph_key = GlyphKey::for_text(&text, ch, cell.style, self.font_size_px);
                     let atlas_entry = atlas.lookup_or_insert(glyph_key)?;
                     glyphs.push(PlannedGlyph {
                         row,
@@ -1368,11 +1368,20 @@ impl GlyphAtlasConfig {
     }
 }
 
+/// Stable glyph cache text identity.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GlyphKeyText {
+    /// A single scalar value.
+    Scalar(char),
+    /// A multi-scalar terminal cell text cluster.
+    Cluster(String),
+}
+
 /// Stable glyph cache key.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GlyphKey {
-    /// Character to render.
-    pub ch: char,
+    /// Text to render.
+    pub text: GlyphKeyText,
     /// Cell style.
     pub style: Style,
     /// Font size in pixels.
@@ -1383,9 +1392,22 @@ impl GlyphKey {
     /// Build a glyph cache key.
     pub fn new(ch: char, style: Style, font_size_px: u16) -> Self {
         Self {
-            ch,
+            text: GlyphKeyText::Scalar(ch),
             style: glyph_raster_style(style),
             font_size_px,
+        }
+    }
+
+    /// Build a glyph cache key for a full terminal cell text cluster.
+    pub fn for_text(text: &str, first_char: char, style: Style, font_size_px: u16) -> Self {
+        if text.len() == first_char.len_utf8() {
+            Self::new(first_char, style, font_size_px)
+        } else {
+            Self {
+                text: GlyphKeyText::Cluster(text.to_owned()),
+                style: glyph_raster_style(style),
+                font_size_px,
+            }
         }
     }
 }
@@ -1663,7 +1685,7 @@ impl GlyphAtlas {
                 GlyphEntry { slot, generation }
             }
         };
-        self.entries.insert(key, entry);
+        self.entries.insert(key.clone(), entry);
         self.lru.push_back(key);
         self.metrics.entries = self.entries.len();
         Ok(entry)

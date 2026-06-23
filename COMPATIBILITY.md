@@ -41,7 +41,7 @@ Compatibility proof is not complete.
 | Offscreen GPU render/readback smoke | Partial | `cargo run -- --gpu-smoke` on 2026-06-22 read back `[26, 51, 77, 255]` from a 4x4 clear |
 | GPU texture upload/readback smoke | Partial | `cargo run -- --gpu-upload-smoke` on 2026-06-22 matched `16/16` uploaded bytes |
 | Glyph atlas packing/upload smoke | Partial | `tests/glyph_atlas_image.rs`, `cargo run -- --gpu-glyph-atlas-smoke` on 2026-06-22 matched `32/32` atlas bytes |
-| Font-backed glyph rasterization | Partial | `tests/font_rasterizer.rs` renders a real macOS font glyph to RGBA8 and packs it into an atlas bitmap |
+| Font-backed glyph rasterization | Partial | `tests/font_rasterizer.rs` renders a real macOS font glyph to RGBA8 and packs it into an atlas bitmap; `tests/rasterized_glyph_cache.rs` covers full terminal-cell text rasterization for a combining-mark cluster |
 | Renderer-plan glyph bitmap population | Partial | `tests/rasterized_glyph_cache.rs` rasterizes distinct planned glyph atlas entries once, returns cached bitmaps for repeated render plans, and packs the resulting bitmaps |
 | Font-backed text atlas GPU upload/readback | Partial | `tests/cli.rs`, `cargo run -- --gpu-text-atlas-smoke` on 2026-06-22 matched `1144/1144` atlas bytes for a 22x13 real-font text atlas |
 | Offscreen textured GPU quad draw/readback | Partial | `tests/cli.rs`, `cargo run -- --gpu-textured-quad-smoke` on 2026-06-22 rendered a 4x4 target with first pixel `[255, 0, 0, 255]` and 16 drawn pixels |
@@ -50,7 +50,7 @@ Compatibility proof is not complete.
 | `wgpu` surface lifecycle and configuration execution | Partial | `tests/surface_config.rs` covers config planning, configure/reconfigure/zero-size lifecycle state, and applying configure/reconfigure actions to a surface backend; `tests/app.rs` covers app-owned native window surface state across initial configure, resize, zero-size suspension, clear-frame presentation delegation, and glyph-frame presentation delegation; live window surface creation pending |
 | Deterministic 144Hz frame scheduler | Partial | `tests/frame_scheduler.rs` |
 | Deterministic glyph atlas cache | Partial | `tests/glyph_atlas.rs` |
-| Dirty-region render planning | Partial | `tests/render_plan.rs`, `tests/wgpu_renderer.rs`; render plans retain full multi-codepoint cell text for simple ZWJ clusters while rasterization still uses the first scalar |
+| Dirty-region render planning | Partial | `tests/render_plan.rs`, `tests/wgpu_renderer.rs`; render plans retain full multi-codepoint cell text for simple ZWJ clusters and allocate distinct atlas entries for distinct multi-scalar cell text |
 | Terminal glyph quad generation | Partial | `tests/glyph_quads.rs` builds pixel-space quads and atlas UVs, including wide glyphs, from render-plan output |
 | End-to-end mouse workflows | Not proven | `tmux`, editors, and alternate-screen app scenarios pending |
 | Hardware-backed frame pacing | Not proven | Native surface clear-present loop is wired, but 144Hz frame pacing has not been measured on live hardware |
