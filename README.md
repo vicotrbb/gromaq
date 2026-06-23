@@ -41,7 +41,7 @@ Implemented and tested:
 - Native runtime terminal resize with retained PTY resize notification
 - Native window resize mapping to terminal dimensions with redraw request
 - Native keyboard, application cursor-key, focus-report, committed text, clipboard paste, terminal paste, and terminal mouse-report bytes written to the retained PTY session
-- OSC 52 clipboard payload write-through to the host clipboard abstraction
+- OSC 52 clipboard payload write-through to the host clipboard abstraction plus a native OSC 52 clipboard smoke command
 - Native window mouse coordinates mapped to terminal grid mouse reports
 - Timed native event-loop PTY polling with output-driven redraw requests
 - PTY background-reader output-ready notifications through native event-loop user events
@@ -76,7 +76,6 @@ Not yet complete:
 - Hardware-backed 144Hz frame pacing proof
 - Live desktop screenshot/runtime proof of windowed terminal glyph drawing
 - Live desktop OS clipboard paste smoke
-- Live OSC 52 write-through smoke against the native OS clipboard
 - End-to-end mouse workflows in `tmux`, editors, and alternate screen apps
 - Full VT compatibility coverage for editors, multiplexers, and pagers
 - Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows
@@ -94,6 +93,7 @@ cargo run -- --gpu-text-atlas-smoke
 cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
 cargo run -- --clipboard-smoke
+cargo run -- --osc52-clipboard-smoke
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
