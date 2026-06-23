@@ -1,0 +1,15 @@
+grid:12x4
+visible[0]:"link"
+visible[1]:"emoji 👨\u{200d}👩🏽"
+visible[2]:"tag 🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f} ok"
+visible[3]:"tail"
+cursor:row=3,col=4,visible=true,shape=Block,blinking=true
+scrollback:["style-row", "abcXY"]
+hyperlinks:["https://gromaq.dev/docs"]
+underline_colors:[Rgb(17, 34, 51)]
+styled_cell:text="s",style=fg=indexed-45,bg=rgb-1-2-3,bold=false,dim=false,italic=true,underline=true,underline_style=curly,underline_color_id=1,blink=false,hidden=false,inverse=false,overline=false,strikethrough=false,underline_color=rgb-17-34-51
+edited_cell:text="X"
+linked_cell:text="l",hyperlink=Some("https://gromaq.dev/docs")
+emoji_cell:text="👨\u{200d}👩🏽",leading=true,trailing_cell_trailing=true
+tag_cell:text="🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}",leading=true,trailing_cell_trailing=true
+perf:parsed_bytes=176,dirty_cells=59,scrolls=2,resizes=0,dirty_batches=0
