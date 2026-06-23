@@ -337,6 +337,35 @@ fn zwj_emoji_sequence_stays_in_one_wide_cell_cluster() {
 }
 
 #[test]
+fn emoji_modifier_sequence_stays_in_one_wide_cell_cluster() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("👍🏽").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "👍🏽");
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(grid.line_text(0), "👍🏽");
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn regional_indicator_pair_stays_in_one_wide_cell_cluster() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("🇺🇸A").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "🇺🇸");
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(grid.cell(0, 2).text, "A");
+    assert_eq!(grid.line_text(0), "🇺🇸A");
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
 fn newline_at_bottom_moves_oldest_line_to_scrollback() {
     let config = TerminalConfig::new(8, 2)
         .unwrap()

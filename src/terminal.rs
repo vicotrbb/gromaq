@@ -547,6 +547,12 @@ impl Terminal {
             self.append_combining_mark(ch);
             return;
         }
+        if self.append_emoji_modifier(ch) {
+            return;
+        }
+        if self.append_regional_indicator_pair(ch) {
+            return;
+        }
         if self.append_zwj_joined_char(ch) {
             return;
         }
@@ -591,6 +597,49 @@ impl Terminal {
         self.last_printable_char = Some(ch);
     }
 
+    fn append_emoji_modifier(&mut self, ch: char) -> bool {
+        if !is_emoji_modifier(ch) {
+            return false;
+        }
+        let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
+            return false;
+        };
+        if !self
+            .grid
+            .cell(self.cursor.row, col)
+            .text
+            .chars()
+            .any(is_emoji_modifier_base_candidate)
+        {
+            return false;
+        }
+
+        self.append_to_previous_cluster(ch, col, span_width, span_width);
+        true
+    }
+
+    fn append_regional_indicator_pair(&mut self, ch: char) -> bool {
+        if !is_regional_indicator(ch) {
+            return false;
+        }
+        let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
+            return false;
+        };
+        let previous_text = &self.grid.cell(self.cursor.row, col).text;
+        if previous_text
+            .chars()
+            .filter(|ch| is_regional_indicator(*ch))
+            .count()
+            != 1
+            || previous_text.chars().count() != 1
+        {
+            return false;
+        }
+
+        self.append_to_previous_cluster(ch, col, span_width, 2);
+        true
+    }
+
     fn append_zwj_joined_char(&mut self, ch: char) -> bool {
         let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
             return false;
@@ -610,6 +659,48 @@ impl Terminal {
         self.perf.dirty_cells += u64::from(span_width);
         self.last_printable_char = Some(ch);
         true
+    }
+
+    fn append_to_previous_cluster(
+        &mut self,
+        ch: char,
+        col: u16,
+        old_span_width: u16,
+        requested_span_width: u16,
+    ) {
+        let span_width = if requested_span_width == 2 && col + 1 < self.config.cols {
+            2
+        } else {
+            old_span_width
+        };
+        let trailing = {
+            let cell = self.grid.cell_mut(self.cursor.row, col);
+            cell.text.push(ch);
+            cell.is_wide_leading = span_width == 2;
+            cell.is_wide_trailing = false;
+            Cell {
+                text: String::new(),
+                style: cell.style,
+                hyperlink_id: cell.hyperlink_id,
+                is_wide_leading: false,
+                is_wide_trailing: true,
+            }
+        };
+        if span_width == 2 && col + 1 < self.config.cols {
+            *self.grid.cell_mut(self.cursor.row, col + 1) = trailing;
+        }
+        self.mark_print_span(self.cursor.row, col, span_width);
+        self.perf.dirty_cells += u64::from(span_width);
+        if span_width > old_span_width && self.cursor.col == col + old_span_width {
+            if col + span_width >= self.config.cols {
+                self.cursor.col = self.config.cols - 1;
+                self.wrap_pending = self.auto_wrap;
+            } else {
+                self.cursor.col = col + span_width;
+                self.wrap_pending = false;
+            }
+        }
+        self.last_printable_char = Some(ch);
     }
 
     fn previous_visible_cell_with_span(&self) -> Option<(u16, u16)> {
@@ -1907,6 +1998,21 @@ fn visible_width(text: &str) -> usize {
     text.chars()
         .map(|ch| UnicodeWidthChar::width(ch).unwrap_or(0).min(2))
         .sum()
+}
+
+fn is_emoji_modifier(ch: char) -> bool {
+    matches!(ch, '\u{1f3fb}'..='\u{1f3ff}')
+}
+
+fn is_emoji_modifier_base_candidate(ch: char) -> bool {
+    matches!(
+        ch,
+        '\u{2600}'..='\u{27bf}' | '\u{1f000}'..='\u{1faff}'
+    )
+}
+
+fn is_regional_indicator(ch: char) -> bool {
+    matches!(ch, '\u{1f1e6}'..='\u{1f1ff}')
 }
 
 fn cell_screenshot_color(cell: &Cell) -> [u8; 4] {
