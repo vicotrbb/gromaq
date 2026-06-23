@@ -237,6 +237,7 @@ pub struct Terminal {
     dirty_run: Option<DirtyRun>,
     mouse: MouseReportState,
     title: Option<String>,
+    icon_label: Option<String>,
     clipboard_text: Option<String>,
     hyperlinks: Vec<String>,
     current_hyperlink_id: u16,
@@ -283,6 +284,7 @@ impl Terminal {
             dirty_run: None,
             mouse: MouseReportState::default(),
             title: None,
+            icon_label: None,
             clipboard_text: None,
             hyperlinks: Vec::new(),
             current_hyperlink_id: 0,
@@ -1119,6 +1121,7 @@ impl Terminal {
         self.dirty_run = None;
         self.mouse = MouseReportState::default();
         self.title = None;
+        self.icon_label = None;
         self.clipboard_text = None;
         self.hyperlinks.clear();
         self.current_hyperlink_id = 0;
@@ -1289,9 +1292,9 @@ impl Terminal {
             ),
             20 => {
                 self.pending_response_bytes.extend_from_slice(b"\x1b]L");
-                if let Some(title) = &self.title {
+                if let Some(icon_label) = self.icon_label.as_ref().or(self.title.as_ref()) {
                     self.pending_response_bytes
-                        .extend_from_slice(title.as_bytes());
+                        .extend_from_slice(icon_label.as_bytes());
                 }
                 self.pending_response_bytes.extend_from_slice(b"\x1b\\");
             }
@@ -1930,7 +1933,24 @@ impl Perform for Terminal {
             return;
         };
         match command {
-            "0" | "2" => {
+            "0" => {
+                if let Some(label) = params
+                    .get(1)
+                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                {
+                    self.icon_label = Some(label.to_owned());
+                    self.title = Some(label.to_owned());
+                }
+            }
+            "1" => {
+                if let Some(icon_label) = params
+                    .get(1)
+                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                {
+                    self.icon_label = Some(icon_label.to_owned());
+                }
+            }
+            "2" => {
                 if let Some(title) = params
                     .get(1)
                     .and_then(|bytes| std::str::from_utf8(bytes).ok())

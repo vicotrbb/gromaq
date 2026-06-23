@@ -19,6 +19,21 @@ fn osc_0_sets_window_title_with_st_terminator() {
 }
 
 #[test]
+fn osc_1_sets_icon_label_without_changing_window_title() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b]2;Window Title\x07\x1b]1;Icon Label\x07\x1b[20t\x1b[21t")
+        .unwrap();
+
+    assert_eq!(terminal.dump_title().as_deref(), Some("Window Title"));
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]LIcon Label\x1b\\\x1b]lWindow Title\x1b\\"
+    );
+}
+
+#[test]
 fn csi_window_title_report_returns_current_title() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 
