@@ -296,13 +296,13 @@ fn checked_surface_frame_pixel_dimension(
 fn atlas_columns_for_glyphs(glyphs: &[GlyphBitmap]) -> u32 {
     let slots = glyphs
         .iter()
-        .map(|glyph| glyph.entry.slot)
+        .map(|glyph| u64::from(glyph.entry.slot))
         .max()
         .unwrap_or(0)
-        .saturating_add(1);
+        + 1;
     let mut columns = 1_u32;
-    while columns.saturating_mul(columns) < slots {
-        columns = columns.saturating_add(1);
+    while u64::from(columns) * u64::from(columns) < slots {
+        columns += 1;
     }
     columns
 }
@@ -1965,6 +1965,47 @@ mod tests {
         let error = checked_glyph_quad_index_capacity((usize::MAX / 6) + 1).unwrap_err();
 
         assert_eq!(error, GlyphQuadError::IndexCountTooLarge);
+    }
+
+    #[test]
+    fn atlas_columns_for_glyphs_uses_widened_slot_math() {
+        let glyphs = [
+            GlyphBitmap {
+                entry: GlyphEntry {
+                    slot: 0,
+                    generation: 0,
+                },
+                width: 1,
+                height: 1,
+                rgba: Vec::new(),
+            },
+            GlyphBitmap {
+                entry: GlyphEntry {
+                    slot: 3,
+                    generation: 0,
+                },
+                width: 1,
+                height: 1,
+                rgba: Vec::new(),
+            },
+        ];
+
+        assert_eq!(atlas_columns_for_glyphs(&glyphs), 2);
+    }
+
+    #[test]
+    fn atlas_columns_for_glyphs_handles_maximum_slot_without_overflow() {
+        let glyphs = [GlyphBitmap {
+            entry: GlyphEntry {
+                slot: u32::MAX,
+                generation: 0,
+            },
+            width: 1,
+            height: 1,
+            rgba: Vec::new(),
+        }];
+
+        assert_eq!(atlas_columns_for_glyphs(&glyphs), 65_536);
     }
 
     #[test]
