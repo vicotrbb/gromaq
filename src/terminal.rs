@@ -547,6 +547,9 @@ impl Terminal {
             self.append_combining_mark(ch);
             return;
         }
+        if self.append_zwj_joined_char(ch) {
+            return;
+        }
         let width_u16 = u16::try_from(width).expect("character width is clamped to 2");
         if self.auto_wrap && (self.wrap_pending || self.cursor.col + width_u16 > self.config.cols) {
             self.wrap_pending = false;
@@ -588,21 +591,49 @@ impl Terminal {
         self.last_printable_char = Some(ch);
     }
 
-    fn append_combining_mark(&mut self, ch: char) {
+    fn append_zwj_joined_char(&mut self, ch: char) -> bool {
+        let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
+            return false;
+        };
+        if !self
+            .grid
+            .cell(self.cursor.row, col)
+            .text
+            .ends_with('\u{200d}')
+        {
+            return false;
+        }
+
+        let cell = self.grid.cell_mut(self.cursor.row, col);
+        cell.text.push(ch);
+        self.mark_print_span(self.cursor.row, col, span_width);
+        self.perf.dirty_cells += u64::from(span_width);
+        self.last_printable_char = Some(ch);
+        true
+    }
+
+    fn previous_visible_cell_with_span(&self) -> Option<(u16, u16)> {
         if self.cursor.col == 0 {
-            return;
+            return None;
         }
         let mut col = self.cursor.col - 1;
         if self.grid.cell(self.cursor.row, col).is_wide_trailing && col > 0 {
             col -= 1;
         }
         if self.grid.cell(self.cursor.row, col).is_wide_trailing {
-            return;
+            return None;
         }
         let span_width = if self.grid.cell(self.cursor.row, col).is_wide_leading {
             2
         } else {
             1
+        };
+        Some((col, span_width))
+    }
+
+    fn append_combining_mark(&mut self, ch: char) {
+        let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
+            return;
         };
 
         let cell = self.grid.cell_mut(self.cursor.row, col);

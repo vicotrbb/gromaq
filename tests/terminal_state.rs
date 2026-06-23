@@ -323,6 +323,20 @@ fn combining_mark_after_wide_unicode_stays_on_wide_leading_cell() {
 }
 
 #[test]
+fn zwj_emoji_sequence_stays_in_one_wide_cell_cluster() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("👨\u{200d}👩").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "👨\u{200d}👩");
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(grid.line_text(0), "👨\u{200d}👩");
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
 fn newline_at_bottom_moves_oldest_line_to_scrollback() {
     let config = TerminalConfig::new(8, 2)
         .unwrap()
