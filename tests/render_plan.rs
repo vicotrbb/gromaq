@@ -185,6 +185,29 @@ fn render_plan_allocates_distinct_atlas_entries_for_different_cell_text() {
 }
 
 #[test]
+fn render_plan_preserves_stacked_combining_mark_cell_text() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal.write_str("A\u{0301}\u{0302}B").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(14);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.glyphs.len(), 2);
+    assert_eq!(plan.glyphs[0].text, "A\u{0301}\u{0302}");
+    assert_eq!(plan.glyphs[1].text, "B");
+    assert_eq!(atlas.metrics().entries, 2);
+}
+
+#[test]
 fn render_plan_skips_whitespace_glyph_commands() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal.write_str("A B").unwrap();

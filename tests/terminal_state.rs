@@ -386,6 +386,19 @@ fn combining_mark_after_wide_unicode_stays_on_wide_leading_cell() {
 }
 
 #[test]
+fn stacked_combining_marks_stay_on_base_cell() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("A\u{0301}\u{0302}B").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "A\u{0301}\u{0302}");
+    assert_eq!(grid.cell(0, 1).text, "B");
+    assert_eq!(grid.line_text(0), "A\u{0301}\u{0302}B");
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
 fn combining_mark_after_right_edge_print_stays_on_last_cell() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
 
