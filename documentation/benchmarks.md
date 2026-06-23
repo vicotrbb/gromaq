@@ -24,7 +24,10 @@ verified `gromaq-runtime-line-511` in the render plan, and reported render p95
 pumped 51200 bytes from 2048 lines across 4 batches, retained 128 scrollback
 lines, rendered 4 CPU-side dirty frames, and verified
 `gromaq-bounded-line-2047` in the render plan. On the same date,
-`cargo run -- --runtime-reflow-smoke` pumped 80
+`cargo run -- --runtime-alternate-screen-smoke` pumped primary, alternate, and
+restore output stages through the runtime, rendered 3 CPU-side dirty frames,
+restored primary visible content, and suppressed alternate-screen scrollback.
+On the same date, `cargo run -- --runtime-reflow-smoke` pumped 80
 bytes, reported 1 resize event, preserved 2 reflowed scrollback lines with
 styled metadata, rendered visible lines `klmno|pqrst`, and rendered 1 CPU-side
 dirty frame. On the same date, `cargo run -- --runtime-idle-smoke` pumped 0
