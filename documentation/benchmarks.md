@@ -9,6 +9,9 @@ plumbing, real-font rasterization, and PTY output pumping.
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
 growth, and live window runtime proof still require separate live measurements.
+The native runtime exposes bounded render-time counters, including sample count,
+total, max, and bucketed p95 estimate, so live-window measurements can be
+reported from structured counters instead of subjective observation.
 
 ## Reproducible Local Run
 

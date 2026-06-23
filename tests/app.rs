@@ -837,6 +837,7 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
     assert_eq!(metrics.render_time_samples, 1);
     assert!(metrics.render_time_total_ns >= 1_000_000);
     assert!(metrics.render_time_max_ns >= 1_000_000);
+    assert!(metrics.render_time_p95_ns >= metrics.render_time_max_ns);
     assert!(metrics.render_time_total_ns >= metrics.render_time_max_ns);
 }
 

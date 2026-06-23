@@ -33,6 +33,24 @@ use crate::renderer::{
 use crate::{Terminal, TerminalConfig};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
+const RENDER_TIME_BUCKETS_NS: [u64; 16] = [
+    100_000,
+    250_000,
+    500_000,
+    1_000_000,
+    2_000_000,
+    4_000_000,
+    6_940_000,
+    8_000_000,
+    10_000_000,
+    16_000_000,
+    33_000_000,
+    50_000_000,
+    100_000_000,
+    250_000_000,
+    500_000_000,
+    u64::MAX,
+];
 
 /// Native window and frame-loop configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -583,6 +601,46 @@ pub struct NativeRuntimePerfSnapshot {
     pub render_time_total_ns: u64,
     /// Maximum measured render-frame duration in nanoseconds.
     pub render_time_max_ns: u64,
+    /// Approximate p95 render-frame duration in nanoseconds, using fixed buckets.
+    pub render_time_p95_ns: u64,
+}
+
+/// Fixed-size render timing histogram for bounded live-performance probes.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct RenderTimeHistogram {
+    buckets: [u64; RENDER_TIME_BUCKETS_NS.len()],
+}
+
+impl RenderTimeHistogram {
+    fn record(&mut self, elapsed_ns: u64) {
+        let bucket = RENDER_TIME_BUCKETS_NS
+            .iter()
+            .position(|upper_bound| elapsed_ns <= *upper_bound)
+            .unwrap_or(RENDER_TIME_BUCKETS_NS.len() - 1);
+        self.buckets[bucket] = self.buckets[bucket].saturating_add(1);
+    }
+
+    fn p95_upper_bound_ns(self, samples: u64) -> u64 {
+        if samples == 0 {
+            return 0;
+        }
+        let target_rank = percentile_rank(samples, 95);
+        let mut cumulative = 0_u64;
+        for (bucket, upper_bound) in self.buckets.iter().zip(RENDER_TIME_BUCKETS_NS) {
+            cumulative = cumulative.saturating_add(*bucket);
+            if cumulative >= target_rank {
+                return upper_bound;
+            }
+        }
+        u64::MAX
+    }
+}
+
+fn percentile_rank(samples: u64, percentile: u8) -> u64 {
+    let samples = u128::from(samples);
+    let percentile = u128::from(percentile);
+    let rank = samples.saturating_mul(percentile).saturating_add(99) / 100;
+    u64::try_from(rank).unwrap_or(u64::MAX)
 }
 
 fn saturating_usize_to_u64(value: usize) -> u64 {
@@ -678,6 +736,7 @@ pub struct NativeTerminalRuntime<S> {
     shell_session: Option<S>,
     last_synced_clipboard_text: Option<String>,
     perf: NativeRuntimePerfSnapshot,
+    render_time_histogram: RenderTimeHistogram,
 }
 
 impl<S> NativeTerminalRuntime<S> {
@@ -690,6 +749,7 @@ impl<S> NativeTerminalRuntime<S> {
             shell_session: None,
             last_synced_clipboard_text: None,
             perf: NativeRuntimePerfSnapshot::default(),
+            render_time_histogram: RenderTimeHistogram::default(),
         })
     }
 
@@ -725,6 +785,10 @@ impl<S> NativeTerminalRuntime<S> {
         self.perf.render_time_samples += 1;
         self.perf.render_time_total_ns = self.perf.render_time_total_ns.saturating_add(elapsed_ns);
         self.perf.render_time_max_ns = self.perf.render_time_max_ns.max(elapsed_ns);
+        self.render_time_histogram.record(elapsed_ns);
+        self.perf.render_time_p95_ns = self
+            .render_time_histogram
+            .p95_upper_bound_ns(self.perf.render_time_samples);
         true
     }
 
@@ -1598,6 +1662,33 @@ mod tests {
         let duration = Duration::from_nanos(42);
 
         assert_eq!(saturating_duration_nanos(duration), 42);
+    }
+
+    #[test]
+    fn render_time_histogram_reports_bucketed_p95_upper_bound() {
+        let mut histogram = RenderTimeHistogram::default();
+        for elapsed_ns in [
+            50_000_u64, 120_000, 300_000, 900_000, 1_500_000, 3_000_000, 6_500_000, 7_500_000,
+            9_500_000, 15_000_000,
+        ] {
+            histogram.record(elapsed_ns);
+        }
+
+        assert_eq!(histogram.p95_upper_bound_ns(10), 16_000_000);
+    }
+
+    #[test]
+    fn render_time_histogram_reports_zero_without_samples() {
+        let histogram = RenderTimeHistogram::default();
+
+        assert_eq!(histogram.p95_upper_bound_ns(0), 0);
+    }
+
+    #[test]
+    fn percentile_rank_rounds_up() {
+        assert_eq!(percentile_rank(1, 95), 1);
+        assert_eq!(percentile_rank(20, 95), 19);
+        assert_eq!(percentile_rank(21, 95), 20);
     }
 
     #[test]
