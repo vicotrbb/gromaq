@@ -1104,16 +1104,11 @@ fn runtime_bounded_state_payloads() -> Vec<Vec<u8>> {
         .collect()
 }
 
-fn scrollback_cell_count(scrollback: &crate::ScrollbackSnapshot) -> usize {
-    scrollback.cells.iter().map(Vec::len).sum()
-}
-
 fn runtime_bounded_state_smoke_exit() -> CliExit {
     let payloads = runtime_bounded_state_payloads();
     let expected_bytes: usize = payloads.iter().map(Vec::len).sum();
     let total_lines = RUNTIME_LARGE_OUTPUT_LINES * RUNTIME_BOUNDED_STATE_BATCHES;
     let last_line = format!("gromaq-bounded-line-{:04}", total_lines - 1);
-    let max_retained_cells = RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES * usize::from(32_u16);
     let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 32,
@@ -1154,18 +1149,18 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
                 "output batch did not render a dirty frame",
             );
         }
-        let scrollback = runtime.terminal().dump_scrollback();
-        if scrollback.lines.len() > RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
-            || scrollback.cells.len() > RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
-            || scrollback_cell_count(&scrollback) > max_retained_cells
+        let state = runtime.dump_runtime_state_snapshot();
+        if state.scrollback_lines > RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
+            || state.scrollback_cell_rows > RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
+            || state.scrollback_cells > state.scrollback_cell_limit
         {
             return runtime_bounded_state_smoke_failure("scrollback state exceeded configured cap");
         }
     }
 
     let metrics = runtime.dump_runtime_perf_metrics();
+    let state = runtime.dump_runtime_state_snapshot();
     let scrollback = runtime.terminal().dump_scrollback();
-    let retained_cells = scrollback_cell_count(&scrollback);
     let visible_text = renderer
         .last_plan()
         .map(|plan| {
@@ -1180,9 +1175,10 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
         || metrics.pty_output_batches != RUNTIME_BOUNDED_STATE_BATCHES as u64
         || metrics.pty_output_bytes != expected_bytes as u64
         || metrics.rendered_frames != RUNTIME_BOUNDED_STATE_BATCHES as u64
-        || scrollback.lines.len() != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
-        || scrollback.cells.len() != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
-        || retained_cells > max_retained_cells
+        || state.scrollback_limit != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
+        || state.scrollback_lines != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
+        || state.scrollback_cell_rows != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
+        || state.scrollback_cells > state.scrollback_cell_limit
         || scrollback
             .lines
             .iter()
@@ -1201,11 +1197,11 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
             RUNTIME_BOUNDED_STATE_BATCHES,
             total_lines,
             pumped_bytes,
-            RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES,
-            scrollback.lines.len(),
-            scrollback.cells.len(),
-            retained_cells,
-            max_retained_cells,
+            state.scrollback_limit,
+            state.scrollback_lines,
+            state.scrollback_cell_rows,
+            state.scrollback_cells,
+            state.scrollback_cell_limit,
             metrics.rendered_frames,
             last_line
         ),

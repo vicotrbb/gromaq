@@ -32,6 +32,7 @@ use crate::renderer::{
     SurfaceConfigPlanner, SurfaceConfigurationController, SurfaceFrameBackend, SurfaceFrameError,
     SurfaceGlyphFrame, SurfaceLifecycleAction, WgpuRenderer, WgpuSurfaceBackend,
 };
+use crate::scrollback::ScrollbackSnapshot;
 use crate::{SelectionRange, Terminal, TerminalConfig};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
@@ -652,6 +653,27 @@ pub struct NativeRuntimePerfSnapshot {
     pub input_to_render_p95_ns: u64,
 }
 
+/// Deterministic runtime state footprint used by validation and memory-growth probes.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct NativeRuntimeStateSnapshot {
+    /// Current visible terminal columns.
+    pub terminal_cols: u16,
+    /// Current visible terminal rows.
+    pub terminal_rows: u16,
+    /// Current visible terminal cell capacity.
+    pub visible_cells: usize,
+    /// Configured retained scrollback line limit.
+    pub scrollback_limit: usize,
+    /// Number of retained scrollback text rows.
+    pub scrollback_lines: usize,
+    /// Number of retained scrollback cell rows.
+    pub scrollback_cell_rows: usize,
+    /// Number of retained scrollback cells.
+    pub scrollback_cells: usize,
+    /// Maximum retained scrollback cells for the current column count and line cap.
+    pub scrollback_cell_limit: usize,
+}
+
 /// Fixed-size duration histogram for bounded live-performance probes.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 struct RuntimeDurationHistogram {
@@ -707,6 +729,10 @@ fn average_duration_nanos(total_ns: u64, samples: u64) -> u64 {
 
 fn add_usize_counter(counter: &mut u64, value: usize) {
     *counter = (*counter).saturating_add(saturating_usize_to_u64(value));
+}
+
+fn scrollback_cell_count(scrollback: &ScrollbackSnapshot) -> usize {
+    scrollback.cells.iter().map(Vec::len).sum()
 }
 
 /// Spawns PTY sessions for the native terminal runtime.
@@ -831,6 +857,25 @@ impl<S> NativeTerminalRuntime<S> {
     /// Return deterministic native runtime counters.
     pub fn dump_runtime_perf_metrics(&self) -> NativeRuntimePerfSnapshot {
         self.perf
+    }
+
+    /// Return deterministic runtime state-footprint counters.
+    pub fn dump_runtime_state_snapshot(&self) -> NativeRuntimeStateSnapshot {
+        let scrollback = self.terminal.dump_scrollback();
+        NativeRuntimeStateSnapshot {
+            terminal_cols: self.config.terminal_cols,
+            terminal_rows: self.config.terminal_rows,
+            visible_cells: usize::from(self.config.terminal_cols)
+                .saturating_mul(usize::from(self.config.terminal_rows)),
+            scrollback_limit: self.config.scrollback_lines,
+            scrollback_lines: scrollback.lines.len(),
+            scrollback_cell_rows: scrollback.cells.len(),
+            scrollback_cells: scrollback_cell_count(&scrollback),
+            scrollback_cell_limit: self
+                .config
+                .scrollback_lines
+                .saturating_mul(usize::from(self.config.terminal_cols)),
+        }
     }
 
     /// Render the current terminal frame when dirty regions are pending.

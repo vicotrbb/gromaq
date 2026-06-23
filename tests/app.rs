@@ -11,10 +11,11 @@ use std::time::Duration;
 use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativePtySessionIo,
-    NativePtySpawner, NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeTerminalApp,
-    NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowMouseInput,
-    NativeWindowSurface, RealNativePtySpawner, is_native_copy_shortcut, is_native_paste_shortcut,
-    load_default_native_glyph_cache, render_and_present_terminal_glyph_frame,
+    NativePtySpawner, NativeResizeGridMapper, NativeRuntimePerfSnapshot,
+    NativeRuntimeStateSnapshot, NativeTerminalApp, NativeTerminalRuntime,
+    NativeTerminalRuntimeConfig, NativeWindowMouseInput, NativeWindowSurface, RealNativePtySpawner,
+    is_native_copy_shortcut, is_native_paste_shortcut, load_default_native_glyph_cache,
+    render_and_present_terminal_glyph_frame,
 };
 use gromaq::dirty::DirtyRegion;
 use gromaq::font::RasterizedGlyphCache;
@@ -1236,6 +1237,75 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
     );
     assert!(metrics.input_to_render_total_ns >= metrics.input_to_render_max_ns);
     assert!(metrics.input_to_render_p95_ns >= metrics.input_to_render_max_ns);
+}
+
+#[test]
+fn native_runtime_state_snapshot_reports_bounded_scrollback_footprint() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 8,
+        terminal_rows: 2,
+        scrollback_lines: 3,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+
+    assert_eq!(
+        runtime.dump_runtime_state_snapshot(),
+        NativeRuntimeStateSnapshot {
+            terminal_cols: 8,
+            terminal_rows: 2,
+            visible_cells: 16,
+            scrollback_limit: 3,
+            scrollback_lines: 0,
+            scrollback_cell_rows: 0,
+            scrollback_cells: 0,
+            scrollback_cell_limit: 24,
+        }
+    );
+
+    runtime.start_shell(&spawner).unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"one\r\ntwo\r\nthree\r\nfour\r\nfive\r\n".to_vec());
+    runtime.pump_pty_output().unwrap();
+    runtime.pump_pty_output().unwrap();
+
+    let state = runtime.dump_runtime_state_snapshot();
+    assert_eq!(state.terminal_cols, 8);
+    assert_eq!(state.terminal_rows, 2);
+    assert_eq!(state.visible_cells, 16);
+    assert_eq!(state.scrollback_limit, 3);
+    assert_eq!(state.scrollback_lines, 3);
+    assert_eq!(state.scrollback_cell_rows, 3);
+    assert!(state.scrollback_cells <= state.scrollback_cell_limit);
+
+    runtime
+        .resize_terminal(NativePtyResize {
+            cols: 5,
+            rows: 4,
+            pixel_width: 500,
+            pixel_height: 320,
+        })
+        .unwrap();
+
+    let resized = runtime.dump_runtime_state_snapshot();
+    assert_eq!(resized.terminal_cols, 5);
+    assert_eq!(resized.terminal_rows, 4);
+    assert_eq!(resized.visible_cells, 20);
+    assert_eq!(resized.scrollback_limit, 3);
+    assert_eq!(resized.scrollback_cell_limit, 15);
+    assert!(resized.scrollback_lines <= resized.scrollback_limit);
+    assert!(resized.scrollback_cells <= resized.scrollback_cell_limit);
 }
 
 #[test]
