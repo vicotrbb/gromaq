@@ -408,6 +408,13 @@ impl Terminal {
         }) else {
             return Vec::new();
         };
+        let last_col = if last_col + 1 < self.config.cols
+            && self.grid.cell(row, last_col + 1).is_wide_trailing
+        {
+            last_col + 1
+        } else {
+            last_col
+        };
         (0..=last_col)
             .map(|col| self.snapshot_cell(self.grid.cell(row, col)))
             .collect()

@@ -480,6 +480,24 @@ fn newline_at_bottom_moves_oldest_line_to_scrollback() {
 }
 
 #[test]
+fn scrollback_preserves_wide_cell_metadata_when_row_scrolls_offscreen() {
+    let config = TerminalConfig::new(4, 2)
+        .unwrap()
+        .with_scrollback_limit(4)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    terminal.write_str("ab界\r\ncd\r\nef").unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["ab界"]);
+    assert_eq!(scrollback.cells.len(), 1);
+    assert_eq!(scrollback.cells[0][2].text, "界");
+    assert!(scrollback.cells[0][2].is_wide_leading);
+    assert!(scrollback.cells[0][3].is_wide_trailing);
+}
+
+#[test]
 fn vertical_tab_and_form_feed_follow_linefeed_without_carriage_return() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
 
