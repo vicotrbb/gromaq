@@ -117,6 +117,16 @@ fn copy_selection_preserves_emoji_modifier_zwj_cluster_text_once() {
 }
 
 #[test]
+fn copy_selection_preserves_rainbow_flag_zwj_cluster_text_once() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+    terminal.write_str("a🏳️\u{200d}🌈b").unwrap();
+
+    terminal.set_selection(SelectionRange::new((0, 0), (0, 3)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "a🏳️\u{200d}🌈b");
+}
+
+#[test]
 fn copy_selection_preserves_tag_sequence_emoji_flag_text_once() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
     terminal
