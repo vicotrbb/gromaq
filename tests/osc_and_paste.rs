@@ -160,6 +160,19 @@ fn paste_encoding_is_plain_text_until_bracketed_paste_is_enabled() {
 }
 
 #[test]
+fn bracketed_paste_wraps_multiline_utf8_payloads_without_reencoding() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    let text = "alpha\nbeta\t界";
+
+    terminal.write_str("\x1b[?2004h").unwrap();
+
+    assert_eq!(
+        terminal.encode_paste_text(text),
+        b"\x1b[200~alpha\nbeta\t\xe7\x95\x8c\x1b[201~"
+    );
+}
+
+#[test]
 fn dec_private_mode_restore_restores_saved_bracketed_paste_state() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 
