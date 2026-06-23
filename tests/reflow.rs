@@ -262,3 +262,28 @@ fn scrollback_reflow_preserves_hyperlink_metadata() {
         }
     }
 }
+
+#[test]
+fn scrollback_reflow_preserves_underline_color_metadata() {
+    let config = TerminalConfig::new(10, 2)
+        .unwrap()
+        .with_scrollback_limit(10)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal
+        .write_str("\x1b[4;58:2:17:34:51mabcdefghij\x1b[0m\r\nklmnopqrst\r\nuv")
+        .unwrap();
+
+    terminal.resize(5, 2).unwrap();
+
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["abcde", "fghij"]);
+    assert_eq!(scrollback.underline_colors, vec![Color::Rgb(17, 34, 51)]);
+    for row in 0..2 {
+        for col in 0..5 {
+            let style = scrollback.cells[row][col].style;
+            assert!(style.underline);
+            assert_eq!(style.underline_color_id, 1);
+        }
+    }
+}
