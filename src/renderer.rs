@@ -995,6 +995,9 @@ impl RenderPlanner {
                     if cell.text.is_empty() || cell.is_wide_trailing {
                         continue;
                     }
+                    if cell.text.chars().all(char::is_whitespace) {
+                        continue;
+                    }
                     let Some(ch) = cell.text.chars().next() else {
                         continue;
                     };

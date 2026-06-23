@@ -88,6 +88,33 @@ fn render_plan_allocates_distinct_atlas_entries_for_different_cell_text() {
 }
 
 #[test]
+fn render_plan_skips_whitespace_glyph_commands() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal.write_str("A B").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(14);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    let planned: Vec<(u16, u16, char)> = plan
+        .glyphs
+        .iter()
+        .map(|glyph| (glyph.row, glyph.col, glyph.ch))
+        .collect();
+    assert_eq!(planned, vec![(0, 0, 'A'), (0, 2, 'B')]);
+    assert_eq!(plan.clear_regions, dirty);
+    assert_eq!(atlas.metrics().entries, 2);
+}
+
+#[test]
 fn render_plan_limits_work_to_dirty_regions() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal.write_str("abcdef").unwrap();
