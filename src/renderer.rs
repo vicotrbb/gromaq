@@ -1834,8 +1834,8 @@ impl GlyphAtlasImage {
     }
 
     /// Build a deterministic two-slot atlas image for GPU upload smoke tests.
-    pub fn smoke_rgba8() -> Self {
-        let red = GlyphBitmap::solid_rgba8(
+    pub fn smoke_rgba8() -> std::result::Result<Self, String> {
+        let red = GlyphBitmap::try_solid_rgba8(
             GlyphEntry {
                 slot: 0,
                 generation: 0,
@@ -1843,8 +1843,8 @@ impl GlyphAtlasImage {
             2,
             2,
             [255, 0, 0, 255],
-        );
-        let green = GlyphBitmap::solid_rgba8(
+        )?;
+        let green = GlyphBitmap::try_solid_rgba8(
             GlyphEntry {
                 slot: 1,
                 generation: 0,
@@ -1852,8 +1852,8 @@ impl GlyphAtlasImage {
             2,
             2,
             [0, 255, 0, 255],
-        );
-        Self::pack_rgba8(2, 2, 2, &[red, green]).expect("smoke atlas bitmap dimensions are valid")
+        )?;
+        Self::pack_rgba8(2, 2, 2, &[red, green])
     }
 }
 

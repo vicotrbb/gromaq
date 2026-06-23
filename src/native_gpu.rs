@@ -360,7 +360,7 @@ impl GpuGlyphAtlasUploadRunner for NativeGpuContext {
     fn run_glyph_atlas_upload_smoke(
         &self,
     ) -> std::result::Result<GpuGlyphAtlasUploadReport, GpuBootstrapError> {
-        let image = GlyphAtlasImage::smoke_rgba8();
+        let image = GlyphAtlasImage::smoke_rgba8().map_err(GpuBootstrapError::SmokeReadback)?;
         let pixels = self.upload_glyph_atlas_and_readback(&image)?;
         let first_pixel = pixels.get(0..4).ok_or_else(|| {
             GpuBootstrapError::SmokeReadback("empty glyph atlas readback".to_owned())
