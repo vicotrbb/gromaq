@@ -54,6 +54,39 @@ fn glyph_quad_planner_builds_positioned_quads_with_atlas_uvs() {
 }
 
 #[test]
+fn glyph_quad_planner_preserves_multi_codepoint_cell_text() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal.write_str("👨\u{200d}👩").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut render_planner = RenderPlanner::new(14);
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+    let quad_config = GlyphQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 16,
+        atlas_slot_width_px: 10,
+        atlas_slot_height_px: 20,
+        atlas_columns: 2,
+        atlas_width_px: 20,
+        atlas_height_px: 20,
+    };
+
+    let batch = GlyphQuadPlanner::new(quad_config).plan(&plan).unwrap();
+
+    assert_eq!(batch.quads.len(), 1);
+    assert_eq!(batch.quads[0].text, "👨\u{200d}👩");
+    assert_eq!(batch.quads[0].ch, '👨');
+    assert_eq!(batch.quads[0].vertices[1].position, [16.0, 0.0]);
+}
+
+#[test]
 fn glyph_quad_planner_rejects_invalid_atlas_dimensions() {
     let invalid = GlyphQuadConfig {
         cell_width_px: 8,
