@@ -12,6 +12,8 @@ Gromaq is early. Contributions must preserve correctness, determinism, and perfo
 - Add tests before behavior changes.
 - Document benchmark commands and proof boundaries.
 - Follow the fixture guidance in `TESTING.md`.
+- Follow the debugging workflow in `DEBUGGING.md` when investigating failures or
+  adding compatibility evidence.
 
 ## Required Checks
 
