@@ -512,6 +512,37 @@ fn dec_origin_mode_clamps_cursor_to_scroll_region_bottom() {
 }
 
 #[test]
+fn dec_origin_mode_clamps_relative_vertical_motion_to_scroll_region() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[2;4r\x1b[?6h\x1b[3;1H\x1b[9A\x1b[1GT\x1b[9B\x1b[1GM")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "");
+    assert_eq!(grid.line_text(1), "T");
+    assert_eq!(grid.line_text(2), "");
+    assert_eq!(grid.line_text(3), "M");
+    assert_eq!(grid.line_text(4), "");
+    assert_eq!(terminal.dump_cursor().row, 3);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
+fn relative_vertical_motion_ignores_scroll_region_when_origin_mode_disabled() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal.write_str("\x1b[2;4r\x1b[1;1H\x1b[9BB").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(3), "");
+    assert_eq!(grid.line_text(4), "B");
+    assert_eq!(terminal.dump_cursor().row, 4);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
 fn dec_origin_mode_disable_returns_cursor_addressing_to_viewport() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 

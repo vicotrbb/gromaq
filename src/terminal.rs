@@ -897,12 +897,14 @@ impl Terminal {
 
     fn move_cursor_up(&mut self, count: u16) {
         self.wrap_pending = false;
-        self.cursor.row = self.cursor.row.saturating_sub(count);
+        let (top, _) = self.vertical_cursor_bounds();
+        self.cursor.row = self.cursor.row.saturating_sub(count).max(top);
     }
 
     fn move_cursor_down(&mut self, count: u16) {
         self.wrap_pending = false;
-        self.cursor.row = (self.cursor.row + count).min(self.config.rows - 1);
+        let (_, bottom) = self.vertical_cursor_bounds();
+        self.cursor.row = self.cursor.row.saturating_add(count).min(bottom);
     }
 
     fn move_cursor_next_line(&mut self, count: u16) {
@@ -1021,6 +1023,14 @@ impl Terminal {
             self.scroll_top.saturating_add(row).min(self.scroll_bottom)
         } else {
             row.min(self.config.rows - 1)
+        }
+    }
+
+    fn vertical_cursor_bounds(&self) -> (u16, u16) {
+        if self.origin_mode {
+            (self.scroll_top, self.scroll_bottom)
+        } else {
+            (0, self.config.rows - 1)
         }
     }
 
