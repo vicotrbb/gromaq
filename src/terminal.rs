@@ -1193,6 +1193,8 @@ impl Terminal {
         self.flush_dirty_run();
         self.grid
             .insert_blank_cells(self.cursor.row, self.cursor.col, count, self.style);
+        self.grid
+            .repair_wide_cells_in_row(self.cursor.row, self.style);
         self.dirty.mark_span(
             self.cursor.row,
             self.cursor.col,
@@ -1205,6 +1207,8 @@ impl Terminal {
         self.flush_dirty_run();
         self.grid
             .delete_cells(self.cursor.row, self.cursor.col, count, self.style);
+        self.grid
+            .repair_wide_cells_in_row(self.cursor.row, self.style);
         self.dirty.mark_span(
             self.cursor.row,
             self.cursor.col,
@@ -1219,6 +1223,8 @@ impl Terminal {
         for col in self.cursor.col..self.cursor.col + count {
             self.grid.clear_cell(self.cursor.row, col, self.style);
         }
+        self.grid
+            .repair_wide_cells_in_row(self.cursor.row, self.style);
         self.dirty
             .mark_span(self.cursor.row, self.cursor.col, count);
         self.perf.dirty_cells += u64::from(count);

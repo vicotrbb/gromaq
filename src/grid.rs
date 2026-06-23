@@ -84,6 +84,35 @@ impl Grid {
         }
     }
 
+    /// Clear split wide-cell fragments left by cell-wise row mutations.
+    pub fn repair_wide_cells_in_row(&mut self, row: u16, style: Style) {
+        let mut col = 0;
+        while col < self.cols {
+            let cell = self.cell(row, col);
+            if cell.is_wide_trailing {
+                self.clear_cell(row, col, style);
+                col += 1;
+                continue;
+            }
+
+            if cell.is_wide_leading {
+                let has_valid_trailing = col + 1 < self.cols && {
+                    let trailing = self.cell(row, col + 1);
+                    trailing.is_wide_trailing && trailing.text.is_empty()
+                };
+                if has_valid_trailing {
+                    col += 2;
+                } else {
+                    self.clear_cell(row, col, style);
+                    col += 1;
+                }
+                continue;
+            }
+
+            col += 1;
+        }
+    }
+
     /// Insert blank rows at `row`, shifting rows downward and dropping bottom rows.
     pub fn insert_blank_rows(&mut self, row: u16, count: u16, style: Style) {
         if row >= self.rows || count == 0 {

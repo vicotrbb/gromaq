@@ -170,6 +170,29 @@ fn csi_delete_characters_shifts_line_left() {
 }
 
 #[test]
+fn csi_delete_characters_clears_split_wide_cell_metadata() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+
+    terminal.write_str("A界B\x1b[1;2H\x1b[P").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "A B");
+    assert!(!grid.cell(0, 1).is_wide_trailing);
+}
+
+#[test]
+fn csi_insert_blank_characters_clears_split_wide_cell_metadata() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+
+    terminal.write_str("A界B\x1b[1;3H\x1b[@").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "A   B");
+    assert!(!grid.cell(0, 1).is_wide_leading);
+    assert!(!grid.cell(0, 3).is_wide_trailing);
+}
+
+#[test]
 fn csi_erase_characters_blanks_cells_without_shifting_line() {
     let mut terminal = Terminal::new(TerminalConfig::new(10, 2).unwrap());
 
@@ -178,6 +201,17 @@ fn csi_erase_characters_blanks_cells_without_shifting_line() {
     assert_eq!(terminal.dump_grid().line_text(0), "ab  ef");
     assert_eq!(terminal.dump_cursor().row, 0);
     assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn csi_erase_characters_clears_split_wide_cell_metadata() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+
+    terminal.write_str("A界B\x1b[1;3H\x1b[X").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "A  B");
+    assert!(!grid.cell(0, 1).is_wide_leading);
 }
 
 #[test]
