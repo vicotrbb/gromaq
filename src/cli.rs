@@ -679,10 +679,13 @@ fn frame_scheduler_smoke_exit() -> CliExit {
     scheduler.record_presented(start);
 
     let paced = scheduler.decide(start + Duration::from_millis(2), true);
-    if paced.reason != RenderReason::FramePaced || paced.wait_for.is_none() {
+    let Some(wait_for) = paced.wait_for else {
+        return frame_scheduler_smoke_failure("dirty frame was not frame-paced before interval");
+    };
+    if paced.reason != RenderReason::FramePaced {
         return frame_scheduler_smoke_failure("dirty frame was not frame-paced before interval");
     }
-    let wait_ns = duration_as_nanos_u64(paced.wait_for.expect("checked above"));
+    let wait_ns = duration_as_nanos_u64(wait_for);
 
     let second_presented_at = start + target_interval;
     let second = scheduler.decide(second_presented_at, true);
