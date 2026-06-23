@@ -55,6 +55,29 @@ pub enum GromaqError {
         actual: u32,
     },
 
+    /// Loading a configuration file from disk failed.
+    #[error("failed to read config file {path}: {message}")]
+    ConfigRead {
+        /// Config file path.
+        path: String,
+        /// Underlying read error message.
+        message: String,
+    },
+
+    /// Parsing TOML configuration text failed.
+    #[error("failed to parse config TOML: {message}")]
+    ConfigParse {
+        /// Parser error message.
+        message: String,
+    },
+
+    /// Serializing configuration to TOML failed.
+    #[error("failed to serialize config TOML: {message}")]
+    ConfigSerialize {
+        /// Serializer error message.
+        message: String,
+    },
+
     /// Glyph atlas capacity must be bounded and non-zero.
     #[error("glyph atlas capacity must be between {minimum} and {maximum}, got {actual}")]
     InvalidGlyphAtlasCapacity {

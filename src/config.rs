@@ -1,5 +1,7 @@
 //! User configuration model and validation.
 
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 
 use crate::error::{GromaqError, Result};
@@ -9,6 +11,7 @@ pub const MAX_TERMINAL_CELLS: u64 = 1_000_000;
 
 /// Top-level Gromaq configuration.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct GromaqConfig {
     /// Terminal dimensions and history.
     pub terminal: TerminalSettings,
@@ -19,6 +22,33 @@ pub struct GromaqConfig {
 }
 
 impl GromaqConfig {
+    /// Load, parse, and validate a TOML configuration file from disk.
+    pub fn from_toml_file(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
+        let contents = std::fs::read_to_string(path).map_err(|error| GromaqError::ConfigRead {
+            path: path.display().to_string(),
+            message: error.to_string(),
+        })?;
+        Self::from_toml_str(&contents)
+    }
+
+    /// Parse and validate TOML configuration text.
+    pub fn from_toml_str(contents: &str) -> Result<Self> {
+        let config: Self = toml::from_str(contents).map_err(|error| GromaqError::ConfigParse {
+            message: error.to_string(),
+        })?;
+        config.validate()?;
+        Ok(config)
+    }
+
+    /// Serialize this configuration as TOML after validating it.
+    pub fn to_toml_string(&self) -> Result<String> {
+        self.validate()?;
+        toml::to_string_pretty(self).map_err(|error| GromaqError::ConfigSerialize {
+            message: error.to_string(),
+        })
+    }
+
     /// Validate configuration values.
     pub fn validate(&self) -> Result<()> {
         validate_terminal_dimensions(self.terminal.cols, self.terminal.rows)?;
@@ -71,6 +101,7 @@ pub(crate) fn validate_terminal_dimensions(cols: u16, rows: u16) -> Result<()> {
 
 /// Terminal section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct TerminalSettings {
     /// Startup columns.
     pub cols: u16,
@@ -92,6 +123,7 @@ impl Default for TerminalSettings {
 
 /// Font section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct FontSettings {
     /// Font family name.
     pub family: String,
@@ -110,6 +142,7 @@ impl Default for FontSettings {
 
 /// Performance section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PerformanceSettings {
     /// Desired maximum refresh rate.
     pub target_fps: u32,
