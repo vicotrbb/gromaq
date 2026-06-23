@@ -2,6 +2,7 @@
 
 use std::{
     collections::VecDeque,
+    fs,
     path::PathBuf,
     time::{Duration, Instant},
 };
@@ -11,12 +12,12 @@ use thiserror::Error;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::app::{
-    NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
+    NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalApp,
+    NativeTerminalRuntime, NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
     run_native_app_with_runtime_renderer_and_config_file,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
-use crate::config::{GromaqConfig, ShellSettings};
+use crate::config::{ConfigFileReloader, GromaqConfig, ShellSettings};
 use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
     GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
@@ -260,6 +261,7 @@ where
         && arg != "--runtime-continuous-output-smoke"
         && arg != "--runtime-alternate-screen-smoke"
         && arg != "--runtime-reflow-smoke"
+        && arg != "--runtime-config-reload-smoke"
         && arg != "--runtime-idle-smoke"
         && arg != "--frame-scheduler-smoke"
     {
@@ -360,6 +362,9 @@ where
     }
     if arg == "--runtime-reflow-smoke" {
         return runtime_reflow_smoke_exit();
+    }
+    if arg == "--runtime-config-reload-smoke" {
+        return runtime_config_reload_smoke_exit();
     }
     if arg == "--runtime-idle-smoke" {
         return runtime_idle_smoke_exit();
@@ -567,7 +572,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
@@ -1698,6 +1703,169 @@ fn runtime_reflow_smoke_failure(reason: &str) -> CliExit {
         stdout: String::new(),
         stderr: format!("runtime reflow smoke failed: {reason}\n"),
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RuntimeConfigReloadSmokeReport {
+    unchanged_poll_changed: bool,
+    changed_poll_changed: bool,
+    cols: u16,
+    rows: u16,
+    scrollback_lines: usize,
+    target_fps: u32,
+    dirty_regions: bool,
+    font_size_px: u16,
+    shell_program: String,
+}
+
+fn runtime_config_reload_smoke_exit() -> CliExit {
+    match run_runtime_config_reload_smoke() {
+        Ok(report) => CliExit {
+            code: 0,
+            stdout: format!(
+                "runtime config reload smoke: ok\nunchanged poll changed: {}\nchanged poll changed: {}\nterminal: {}x{}\nscrollback lines: {}\ntarget fps: {}\ndirty-region rendering: {}\nfont size px: {}\nshell: {}\n",
+                report.unchanged_poll_changed,
+                report.changed_poll_changed,
+                report.cols,
+                report.rows,
+                report.scrollback_lines,
+                report.target_fps,
+                report.dirty_regions,
+                report.font_size_px,
+                report.shell_program,
+            ),
+            stderr: String::new(),
+        },
+        Err(error) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!("runtime config reload smoke failed: {error}\n"),
+        },
+    }
+}
+
+fn run_runtime_config_reload_smoke() -> std::result::Result<RuntimeConfigReloadSmokeReport, String>
+{
+    let path = runtime_config_reload_smoke_path()?;
+    let result = run_runtime_config_reload_smoke_with_path(&path);
+    let _ = fs::remove_file(path);
+    result
+}
+
+fn run_runtime_config_reload_smoke_with_path(
+    path: &PathBuf,
+) -> std::result::Result<RuntimeConfigReloadSmokeReport, String> {
+    fs::write(path, "[performance]\ntarget_fps = 144\n")
+        .map_err(|error| format!("failed to write initial config: {error}"))?;
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+    )
+    .map_err(|error| error.to_string())?;
+    let reloader =
+        ConfigFileReloader::from_file(path.clone()).map_err(|error| error.to_string())?;
+    app.set_config_reloader(reloader);
+
+    let unchanged_poll_changed = app
+        .reload_config_if_changed()
+        .map_err(|error| error.to_string())?;
+    if unchanged_poll_changed {
+        return Err("unchanged config poll reported a reload".to_owned());
+    }
+
+    fs::write(
+        path,
+        r#"
+        [terminal]
+        cols = 28
+        rows = 6
+        scrollback_lines = 96
+
+        [performance]
+        target_fps = 120
+        dirty_region_rendering = false
+
+        [font]
+        size_px = 18.0
+
+        [shell]
+        program = "/bin/sh"
+        args = ["-l"]
+        cwd = "/tmp"
+        "#,
+    )
+    .map_err(|error| format!("failed to write changed config: {error}"))?;
+
+    let changed_poll_changed = app
+        .reload_config_if_changed()
+        .map_err(|error| error.to_string())?;
+    if !changed_poll_changed {
+        return Err("changed config poll did not report a reload".to_owned());
+    }
+
+    let grid = app.runtime().terminal().dump_grid();
+    let runtime_config = app.runtime().config();
+    let app_config = app.lifecycle().config();
+    let renderer_config = app.renderer().config();
+    if grid.cols != 28 || grid.rows != 6 {
+        return Err(format!(
+            "terminal dimensions did not reload, got {}x{}",
+            grid.cols, grid.rows
+        ));
+    }
+    if runtime_config.scrollback_lines != 96 {
+        return Err(format!(
+            "scrollback lines did not reload, got {}",
+            runtime_config.scrollback_lines
+        ));
+    }
+    if app_config.target_fps != 120 || renderer_config.target_fps != 120 {
+        return Err(format!(
+            "target fps did not reload, app={}, renderer={}",
+            app_config.target_fps, renderer_config.target_fps
+        ));
+    }
+    if renderer_config.dirty_regions {
+        return Err("dirty-region renderer setting did not reload".to_owned());
+    }
+    if renderer_config.font_size_px != 18 {
+        return Err(format!(
+            "renderer font size did not reload, got {}",
+            renderer_config.font_size_px
+        ));
+    }
+    if runtime_config.shell.program != "/bin/sh" {
+        return Err(format!(
+            "shell program did not reload, got {}",
+            runtime_config.shell.program.display()
+        ));
+    }
+
+    Ok(RuntimeConfigReloadSmokeReport {
+        unchanged_poll_changed,
+        changed_poll_changed,
+        cols: grid.cols,
+        rows: grid.rows,
+        scrollback_lines: runtime_config.scrollback_lines,
+        target_fps: app_config.target_fps,
+        dirty_regions: renderer_config.dirty_regions,
+        font_size_px: renderer_config.font_size_px,
+        shell_program: runtime_config.shell.program.display().to_string(),
+    })
+}
+
+fn runtime_config_reload_smoke_path() -> std::result::Result<PathBuf, String> {
+    let directory = std::env::current_dir()
+        .map_err(|error| format!("failed to resolve current directory: {error}"))?
+        .join("target")
+        .join("gromaq-runtime-smokes");
+    fs::create_dir_all(&directory)
+        .map_err(|error| format!("failed to create smoke directory: {error}"))?;
+    Ok(directory.join(format!(
+        "{}-runtime-config-reload-smoke.toml",
+        std::process::id()
+    )))
 }
 
 #[derive(Debug, Clone, Copy, Default)]
