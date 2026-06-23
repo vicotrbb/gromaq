@@ -15,7 +15,7 @@ Implemented and tested:
 - OSC icon-label/title handling, bounded OSC 8 hyperlink cell metadata, and bounded OSC 52 clipboard-text decoding
 - File-backed golden terminal-state fixture covering ANSI styling, OSC 8 hyperlink metadata, wide-cell state, scrollback, cursor state, performance counters, and alternate-screen restoration
 - Bracketed paste mode encoding
-- Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, and simple emoji ZWJ clusters
+- Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, emoji-modifier clusters, regional-indicator pairs, and emoji ZWJ clusters
 - Bounded scrollback
 - Long-output scrollback eviction capped to the configured scrollback limit
 - Scrollback clearing via erase-display mode 3
