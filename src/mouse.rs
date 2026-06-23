@@ -14,14 +14,18 @@ pub enum MouseProtocol {
 /// Mouse reporting state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MouseReportState {
-    mode: MouseReportMode,
+    button_reporting: bool,
+    button_motion_reporting: bool,
+    any_motion_reporting: bool,
     protocol: MouseProtocol,
 }
 
 impl Default for MouseReportState {
     fn default() -> Self {
         Self {
-            mode: MouseReportMode::Disabled,
+            button_reporting: false,
+            button_motion_reporting: false,
+            any_motion_reporting: false,
             protocol: MouseProtocol::Default,
         }
     }
@@ -43,29 +47,17 @@ pub enum MouseReportMode {
 impl MouseReportState {
     /// Enable or disable button-event reporting.
     pub fn set_button_reporting(&mut self, enabled: bool) {
-        self.mode = if enabled {
-            MouseReportMode::Button
-        } else {
-            MouseReportMode::Disabled
-        };
+        self.button_reporting = enabled;
     }
 
     /// Enable or disable button-motion reporting.
     pub fn set_button_motion_reporting(&mut self, enabled: bool) {
-        self.mode = if enabled {
-            MouseReportMode::ButtonMotion
-        } else {
-            MouseReportMode::Button
-        };
+        self.button_motion_reporting = enabled;
     }
 
     /// Enable or disable any-motion reporting.
     pub fn set_any_motion_reporting(&mut self, enabled: bool) {
-        self.mode = if enabled {
-            MouseReportMode::AnyMotion
-        } else {
-            MouseReportMode::Button
-        };
+        self.any_motion_reporting = enabled;
     }
 
     /// Enable or disable SGR mouse encoding.
@@ -77,19 +69,19 @@ impl MouseReportState {
         };
     }
 
-    /// Whether button-event reporting is active.
+    /// Whether DECSET 1000 button-event reporting is enabled.
     pub fn button_reporting_enabled(self) -> bool {
-        self.mode != MouseReportMode::Disabled
+        self.button_reporting
     }
 
-    /// Whether button-motion reporting is active.
+    /// Whether DECSET 1002 button-motion reporting is enabled.
     pub fn button_motion_reporting_enabled(self) -> bool {
-        self.mode == MouseReportMode::ButtonMotion
+        self.button_motion_reporting
     }
 
-    /// Whether any-motion reporting is active.
+    /// Whether DECSET 1003 any-motion reporting is enabled.
     pub fn any_motion_reporting_enabled(self) -> bool {
-        self.mode == MouseReportMode::AnyMotion
+        self.any_motion_reporting
     }
 
     /// Whether SGR mouse encoding is active.
@@ -99,7 +91,7 @@ impl MouseReportState {
 
     /// Encode a mouse event according to active reporting modes.
     pub fn encode(self, event: MouseEvent) -> Option<Vec<u8>> {
-        if !self.mode.reports(event.kind) {
+        if !self.effective_mode().reports(event.kind) {
             return None;
         }
         let modifier_code = mouse_modifier_code(event.modifiers);
@@ -129,6 +121,18 @@ impl MouseReportState {
                     .into_bytes(),
                 )
             }
+        }
+    }
+
+    fn effective_mode(self) -> MouseReportMode {
+        if self.any_motion_reporting {
+            MouseReportMode::AnyMotion
+        } else if self.button_motion_reporting {
+            MouseReportMode::ButtonMotion
+        } else if self.button_reporting {
+            MouseReportMode::Button
+        } else {
+            MouseReportMode::Disabled
         }
     }
 }

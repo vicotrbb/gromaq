@@ -147,3 +147,52 @@ fn disabling_motion_modes_keeps_basic_button_reporting_when_1000_remains_enabled
     assert_eq!(terminal.encode_mouse_event(drag), None);
     assert_eq!(terminal.encode_mouse_event(press).unwrap(), b"\x1b[<0;2;2M");
 }
+
+#[test]
+fn disabling_motion_mode_without_button_reporting_disables_mouse_events() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?1002h\x1b[?1006h").unwrap();
+
+    let drag = MouseEvent::new(MouseEventKind::Drag, MouseButton::Left, 1, 1);
+    let press = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 1, 1);
+
+    assert_eq!(terminal.encode_mouse_event(drag).unwrap(), b"\x1b[<32;2;2M");
+
+    terminal.write_str("\x1b[?1002l").unwrap();
+
+    assert_eq!(terminal.encode_mouse_event(drag), None);
+    assert_eq!(terminal.encode_mouse_event(press), None);
+}
+
+#[test]
+fn disabling_button_reporting_preserves_active_motion_reporting() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal
+        .write_str("\x1b[?1000h\x1b[?1002h\x1b[?1006h")
+        .unwrap();
+
+    terminal.write_str("\x1b[?1000l").unwrap();
+
+    let drag = MouseEvent::new(MouseEventKind::Drag, MouseButton::Left, 1, 1);
+    let press = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 1, 1);
+
+    assert_eq!(terminal.encode_mouse_event(drag).unwrap(), b"\x1b[<32;2;2M");
+    assert_eq!(terminal.encode_mouse_event(press).unwrap(), b"\x1b[<0;2;2M");
+}
+
+#[test]
+fn any_motion_reporting_survives_button_motion_reset() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal
+        .write_str("\x1b[?1002h\x1b[?1003h\x1b[?1006h")
+        .unwrap();
+
+    terminal.write_str("\x1b[?1002l").unwrap();
+
+    let motion = MouseEvent::new(MouseEventKind::Motion, MouseButton::None, 1, 1);
+
+    assert_eq!(
+        terminal.encode_mouse_event(motion).unwrap(),
+        b"\x1b[<35;2;2M"
+    );
+}
