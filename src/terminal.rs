@@ -1191,6 +1191,14 @@ impl Terminal {
         }
     }
 
+    fn report_window_manipulation(&mut self, mode: u16) {
+        if mode == 18 {
+            self.pending_response_bytes.extend_from_slice(
+                format!("\x1b[8;{};{}t", self.config.rows, self.config.cols).as_bytes(),
+            );
+        }
+    }
+
     fn report_primary_device_attributes(&mut self, mode: u16) {
         if mode == 0 {
             self.pending_response_bytes.extend_from_slice(b"\x1b[?1;2c");
@@ -1753,6 +1761,7 @@ impl Perform for Terminal {
                 self.set_scroll_region(top, bottom);
             }
             's' => self.save_cursor(),
+            't' if intermediates.is_empty() => self.report_window_manipulation(first),
             'u' => self.restore_cursor(),
             'h' if intermediates.is_empty() => {
                 for mode in values {
