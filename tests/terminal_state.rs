@@ -365,6 +365,21 @@ fn zwj_emoji_sequence_stays_in_one_wide_cell_cluster() {
 }
 
 #[test]
+fn multi_part_zwj_emoji_sequence_stays_in_one_wide_cell_cluster() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("👨\u{200d}👩\u{200d}👧A").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "👨\u{200d}👩\u{200d}👧");
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(grid.cell(0, 2).text, "A");
+    assert_eq!(grid.line_text(0), "👨\u{200d}👩\u{200d}👧A");
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
 fn emoji_modifier_sequence_stays_in_one_wide_cell_cluster() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
