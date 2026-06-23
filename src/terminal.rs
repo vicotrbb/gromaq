@@ -1298,6 +1298,34 @@ impl Terminal {
         }
     }
 
+    fn mode_state(&self, mode: u16) -> Option<bool> {
+        match mode {
+            4 => Some(self.insert_mode),
+            _ => None,
+        }
+    }
+
+    fn report_mode_state(&mut self, private: bool, mode: u16) {
+        let state = if private {
+            self.private_mode_state(mode)
+        } else {
+            self.mode_state(mode)
+        };
+        let value = match state {
+            Some(true) => 1,
+            Some(false) => 2,
+            None => 0,
+        };
+
+        if private {
+            self.pending_response_bytes
+                .extend_from_slice(format!("\x1b[?{};{}$y", mode, value).as_bytes());
+        } else {
+            self.pending_response_bytes
+                .extend_from_slice(format!("\x1b[{};{}$y", mode, value).as_bytes());
+        }
+    }
+
     fn report_device_status(&mut self, mode: u16) {
         match mode {
             5 => self.pending_response_bytes.extend_from_slice(b"\x1b[0n"),
@@ -1926,6 +1954,8 @@ impl Perform for Terminal {
             'm' => self.apply_sgr(params),
             'n' if intermediates.is_empty() => self.report_device_status(first),
             'n' if intermediates == b"?" => self.report_private_device_status(first),
+            'p' if intermediates == b"$" => self.report_mode_state(false, first),
+            'p' if intermediates == b"?$" => self.report_mode_state(true, first),
             'p' if intermediates == b"!" => self.soft_reset(),
             'q' if intermediates == b" " => self.set_cursor_shape(first),
             'r' if intermediates == b"?" => self.restore_private_modes(&values),

@@ -110,6 +110,34 @@ fn terminal_parameter_reports_are_queued_as_terminal_responses() {
 }
 
 #[test]
+fn ansi_mode_reports_return_insert_mode_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[4$p\x1b[4h\x1b[4$p\x1b[999$p")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[4;2$y\x1b[4;1$y\x1b[999;0$y"
+    );
+}
+
+#[test]
+fn dec_private_mode_reports_return_mode_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[?7$p\x1b[?7l\x1b[?7$p\x1b[?2004h\x1b[?2004$p\x1b[?999$p")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[?7;1$y\x1b[?7;2$y\x1b[?2004;1$y\x1b[?999;0$y"
+    );
+}
+
+#[test]
 fn text_area_size_report_uses_current_terminal_dimensions() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
