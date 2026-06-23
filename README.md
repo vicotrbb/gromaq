@@ -38,6 +38,7 @@ Implemented and tested:
 - Real PTY `cargo test -- --nocapture` fixture workflow with deterministic large output
 - Scripted interactive PTY workflow checks for available `bash`, `zsh`, `fish`, and `nushell`
 - Scripted interactive PTY workflow checks for available `vim`, `nvim`, `tmux`, and `less`
+- Real PTY tmux SGR mouse-click pane selection workflow when `tmux` is available
 - Real PTY background-reader large-output burst drain test
 - No-argument binary dispatch to the native terminal app loop
 - Launched native app runtime starts and retains a shell PTY session
@@ -87,7 +88,7 @@ Not yet complete:
 - Hardware-backed 144Hz frame pacing proof
 - Live desktop screenshot/runtime proof of windowed terminal glyph drawing
 - Live desktop OS clipboard paste smoke
-- End-to-end mouse workflows in `tmux`, editors, and alternate screen apps
+- End-to-end mouse workflows in editors and broader alternate screen apps
 - Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
 - Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows
 - Performance acceptance proof for 144Hz, frame time, input latency, idle CPU, and memory growth

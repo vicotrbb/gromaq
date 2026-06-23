@@ -1,6 +1,7 @@
 use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 use std::sync::{
     Arc,
     atomic::{AtomicUsize, Ordering},
@@ -392,6 +393,39 @@ fn pty_session_runs_tmux_interactive_pane_when_available() {
 }
 
 #[test]
+fn pty_session_runs_tmux_mouse_pane_selection_when_available() {
+    let Some(_program) = find_program("tmux") else {
+        eprintln!("skipping tmux mouse PTY workflow test because tmux is not on PATH");
+        return;
+    };
+    let socket_name = format!("gromaq-pty-mouse-{}", std::process::id());
+    let _guard = TmuxServerGuard::new(socket_name.clone());
+    let command = format!(
+        "TERM=xterm-256color tmux -L {} new-session -d -s gromaq-pty-mouse 'sh' \\; split-window -h 'sh' \\; set-option -g mouse on \\; select-pane -t 1 \\; attach-session -t gromaq-pty-mouse",
+        shell_quote(&socket_name)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    assert_eq!(
+        tmux_active_pane_index(&socket_name).trim(),
+        "1",
+        "tmux mouse workflow must start with the right pane active"
+    );
+
+    session.write_all(b"\x1b[<0;2;2M\x1b[<0;2;2m").unwrap();
+    let active_pane =
+        wait_for_tmux_active_pane_index(&socket_name, "0", 100, Duration::from_millis(20));
+
+    assert_eq!(
+        active_pane.trim(),
+        "0",
+        "tmux should consume the SGR mouse click from the PTY and select the left pane"
+    );
+}
+
+#[test]
 fn pty_session_runs_less_version_when_available() {
     assert_program_outputs_when_available("less", &["--version"], "less");
 }
@@ -699,6 +733,54 @@ fn test_temp_path(name: &str) -> std::path::PathBuf {
         .join("gromaq-pty-tests");
     fs::create_dir_all(&directory).unwrap();
     directory.join(format!("{}-{name}", std::process::id()))
+}
+
+struct TmuxServerGuard {
+    socket_name: String,
+}
+
+impl TmuxServerGuard {
+    fn new(socket_name: String) -> Self {
+        Self { socket_name }
+    }
+}
+
+impl Drop for TmuxServerGuard {
+    fn drop(&mut self) {
+        let _ = Command::new("tmux")
+            .args(["-L", &self.socket_name, "kill-server"])
+            .status();
+    }
+}
+
+fn wait_for_tmux_active_pane_index(
+    socket_name: &str,
+    expected: &str,
+    attempts: usize,
+    pause: Duration,
+) -> String {
+    let mut active_pane = String::new();
+    for _ in 0..attempts {
+        active_pane = tmux_active_pane_index(socket_name);
+        if active_pane.trim() == expected {
+            break;
+        }
+        std::thread::sleep(pause);
+    }
+    active_pane
+}
+
+fn tmux_active_pane_index(socket_name: &str) -> String {
+    let output = Command::new("tmux")
+        .args(["-L", socket_name, "display-message", "-p", "#{pane_index}"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "tmux display-message failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout).unwrap()
 }
 
 fn shell_quote_path(path: &Path) -> String {
