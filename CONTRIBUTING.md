@@ -17,10 +17,15 @@ Gromaq is early. Contributions must preserve correctness, determinism, and perfo
 
 ```bash
 cargo fmt --check
+git diff --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
-cargo bench
+cargo bench --bench parser_throughput -- --list
 ```
+
+Run full Criterion benchmarks with `cargo bench` when changing parser, PTY pump,
+render planning, glyph cache, rasterization, frame preparation, or other
+measured hot paths.
 
 ## Pull Requests
 
