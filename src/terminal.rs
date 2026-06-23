@@ -733,11 +733,24 @@ impl Terminal {
         let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
             return;
         };
+        let requested_span_width =
+            if self.combining_mark_requests_emoji_width(ch, self.grid.cell(self.cursor.row, col)) {
+                2
+            } else {
+                span_width
+            };
 
-        let cell = self.grid.cell_mut(self.cursor.row, col);
-        cell.text.push(ch);
-        self.mark_print_span(self.cursor.row, col, span_width);
-        self.perf.dirty_cells += u64::from(span_width);
+        self.append_to_previous_cluster(ch, col, span_width, requested_span_width);
+    }
+
+    fn combining_mark_requests_emoji_width(&self, ch: char, cell: &Cell) -> bool {
+        if is_variation_selector_16(ch) {
+            return cell.text.chars().any(is_emoji_presentation_base_candidate);
+        }
+        if is_combining_enclosing_keycap(ch) {
+            return is_keycap_base_sequence(&cell.text);
+        }
+        false
     }
 
     fn clear_stale_wide_neighbors(&mut self, row: u16, col: u16) {
@@ -2062,6 +2075,29 @@ fn is_emoji_modifier_base_candidate(ch: char) -> bool {
         ch,
         '\u{2600}'..='\u{27bf}' | '\u{1f000}'..='\u{1faff}'
     )
+}
+
+fn is_emoji_presentation_base_candidate(ch: char) -> bool {
+    is_emoji_modifier_base_candidate(ch) || matches!(ch, '\u{00a9}' | '\u{00ae}' | '\u{2122}')
+}
+
+fn is_variation_selector_16(ch: char) -> bool {
+    ch == '\u{fe0f}'
+}
+
+fn is_combining_enclosing_keycap(ch: char) -> bool {
+    ch == '\u{20e3}'
+}
+
+fn is_keycap_base_sequence(text: &str) -> bool {
+    let mut chars = text.chars();
+    let Some(base) = chars.next() else {
+        return false;
+    };
+    if !matches!(base, '#' | '*' | '0'..='9') {
+        return false;
+    }
+    matches!(chars.next(), None | Some('\u{fe0f}')) && chars.next().is_none()
 }
 
 fn is_regional_indicator(ch: char) -> bool {

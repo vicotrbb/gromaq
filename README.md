@@ -14,7 +14,7 @@ Implemented and tested:
 - Terminal-generated Primary/Secondary DA, DECID, regular and DEC private DSR cursor-position/status replies, ANSI/DEC private mode-state replies, DECRQSS SGR/scroll-margin/cursor-shape status replies, and xterm window-state/window-position/pixel-size/text-area/screen size/icon-label/title reports with native PTY write-back
 - OSC icon-label/title handling, bounded OSC 8 hyperlink cell metadata, and bounded OSC 52 clipboard-text decoding
 - Bracketed paste mode encoding
-- Unicode wide-cell handling, including combining marks attached to wide glyphs and simple emoji ZWJ clusters
+- Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, and simple emoji ZWJ clusters
 - Bounded scrollback
 - Scrollback clearing via erase-display mode 3
 - Visible-grid resize reflow for soft wraps, hard newlines, styled cells, and wide cells
