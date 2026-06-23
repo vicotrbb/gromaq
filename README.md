@@ -98,6 +98,7 @@ cargo run -- --osc52-clipboard-smoke
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
+cargo bench --bench parser_throughput -- --list
 cargo bench
 ```
 
