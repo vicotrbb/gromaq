@@ -85,12 +85,18 @@ impl Grid {
     }
 
     /// Clear split wide-cell fragments left by cell-wise row mutations.
-    pub fn repair_wide_cells_in_row(&mut self, row: u16, style: Style) {
+    ///
+    /// Returns the repaired column range as `(start, end_exclusive)` when cells changed.
+    pub fn repair_wide_cells_in_row(&mut self, row: u16, style: Style) -> Option<(u16, u16)> {
         let mut col = 0;
+        let mut repaired_start = self.cols;
+        let mut repaired_end = 0;
         while col < self.cols {
             let cell = self.cell(row, col);
             if cell.is_wide_trailing {
                 self.clear_cell(row, col, style);
+                repaired_start = repaired_start.min(col);
+                repaired_end = repaired_end.max(col + 1);
                 col += 1;
                 continue;
             }
@@ -104,6 +110,8 @@ impl Grid {
                     col += 2;
                 } else {
                     self.clear_cell(row, col, style);
+                    repaired_start = repaired_start.min(col);
+                    repaired_end = repaired_end.max(col + 1);
                     col += 1;
                 }
                 continue;
@@ -111,6 +119,7 @@ impl Grid {
 
             col += 1;
         }
+        (repaired_start < repaired_end).then_some((repaired_start, repaired_end))
     }
 
     /// Insert blank rows at `row`, shifting rows downward and dropping bottom rows.

@@ -32,6 +32,22 @@ fn erase_line_marks_cleared_span_dirty() {
 }
 
 #[test]
+fn erase_character_marks_repaired_wide_cell_dirty() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+    terminal.write_str("A界B").unwrap();
+    terminal.take_dirty_regions();
+
+    terminal.write_str("\x1b[1;3H\x1b[X").unwrap();
+
+    let regions = terminal.take_dirty_regions();
+    assert_eq!(regions.len(), 1);
+    assert_eq!(regions[0].row, 0);
+    assert_eq!(regions[0].col, 1);
+    assert_eq!(regions[0].rows, 1);
+    assert_eq!(regions[0].cols, 2);
+}
+
+#[test]
 fn resize_marks_entire_new_viewport_dirty() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("abc").unwrap();
