@@ -17,8 +17,9 @@ On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported render p95 4000000 ns plus
 input-to-render p95 6940000 ns. On the same date,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
-rendered 1 CPU-side dirty frame, verified `gromaq-runtime-line-511` in the
-render plan, and reported render p95 500000 ns. On the same date,
+reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
+verified `gromaq-runtime-line-511` in the render plan, and reported render p95
+500000 ns. On the same date,
 `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz target
 interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
 frames. These are deterministic smoke results, not live hardware acceptance

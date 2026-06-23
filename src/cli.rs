@@ -26,6 +26,7 @@ use crate::terminal::{Terminal, TerminalConfig};
 const CLIPBOARD_SMOKE_TEXT: &str = "gromaq clipboard smoke";
 const OSC52_CLIPBOARD_SMOKE_TEXT: &str = "gromaq osc52 smoke";
 const RUNTIME_LARGE_OUTPUT_LINES: usize = 512;
+const RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES: usize = 128;
 
 /// Captured CLI result for tests and the binary wrapper.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -639,7 +640,7 @@ fn runtime_large_output_smoke_exit() -> CliExit {
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 32,
         terminal_rows: 8,
-        scrollback_lines: 128,
+        scrollback_lines: RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
         shell: ShellCommand {
@@ -662,6 +663,7 @@ fn runtime_large_output_smoke_exit() -> CliExit {
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
     let rendered = runtime.render_terminal_frame(&mut renderer);
     let metrics = runtime.dump_runtime_perf_metrics();
+    let scrollback = runtime.terminal().dump_scrollback();
     let visible_text = renderer
         .last_plan()
         .map(|plan| {
@@ -677,6 +679,11 @@ fn runtime_large_output_smoke_exit() -> CliExit {
         || metrics.pty_output_batches != 1
         || !rendered
         || metrics.rendered_frames != 1
+        || scrollback.lines.len() != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
+        || scrollback
+            .lines
+            .iter()
+            .any(|line| line == "gromaq-runtime-line-000")
         || !visible_text.contains(&last_line)
     {
         return CliExit {
@@ -691,9 +698,10 @@ fn runtime_large_output_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime large-output smoke: ok\nlines: {}\npumped bytes: {}\nrendered frames: {}\nlast visible line: {}\nrender p95 ns: {}\n",
+            "runtime large-output smoke: ok\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nlast visible line: {}\nrender p95 ns: {}\n",
             RUNTIME_LARGE_OUTPUT_LINES,
             pumped_bytes,
+            scrollback.lines.len(),
             metrics.rendered_frames,
             last_line,
             metrics.render_time_p95_ns

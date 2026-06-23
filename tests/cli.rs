@@ -218,6 +218,7 @@ fn runtime_large_output_smoke_cli_reports_rendered_burst_without_gpu_bootstrap()
     assert!(exit.stdout.contains("runtime large-output smoke: ok"));
     assert!(exit.stdout.contains("lines: 512"));
     assert!(exit.stdout.contains("pumped bytes:"));
+    assert!(exit.stdout.contains("scrollback lines: 128"));
     assert!(exit.stdout.contains("rendered frames: 1"));
     assert!(
         exit.stdout
