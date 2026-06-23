@@ -475,6 +475,37 @@ fn runtime_bounded_state_batches(c: &mut Criterion) {
     });
 }
 
+fn runtime_state_snapshot_bounded_session(c: &mut Criterion) {
+    let payloads = bounded_state_payloads();
+    let spawner = BenchPayloadPtySpawner { payloads };
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 32,
+        terminal_rows: 8,
+        scrollback_lines: BOUNDED_STATE_SCROLLBACK_LINES,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    for _ in 0..BOUNDED_STATE_BATCHES {
+        black_box(runtime.pump_pty_output().unwrap());
+    }
+
+    c.bench_function("runtime_state_snapshot_bounded_session", |b| {
+        b.iter(|| {
+            let snapshot = runtime.dump_runtime_state_snapshot();
+            black_box(snapshot.scrollback_lines);
+            black_box(snapshot.scrollback_cells);
+            black_box(snapshot.scrollback_cell_limit);
+        });
+    });
+}
+
 fn runtime_continuous_output_batches(c: &mut Criterion) {
     let payloads = continuous_output_payloads();
     c.bench_function("runtime_continuous_output_batches", |b| {
@@ -589,6 +620,7 @@ criterion_group!(
     font_rasterizer_combining_cell,
     pty_runtime_pump_large_output,
     runtime_bounded_state_batches,
+    runtime_state_snapshot_bounded_session,
     runtime_continuous_output_batches,
     runtime_alternate_screen_stages
 );

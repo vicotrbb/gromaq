@@ -73,6 +73,7 @@ The benchmark list should include:
 - `font_rasterizer_combining_cell`
 - `pty_runtime_pump_large_output`
 - `runtime_bounded_state_batches`
+- `runtime_state_snapshot_bounded_session`
 - `runtime_continuous_output_batches`
 - `runtime_alternate_screen_stages`
 
