@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::VecDeque;
+use std::fs;
 use std::path::PathBuf;
 use std::sync::{
     Arc,
@@ -26,8 +27,8 @@ use gromaq::renderer::{
     WgpuRenderer,
 };
 use gromaq::{
-    CursorSnapshot, GridSnapshot, GromaqConfig, KeyModifiers, MemoryClipboard, MouseButton,
-    MouseEvent, MouseEventKind, Terminal, TerminalConfig,
+    ConfigFileReloader, CursorSnapshot, GridSnapshot, GromaqConfig, KeyModifiers, MemoryClipboard,
+    MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
@@ -37,6 +38,15 @@ struct MockPtySession {
     output: RefCell<VecDeque<Vec<u8>>>,
     input: RefCell<Vec<Vec<u8>>>,
     resizes: RefCell<Vec<NativePtyResize>>,
+}
+
+fn test_app_config_path(name: &str) -> PathBuf {
+    let directory = std::env::current_dir()
+        .unwrap()
+        .join("target")
+        .join("gromaq-app-tests");
+    fs::create_dir_all(&directory).unwrap();
+    directory.join(format!("{}-{name}", std::process::id()))
 }
 
 impl NativePtySessionIo for MockPtySession {
@@ -277,6 +287,42 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     assert_eq!(app.renderer().config().font_size_px, 18);
     assert_eq!(app.renderer().config().clear_color, [0.1, 0.2, 0.3, 1.0]);
     assert!(!app.runtime().has_shell_session());
+}
+
+#[test]
+fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
+    let path = test_app_config_path("reload-render-config.toml");
+    fs::write(&path, "[performance]\ntarget_fps = 144\n").unwrap();
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+    )
+    .unwrap();
+    app.set_config_reloader(ConfigFileReloader::from_file(path.clone()).unwrap());
+
+    assert!(!app.reload_config_if_changed().unwrap());
+
+    fs::write(
+        &path,
+        r#"
+        [performance]
+        target_fps = 120
+        dirty_region_rendering = false
+
+        [font]
+        size_px = 18.0
+        "#,
+    )
+    .unwrap();
+
+    assert!(app.reload_config_if_changed().unwrap());
+    assert_eq!(app.lifecycle().config().target_fps, 120);
+    assert_eq!(app.renderer().config().target_fps, 120);
+    assert!(!app.renderer().config().dirty_regions);
+    assert_eq!(app.renderer().config().font_size_px, 18);
+    assert!(!app.runtime().has_shell_session());
+    let _ = fs::remove_file(path);
 }
 
 #[test]

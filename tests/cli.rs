@@ -702,6 +702,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             ..RendererConfig::default()
         }
     );
+    assert_eq!(launches[0].config_path.as_deref(), Some(path.as_path()));
     let _ = fs::remove_file(path);
 }
 

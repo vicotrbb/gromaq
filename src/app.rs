@@ -17,7 +17,7 @@ use winit::keyboard::{Key, ModifiersState, NamedKey, PhysicalKey};
 use winit::window::{Window, WindowAttributes, WindowId};
 
 use crate::clipboard::{HostClipboard, NativeClipboard};
-use crate::config::GromaqConfig;
+use crate::config::{ConfigFileReloader, GromaqConfig};
 use crate::font::{FontRasterError, RasterizedGlyphCache};
 use crate::input::key_modifiers_from_winit;
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
@@ -1301,6 +1301,7 @@ pub struct NativeTerminalApp {
     cursor_position: Option<PhysicalPosition<f64>>,
     mouse_buttons: NativeMouseButtonTracker,
     resize_mapper: NativeResizeGridMapper,
+    config_reloader: Option<ConfigFileReloader>,
     window: Option<Arc<Window>>,
     window_id: Option<WindowId>,
     startup_error: Option<String>,
@@ -1354,6 +1355,7 @@ impl NativeTerminalApp {
             cursor_position: None,
             mouse_buttons: NativeMouseButtonTracker::default(),
             resize_mapper,
+            config_reloader: None,
             window: None,
             window_id: None,
             startup_error: None,
@@ -1373,6 +1375,29 @@ impl NativeTerminalApp {
     /// Access renderer state.
     pub fn renderer(&self) -> &WgpuRenderer {
         &self.renderer
+    }
+
+    /// Install a config-file reloader for live reloadable settings.
+    pub fn set_config_reloader(&mut self, config_reloader: ConfigFileReloader) {
+        self.config_reloader = Some(config_reloader);
+    }
+
+    /// Poll the installed config file and apply reloadable settings when it changed.
+    pub fn reload_config_if_changed(&mut self) -> Result<bool, NativeAppError> {
+        let Some(reload) = self
+            .config_reloader
+            .as_mut()
+            .map(ConfigFileReloader::reload_if_changed)
+            .transpose()
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?
+        else {
+            return Ok(false);
+        };
+        if !reload.changed {
+            return Ok(false);
+        }
+        self.apply_reloadable_gromaq_config(&reload.config)?;
+        Ok(true)
     }
 
     /// Apply validated user configuration fields that are reloadable without restarting the PTY.
@@ -1435,6 +1460,19 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        match self.reload_config_if_changed() {
+            Ok(true) => {
+                if let Some(window) = &self.window {
+                    window.request_redraw();
+                }
+            }
+            Ok(false) => {}
+            Err(error) => {
+                self.startup_error = Some(error.to_string());
+                event_loop.exit();
+                return;
+            }
+        }
         if let Some(deadline) = self.lifecycle.next_pty_pump_deadline(Instant::now()) {
             event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
         }
@@ -1806,6 +1844,21 @@ pub fn run_native_app_with_runtime_and_renderer_config(
     runtime_config: NativeTerminalRuntimeConfig,
     renderer_config: RendererConfig,
 ) -> Result<(), NativeAppError> {
+    run_native_app_with_runtime_renderer_and_config_file(
+        config,
+        runtime_config,
+        renderer_config,
+        None,
+    )
+}
+
+/// Run the native `winit` terminal application loop with explicit runtime, renderer, and config reload path.
+pub fn run_native_app_with_runtime_renderer_and_config_file(
+    config: NativeAppConfig,
+    runtime_config: NativeTerminalRuntimeConfig,
+    renderer_config: RendererConfig,
+    config_path: Option<&Path>,
+) -> Result<(), NativeAppError> {
     let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
     let event_proxy = event_loop.create_proxy();
     let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
@@ -1813,6 +1866,12 @@ pub fn run_native_app_with_runtime_and_renderer_config(
         runtime_config,
         renderer_config,
     )?;
+    if let Some(config_path) = config_path {
+        app.set_config_reloader(
+            ConfigFileReloader::from_file(config_path)
+                .map_err(|error| NativeAppError::Runtime(error.to_string()))?,
+        );
+    }
     app.set_event_proxy(NativeAppEventProxy::from(event_proxy));
     event_loop.run_app(&mut app)?;
     if let Some(error) = app.take_startup_error() {

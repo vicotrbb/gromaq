@@ -13,7 +13,7 @@ use winit::keyboard::{Key, ModifiersState};
 use crate::app::{
     NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
     NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
-    run_native_app_with_runtime_and_renderer_config,
+    run_native_app_with_runtime_renderer_and_config_file,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::{GromaqConfig, ShellSettings};
@@ -76,6 +76,8 @@ pub struct NativeAppLaunchConfig {
     pub runtime: NativeTerminalRuntimeConfig,
     /// Renderer configuration for glyph planning and frame presentation.
     pub renderer: RendererConfig,
+    /// Optional TOML config path to poll for reloadable changes after launch.
+    pub config_path: Option<PathBuf>,
 }
 
 impl NativeAppLaunchConfig {
@@ -92,6 +94,7 @@ impl NativeAppLaunchConfig {
             app,
             runtime,
             renderer,
+            config_path: None,
         })
     }
 }
@@ -123,8 +126,13 @@ pub struct RealNativeAppLauncher;
 
 impl NativeAppLauncher for RealNativeAppLauncher {
     fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
-        run_native_app_with_runtime_and_renderer_config(config.app, config.runtime, config.renderer)
-            .map_err(|error| NativeAppLaunchError::new(error.to_string()))
+        run_native_app_with_runtime_renderer_and_config_file(
+            config.app,
+            config.runtime,
+            config.renderer,
+            config.config_path.as_deref(),
+        )
+        .map_err(|error| NativeAppLaunchError::new(error.to_string()))
     }
 }
 
@@ -563,7 +571,10 @@ where
         }
     };
     let launch_config = match NativeAppLaunchConfig::from_gromaq_config(&config) {
-        Ok(launch_config) => launch_config,
+        Ok(mut launch_config) => {
+            launch_config.config_path = Some(PathBuf::from(path));
+            launch_config
+        }
         Err(error) => {
             return CliExit {
                 code: 1,
