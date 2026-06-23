@@ -1563,6 +1563,7 @@ impl Terminal {
             12 => Some(self.cursor.blinking),
             25 => Some(self.cursor.visible),
             66 => Some(self.application_keypad),
+            47 | 1047 | 1049 => Some(self.saved_primary.is_some()),
             1000 => Some(self.mouse.button_reporting_enabled()),
             1002 => Some(self.mouse.button_motion_reporting_enabled()),
             1003 => Some(self.mouse.any_motion_reporting_enabled()),

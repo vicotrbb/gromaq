@@ -154,6 +154,22 @@ fn dec_private_mode_reports_return_mode_state() {
 }
 
 #[test]
+fn dec_private_mode_reports_include_alternate_screen_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str(
+            "\x1b[?47$p\x1b[?1047$p\x1b[?1049$p\x1b[?1049h\x1b[?47$p\x1b[?1047$p\x1b[?1049$p\x1b[?1049l\x1b[?1049$p",
+        )
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[?47;2$y\x1b[?1047;2$y\x1b[?1049;2$y\x1b[?47;1$y\x1b[?1047;1$y\x1b[?1049;1$y\x1b[?1049;2$y"
+    );
+}
+
+#[test]
 fn decrqss_reports_scroll_margin_status_string() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
 
