@@ -1412,7 +1412,10 @@ impl FrameScheduler {
             let elapsed = presented_at.saturating_duration_since(last_presented);
             let intervals = elapsed.as_nanos() / self.target_interval.as_nanos();
             if intervals > 1 {
-                self.metrics.dropped_frames += u64::try_from(intervals - 1).unwrap_or(u64::MAX);
+                self.metrics.dropped_frames = self
+                    .metrics
+                    .dropped_frames
+                    .saturating_add(saturating_u128_to_u64(intervals - 1));
             }
         }
         self.last_presented = Some(presented_at);
@@ -1423,6 +1426,10 @@ impl FrameScheduler {
     pub fn metrics(&self) -> FrameSchedulerMetrics {
         self.metrics
     }
+}
+
+fn saturating_u128_to_u64(value: u128) -> u64 {
+    u64::try_from(value).unwrap_or(u64::MAX)
 }
 
 /// Glyph atlas configuration.
@@ -2000,6 +2007,18 @@ mod tests {
                 "surface glyph frame width is too large to represent".to_owned()
             )
         );
+    }
+
+    #[test]
+    fn frame_scheduler_dropped_frame_metrics_saturate() {
+        let mut scheduler = FrameScheduler::new(1).unwrap();
+        scheduler.metrics.dropped_frames = u64::MAX - 1;
+        let start = Instant::now();
+        scheduler.record_presented(start);
+
+        scheduler.record_presented(start + Duration::from_secs(4));
+
+        assert_eq!(scheduler.metrics().dropped_frames, u64::MAX);
     }
 
     #[test]
