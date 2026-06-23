@@ -476,6 +476,43 @@ impl NativeTerminalRuntimeConfig {
     }
 }
 
+/// Deterministic native runtime counters for validation and performance probes.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct NativeRuntimePerfSnapshot {
+    /// Number of non-empty PTY output batches pumped into terminal state.
+    pub pty_output_batches: u64,
+    /// Total PTY output bytes pumped into terminal state.
+    pub pty_output_bytes: u64,
+    /// Number of terminal-generated response writes sent back to the PTY.
+    pub pty_response_writes: u64,
+    /// Total terminal-generated response bytes sent back to the PTY.
+    pub pty_response_bytes: u64,
+    /// Number of app-originated PTY input writes.
+    pub pty_input_writes: u64,
+    /// Total app-originated PTY input bytes.
+    pub pty_input_bytes: u64,
+    /// Number of native key inputs encoded and written to the PTY.
+    pub native_key_inputs: u64,
+    /// Number of terminal mouse inputs encoded and written to the PTY.
+    pub mouse_inputs: u64,
+    /// Number of focus inputs encoded and written to the PTY.
+    pub focus_inputs: u64,
+    /// Number of clipboard paste actions that wrote text to the PTY.
+    pub clipboard_pastes: u64,
+    /// Total pasted text bytes written through the terminal paste path.
+    pub paste_bytes: u64,
+    /// Total committed text bytes written to the PTY.
+    pub committed_text_bytes: u64,
+    /// Number of successful terminal resize operations through the native runtime.
+    pub resize_events: u64,
+    /// Number of render attempts made by the native runtime.
+    pub render_attempts: u64,
+    /// Number of dirty terminal frames rendered through the renderer boundary.
+    pub rendered_frames: u64,
+    /// Number of render attempts skipped because no dirty regions were pending.
+    pub clean_frame_skips: u64,
+}
+
 /// Spawns PTY sessions for the native terminal runtime.
 pub trait NativePtySpawner {
     /// Session handle kept alive by the runtime.
@@ -556,6 +593,7 @@ pub struct NativeTerminalRuntime<S> {
     terminal: Terminal,
     shell_session: Option<S>,
     last_synced_clipboard_text: Option<String>,
+    perf: NativeRuntimePerfSnapshot,
 }
 
 impl<S> NativeTerminalRuntime<S> {
@@ -567,6 +605,7 @@ impl<S> NativeTerminalRuntime<S> {
             terminal,
             shell_session: None,
             last_synced_clipboard_text: None,
+            perf: NativeRuntimePerfSnapshot::default(),
         })
     }
 
@@ -575,13 +614,20 @@ impl<S> NativeTerminalRuntime<S> {
         &self.terminal
     }
 
+    /// Return deterministic native runtime counters.
+    pub fn dump_runtime_perf_metrics(&self) -> NativeRuntimePerfSnapshot {
+        self.perf
+    }
+
     /// Render the current terminal frame when dirty regions are pending.
     pub fn render_terminal_frame<R>(&mut self, renderer: &mut R) -> bool
     where
         R: GpuRenderer,
     {
+        self.perf.render_attempts += 1;
         let dirty_regions = self.terminal.take_dirty_regions();
         if dirty_regions.is_empty() {
+            self.perf.clean_frame_skips += 1;
             return false;
         }
         renderer.render_frame(
@@ -589,6 +635,7 @@ impl<S> NativeTerminalRuntime<S> {
             self.terminal.dump_cursor(),
             &dirty_regions,
         );
+        self.perf.rendered_frames += 1;
         true
     }
 
@@ -649,6 +696,8 @@ where
         if output.is_empty() {
             return Ok(0);
         }
+        self.perf.pty_output_batches += 1;
+        self.perf.pty_output_bytes += u64::try_from(output.len()).unwrap_or(u64::MAX);
         self.terminal
             .write_bytes(&output)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
@@ -657,6 +706,8 @@ where
             session
                 .write_input(&response)
                 .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+            self.perf.pty_response_writes += 1;
+            self.perf.pty_response_bytes += u64::try_from(response.len()).unwrap_or(u64::MAX);
         }
         Ok(output.len())
     }
@@ -668,7 +719,10 @@ where
         };
         session
             .write_input(bytes)
-            .map_err(|error| NativeAppError::Runtime(error.to_string()))
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        self.perf.pty_input_writes += 1;
+        self.perf.pty_input_bytes += u64::try_from(bytes.len()).unwrap_or(u64::MAX);
+        Ok(())
     }
 
     /// Encode a native logical key and write it to the PTY when it maps to terminal input.
@@ -680,7 +734,11 @@ where
         let Some(bytes) = self.terminal.encode_winit_key_input(key, modifiers) else {
             return Ok(false);
         };
+        let had_session = self.shell_session.is_some();
         self.send_pty_input(&bytes)?;
+        if had_session {
+            self.perf.native_key_inputs += 1;
+        }
         Ok(true)
     }
 
@@ -689,7 +747,11 @@ where
         let Some(bytes) = self.terminal.encode_mouse_event(event) else {
             return Ok(false);
         };
+        let had_session = self.shell_session.is_some();
         self.send_pty_input(&bytes)?;
+        if had_session {
+            self.perf.mouse_inputs += 1;
+        }
         Ok(true)
     }
 
@@ -698,7 +760,11 @@ where
         let Some(bytes) = self.terminal.encode_focus_event(focused) else {
             return Ok(false);
         };
+        let had_session = self.shell_session.is_some();
         self.send_pty_input(&bytes)?;
+        if had_session {
+            self.perf.focus_inputs += 1;
+        }
         Ok(true)
     }
 
@@ -727,7 +793,12 @@ where
     /// Encode pasted text according to terminal mode and write it to the PTY.
     pub fn send_paste_text(&mut self, text: &str) -> Result<(), NativeAppError> {
         let bytes = self.terminal.encode_paste_text(text);
-        self.send_pty_input(&bytes)
+        let had_session = self.shell_session.is_some();
+        self.send_pty_input(&bytes)?;
+        if had_session {
+            self.perf.paste_bytes += u64::try_from(text.len()).unwrap_or(u64::MAX);
+        }
+        Ok(())
     }
 
     /// Read text from a host clipboard and write it to the PTY as a terminal paste.
@@ -739,12 +810,18 @@ where
             return Ok(false);
         };
         self.send_paste_text(&text)?;
+        self.perf.clipboard_pastes += 1;
         Ok(true)
     }
 
     /// Write committed platform text input to the PTY as typed UTF-8 text.
     pub fn send_committed_text(&mut self, text: &str) -> Result<(), NativeAppError> {
-        self.send_pty_input(text.as_bytes())
+        let had_session = self.shell_session.is_some();
+        self.send_pty_input(text.as_bytes())?;
+        if had_session {
+            self.perf.committed_text_bytes += u64::try_from(text.len()).unwrap_or(u64::MAX);
+        }
+        Ok(())
     }
 
     /// Resize terminal state and notify the retained PTY session.
@@ -757,6 +834,7 @@ where
                 .resize(size)
                 .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         }
+        self.perf.resize_events += 1;
         Ok(())
     }
 

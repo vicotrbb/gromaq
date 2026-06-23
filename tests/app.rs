@@ -10,9 +10,10 @@ use std::time::Duration;
 use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
     NativeMouseGridMapper, NativePtyResize, NativePtySessionIo, NativePtySpawner,
-    NativeResizeGridMapper, NativeTerminalRuntime, NativeTerminalRuntimeConfig,
-    NativeWindowSurface, RealNativePtySpawner, is_native_paste_shortcut,
-    load_default_native_glyph_cache, render_and_present_terminal_glyph_frame,
+    NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeTerminalRuntime,
+    NativeTerminalRuntimeConfig, NativeWindowSurface, RealNativePtySpawner,
+    is_native_paste_shortcut, load_default_native_glyph_cache,
+    render_and_present_terminal_glyph_frame,
 };
 use gromaq::dirty::DirtyRegion;
 use gromaq::font::RasterizedGlyphCache;
@@ -676,6 +677,72 @@ fn native_terminal_runtime_pumps_pty_output_and_writes_input() {
     assert_eq!(runtime.terminal().dump_grid().line_text(0), "hello");
     let session = runtime.shell_session().unwrap();
     assert_eq!(session.input.borrow().as_slice(), &[b"pwd\n".to_vec()]);
+}
+
+#[test]
+fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    assert_eq!(
+        runtime.dump_runtime_perf_metrics(),
+        NativeRuntimePerfSnapshot::default()
+    );
+    runtime.start_shell(&spawner).unwrap();
+    runtime.pump_pty_output().unwrap();
+    runtime
+        .send_winit_key_input(&Key::Character("c".into()), ModifiersState::CONTROL)
+        .unwrap();
+    runtime.send_paste_text("ab").unwrap();
+    runtime.send_committed_text("é").unwrap();
+    runtime
+        .resize_terminal(NativePtyResize {
+            cols: 10,
+            rows: 6,
+            pixel_width: 800,
+            pixel_height: 480,
+        })
+        .unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"\x1b[6n".to_vec());
+    runtime.pump_pty_output().unwrap();
+    let mut renderer = MockFrameRenderer::default();
+    assert!(runtime.render_terminal_frame(&mut renderer));
+    assert!(!runtime.render_terminal_frame(&mut renderer));
+
+    let metrics = runtime.dump_runtime_perf_metrics();
+    assert_eq!(metrics.pty_output_batches, 2);
+    assert_eq!(metrics.pty_output_bytes, 11);
+    assert_eq!(metrics.pty_response_writes, 1);
+    assert!(!runtime.shell_session().unwrap().input.borrow()[3].is_empty());
+    assert_eq!(
+        metrics.pty_response_bytes,
+        runtime.shell_session().unwrap().input.borrow()[3].len() as u64
+    );
+    assert_eq!(metrics.pty_input_writes, 3);
+    assert_eq!(metrics.pty_input_bytes, 5);
+    assert_eq!(metrics.native_key_inputs, 1);
+    assert_eq!(metrics.paste_bytes, 2);
+    assert_eq!(metrics.committed_text_bytes, 2);
+    assert_eq!(metrics.resize_events, 1);
+    assert_eq!(metrics.render_attempts, 2);
+    assert_eq!(metrics.rendered_frames, 1);
+    assert_eq!(metrics.clean_frame_skips, 1);
 }
 
 #[test]
