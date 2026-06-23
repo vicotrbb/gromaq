@@ -16,8 +16,13 @@ pub enum PtyError {
     #[error("pty operation failed: {0}")]
     Backend(String),
     /// Standard I/O failure.
-    #[error("pty I/O failed: {0}")]
-    Io(String),
+    #[error("pty I/O failed with {kind:?}: {message}")]
+    Io {
+        /// Standard I/O error kind.
+        kind: ErrorKind,
+        /// Underlying I/O error message.
+        message: String,
+    },
     /// Output was not available before the deadline.
     #[error("pty read timed out after {0:?}")]
     ReadTimeout(Duration),
@@ -33,6 +38,15 @@ pub enum PtyError {
 }
 
 type PtyResult<T> = std::result::Result<T, PtyError>;
+
+impl PtyError {
+    fn io(error: std::io::Error) -> Self {
+        Self::Io {
+            kind: error.kind(),
+            message: error.to_string(),
+        }
+    }
+}
 
 /// Shell launch configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -150,9 +164,7 @@ impl PtySession {
     /// Write bytes to the PTY master.
     pub fn write_all(&mut self, bytes: &[u8]) -> PtyResult<()> {
         let writer = self.writer.as_mut().ok_or(PtyError::WriterAlreadyTaken)?;
-        writer
-            .write_all(bytes)
-            .map_err(|error| PtyError::Io(error.to_string()))
+        writer.write_all(bytes).map_err(PtyError::io)
     }
 
     /// Start a background reader that streams PTY output chunks to `drain_available_output`.
@@ -183,7 +195,7 @@ impl PtySession {
                     }
                     Err(error) if error.kind() == ErrorKind::Interrupted => {}
                     Err(error) => {
-                        let _ = sender.send(Err(PtyError::Io(error.to_string())));
+                        let _ = sender.send(Err(PtyError::io(error)));
                         break;
                     }
                 }
@@ -222,13 +234,13 @@ impl PtySession {
             let result = reader
                 .read_to_string(&mut output)
                 .map(|_| output)
-                .map_err(|error| error.to_string());
+                .map_err(PtyError::io);
             let _ = sender.send(result);
         });
 
         match receiver.recv_timeout(timeout) {
             Ok(Ok(output)) => Ok(output),
-            Ok(Err(error)) => Err(PtyError::Io(error)),
+            Ok(Err(error)) => Err(error),
             Err(mpsc::RecvTimeoutError::Timeout) => {
                 let _ = self.child.kill();
                 Err(PtyError::ReadTimeout(timeout))
@@ -239,9 +251,7 @@ impl PtySession {
 
     /// Poll the child process without blocking.
     pub fn try_wait(&mut self) -> PtyResult<Option<ExitStatus>> {
-        self.child
-            .try_wait()
-            .map_err(|error| PtyError::Io(error.to_string()))
+        self.child.try_wait().map_err(PtyError::io)
     }
 
     /// Wait for the child process to exit until `timeout` elapses.
@@ -255,6 +265,24 @@ impl PtySession {
                 return Ok(None);
             }
             std::thread::sleep(Duration::from_millis(10));
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pty_io_error_preserves_kind_and_message() {
+        let error = PtyError::io(std::io::Error::new(ErrorKind::BrokenPipe, "writer closed"));
+
+        match error {
+            PtyError::Io { kind, message } => {
+                assert_eq!(kind, ErrorKind::BrokenPipe);
+                assert_eq!(message, "writer closed");
+            }
+            other => panic!("expected PTY I/O error, got {other:?}"),
         }
     }
 }
