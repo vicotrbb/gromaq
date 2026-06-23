@@ -2,6 +2,7 @@ use base64::{Engine, engine::general_purpose};
 use gromaq::{Terminal, TerminalConfig};
 
 const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
+const MAX_OSC_TITLE_BYTES: usize = 4096;
 const MAX_METADATA_IDS: u16 = 4096;
 
 #[test]
@@ -62,6 +63,39 @@ fn csi_window_icon_label_report_returns_current_title_label() {
     assert_eq!(
         terminal.take_pending_response_bytes(),
         b"\x1b]LGromaq Terminal\x1b\\"
+    );
+}
+
+#[test]
+fn overlong_osc_title_is_ignored_without_clearing_previous_title() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    let overlong_title = "x".repeat(MAX_OSC_TITLE_BYTES + 1);
+
+    terminal.write_str("\x1b]2;safe title\x07").unwrap();
+    terminal
+        .write_str(&format!("\x1b]2;{overlong_title}\x07\x1b[21t"))
+        .unwrap();
+
+    assert_eq!(terminal.dump_title().as_deref(), Some("safe title"));
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]lsafe title\x1b\\"
+    );
+}
+
+#[test]
+fn overlong_osc_icon_label_is_ignored_without_clearing_previous_label() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    let overlong_label = "x".repeat(MAX_OSC_TITLE_BYTES + 1);
+
+    terminal.write_str("\x1b]0;safe label\x07").unwrap();
+    terminal
+        .write_str(&format!("\x1b]1;{overlong_label}\x07\x1b[20t"))
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]Lsafe label\x1b\\"
     );
 }
 

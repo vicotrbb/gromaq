@@ -17,6 +17,7 @@ use crate::scrollback::{Scrollback, ScrollbackSnapshot};
 use crate::selection::{SelectionPoint, SelectionRange};
 
 const MAX_SCROLLBACK_LINES: usize = 1_000_000;
+const MAX_OSC_TITLE_BYTES: usize = 4096;
 const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
 const MAX_OSC8_HYPERLINK_BYTES: usize = 4096;
 const MAX_METADATA_IDS: usize = 4096;
@@ -2499,7 +2500,7 @@ impl Perform for Terminal {
             "0" => {
                 if let Some(label) = params
                     .get(1)
-                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                    .and_then(|bytes| decode_bounded_osc_text(bytes))
                 {
                     self.icon_label = Some(label.to_owned());
                     self.title = Some(label.to_owned());
@@ -2508,7 +2509,7 @@ impl Perform for Terminal {
             "1" => {
                 if let Some(icon_label) = params
                     .get(1)
-                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                    .and_then(|bytes| decode_bounded_osc_text(bytes))
                 {
                     self.icon_label = Some(icon_label.to_owned());
                 }
@@ -2516,7 +2517,7 @@ impl Perform for Terminal {
             "2" => {
                 if let Some(title) = params
                     .get(1)
-                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                    .and_then(|bytes| decode_bounded_osc_text(bytes))
                 {
                     self.title = Some(title.to_owned());
                 }
@@ -2656,6 +2657,13 @@ fn apply_grouped_sgr_param(style: &mut Style, param: &[u16]) -> bool {
         }
         _ => false,
     }
+}
+
+fn decode_bounded_osc_text(bytes: &[u8]) -> Option<&str> {
+    if bytes.len() > MAX_OSC_TITLE_BYTES {
+        return None;
+    }
+    std::str::from_utf8(bytes).ok()
 }
 
 fn decode_osc52_clipboard(params: &[&[u8]]) -> Option<String> {
