@@ -228,6 +228,31 @@ fn encodes_winit_function_keys_to_terminal_sequences() {
 }
 
 #[test]
+fn encodes_winit_extended_function_keys_to_shifted_terminal_sequences() {
+    let cases = [
+        (NamedKey::F13, b"\x1b[1;2P".as_slice()),
+        (NamedKey::F14, b"\x1b[1;2Q".as_slice()),
+        (NamedKey::F15, b"\x1b[1;2R".as_slice()),
+        (NamedKey::F16, b"\x1b[1;2S".as_slice()),
+        (NamedKey::F17, b"\x1b[15;2~".as_slice()),
+        (NamedKey::F18, b"\x1b[17;2~".as_slice()),
+        (NamedKey::F19, b"\x1b[18;2~".as_slice()),
+        (NamedKey::F20, b"\x1b[19;2~".as_slice()),
+        (NamedKey::F21, b"\x1b[20;2~".as_slice()),
+        (NamedKey::F22, b"\x1b[21;2~".as_slice()),
+        (NamedKey::F23, b"\x1b[23;2~".as_slice()),
+        (NamedKey::F24, b"\x1b[24;2~".as_slice()),
+    ];
+
+    for (key, expected) in cases {
+        assert_eq!(
+            encode_winit_key(&Key::Named(key), ModifiersState::empty()),
+            Some(expected.to_vec())
+        );
+    }
+}
+
+#[test]
 fn encodes_winit_modified_named_keys_to_terminal_sequences() {
     let cases = [
         (
@@ -271,6 +296,12 @@ fn encodes_winit_modified_named_keys_to_terminal_sequences() {
             ModifiersState::SHIFT.union(ModifiersState::ALT),
             b"\x1b[24;4~".as_slice(),
         ),
+        (
+            NamedKey::F13,
+            ModifiersState::CONTROL,
+            b"\x1b[1;6P".as_slice(),
+        ),
+        (NamedKey::F24, ModifiersState::ALT, b"\x1b[24;4~".as_slice()),
     ];
 
     for (key, modifiers, expected) in cases {

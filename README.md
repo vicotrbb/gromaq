@@ -21,7 +21,7 @@ Implemented and tested:
 - Styled scrollback row reflow during resize
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
-- Keyboard input encoding for common keys, navigation keys, named Space, modified named keys, F1-F12 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
+- Keyboard input encoding for common keys, navigation keys, named Space, modified named keys, F1-F24 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
 - Configuration validation
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, and measured native render durations
