@@ -1,4 +1,4 @@
-use gromaq::{Terminal, TerminalConfig};
+use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
 
 #[test]
 fn printable_run_produces_single_dirty_region() {
@@ -93,4 +93,48 @@ fn resize_marks_entire_new_viewport_dirty() {
     assert_eq!(regions[0].col, 0);
     assert_eq!(regions[0].rows, 4);
     assert_eq!(regions[0].cols, 10);
+}
+
+#[test]
+fn dirty_tracker_contains_regions_at_u16_edges_without_overflow() {
+    let mut dirty = DirtyTracker::default();
+    let edge = DirtyRegion {
+        row: u16::MAX,
+        col: u16::MAX,
+        rows: 1,
+        cols: 1,
+    };
+
+    dirty.mark_region(edge);
+
+    assert!(dirty.contains_region(edge));
+}
+
+#[test]
+fn dirty_tracker_unions_adjacent_edge_regions_with_widened_bounds() {
+    let mut dirty = DirtyTracker::default();
+    dirty.mark_region(DirtyRegion {
+        row: u16::MAX - 1,
+        col: u16::MAX - 1,
+        rows: 1,
+        cols: 1,
+    });
+    dirty.mark_region(DirtyRegion {
+        row: u16::MAX,
+        col: u16::MAX,
+        rows: 1,
+        cols: 1,
+    });
+
+    let regions = dirty.take();
+
+    assert_eq!(
+        regions,
+        vec![DirtyRegion {
+            row: u16::MAX - 1,
+            col: u16::MAX - 1,
+            rows: 2,
+            cols: 2,
+        }]
+    );
 }

@@ -24,19 +24,42 @@ impl DirtyRegion {
         }
     }
 
+    fn from_wide_bounds(row_start: u16, col_start: u16, row_end: u32, col_end: u32) -> Self {
+        let rows = row_end
+            .saturating_sub(u32::from(row_start))
+            .min(u32::from(u16::MAX)) as u16;
+        let cols = col_end
+            .saturating_sub(u32::from(col_start))
+            .min(u32::from(u16::MAX)) as u16;
+        Self {
+            row: row_start,
+            col: col_start,
+            rows,
+            cols,
+        }
+    }
+
+    fn row_end(self) -> u32 {
+        u32::from(self.row) + u32::from(self.rows)
+    }
+
+    fn col_end(self) -> u32 {
+        u32::from(self.col) + u32::from(self.cols)
+    }
+
     fn union(self, other: Self) -> Self {
         let row_start = self.row.min(other.row);
         let col_start = self.col.min(other.col);
-        let row_end = (self.row + self.rows).max(other.row + other.rows);
-        let col_end = (self.col + self.cols).max(other.col + other.cols);
-        Self::from_bounds(row_start, col_start, row_end, col_end)
+        let row_end = self.row_end().max(other.row_end());
+        let col_end = self.col_end().max(other.col_end());
+        Self::from_wide_bounds(row_start, col_start, row_end, col_end)
     }
 
     fn contains(self, other: Self) -> bool {
         self.row <= other.row
             && self.col <= other.col
-            && self.row + self.rows >= other.row + other.rows
-            && self.col + self.cols >= other.col + other.cols
+            && self.row_end() >= other.row_end()
+            && self.col_end() >= other.col_end()
     }
 }
 
