@@ -16,6 +16,7 @@ Current benchmarks:
 
 - `parser_large_output`: parses ANSI-styled output with Unicode content.
 - `scrollback_large_output`: writes a prebuilt 2,000-line payload into a small viewport with bounded scrollback, avoiding fixture formatting work inside the measured loop.
+- `scrollback_view_navigation`: repeatedly moves a populated scrollback viewport up and down through retained history, snapshots the displayed grid, and drains dirty viewport regions.
 - `dirty_region_coalescing`: marks overlapping dirty spans/cells/regions, checks containment, and drains the coalesced scheduler region.
 - `render_plan_large_dirty_region`: builds CPU-side glyph draw commands from a large dirty viewport and exercises glyph atlas lookups.
 - `glyph_quad_generation_large_plan`: converts a prebuilt large terminal render plan into textured glyph quads and triangle indices for GPU buffer upload.
@@ -49,4 +50,4 @@ The full terminal goal is not complete until benchmarks and runtime validation p
 - efficient glyph cache hit rate
 - no avoidable hot-path allocations
 
-This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, dirty-region, render-plan, glyph-quad, prepared-frame, input echo-to-render, font-rasterization, cached glyph-bitmap, runtime PTY pump, bounded runtime state, continuous runtime output, and runtime alternate-screen measurements for future regression tracking. `NativeTerminalRuntime::dump_runtime_state_snapshot` exposes deterministic visible-cell and retained scrollback row/cell/cap counters, and `cargo run -- --runtime-bounded-state-smoke` uses that state snapshot for capped runtime scrollback proof, but it is not a live process-memory growth measurement.
+This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback ingestion, scrollback viewport navigation, dirty-region, render-plan, glyph-quad, prepared-frame, input echo-to-render, font-rasterization, cached glyph-bitmap, runtime PTY pump, bounded runtime state, continuous runtime output, and runtime alternate-screen measurements for future regression tracking. `NativeTerminalRuntime::dump_runtime_state_snapshot` exposes deterministic visible-cell and retained scrollback row/cell/cap counters, and `cargo run -- --runtime-bounded-state-smoke` uses that state snapshot for capped runtime scrollback proof, but it is not a live process-memory growth measurement.
