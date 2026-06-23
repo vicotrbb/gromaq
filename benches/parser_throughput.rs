@@ -10,7 +10,8 @@ use gromaq::app::{
 };
 use gromaq::font::FontRasterizer;
 use gromaq::native_gpu::{
-    GpuBootstrap, GpuBootstrapConfig, GpuTerminalTextRunner, GpuTexturedQuadRunner,
+    GpuBootstrap, GpuBootstrapConfig, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
+    GpuTexturedQuadRunner, NativeGpuContext,
 };
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
@@ -768,13 +769,9 @@ fn runtime_protocol_input_reports(c: &mut Criterion) {
 }
 
 fn gpu_textured_quad_draw_readback(c: &mut Criterion) {
-    let context = match GpuBootstrap::new(GpuBootstrapConfig::native_default()).initialize_native()
-    {
-        Ok(context) => context,
-        Err(error) => {
-            skip_benchmark(c, "gpu_textured_quad_draw_readback", &error.to_string());
-            return;
-        }
+    let Some(context) = native_gpu_context_for_benchmark(c, "gpu_textured_quad_draw_readback")
+    else {
+        return;
     };
 
     c.bench_function("gpu_textured_quad_draw_readback", |b| {
@@ -788,13 +785,9 @@ fn gpu_textured_quad_draw_readback(c: &mut Criterion) {
 }
 
 fn gpu_terminal_text_draw_readback(c: &mut Criterion) {
-    let context = match GpuBootstrap::new(GpuBootstrapConfig::native_default()).initialize_native()
-    {
-        Ok(context) => context,
-        Err(error) => {
-            skip_benchmark(c, "gpu_terminal_text_draw_readback", &error.to_string());
-            return;
-        }
+    let Some(context) = native_gpu_context_for_benchmark(c, "gpu_terminal_text_draw_readback")
+    else {
+        return;
     };
 
     c.bench_function("gpu_terminal_text_draw_readback", |b| {
@@ -807,6 +800,27 @@ fn gpu_terminal_text_draw_readback(c: &mut Criterion) {
             black_box(report.rasterized_glyphs);
             black_box(report.reused_glyphs);
             black_box(report.drawn_pixels);
+        });
+    });
+}
+
+fn gpu_text_atlas_upload_readback(c: &mut Criterion) {
+    let Some(context) = native_gpu_context_for_benchmark(c, "gpu_text_atlas_upload_readback")
+    else {
+        return;
+    };
+
+    c.bench_function("gpu_text_atlas_upload_readback", |b| {
+        b.iter(|| {
+            let report = context.run_text_atlas_upload_smoke().unwrap();
+            black_box(report.width);
+            black_box(report.height);
+            black_box(report.occupied_slots);
+            black_box(report.rasterized_glyphs);
+            black_box(report.reused_glyphs);
+            black_box(report.covered_pixels);
+            black_box(report.matching_bytes);
+            black_box(report.total_bytes);
         });
     });
 }
@@ -831,13 +845,27 @@ criterion_group!(
     runtime_alternate_screen_stages,
     runtime_protocol_input_reports,
     gpu_textured_quad_draw_readback,
-    gpu_terminal_text_draw_readback
+    gpu_terminal_text_draw_readback,
+    gpu_text_atlas_upload_readback
 );
 criterion_main!(benches);
 
 fn skip_benchmark(c: &mut Criterion, name: &'static str, reason: &str) {
     eprintln!("skipping {name}: {reason}");
     c.bench_function(name, |b| b.iter(|| black_box(())));
+}
+
+fn native_gpu_context_for_benchmark(
+    c: &mut Criterion,
+    name: &'static str,
+) -> Option<NativeGpuContext> {
+    match GpuBootstrap::new(GpuBootstrapConfig::native_default()).initialize_native() {
+        Ok(context) => Some(context),
+        Err(error) => {
+            skip_benchmark(c, name, &error.to_string());
+            None
+        }
+    }
 }
 
 fn bench_monospace_font_bytes() -> Result<Vec<u8>, String> {
