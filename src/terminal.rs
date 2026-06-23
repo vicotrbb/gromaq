@@ -1413,6 +1413,9 @@ impl Terminal {
             if apply_grouped_sgr_param(&mut self.style, param) {
                 continue;
             }
+            if is_invalid_grouped_extended_color_param(param) {
+                continue;
+            }
             flattened.extend(param.iter().copied());
         }
         self.apply_flat_sgr(flattened);
@@ -2536,6 +2539,19 @@ where
             Some(Color::Rgb(r, g, b))
         }
         _ => None,
+    }
+}
+
+fn is_invalid_grouped_extended_color_param(param: &[u16]) -> bool {
+    match param {
+        [38 | 48 | 58, 5, index] => u8::try_from(*index).is_err(),
+        [38 | 48 | 58, 2, red, green, blue] => {
+            u8::try_from(*red).is_err()
+                || u8::try_from(*green).is_err()
+                || u8::try_from(*blue).is_err()
+        }
+        [38 | 48 | 58, ..] => true,
+        _ => false,
     }
 }
 

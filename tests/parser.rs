@@ -199,6 +199,26 @@ fn sgr_ignores_out_of_range_extended_color_components() {
 }
 
 #[test]
+fn sgr_ignores_invalid_grouped_extended_color_params() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[31;44mA\x1b[38:6:1mB\x1b[48:6:5mC")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let unsupported_foreground_mode = grid.cell(0, 1);
+    assert_eq!(unsupported_foreground_mode.style.foreground, Color::Ansi(1));
+    assert_eq!(unsupported_foreground_mode.style.background, Color::Ansi(4));
+    assert!(!unsupported_foreground_mode.style.bold);
+
+    let unsupported_background_mode = grid.cell(0, 2);
+    assert_eq!(unsupported_background_mode.style.foreground, Color::Ansi(1));
+    assert_eq!(unsupported_background_mode.style.background, Color::Ansi(4));
+    assert!(!unsupported_background_mode.style.blink);
+}
+
+#[test]
 fn csi_cursor_movement_and_erase_line_are_applied() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
