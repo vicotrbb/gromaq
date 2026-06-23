@@ -1022,6 +1022,7 @@ impl Terminal {
     #[inline(never)]
     fn soft_reset(&mut self) {
         self.wrap_pending = false;
+        self.auto_wrap = false;
         self.origin_mode = false;
         self.application_cursor_keys = false;
         self.insert_mode = false;

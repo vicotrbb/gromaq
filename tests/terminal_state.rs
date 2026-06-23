@@ -279,6 +279,19 @@ fn decstr_soft_reset_resets_dec_saved_cursor_to_home_state() {
 }
 
 #[test]
+fn decstr_soft_reset_disables_autowrap() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("\x1b[!pabcdE").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abcE");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
 fn csi_erase_display_mode_0_clears_from_cursor_to_screen_end() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
