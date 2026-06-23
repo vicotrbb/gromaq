@@ -19,6 +19,20 @@ fn osc_0_sets_window_title_with_st_terminator() {
 }
 
 #[test]
+fn csi_window_title_report_returns_current_title() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b]2;Gromaq Terminal\x07\x1b[21t")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]lGromaq Terminal\x1b\\"
+    );
+}
+
+#[test]
 fn osc_52_decodes_clipboard_text_without_changing_title() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     terminal.write_str("\x1b]2;safe title\x07").unwrap();

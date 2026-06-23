@@ -1223,10 +1223,19 @@ impl Terminal {
     }
 
     fn report_window_manipulation(&mut self, mode: u16) {
-        if mode == 18 {
-            self.pending_response_bytes.extend_from_slice(
+        match mode {
+            18 => self.pending_response_bytes.extend_from_slice(
                 format!("\x1b[8;{};{}t", self.config.rows, self.config.cols).as_bytes(),
-            );
+            ),
+            21 => {
+                self.pending_response_bytes.extend_from_slice(b"\x1b]l");
+                if let Some(title) = &self.title {
+                    self.pending_response_bytes
+                        .extend_from_slice(title.as_bytes());
+                }
+                self.pending_response_bytes.extend_from_slice(b"\x1b\\");
+            }
+            _ => {}
         }
     }
 
