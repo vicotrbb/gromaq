@@ -53,6 +53,20 @@ fn dec_private_mode_restore_restores_saved_autowrap_state() {
 }
 
 #[test]
+fn dec_private_mode_restore_restores_saved_focus_report_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[?1004h\x1b[?1004s\x1b[?1004l")
+        .unwrap();
+    assert_eq!(terminal.encode_focus_event(true), None);
+
+    terminal.write_str("\x1b[?1004r").unwrap();
+    assert_eq!(terminal.encode_focus_event(true), Some(b"\x1b[I".to_vec()));
+    assert_eq!(terminal.encode_focus_event(false), Some(b"\x1b[O".to_vec()));
+}
+
+#[test]
 fn byte_input_parses_text_and_escape_sequences_without_string_conversion() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
