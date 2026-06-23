@@ -1488,14 +1488,9 @@ impl GlyphBitmap {
             return Ok(self.clone());
         }
 
-        let source_row_bytes = usize::try_from(self.width)
-            .unwrap_or(usize::MAX)
-            .saturating_mul(4);
-        let target_row_bytes = usize::try_from(target_width)
-            .unwrap_or(usize::MAX)
-            .saturating_mul(4);
-        let expected_source_len =
-            source_row_bytes.saturating_mul(usize::try_from(self.height).unwrap_or(usize::MAX));
+        let source_row_bytes = rgba_row_byte_len(self.width)?;
+        let target_row_bytes = rgba_row_byte_len(target_width)?;
+        let expected_source_len = rgba_byte_len(self.width, self.height)?;
         if self.rgba.len() != expected_source_len {
             return Err(format!(
                 "glyph slot {} expected {expected_source_len} rgba bytes before padding",
@@ -1503,12 +1498,7 @@ impl GlyphBitmap {
             ));
         }
 
-        let mut rgba = vec![
-            0;
-            target_row_bytes.saturating_mul(
-                usize::try_from(target_height).unwrap_or(usize::MAX)
-            )
-        ];
+        let mut rgba = zeroed_rgba_buffer(target_width, target_height)?;
         for row in 0..usize::try_from(self.height).unwrap_or(0) {
             let source_start = row.saturating_mul(source_row_bytes);
             let target_start = row.saturating_mul(target_row_bytes);
@@ -1523,6 +1513,51 @@ impl GlyphBitmap {
             rgba,
         })
     }
+}
+
+fn rgba_row_byte_len(width: u32) -> std::result::Result<usize, String> {
+    usize::try_from(width)
+        .ok()
+        .and_then(|width| width.checked_mul(4))
+        .ok_or_else(|| "rgba row dimensions are too large".to_owned())
+}
+
+fn rgba_byte_len(width: u32, height: u32) -> std::result::Result<usize, String> {
+    usize::try_from(width)
+        .ok()
+        .and_then(|width| {
+            usize::try_from(height)
+                .ok()
+                .and_then(|height| width.checked_mul(height))
+        })
+        .and_then(|pixels| pixels.checked_mul(4))
+        .ok_or_else(|| "rgba image dimensions are too large".to_owned())
+}
+
+fn zeroed_rgba_buffer(width: u32, height: u32) -> std::result::Result<Vec<u8>, String> {
+    let len = rgba_byte_len(width, height)?;
+    let mut rgba = Vec::new();
+    rgba.try_reserve_exact(len)
+        .map_err(|_| "rgba image buffer is too large to allocate".to_owned())?;
+    rgba.resize(len, 0);
+    Ok(rgba)
+}
+
+fn rgba_offset(width: u32, x: u32, y: u32) -> std::result::Result<usize, String> {
+    usize::try_from(y)
+        .ok()
+        .and_then(|y| {
+            usize::try_from(width)
+                .ok()
+                .and_then(|width| y.checked_mul(width))
+        })
+        .and_then(|row_start| {
+            usize::try_from(x)
+                .ok()
+                .and_then(|x| row_start.checked_add(x))
+        })
+        .and_then(|pixel_offset| pixel_offset.checked_mul(4))
+        .ok_or_else(|| "rgba image offset is too large".to_owned())
 }
 
 /// Packed RGBA8 glyph atlas image.
@@ -1555,15 +1590,16 @@ impl GlyphAtlasImage {
             .max()
             .unwrap_or(0);
         let rows = (max_slot / columns) + 1;
-        let width = slot_width * columns;
-        let height = slot_height * rows;
-        let mut rgba = vec![0; usize::try_from(width * height * 4).unwrap_or(usize::MAX)];
+        let width = slot_width
+            .checked_mul(columns)
+            .ok_or_else(|| "glyph atlas width is too large".to_owned())?;
+        let height = slot_height
+            .checked_mul(rows)
+            .ok_or_else(|| "glyph atlas height is too large".to_owned())?;
+        let mut rgba = zeroed_rgba_buffer(width, height)?;
 
         for glyph in glyphs {
-            let expected_len = usize::try_from(slot_width)
-                .unwrap_or(usize::MAX)
-                .saturating_mul(usize::try_from(slot_height).unwrap_or(usize::MAX))
-                .saturating_mul(4);
+            let expected_len = rgba_byte_len(slot_width, slot_height)?;
             if glyph.width != slot_width
                 || glyph.height != slot_height
                 || glyph.rgba.len() != expected_len
@@ -1577,12 +1613,16 @@ impl GlyphAtlasImage {
             let slot_col = glyph.entry.slot % columns;
             let slot_row = glyph.entry.slot / columns;
             for y in 0..slot_height {
-                let atlas_y = slot_row * slot_height + y;
-                let atlas_x = slot_col * slot_width;
-                let atlas_start =
-                    usize::try_from((atlas_y * width + atlas_x) * 4).unwrap_or(usize::MAX);
-                let glyph_start = usize::try_from(y * slot_width * 4).unwrap_or(usize::MAX);
-                let row_bytes = usize::try_from(slot_width * 4).unwrap_or(usize::MAX);
+                let atlas_y = slot_row
+                    .checked_mul(slot_height)
+                    .and_then(|row_start| row_start.checked_add(y))
+                    .ok_or_else(|| "glyph atlas row offset is too large".to_owned())?;
+                let atlas_x = slot_col
+                    .checked_mul(slot_width)
+                    .ok_or_else(|| "glyph atlas column offset is too large".to_owned())?;
+                let atlas_start = rgba_offset(width, atlas_x, atlas_y)?;
+                let glyph_start = rgba_offset(slot_width, 0, y)?;
+                let row_bytes = rgba_row_byte_len(slot_width)?;
                 rgba[atlas_start..atlas_start + row_bytes]
                     .copy_from_slice(&glyph.rgba[glyph_start..glyph_start + row_bytes]);
             }
