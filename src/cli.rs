@@ -25,6 +25,7 @@ use crate::terminal::{Terminal, TerminalConfig};
 
 const CLIPBOARD_SMOKE_TEXT: &str = "gromaq clipboard smoke";
 const OSC52_CLIPBOARD_SMOKE_TEXT: &str = "gromaq osc52 smoke";
+const RUNTIME_LARGE_OUTPUT_LINES: usize = 512;
 
 /// Captured CLI result for tests and the binary wrapper.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -187,6 +188,7 @@ where
         && arg != "--clipboard-smoke"
         && arg != "--osc52-clipboard-smoke"
         && arg != "--runtime-perf-smoke"
+        && arg != "--runtime-large-output-smoke"
         && arg != "--frame-scheduler-smoke"
     {
         return CliExit {
@@ -211,6 +213,9 @@ where
     }
     if arg == "--runtime-perf-smoke" {
         return runtime_perf_smoke_exit();
+    }
+    if arg == "--runtime-large-output-smoke" {
+        return runtime_large_output_smoke_exit();
     }
     if arg == "--frame-scheduler-smoke" {
         return frame_scheduler_smoke_exit();
@@ -415,7 +420,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn frame_scheduler_smoke_exit() -> CliExit {
@@ -581,6 +586,127 @@ fn runtime_perf_smoke_error(error: impl std::fmt::Display) -> CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("runtime perf smoke failed: {error}\n"),
+    }
+}
+
+#[derive(Debug, Clone)]
+struct RuntimeLargeOutputSmokePtySpawner {
+    payload: Vec<u8>,
+}
+
+#[derive(Debug)]
+struct RuntimeLargeOutputSmokePtySession {
+    output: VecDeque<Vec<u8>>,
+}
+
+impl NativePtySpawner for RuntimeLargeOutputSmokePtySpawner {
+    type Session = RuntimeLargeOutputSmokePtySession;
+
+    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
+        Ok(RuntimeLargeOutputSmokePtySession {
+            output: VecDeque::from([self.payload.clone()]),
+        })
+    }
+}
+
+impl NativePtySessionIo for RuntimeLargeOutputSmokePtySession {
+    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
+        Ok(self.output.pop_front().unwrap_or_default())
+    }
+
+    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
+        Ok(())
+    }
+
+    fn resize(&mut self, _size: crate::app::NativePtyResize) -> Result<(), PtyError> {
+        Ok(())
+    }
+}
+
+fn runtime_large_output_payload(lines: usize) -> Vec<u8> {
+    let mut payload = Vec::new();
+    for line in 0..lines {
+        payload.extend_from_slice(format!("gromaq-runtime-line-{line:03}\n").as_bytes());
+    }
+    payload
+}
+
+fn runtime_large_output_smoke_exit() -> CliExit {
+    let payload = runtime_large_output_payload(RUNTIME_LARGE_OUTPUT_LINES);
+    let expected_bytes = payload.len();
+    let last_line = format!("gromaq-runtime-line-{:03}", RUNTIME_LARGE_OUTPUT_LINES - 1);
+    let spawner = RuntimeLargeOutputSmokePtySpawner { payload };
+    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 32,
+        terminal_rows: 8,
+        scrollback_lines: 128,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    }) {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_large_output_smoke_error(error),
+    };
+    if let Err(error) = runtime.start_shell(&spawner) {
+        return runtime_large_output_smoke_error(error);
+    }
+
+    let pumped_bytes = match runtime.pump_pty_output() {
+        Ok(bytes) => bytes,
+        Err(error) => return runtime_large_output_smoke_error(error),
+    };
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let rendered = runtime.render_terminal_frame(&mut renderer);
+    let metrics = runtime.dump_runtime_perf_metrics();
+    let visible_text = renderer
+        .last_plan()
+        .map(|plan| {
+            plan.glyphs
+                .iter()
+                .map(|glyph| glyph.text.as_str())
+                .collect::<String>()
+        })
+        .unwrap_or_default();
+
+    if pumped_bytes != expected_bytes
+        || metrics.pty_output_bytes != expected_bytes as u64
+        || metrics.pty_output_batches != 1
+        || !rendered
+        || metrics.rendered_frames != 1
+        || !visible_text.contains(&last_line)
+    {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr:
+                "runtime large-output smoke failed: burst did not reach a rendered visible frame\n"
+                    .to_owned(),
+        };
+    }
+
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "runtime large-output smoke: ok\nlines: {}\npumped bytes: {}\nrendered frames: {}\nlast visible line: {}\nrender p95 ns: {}\n",
+            RUNTIME_LARGE_OUTPUT_LINES,
+            pumped_bytes,
+            metrics.rendered_frames,
+            last_line,
+            metrics.render_time_p95_ns
+        ),
+        stderr: String::new(),
+    }
+}
+
+fn runtime_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime large-output smoke failed: {error}\n"),
     }
 }
 
