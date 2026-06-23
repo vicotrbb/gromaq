@@ -78,6 +78,15 @@ fn text_area_size_report_uses_current_terminal_dimensions() {
 }
 
 #[test]
+fn window_state_report_returns_open_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal.write_str("\x1b[11t").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[1t");
+}
+
+#[test]
 fn primary_device_attributes_are_queued_as_terminal_responses() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
