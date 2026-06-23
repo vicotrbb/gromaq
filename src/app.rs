@@ -1022,6 +1022,9 @@ where
 
     /// Write encoded terminal input bytes to the PTY session.
     pub fn send_pty_input(&mut self, bytes: &[u8]) -> Result<(), NativeAppError> {
+        if bytes.is_empty() {
+            return Ok(());
+        }
         let Some(session) = self.shell_session.as_mut() else {
             return Ok(());
         };
@@ -1036,7 +1039,7 @@ where
             total_input_bytes = self.perf.pty_input_bytes,
             "wrote native PTY input"
         );
-        if !bytes.is_empty() && self.pending_input_to_render_started.is_none() {
+        if self.pending_input_to_render_started.is_none() {
             self.pending_input_to_render_started = Some(Instant::now());
         }
         Ok(())

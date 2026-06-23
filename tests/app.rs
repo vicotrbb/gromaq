@@ -2586,6 +2586,36 @@ fn native_terminal_runtime_writes_committed_text_to_pty() {
     );
 }
 
+#[test]
+fn native_terminal_runtime_ignores_empty_pty_input_writes() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+
+    runtime.send_pty_input(b"").unwrap();
+    runtime.send_paste_text("").unwrap();
+    runtime.send_committed_text("").unwrap();
+
+    let session = runtime.shell_session().unwrap();
+    assert!(session.input.borrow().is_empty());
+    assert_eq!(
+        runtime.dump_runtime_perf_metrics(),
+        NativeRuntimePerfSnapshot::default()
+    );
+}
+
 fn supported_surface_capabilities() -> wgpu::SurfaceCapabilities {
     wgpu::SurfaceCapabilities {
         formats: vec![wgpu::TextureFormat::Bgra8UnormSrgb],
