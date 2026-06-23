@@ -376,6 +376,55 @@ fn native_mouse_button_tracker_reports_drag_only_while_button_is_pressed() {
 }
 
 #[test]
+fn native_mouse_button_tracker_reports_active_drag_button_priority() {
+    let mut tracker = NativeMouseButtonTracker::default();
+
+    tracker.set_pressed(MouseButton::Right, true);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Drag, MouseButton::Right)
+    );
+
+    tracker.set_pressed(MouseButton::Middle, true);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Drag, MouseButton::Middle)
+    );
+
+    tracker.set_pressed(MouseButton::Left, true);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Drag, MouseButton::Left)
+    );
+
+    tracker.set_pressed(MouseButton::None, true);
+    tracker.set_pressed(MouseButton::WheelUp, true);
+    tracker.set_pressed(MouseButton::WheelDown, true);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Drag, MouseButton::Left)
+    );
+
+    tracker.set_pressed(MouseButton::Left, false);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Drag, MouseButton::Middle)
+    );
+
+    tracker.set_pressed(MouseButton::Middle, false);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Drag, MouseButton::Right)
+    );
+
+    tracker.set_pressed(MouseButton::Right, false);
+    assert_eq!(
+        tracker.cursor_move_event(),
+        (MouseEventKind::Motion, MouseButton::None)
+    );
+}
+
+#[test]
 fn native_resize_grid_mapper_scales_window_pixels_to_terminal_size() {
     let mapper = NativeResizeGridMapper::new(1280, 800, 120, 36).unwrap();
 
