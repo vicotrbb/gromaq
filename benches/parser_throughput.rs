@@ -4,7 +4,7 @@ use std::hint::black_box;
 use criterion::{Criterion, criterion_group, criterion_main};
 use gromaq::app::{
     NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
+    NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
 };
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
@@ -16,6 +16,12 @@ const LARGE_OUTPUT: &str = "\
 \x1b[31;1merror\x1b[0m line one\n\
 normal log line with unicode 界 and attributes\n\
 \x1b[32mok\x1b[0m line three\n\
+";
+
+const ASCII_RENDER_OUTPUT: &str = "\
+error status 0123456789 ABC xyz\n\
+normal log line with attributes\n\
+prompt $ cargo test --all\n\
 ";
 
 #[derive(Debug)]
@@ -149,6 +155,34 @@ fn glyph_quad_generation_large_plan(c: &mut Criterion) {
     });
 }
 
+fn rasterized_glyph_cache_hot_plan(c: &mut Criterion) {
+    let mut terminal = Terminal::new(TerminalConfig::new(120, 36).unwrap());
+    for _ in 0..128 {
+        terminal.write_str(ASCII_RENDER_OUTPUT).unwrap();
+    }
+    let dirty_regions = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(4096).unwrap());
+    let mut render_planner = RenderPlanner::new(14);
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty_regions,
+            &mut atlas,
+        )
+        .unwrap();
+    let mut glyph_cache = load_default_native_glyph_cache().unwrap();
+    glyph_cache.rasterize_plan(&plan).unwrap();
+
+    c.bench_function("rasterized_glyph_cache_hot_plan", |b| {
+        b.iter(|| {
+            let batch = glyph_cache.rasterize_plan(black_box(&plan)).unwrap();
+            black_box(batch.bitmaps.len());
+            black_box(batch.reused);
+        });
+    });
+}
+
 fn pty_runtime_pump_large_output(c: &mut Criterion) {
     c.bench_function("pty_runtime_pump_large_output", |b| {
         b.iter(|| {
@@ -189,6 +223,7 @@ criterion_group!(
     scrollback_large_output,
     render_plan_large_dirty_region,
     glyph_quad_generation_large_plan,
+    rasterized_glyph_cache_hot_plan,
     pty_runtime_pump_large_output
 );
 criterion_main!(benches);
