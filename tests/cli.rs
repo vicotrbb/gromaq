@@ -369,6 +369,9 @@ fn runtime_large_output_smoke_cli_reports_rendered_burst_without_gpu_bootstrap()
     assert!(exit.stdout.contains("pumped bytes:"));
     assert!(exit.stdout.contains("scrollback lines: 128"));
     assert!(exit.stdout.contains("rendered frames: 1"));
+    assert!(exit.stdout.contains("rendered dirty regions:"));
+    assert!(exit.stdout.contains("rendered dirty cells:"));
+    assert!(exit.stdout.contains("rendered dirty cells max:"));
     assert!(
         exit.stdout
             .contains("last visible line: gromaq-runtime-line-511")
@@ -397,6 +400,9 @@ fn runtime_bounded_state_smoke_cli_reports_capped_long_session_without_gpu_boots
     assert!(exit.stdout.contains("scrollback cells:"));
     assert!(exit.stdout.contains("scrollback max cells: 4096"));
     assert!(exit.stdout.contains("rendered frames: 4"));
+    assert!(exit.stdout.contains("rendered dirty regions:"));
+    assert!(exit.stdout.contains("rendered dirty cells:"));
+    assert!(exit.stdout.contains("rendered dirty cells max:"));
     assert!(
         exit.stdout
             .contains("last visible line: gromaq-bounded-line-2047")
@@ -420,6 +426,9 @@ fn runtime_continuous_output_smoke_cli_reports_streamed_batches_without_gpu_boot
     assert!(exit.stdout.contains("pumped bytes:"));
     assert!(exit.stdout.contains("scrollback lines: 64"));
     assert!(exit.stdout.contains("rendered frames: 32"));
+    assert!(exit.stdout.contains("rendered dirty regions:"));
+    assert!(exit.stdout.contains("rendered dirty cells:"));
+    assert!(exit.stdout.contains("rendered dirty cells max:"));
     assert!(
         exit.stdout
             .contains("last visible line: gromaq-continuous-line-255")

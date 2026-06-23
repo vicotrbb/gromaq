@@ -33,6 +33,8 @@ const CLIPBOARD_SMOKE_TEXT: &str = "gromaq clipboard smoke";
 const OSC52_CLIPBOARD_SMOKE_TEXT: &str = "gromaq osc52 smoke";
 const RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT: &str = "gromaq runtime clipboard paste";
 const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
+const RUNTIME_OUTPUT_SMOKE_COLS: u16 = 32;
+const RUNTIME_OUTPUT_SMOKE_ROWS: u16 = 8;
 const RUNTIME_LARGE_OUTPUT_LINES: usize = 512;
 const RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES: usize = 128;
 const RUNTIME_BOUNDED_STATE_BATCHES: usize = 4;
@@ -971,10 +973,11 @@ fn runtime_large_output_smoke_exit() -> CliExit {
     let payload = runtime_large_output_payload(RUNTIME_LARGE_OUTPUT_LINES);
     let expected_bytes = payload.len();
     let last_line = format!("gromaq-runtime-line-{:03}", RUNTIME_LARGE_OUTPUT_LINES - 1);
+    let viewport_cells = runtime_output_smoke_viewport_cells();
     let spawner = RuntimeLargeOutputSmokePtySpawner { payload };
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 32,
-        terminal_rows: 8,
+        terminal_cols: RUNTIME_OUTPUT_SMOKE_COLS,
+        terminal_rows: RUNTIME_OUTPUT_SMOKE_ROWS,
         scrollback_lines: RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
@@ -1020,6 +1023,10 @@ fn runtime_large_output_smoke_exit() -> CliExit {
         || metrics.pty_output_batches != 1
         || !rendered
         || metrics.rendered_frames != 1
+        || metrics.rendered_dirty_regions == 0
+        || metrics.rendered_dirty_cells == 0
+        || metrics.rendered_dirty_cells_max == 0
+        || metrics.rendered_dirty_cells_max > viewport_cells
         || scrollback.lines.len() != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
         || scrollback
             .lines
@@ -1039,16 +1046,23 @@ fn runtime_large_output_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime large-output smoke: ok\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nlast visible line: {}\nrender p95 ns: {}\n",
+            "runtime large-output smoke: ok\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nlast visible line: {}\nrender p95 ns: {}\n",
             RUNTIME_LARGE_OUTPUT_LINES,
             pumped_bytes,
             scrollback.lines.len(),
             metrics.rendered_frames,
+            metrics.rendered_dirty_regions,
+            metrics.rendered_dirty_cells,
+            metrics.rendered_dirty_cells_max,
             last_line,
             metrics.render_time_p95_ns
         ),
         stderr: String::new(),
     }
+}
+
+fn runtime_output_smoke_viewport_cells() -> u64 {
+    u64::from(RUNTIME_OUTPUT_SMOKE_COLS) * u64::from(RUNTIME_OUTPUT_SMOKE_ROWS)
 }
 
 fn runtime_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
@@ -1112,10 +1126,11 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
     let expected_bytes: usize = payloads.iter().map(Vec::len).sum();
     let total_lines = RUNTIME_LARGE_OUTPUT_LINES * RUNTIME_BOUNDED_STATE_BATCHES;
     let last_line = format!("gromaq-bounded-line-{:04}", total_lines - 1);
+    let viewport_cells = runtime_output_smoke_viewport_cells();
     let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 32,
-        terminal_rows: 8,
+        terminal_cols: RUNTIME_OUTPUT_SMOKE_COLS,
+        terminal_rows: RUNTIME_OUTPUT_SMOKE_ROWS,
         scrollback_lines: RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
@@ -1178,6 +1193,10 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
         || metrics.pty_output_batches != RUNTIME_BOUNDED_STATE_BATCHES as u64
         || metrics.pty_output_bytes != expected_bytes as u64
         || metrics.rendered_frames != RUNTIME_BOUNDED_STATE_BATCHES as u64
+        || metrics.rendered_dirty_regions == 0
+        || metrics.rendered_dirty_cells == 0
+        || metrics.rendered_dirty_cells_max == 0
+        || metrics.rendered_dirty_cells_max > viewport_cells
         || state.scrollback_limit != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
         || state.scrollback_lines != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
         || state.scrollback_cell_rows != RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES
@@ -1196,7 +1215,7 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime bounded-state smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nscrollback cell rows: {}\nscrollback cells: {}\nscrollback max cells: {}\nrendered frames: {}\nlast visible line: {}\n",
+            "runtime bounded-state smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nscrollback cell rows: {}\nscrollback cells: {}\nscrollback max cells: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nlast visible line: {}\n",
             RUNTIME_BOUNDED_STATE_BATCHES,
             total_lines,
             pumped_bytes,
@@ -1206,6 +1225,9 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
             state.scrollback_cells,
             state.scrollback_cell_limit,
             metrics.rendered_frames,
+            metrics.rendered_dirty_regions,
+            metrics.rendered_dirty_cells,
+            metrics.rendered_dirty_cells_max,
             last_line
         ),
         stderr: String::new(),
@@ -1247,10 +1269,11 @@ fn runtime_continuous_output_smoke_exit() -> CliExit {
     let expected_bytes: usize = payloads.iter().map(Vec::len).sum();
     let total_lines = RUNTIME_CONTINUOUS_OUTPUT_BATCHES * RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH;
     let last_line = format!("gromaq-continuous-line-{:03}", total_lines - 1);
+    let viewport_cells = runtime_output_smoke_viewport_cells();
     let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 32,
-        terminal_rows: 8,
+        terminal_cols: RUNTIME_OUTPUT_SMOKE_COLS,
+        terminal_rows: RUNTIME_OUTPUT_SMOKE_ROWS,
         scrollback_lines: RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
@@ -1305,6 +1328,10 @@ fn runtime_continuous_output_smoke_exit() -> CliExit {
         || metrics.pty_output_batches != RUNTIME_CONTINUOUS_OUTPUT_BATCHES as u64
         || metrics.pty_output_bytes != expected_bytes as u64
         || metrics.rendered_frames != RUNTIME_CONTINUOUS_OUTPUT_BATCHES as u64
+        || metrics.rendered_dirty_regions == 0
+        || metrics.rendered_dirty_cells == 0
+        || metrics.rendered_dirty_cells_max == 0
+        || metrics.rendered_dirty_cells_max > viewport_cells
         || scrollback.lines.len() != RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES
         || scrollback
             .lines
@@ -1320,12 +1347,15 @@ fn runtime_continuous_output_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime continuous-output smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nlast visible line: {}\nrender p95 ns: {}\n",
+            "runtime continuous-output smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nlast visible line: {}\nrender p95 ns: {}\n",
             RUNTIME_CONTINUOUS_OUTPUT_BATCHES,
             total_lines,
             pumped_bytes,
             scrollback.lines.len(),
             metrics.rendered_frames,
+            metrics.rendered_dirty_regions,
+            metrics.rendered_dirty_cells,
+            metrics.rendered_dirty_cells_max,
             last_line,
             metrics.render_time_p95_ns
         ),

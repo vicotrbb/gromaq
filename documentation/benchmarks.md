@@ -19,19 +19,20 @@ echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render average/p95, and input-to-render average/p95 counters. On the same date,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
-verified `gromaq-runtime-line-511` in the render plan, and reported render p95
-500000 ns. On the same date, `cargo run -- --runtime-bounded-state-smoke`
+reported viewport-capped rendered dirty-region work, verified
+`gromaq-runtime-line-511` in the render plan, and reported render p95 500000 ns.
+On the same date, `cargo run -- --runtime-bounded-state-smoke`
 pumped 51200 bytes from 2048 lines across 4 batches, retained 128 scrollback
 lines and 128 styled scrollback cell rows, used the runtime state snapshot to
 keep retained cell data within the 4096-cell deterministic cap for a 32-column
-bounded runtime, rendered 4
-CPU-side dirty frames, and verified
+bounded runtime, rendered 4 CPU-side dirty frames, reported viewport-capped
+rendered dirty-region work, and verified
 `gromaq-bounded-line-2047` in the render plan. On the same date,
 `cargo run -- --runtime-continuous-output-smoke` pumped 6912 bytes from 256
 lines across 32 small PTY batches, rendered each dirty batch, verified the
-configured 64-line scrollback cap, reported render p95 500000 ns, and checked
-that `gromaq-continuous-line-255` reached the latest visible render plan. On
-the same date,
+configured 64-line scrollback cap, reported viewport-capped rendered dirty-region
+work and render p95 500000 ns, and checked that `gromaq-continuous-line-255`
+reached the latest visible render plan. On the same date,
 `cargo run -- --runtime-alternate-screen-smoke` pumped primary, alternate, and
 restore output stages through the runtime, rendered 3 CPU-side dirty frames,
 restored primary visible content, and suppressed alternate-screen scrollback.
