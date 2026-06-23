@@ -1078,7 +1078,9 @@ impl Terminal {
                     let cols = self.config.cols - start_col;
                     self.dirty.mark_span(row, start_col, cols);
                     self.perf.dirty_cells += u64::from(cols);
-                    self.hard_breaks[usize::from(row)] = false;
+                    if start_col == 0 {
+                        self.hard_breaks[usize::from(row)] = false;
+                    }
                 }
             }
             1 => {
@@ -1094,7 +1096,9 @@ impl Terminal {
                     let cols = end_col + 1;
                     self.dirty.mark_span(row, 0, cols);
                     self.perf.dirty_cells += u64::from(cols);
-                    self.hard_breaks[usize::from(row)] = false;
+                    if end_col + 1 == self.config.cols {
+                        self.hard_breaks[usize::from(row)] = false;
+                    }
                 }
             }
             2 => {

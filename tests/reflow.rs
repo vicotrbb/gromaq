@@ -39,6 +39,19 @@ fn reflow_preserves_hard_newline_boundaries() {
 }
 
 #[test]
+fn reflow_preserves_hard_newline_after_partial_display_erase() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
+    terminal.write_str("abc\ndef").unwrap();
+    terminal.write_str("\x1b[1;2H\x1b[1J").unwrap();
+
+    terminal.resize(10, 4).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "  c");
+    assert_eq!(grid.line_text(1), "def");
+}
+
+#[test]
 fn reflow_preserves_cell_styles() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
     terminal.write_str("\x1b[31;1mhelloworld\x1b[0m").unwrap();
