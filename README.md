@@ -31,6 +31,7 @@ Implemented and tested:
 - Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
 - Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding
 - PTY boundary plus a real shell-command lifecycle test
+- Interactive `/bin/sh` PTY input/output workflow through the native PTY writer and background reader
 - Real PTY command workflow tests for available `bash` and `zsh`
 - Real PTY command lifecycle checks for available `fish`, `nushell`, `vim`, `nvim`, `tmux`, `less`, `top`, `htop`, `btop`, `ssh`, `kubectl`, and `cargo test`
 - Real PTY background-reader large-output burst drain test

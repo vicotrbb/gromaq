@@ -68,6 +68,45 @@ fn pty_session_spawns_shell_command_and_reads_output() {
 }
 
 #[test]
+fn pty_session_accepts_interactive_shell_input() {
+    let config = PtyConfig {
+        rows: 8,
+        cols: 40,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    };
+
+    let mut session = PtySession::spawn(config).unwrap();
+    session.start_output_reader().unwrap();
+    session
+        .write_all(b"printf 'gromaq-interactive-pty\\n'\nexit\n")
+        .unwrap();
+
+    let output = drain_until_contains(
+        &mut session,
+        "gromaq-interactive-pty",
+        50,
+        Duration::from_millis(20),
+    );
+
+    assert!(
+        output.contains("gromaq-interactive-pty"),
+        "interactive shell output: {output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(3))
+            .unwrap()
+            .is_some()
+    );
+}
+
+#[test]
 fn pty_session_background_reader_drains_available_output() {
     let config = PtyConfig {
         rows: 8,
@@ -336,6 +375,23 @@ fn assert_program_outputs_when_available_with_timeout(
             .unwrap()
             .is_some()
     );
+}
+
+fn drain_until_contains(
+    session: &mut PtySession,
+    expected: &str,
+    attempts: usize,
+    pause: Duration,
+) -> String {
+    let mut output = Vec::new();
+    for _ in 0..attempts {
+        output.extend(session.drain_available_output().unwrap());
+        if String::from_utf8_lossy(&output).contains(expected) {
+            break;
+        }
+        std::thread::sleep(pause);
+    }
+    String::from_utf8_lossy(&output).into_owned()
 }
 
 fn top_snapshot_args() -> &'static [&'static str] {
