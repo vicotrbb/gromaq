@@ -181,7 +181,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -204,6 +204,29 @@ fn frame_scheduler_smoke_cli_reports_144hz_timeline_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("dropped frames: 2"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_clipboard_paste_smoke_cli_routes_clipboard_text_to_runtime_pty() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let mut clipboard = MemoryClipboard::new("previous clipboard");
+
+    let exit = run_with_backend_and_clipboard(
+        ["gromaq", "--runtime-clipboard-paste-smoke"],
+        &backend,
+        &mut clipboard,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime clipboard paste smoke: ok"));
+    assert!(exit.stdout.contains("pasted bytes: 30"));
+    assert!(exit.stdout.contains("clipboard pastes: 1"));
+    assert!(exit.stdout.contains("previous text restored: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(clipboard.read_text().as_deref(), Some("previous clipboard"));
 }
 
 #[test]
