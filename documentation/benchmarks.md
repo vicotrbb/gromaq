@@ -5,12 +5,12 @@ benchmarks are proof inputs for parser throughput, scrollback throughput, dirty
 region coalescing, scrollback viewport navigation, render planning, glyph quad
 generation, 144Hz frame-scheduler decisions, rasterized glyph cache reuse, prepared surface glyph-frame
 construction, native input-to-render plumbing, real-font rasterization,
-deterministic PTY output pumping, real PTY shell-output bursts, bounded runtime
-state under repeated output batches, and runtime alternate-screen transitions,
-plus runtime focus/mouse/terminal-response protocol input paths, texture and
-glyph-atlas GPU upload/readback, font-backed text-atlas GPU upload/readback,
-offscreen textured-quad GPU draw/readback, and offscreen terminal text GPU
-draw/readback.
+deterministic PTY output pumping, real PTY shell-output bursts, real PTY
+input/output roundtrips, bounded runtime state under repeated output batches,
+and runtime alternate-screen transitions, plus runtime
+focus/mouse/terminal-response protocol input paths, texture and glyph-atlas GPU
+upload/readback, font-backed text-atlas GPU upload/readback, offscreen
+textured-quad GPU draw/readback, and offscreen terminal text GPU draw/readback.
 
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
@@ -85,6 +85,7 @@ The benchmark list should include:
 - `font_rasterizer_combining_cell`
 - `pty_runtime_pump_large_output`
 - `real_pty_shell_large_output_burst`
+- `real_pty_shell_input_echo_roundtrip`
 - `runtime_bounded_state_batches`
 - `runtime_state_snapshot_bounded_session`
 - `runtime_continuous_output_batches`

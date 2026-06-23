@@ -576,6 +576,61 @@ fn real_pty_shell_large_output_burst(c: &mut Criterion) {
     });
 }
 
+fn real_pty_shell_input_echo_roundtrip(c: &mut Criterion) {
+    if !Path::new("/bin/sh").exists() {
+        skip_benchmark(
+            c,
+            "real_pty_shell_input_echo_roundtrip",
+            "/bin/sh not found",
+        );
+        return;
+    }
+
+    c.bench_function("real_pty_shell_input_echo_roundtrip", |b| {
+        b.iter(|| {
+            let mut session = PtySession::spawn(PtyConfig {
+                rows: 8,
+                cols: 40,
+                pixel_width: 0,
+                pixel_height: 0,
+                shell: ShellCommand {
+                    program: "/bin/sh".into(),
+                    args: Vec::new(),
+                    cwd: None,
+                },
+            })
+            .unwrap();
+            session.start_output_reader().unwrap();
+            session
+                .write_all(b"printf 'gromaq-real-pty-input\\n'\nexit\n")
+                .unwrap();
+
+            let marker = b"gromaq-real-pty-input";
+            let mut output = Vec::new();
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while Instant::now() < deadline {
+                output.extend(session.drain_available_output().unwrap());
+                if contains_bytes(&output, marker) {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(1));
+            }
+
+            assert!(
+                contains_bytes(&output, marker),
+                "real PTY benchmark did not observe input echo output"
+            );
+            assert!(
+                session
+                    .wait_timeout(Duration::from_secs(5))
+                    .unwrap()
+                    .is_some()
+            );
+            black_box(output.len());
+        });
+    });
+}
+
 fn runtime_bounded_state_batches(c: &mut Criterion) {
     let payloads = bounded_state_payloads();
     c.bench_function("runtime_bounded_state_batches", |b| {
@@ -923,6 +978,7 @@ criterion_group!(
     font_rasterizer_combining_cell,
     pty_runtime_pump_large_output,
     real_pty_shell_large_output_burst,
+    real_pty_shell_input_echo_roundtrip,
     runtime_bounded_state_batches,
     runtime_state_snapshot_bounded_session,
     runtime_continuous_output_batches,
