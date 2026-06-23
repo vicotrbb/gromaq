@@ -10,7 +10,8 @@ use gromaq::app::{
 use gromaq::font::FontRasterizer;
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner, RenderPlanner,
+    GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
+    PreparedSurfaceGlyphFrame, RenderPlanner,
 };
 use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
 
@@ -221,6 +222,41 @@ fn rasterized_glyph_cache_hot_plan(c: &mut Criterion) {
     });
 }
 
+fn prepared_surface_glyph_frame_large_plan(c: &mut Criterion) {
+    let mut terminal = Terminal::new(TerminalConfig::new(120, 36).unwrap());
+    for _ in 0..128 {
+        terminal.write_str(ASCII_RENDER_OUTPUT).unwrap();
+    }
+    let dirty_regions = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(4096).unwrap());
+    let mut render_planner = RenderPlanner::new(14);
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty_regions,
+            &mut atlas,
+        )
+        .unwrap();
+    let mut glyph_cache = load_default_native_glyph_cache().unwrap();
+    let glyphs = glyph_cache.rasterize_plan(&plan).unwrap();
+
+    c.bench_function("prepared_surface_glyph_frame_large_plan", |b| {
+        b.iter(|| {
+            let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+                black_box(&plan),
+                black_box(&glyphs.bitmaps),
+                black_box([0.0, 0.0, 0.0, 1.0]),
+            )
+            .unwrap();
+            let frame = prepared.as_surface_glyph_frame();
+            black_box(frame.batch.quads.len());
+            black_box(frame.batch.indices.len());
+            black_box(frame.atlas.rgba.len());
+        });
+    });
+}
+
 fn font_rasterizer_combining_cell(c: &mut Criterion) {
     let font_bytes = bench_monospace_font_bytes();
     let mut rasterizer = FontRasterizer::from_bytes(font_bytes).unwrap();
@@ -286,6 +322,7 @@ criterion_group!(
     render_plan_large_dirty_region,
     glyph_quad_generation_large_plan,
     rasterized_glyph_cache_hot_plan,
+    prepared_surface_glyph_frame_large_plan,
     font_rasterizer_combining_cell,
     pty_runtime_pump_large_output
 );
