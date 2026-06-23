@@ -36,6 +36,27 @@ fn glyph_cache_reuses_entry_for_color_only_style_changes() {
 }
 
 #[test]
+fn glyph_cache_reuses_entry_for_box_decoration_style_changes() {
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let plain = GlyphKey::new('A', Style::default(), 14);
+    let decorated_style = Style {
+        framed: true,
+        encircled: true,
+        overline: true,
+        strikethrough: true,
+        ..Style::default()
+    };
+    let decorated = GlyphKey::new('A', decorated_style, 14);
+
+    let plain_entry = atlas.lookup_or_insert(plain).unwrap();
+    let decorated_entry = atlas.lookup_or_insert(decorated).unwrap();
+
+    assert_eq!(plain_entry, decorated_entry);
+    assert_eq!(atlas.metrics().entries, 1);
+    assert_eq!(atlas.metrics().hits, 1);
+}
+
+#[test]
 fn glyph_cache_distinguishes_font_affecting_style_and_size() {
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
     let plain = GlyphKey::new('A', Style::default(), 14);

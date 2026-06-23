@@ -1156,6 +1156,12 @@ impl Terminal {
         if self.style.strikethrough {
             params.push("9".to_owned());
         }
+        if self.style.framed {
+            params.push("51".to_owned());
+        }
+        if self.style.encircled {
+            params.push("52".to_owned());
+        }
         if self.style.overline {
             params.push("53".to_owned());
         }
@@ -1597,7 +1603,19 @@ impl Terminal {
                 27 => self.style.inverse = false,
                 28 => self.style.hidden = false,
                 29 => self.style.strikethrough = false,
+                51 => {
+                    self.style.framed = true;
+                    self.style.encircled = false;
+                }
+                52 => {
+                    self.style.framed = false;
+                    self.style.encircled = true;
+                }
                 53 => self.style.overline = true,
+                54 => {
+                    self.style.framed = false;
+                    self.style.encircled = false;
+                }
                 55 => self.style.overline = false,
                 59 => self.style.underline_color_id = 0,
                 30..=37 => self.style.foreground = Color::Ansi((param - 30) as u8),

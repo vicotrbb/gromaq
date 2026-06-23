@@ -7,7 +7,7 @@ cursor:row=3,col=4,visible=true,shape=Block,blinking=true
 scrollback:["style-row", "abcXY"]
 hyperlinks:["https://gromaq.dev/docs"]
 underline_colors:[Rgb(17, 34, 51)]
-styled_cell:text="s",style=fg=indexed-45,bg=rgb-1-2-3,bold=false,dim=false,italic=true,underline=true,underline_style=curly,underline_color_id=1,blink=false,hidden=false,inverse=false,overline=false,strikethrough=false,underline_color=rgb-17-34-51
+styled_cell:text="s",style=fg=indexed-45,bg=rgb-1-2-3,bold=false,dim=false,italic=true,underline=true,underline_style=curly,underline_color_id=1,blink=false,hidden=false,inverse=false,overline=false,strikethrough=false,framed=false,encircled=false,underline_color=rgb-17-34-51
 edited_cell:text="X"
 linked_cell:text="l",hyperlink=Some("https://gromaq.dev/docs")
 emoji_cell:text="👨\u{200d}👩🏽",leading=true,trailing_cell_trailing=true

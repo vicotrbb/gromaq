@@ -377,7 +377,7 @@ perf:parsed_bytes={parsed_bytes},dirty_cells={dirty_cells},scrolls={scrolls},res
 
 fn format_style(style: Style) -> String {
     format!(
-        "fg={},bg={},bold={},dim={},italic={},underline={},underline_style={},underline_color_id={},blink={},hidden={},inverse={},overline={},strikethrough={}",
+        "fg={},bg={},bold={},dim={},italic={},underline={},underline_style={},underline_color_id={},blink={},hidden={},inverse={},overline={},strikethrough={},framed={},encircled={}",
         format_color(style.foreground),
         format_color(style.background),
         style.bold,
@@ -390,7 +390,9 @@ fn format_style(style: Style) -> String {
         style.hidden,
         style.inverse,
         style.overline,
-        style.strikethrough
+        style.strikethrough,
+        style.framed,
+        style.encircled
     )
 }
 

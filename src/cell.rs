@@ -44,6 +44,10 @@ pub struct Style {
     pub overline: bool,
     /// Strikethrough presentation flag.
     pub strikethrough: bool,
+    /// Framed text presentation flag.
+    pub framed: bool,
+    /// Encircled text presentation flag.
+    pub encircled: bool,
 }
 
 impl Default for Style {
@@ -62,6 +66,8 @@ impl Default for Style {
             inverse: false,
             overline: false,
             strikethrough: false,
+            framed: false,
+            encircled: false,
         }
     }
 }

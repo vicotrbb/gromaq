@@ -258,12 +258,12 @@ fn decrqss_reports_active_sgr_status_string() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
 
     terminal
-        .write_str("\x1b[1;3;7;31;44m\x1bP$qm\x1b\\")
+        .write_str("\x1b[1;3;7;51;31;44m\x1bP$qm\x1b\\\x1b[52m\x1bP$qm\x1b\\")
         .unwrap();
 
     assert_eq!(
         terminal.take_pending_response_bytes(),
-        b"\x1bP1$r1;3;7;31;44m\x1b\\"
+        b"\x1bP1$r1;3;7;51;31;44m\x1b\\\x1bP1$r1;3;7;52;31;44m\x1b\\"
     );
 }
 

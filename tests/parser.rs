@@ -74,6 +74,26 @@ fn sgr_sets_and_resets_blink_hidden_and_overline_attributes() {
 }
 
 #[test]
+fn sgr_sets_and_resets_framed_and_encircled_attributes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("\x1b[51mA\x1b[52mB\x1b[54mC").unwrap();
+
+    let grid = terminal.dump_grid();
+    let framed = grid.cell(0, 0).style;
+    assert!(framed.framed);
+    assert!(!framed.encircled);
+
+    let encircled = grid.cell(0, 1).style;
+    assert!(!encircled.framed);
+    assert!(encircled.encircled);
+
+    let plain = grid.cell(0, 2).style;
+    assert!(!plain.framed);
+    assert!(!plain.encircled);
+}
+
+#[test]
 fn sgr_sets_and_resets_italic_and_inverse_attributes() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 

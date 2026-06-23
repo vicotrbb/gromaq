@@ -1601,6 +1601,8 @@ fn glyph_raster_style(style: Style) -> Style {
         inverse: false,
         overline: false,
         strikethrough: false,
+        framed: false,
+        encircled: false,
         ..style
     }
 }
