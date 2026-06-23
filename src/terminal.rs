@@ -789,20 +789,19 @@ impl Terminal {
         let Some((col, span_width)) = self.previous_visible_cell_with_span() else {
             return false;
         };
-        if !self
-            .grid
-            .cell(self.cursor.row, col)
-            .text
-            .ends_with('\u{200d}')
-        {
+        let cell = self.grid.cell(self.cursor.row, col);
+        if !cell.text.ends_with('\u{200d}') {
             return false;
         }
 
-        let cell = self.grid.cell_mut(self.cursor.row, col);
-        cell.text.push(ch);
-        self.mark_print_span(self.cursor.row, col, span_width);
-        self.perf.dirty_cells += u64::from(span_width);
-        self.last_printable_char = Some(ch);
+        let requested_span_width = if is_emoji_presentation_base_candidate(ch)
+            || cell.text.chars().any(is_emoji_presentation_base_candidate)
+        {
+            2
+        } else {
+            span_width
+        };
+        self.append_to_previous_cluster(ch, col, span_width, requested_span_width);
         true
     }
 
