@@ -234,6 +234,7 @@ fn scrollback_reflow_preserves_exact_width_hard_line_breaks() {
 
     let scrollback = terminal.dump_scrollback();
     assert_eq!(scrollback.lines, vec!["abcde", "fghij"]);
+    assert_eq!(scrollback.hard_breaks, vec![true, true]);
 }
 
 #[test]
@@ -249,6 +250,7 @@ fn scrollback_reflow_merges_exact_width_soft_wrapped_rows() {
 
     let scrollback = terminal.dump_scrollback();
     assert_eq!(scrollback.lines, vec!["abcdefghij"]);
+    assert_eq!(scrollback.hard_breaks, vec![false]);
 }
 
 #[test]
@@ -265,6 +267,7 @@ fn scrollback_reflow_keeps_soft_wraps_after_repeated_resize() {
 
     let scrollback = terminal.dump_scrollback();
     assert_eq!(scrollback.lines, vec!["abcdefghij"]);
+    assert_eq!(scrollback.hard_breaks, vec![false]);
 }
 
 #[test]

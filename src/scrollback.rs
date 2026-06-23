@@ -79,6 +79,7 @@ impl Scrollback {
     pub fn snapshot(&self) -> ScrollbackSnapshot {
         ScrollbackSnapshot {
             lines: self.lines.iter().map(ScrollbackLine::text).collect(),
+            hard_breaks: self.lines.iter().map(|line| line.hard_break).collect(),
             hyperlinks: Vec::new(),
             underline_colors: Vec::new(),
             cells: self.lines.iter().map(|line| line.cells.clone()).collect(),
@@ -211,6 +212,8 @@ fn last_visible_cell(cells: &[CellSnapshot]) -> Option<usize> {
 pub struct ScrollbackSnapshot {
     /// Scrollback lines from oldest to newest.
     pub lines: Vec<String>,
+    /// Whether each scrollback row ended a hard line break instead of a soft wrap.
+    pub hard_breaks: Vec<bool>,
     /// OSC 8 hyperlink URI table indexed by non-zero cell hyperlink identifiers.
     pub hyperlinks: Vec<String>,
     /// Underline color table indexed by non-zero style underline color identifiers.
