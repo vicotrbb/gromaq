@@ -1,0 +1,9 @@
+grid:12x5
+visible[0]:""
+visible[1]:""
+visible[2]:""
+visible[3]:""
+visible[4]:""
+title:Some("Window Title")
+cursor:row=1,col=3,visible=true,shape=Block,blinking=true
+pending_response:\x1b[2;4R\x1b[?2;4R\x1b[0n\x1b[?11n\x1b[?20n\x1b[?27;1;0;0n\x1b[?50n\x1b[2;1;1;128;128;1;0x\x1b[3;1;1;128;128;1;0x\x1b[1t\x1b[3;0;0t\x1b[4;540;960t\x1b[8;5;12t\x1b[9;5;12t\x1b]LIcon Label\x1b\\\x1b]lWindow Title\x1b\\\x1b[?1;2c\x1b[>0;1;0c
