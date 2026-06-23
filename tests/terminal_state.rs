@@ -87,6 +87,15 @@ fn window_state_report_returns_open_state() {
 }
 
 #[test]
+fn window_position_report_returns_origin_when_native_position_is_unknown() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal.write_str("\x1b[13t").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[3;0;0t");
+}
+
+#[test]
 fn primary_device_attributes_are_queued_as_terminal_responses() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 

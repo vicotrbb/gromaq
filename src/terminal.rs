@@ -1225,6 +1225,9 @@ impl Terminal {
     fn report_window_manipulation(&mut self, mode: u16) {
         match mode {
             11 => self.pending_response_bytes.extend_from_slice(b"\x1b[1t"),
+            13 => self
+                .pending_response_bytes
+                .extend_from_slice(b"\x1b[3;0;0t"),
             18 => self.pending_response_bytes.extend_from_slice(
                 format!("\x1b[8;{};{}t", self.config.rows, self.config.cols).as_bytes(),
             ),
