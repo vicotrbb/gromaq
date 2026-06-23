@@ -7,7 +7,8 @@ generation, 144Hz frame-scheduler decisions, rasterized glyph cache reuse, prepa
 construction, native input-to-render plumbing, real-font rasterization, PTY
 output pumping, bounded runtime state under repeated output batches, and runtime
 alternate-screen transitions, plus runtime focus/mouse/terminal-response protocol
-input paths.
+input paths, offscreen textured-quad GPU draw/readback, and offscreen terminal
+text GPU draw/readback.
 
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
@@ -86,12 +87,16 @@ The benchmark list should include:
 - `runtime_continuous_output_batches`
 - `runtime_alternate_screen_stages`
 - `runtime_protocol_input_reports`
+- `gpu_textured_quad_draw_readback`
+- `gpu_terminal_text_draw_readback`
 
 Some benchmarks load a local monospace font for real glyph rasterization. The
 benchmark harness checks common macOS and Linux font paths. If no candidate is
 available, the font-dependent benchmark name is still registered and emits a
 clear skip message instead of panicking; that skip does not prove rasterization
-throughput on the current machine.
+throughput on the current machine. The GPU draw/readback benchmarks similarly
+register skip placeholders when no compatible native GPU adapter can be created;
+that skip does not prove GPU draw/readback throughput on the current machine.
 
 ## Regression Handling
 

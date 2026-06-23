@@ -9,6 +9,9 @@ use gromaq::app::{
     NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
 };
 use gromaq::font::FontRasterizer;
+use gromaq::native_gpu::{
+    GpuBootstrap, GpuBootstrapConfig, GpuTerminalTextRunner, GpuTexturedQuadRunner,
+};
 use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
     FrameScheduler, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
@@ -764,6 +767,50 @@ fn runtime_protocol_input_reports(c: &mut Criterion) {
     });
 }
 
+fn gpu_textured_quad_draw_readback(c: &mut Criterion) {
+    let context = match GpuBootstrap::new(GpuBootstrapConfig::native_default()).initialize_native()
+    {
+        Ok(context) => context,
+        Err(error) => {
+            skip_benchmark(c, "gpu_textured_quad_draw_readback", &error.to_string());
+            return;
+        }
+    };
+
+    c.bench_function("gpu_textured_quad_draw_readback", |b| {
+        b.iter(|| {
+            let report = context.run_textured_quad_smoke().unwrap();
+            black_box(report.width);
+            black_box(report.height);
+            black_box(report.drawn_pixels);
+        });
+    });
+}
+
+fn gpu_terminal_text_draw_readback(c: &mut Criterion) {
+    let context = match GpuBootstrap::new(GpuBootstrapConfig::native_default()).initialize_native()
+    {
+        Ok(context) => context,
+        Err(error) => {
+            skip_benchmark(c, "gpu_terminal_text_draw_readback", &error.to_string());
+            return;
+        }
+    };
+
+    c.bench_function("gpu_terminal_text_draw_readback", |b| {
+        b.iter(|| {
+            let report = context.run_terminal_text_smoke().unwrap();
+            black_box(report.width);
+            black_box(report.height);
+            black_box(report.glyphs);
+            black_box(report.quads);
+            black_box(report.rasterized_glyphs);
+            black_box(report.reused_glyphs);
+            black_box(report.drawn_pixels);
+        });
+    });
+}
+
 criterion_group!(
     benches,
     parser_large_output,
@@ -782,7 +829,9 @@ criterion_group!(
     runtime_state_snapshot_bounded_session,
     runtime_continuous_output_batches,
     runtime_alternate_screen_stages,
-    runtime_protocol_input_reports
+    runtime_protocol_input_reports,
+    gpu_textured_quad_draw_readback,
+    gpu_terminal_text_draw_readback
 );
 criterion_main!(benches);
 
