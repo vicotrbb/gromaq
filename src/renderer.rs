@@ -220,6 +220,16 @@ impl PreparedSurfaceGlyphFrame {
                 "rasterized glyph dimensions must be non-zero".to_owned(),
             ));
         }
+        let width = checked_surface_frame_pixel_dimension(
+            "surface glyph frame width",
+            plan.viewport_cols,
+            slot_width,
+        )?;
+        let height = checked_surface_frame_pixel_dimension(
+            "surface glyph frame height",
+            plan.viewport_rows,
+            slot_height,
+        )?;
         let padded = glyphs
             .iter()
             .map(|glyph| {
@@ -245,8 +255,8 @@ impl PreparedSurfaceGlyphFrame {
         Ok(Self {
             atlas,
             batch,
-            width: u32::from(plan.viewport_cols).saturating_mul(slot_width),
-            height: u32::from(plan.viewport_rows).saturating_mul(slot_height),
+            width,
+            height,
             clear_color,
         })
     }
@@ -271,6 +281,16 @@ impl PreparedSurfaceGlyphFrame {
     pub fn batch(&self) -> &GlyphQuadBatch {
         &self.batch
     }
+}
+
+fn checked_surface_frame_pixel_dimension(
+    label: &'static str,
+    cells: u16,
+    cell_size_px: u32,
+) -> std::result::Result<u32, SurfaceFrameError> {
+    u32::from(cells).checked_mul(cell_size_px).ok_or_else(|| {
+        SurfaceFrameError::InvalidFrame(format!("{label} is too large to represent"))
+    })
 }
 
 fn atlas_columns_for_glyphs(glyphs: &[GlyphBitmap]) -> u32 {
@@ -1932,6 +1952,53 @@ mod tests {
             GromaqError::GlyphAtlasInvariant {
                 reason: "glyph LRU key must exist in entries",
             }
+        );
+    }
+
+    #[test]
+    fn prepared_surface_glyph_frame_rejects_overflowing_pixel_width() {
+        let entry = GlyphEntry {
+            slot: 0,
+            generation: 0,
+        };
+        let plan = RenderPlan {
+            viewport_cols: 2,
+            viewport_rows: 1,
+            cursor: CursorSnapshot {
+                row: 0,
+                col: 0,
+                visible: true,
+                shape: crate::terminal::CursorShape::Block,
+                blinking: true,
+            },
+            clear_regions: Vec::new(),
+            glyphs: vec![PlannedGlyph {
+                row: 0,
+                col: 0,
+                text: "A".to_owned(),
+                ch: 'A',
+                style: Style::default(),
+                font_size_px: 14,
+                is_wide: false,
+                atlas_entry: entry,
+            }],
+        };
+        let glyphs = [GlyphBitmap {
+            entry,
+            width: u32::MAX,
+            height: 1,
+            rgba: Vec::new(),
+        }];
+
+        let error =
+            PreparedSurfaceGlyphFrame::from_render_plan(&plan, &glyphs, [0.0, 0.0, 0.0, 1.0])
+                .unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame(
+                "surface glyph frame width is too large to represent".to_owned()
+            )
         );
     }
 
