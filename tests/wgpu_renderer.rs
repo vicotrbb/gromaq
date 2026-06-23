@@ -1,0 +1,99 @@
+use std::path::PathBuf;
+
+use gromaq::font::RasterizedGlyphCache;
+use gromaq::renderer::{GpuRenderer, PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
+use gromaq::{Terminal, TerminalConfig};
+
+fn system_mono_font() -> PathBuf {
+    [
+        "/System/Library/Fonts/SFNSMono.ttf",
+        "/System/Library/Fonts/Menlo.ttc",
+        "/System/Library/Fonts/Supplemental/Courier New.ttf",
+    ]
+    .into_iter()
+    .map(PathBuf::from)
+    .find(|path| path.exists())
+    .expect("expected a local macOS monospace font for renderer glyph frame proof")
+}
+
+#[test]
+fn wgpu_renderer_records_last_planned_frame() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("abcd").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+
+    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+
+    let plan = renderer
+        .last_plan()
+        .expect("renderer should keep last plan");
+    let planned: Vec<(u16, u16, char)> = plan
+        .glyphs
+        .iter()
+        .map(|glyph| (glyph.row, glyph.col, glyph.ch))
+        .collect();
+    assert_eq!(
+        planned,
+        vec![(0, 0, 'a'), (0, 1, 'b'), (0, 2, 'c'), (0, 3, 'd')]
+    );
+    assert_eq!(renderer.glyph_atlas_metrics().entries, 4);
+}
+
+#[test]
+fn wgpu_renderer_can_plan_full_viewport_when_dirty_regions_are_disabled() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("abcd").unwrap();
+    terminal.take_dirty_regions();
+    terminal.write_str("\r\x1b[2CZ").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut renderer = WgpuRenderer::new(RendererConfig {
+        dirty_regions: false,
+        ..RendererConfig::default()
+    });
+
+    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+
+    let plan = renderer
+        .last_plan()
+        .expect("renderer should keep last plan");
+    let planned: Vec<(u16, u16, char)> = plan
+        .glyphs
+        .iter()
+        .map(|glyph| (glyph.row, glyph.col, glyph.ch))
+        .collect();
+    assert_eq!(
+        planned,
+        vec![(0, 0, 'a'), (0, 1, 'b'), (0, 2, 'Z'), (0, 3, 'd')]
+    );
+    assert_eq!(plan.clear_regions.len(), 1);
+    assert_eq!(plan.clear_regions[0].row, 0);
+    assert_eq!(plan.clear_regions[0].col, 0);
+    assert_eq!(plan.clear_regions[0].rows, 2);
+    assert_eq!(plan.clear_regions[0].cols, 8);
+}
+
+#[test]
+fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("ABA").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    let plan = renderer.last_plan().unwrap();
+    let font_bytes = std::fs::read(system_mono_font()).unwrap();
+    let mut glyph_cache = RasterizedGlyphCache::from_bytes(font_bytes).unwrap();
+    let glyphs = glyph_cache.rasterize_plan(plan).unwrap();
+
+    let prepared =
+        PreparedSurfaceGlyphFrame::from_render_plan(plan, &glyphs.bitmaps, [0.0, 0.0, 0.0, 1.0])
+            .unwrap();
+    let frame = prepared.as_surface_glyph_frame();
+
+    assert_eq!(frame.batch.quads.len(), plan.glyphs.len());
+    assert_eq!(frame.batch.indices.len(), plan.glyphs.len() * 6);
+    assert_eq!(frame.atlas.occupied_slots, 2);
+    assert!(frame.width > 0);
+    assert!(frame.height > 0);
+    assert!(frame.atlas.rgba.chunks_exact(4).any(|pixel| pixel[3] > 0));
+}

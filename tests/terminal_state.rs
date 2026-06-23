@@ -1,0 +1,281 @@
+use gromaq::{Color, MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig};
+
+#[test]
+fn printable_text_is_written_to_grid_and_advances_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("hi").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "hi");
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn default_autowrap_moves_printing_past_right_edge_to_next_row() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("abcdE").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abcd");
+    assert_eq!(grid.line_text(1), "E");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
+fn disabled_autowrap_overwrites_rightmost_cell_without_wrapping() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("\x1b[?7labcdE").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abcE");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
+fn byte_input_parses_text_and_escape_sequences_without_string_conversion() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_bytes(b"abcd\x1b[2DXY").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "abXY");
+    assert_eq!(terminal.dump_cursor().col, 4);
+}
+
+#[test]
+fn device_status_reports_are_queued_as_terminal_responses() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("\x1b[2;4H\x1b[6n\x1b[5n").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[2;4R\x1b[0n");
+    assert!(terminal.take_pending_response_bytes().is_empty());
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
+fn primary_device_attributes_are_queued_as_terminal_responses() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("\x1b[c\x1b[0c").unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[?1;2c\x1b[?1;2c"
+    );
+}
+
+#[test]
+fn decid_queues_primary_device_attributes_response() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("\x1bZ").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[?1;2c");
+}
+
+#[test]
+fn secondary_device_attributes_are_queued_as_terminal_responses() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("\x1b[>c\x1b[>0c").unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[>0;1;0c\x1b[>0;1;0c"
+    );
+}
+
+#[test]
+fn wide_unicode_occupies_two_cells() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("界").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "界");
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn combining_mark_after_wide_unicode_stays_on_wide_leading_cell() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("界\u{0301}").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 0).text, "界\u{0301}");
+    assert!(grid.cell(0, 0).is_wide_leading);
+    assert!(grid.cell(0, 1).is_wide_trailing);
+    assert_eq!(grid.line_text(0), "界\u{0301}");
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn newline_at_bottom_moves_oldest_line_to_scrollback() {
+    let config = TerminalConfig::new(8, 2)
+        .unwrap()
+        .with_scrollback_limit(4)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    terminal.write_str("one\ntwo\nthree").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "two");
+    assert_eq!(grid.line_text(1), "three");
+    let scrollback = terminal.dump_scrollback();
+    assert_eq!(scrollback.lines, vec!["one"]);
+}
+
+#[test]
+fn vertical_tab_and_form_feed_follow_linefeed_behavior() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
+
+    terminal.write_bytes(b"A\x0bB\x0cC").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "A");
+    assert_eq!(grid.line_text(1), "B");
+    assert_eq!(grid.line_text(2), "C");
+    assert_eq!(terminal.dump_cursor().row, 2);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
+fn csi_erase_display_mode_3_clears_scrollback_only() {
+    let config = TerminalConfig::new(8, 2)
+        .unwrap()
+        .with_scrollback_limit(4)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+    terminal.write_str("one\ntwo\nthree").unwrap();
+    assert_eq!(terminal.dump_scrollback().lines, vec!["one"]);
+
+    terminal.write_str("\x1b[3J").unwrap();
+
+    assert!(terminal.dump_scrollback().lines.is_empty());
+    assert_eq!(terminal.dump_grid().line_text(0), "two");
+    assert_eq!(terminal.dump_grid().line_text(1), "three");
+}
+
+#[test]
+fn ris_resets_terminal_state_to_initial_defaults() {
+    let config = TerminalConfig::new(8, 3)
+        .unwrap()
+        .with_scrollback_limit(4)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    terminal.write_str("old\nscroll\nstate\n").unwrap();
+    assert!(!terminal.dump_scrollback().lines.is_empty());
+
+    terminal
+        .write_str("\x1b[31;1;7mA\x1b[?25l\x1b[?1000h\x1b[?1006h\x1b[?2004h\x1b[2;3r")
+        .unwrap();
+    assert_eq!(
+        terminal.encode_paste_text("paste"),
+        b"\x1b[200~paste\x1b[201~"
+    );
+    assert!(
+        terminal
+            .encode_mouse_event(MouseEvent::new(
+                MouseEventKind::Press,
+                MouseButton::Left,
+                0,
+                0
+            ))
+            .is_some()
+    );
+
+    terminal.write_str("\x1bcZ\x1b[3;1H\nQ").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(grid.line_text(2), "Q");
+    assert_eq!(terminal.dump_scrollback().lines, vec!["Z"]);
+    assert_eq!(grid.cell(2, 0).style.foreground, Color::Default);
+    assert!(!grid.cell(2, 0).style.bold);
+    assert!(!grid.cell(2, 0).style.inverse);
+    assert_eq!(terminal.dump_cursor().row, 2);
+    assert_eq!(terminal.dump_cursor().col, 1);
+    assert!(terminal.dump_cursor().visible);
+    assert_eq!(terminal.encode_paste_text("paste"), b"paste");
+    assert_eq!(
+        terminal.encode_mouse_event(MouseEvent::new(
+            MouseEventKind::Press,
+            MouseButton::Left,
+            0,
+            0
+        )),
+        None
+    );
+}
+
+#[test]
+fn csi_erase_display_mode_0_clears_from_cursor_to_screen_end() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal
+        .write_str("abcd\nefgh\nijkl\x1b[2;3H\x1b[J")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abcd");
+    assert_eq!(grid.line_text(1), "ef");
+    assert_eq!(grid.line_text(2), "");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn csi_erase_display_mode_1_clears_from_screen_start_to_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal
+        .write_str("abcd\nefgh\nijkl\x1b[2;3H\x1b[1J")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "");
+    assert_eq!(grid.line_text(1), "   h");
+    assert_eq!(grid.line_text(2), "ijkl");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
+fn csi_erase_display_mode_2_clears_screen_without_moving_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal
+        .write_str("abcd\nefgh\nijkl\x1b[2;3H\x1b[2JZ")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "");
+    assert_eq!(grid.line_text(1), "  Z");
+    assert_eq!(grid.line_text(2), "");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
+fn resize_preserves_visible_text_and_clamps_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 2).unwrap());
+    terminal.write_str("abc\ndef").unwrap();
+
+    terminal.resize(4, 3).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abc");
+    assert_eq!(grid.line_text(1), "def");
+    assert!(terminal.dump_cursor().row < 3);
+    assert!(terminal.dump_cursor().col < 4);
+}
