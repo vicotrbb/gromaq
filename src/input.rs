@@ -204,18 +204,18 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
         Key::Named(NamedKey::F10) => return Some(encode_tilde_key(21, key_modifiers)),
         Key::Named(NamedKey::F11) => return Some(encode_tilde_key(23, key_modifiers)),
         Key::Named(NamedKey::F12) => return Some(encode_tilde_key(24, key_modifiers)),
-        Key::Named(NamedKey::F13) => return Some(encode_shifted_function_key(1, key_modifiers)),
-        Key::Named(NamedKey::F14) => return Some(encode_shifted_function_key(2, key_modifiers)),
-        Key::Named(NamedKey::F15) => return Some(encode_shifted_function_key(3, key_modifiers)),
-        Key::Named(NamedKey::F16) => return Some(encode_shifted_function_key(4, key_modifiers)),
-        Key::Named(NamedKey::F17) => return Some(encode_shifted_function_key(5, key_modifiers)),
-        Key::Named(NamedKey::F18) => return Some(encode_shifted_function_key(6, key_modifiers)),
-        Key::Named(NamedKey::F19) => return Some(encode_shifted_function_key(7, key_modifiers)),
-        Key::Named(NamedKey::F20) => return Some(encode_shifted_function_key(8, key_modifiers)),
-        Key::Named(NamedKey::F21) => return Some(encode_shifted_function_key(9, key_modifiers)),
-        Key::Named(NamedKey::F22) => return Some(encode_shifted_function_key(10, key_modifiers)),
-        Key::Named(NamedKey::F23) => return Some(encode_shifted_function_key(11, key_modifiers)),
-        Key::Named(NamedKey::F24) => return Some(encode_shifted_function_key(12, key_modifiers)),
+        Key::Named(NamedKey::F13) => return encode_shifted_function_key(1, key_modifiers),
+        Key::Named(NamedKey::F14) => return encode_shifted_function_key(2, key_modifiers),
+        Key::Named(NamedKey::F15) => return encode_shifted_function_key(3, key_modifiers),
+        Key::Named(NamedKey::F16) => return encode_shifted_function_key(4, key_modifiers),
+        Key::Named(NamedKey::F17) => return encode_shifted_function_key(5, key_modifiers),
+        Key::Named(NamedKey::F18) => return encode_shifted_function_key(6, key_modifiers),
+        Key::Named(NamedKey::F19) => return encode_shifted_function_key(7, key_modifiers),
+        Key::Named(NamedKey::F20) => return encode_shifted_function_key(8, key_modifiers),
+        Key::Named(NamedKey::F21) => return encode_shifted_function_key(9, key_modifiers),
+        Key::Named(NamedKey::F22) => return encode_shifted_function_key(10, key_modifiers),
+        Key::Named(NamedKey::F23) => return encode_shifted_function_key(11, key_modifiers),
+        Key::Named(NamedKey::F24) => return encode_shifted_function_key(12, key_modifiers),
         Key::Named(_) | Key::Unidentified(_) | Key::Dead(_) => return None,
     };
     Some(encode_keys_with_application_cursor_mode(
@@ -340,9 +340,9 @@ fn encode_alt_prefixed_key(base: &[u8], modifiers: KeyModifiers) -> Vec<u8> {
     bytes
 }
 
-fn encode_shifted_function_key(function_number: u8, modifiers: KeyModifiers) -> Vec<u8> {
+fn encode_shifted_function_key(function_number: u8, modifiers: KeyModifiers) -> Option<Vec<u8>> {
     let modifiers = modifiers | KeyModifiers::SHIFT;
-    match function_number {
+    let bytes = match function_number {
         1 => encode_function_key(b'P', 1, modifiers),
         2 => encode_function_key(b'Q', 1, modifiers),
         3 => encode_function_key(b'R', 1, modifiers),
@@ -355,8 +355,9 @@ fn encode_shifted_function_key(function_number: u8, modifiers: KeyModifiers) -> 
         10 => encode_tilde_key(21, modifiers),
         11 => encode_tilde_key(23, modifiers),
         12 => encode_tilde_key(24, modifiers),
-        _ => unreachable!("shifted function key number is matched by caller"),
-    }
+        _ => return None,
+    };
+    Some(bytes)
 }
 
 fn encode_modified_csi_final(final_byte: u8, modifiers: KeyModifiers) -> Option<Vec<u8>> {
