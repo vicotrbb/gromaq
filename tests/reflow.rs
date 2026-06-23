@@ -28,7 +28,7 @@ fn narrowing_reflows_visible_text_across_rows() {
 #[test]
 fn reflow_preserves_hard_newline_boundaries() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
-    terminal.write_str("abc\ndefghij").unwrap();
+    terminal.write_str("abc\r\ndefghij").unwrap();
 
     terminal.resize(10, 4).unwrap();
 
@@ -41,7 +41,7 @@ fn reflow_preserves_hard_newline_boundaries() {
 #[test]
 fn reflow_preserves_hard_newline_after_partial_display_erase() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
-    terminal.write_str("abc\ndef").unwrap();
+    terminal.write_str("abc\r\ndef").unwrap();
     terminal.write_str("\x1b[1;2H\x1b[1J").unwrap();
 
     terminal.resize(10, 4).unwrap();
@@ -54,7 +54,7 @@ fn reflow_preserves_hard_newline_after_partial_display_erase() {
 #[test]
 fn reflow_drops_hard_newline_after_full_line_erase() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
-    terminal.write_str("abc\ndef").unwrap();
+    terminal.write_str("abc\r\ndef").unwrap();
     terminal.write_str("\x1b[1;1H\x1b[K").unwrap();
 
     terminal.resize(10, 4).unwrap();
@@ -65,7 +65,7 @@ fn reflow_drops_hard_newline_after_full_line_erase() {
 #[test]
 fn reflow_preserves_hard_newline_after_partial_line_erase() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 4).unwrap());
-    terminal.write_str("abc\ndef").unwrap();
+    terminal.write_str("abc\r\ndef").unwrap();
     terminal.write_str("\x1b[1;2H\x1b[1K").unwrap();
 
     terminal.resize(10, 4).unwrap();
@@ -126,7 +126,9 @@ fn narrowing_reflows_existing_scrollback_lines() {
         .with_scrollback_limit(10)
         .unwrap();
     let mut terminal = Terminal::new(config);
-    terminal.write_str("abcdefghij\nklmnopqrst\nuv").unwrap();
+    terminal
+        .write_str("abcdefghij\r\nklmnopqrst\r\nuv")
+        .unwrap();
 
     terminal.resize(5, 2).unwrap();
 
@@ -141,7 +143,7 @@ fn scrollback_reflow_preserves_exact_width_hard_line_breaks() {
         .with_scrollback_limit(10)
         .unwrap();
     let mut terminal = Terminal::new(config);
-    terminal.write_str("abcde\nfghij\nklmno\npq").unwrap();
+    terminal.write_str("abcde\r\nfghij\r\nklmno\r\npq").unwrap();
 
     terminal.resize(10, 2).unwrap();
 
@@ -188,7 +190,7 @@ fn scrollback_reflow_preserves_styled_cell_metadata() {
         .unwrap();
     let mut terminal = Terminal::new(config);
     terminal
-        .write_str("\x1b[31;1mabcdefghij\x1b[0m\nklmnopqrst\nuv")
+        .write_str("\x1b[31;1mabcdefghij\x1b[0m\r\nklmnopqrst\r\nuv")
         .unwrap();
 
     terminal.resize(5, 2).unwrap();

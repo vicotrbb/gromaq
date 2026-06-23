@@ -114,12 +114,12 @@ fn ansi_mode_reports_return_insert_mode_state() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 
     terminal
-        .write_str("\x1b[4$p\x1b[4h\x1b[4$p\x1b[999$p")
+        .write_str("\x1b[4$p\x1b[4h\x1b[4$p\x1b[20$p\x1b[20h\x1b[20$p\x1b[999$p")
         .unwrap();
 
     assert_eq!(
         terminal.take_pending_response_bytes(),
-        b"\x1b[4;2$y\x1b[4;1$y\x1b[999;0$y"
+        b"\x1b[4;2$y\x1b[4;1$y\x1b[20;2$y\x1b[20;1$y\x1b[999;0$y"
     );
 }
 
@@ -397,7 +397,7 @@ fn newline_at_bottom_moves_oldest_line_to_scrollback() {
         .unwrap();
     let mut terminal = Terminal::new(config);
 
-    terminal.write_str("one\ntwo\nthree").unwrap();
+    terminal.write_str("one\r\ntwo\r\nthree").unwrap();
 
     let grid = terminal.dump_grid();
     assert_eq!(grid.line_text(0), "two");
@@ -407,17 +407,17 @@ fn newline_at_bottom_moves_oldest_line_to_scrollback() {
 }
 
 #[test]
-fn vertical_tab_and_form_feed_follow_linefeed_behavior() {
+fn vertical_tab_and_form_feed_follow_linefeed_without_carriage_return() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
 
     terminal.write_bytes(b"A\x0bB\x0cC").unwrap();
 
     let grid = terminal.dump_grid();
     assert_eq!(grid.line_text(0), "A");
-    assert_eq!(grid.line_text(1), "B");
-    assert_eq!(grid.line_text(2), "C");
+    assert_eq!(grid.line_text(1), " B");
+    assert_eq!(grid.line_text(2), "  C");
     assert_eq!(terminal.dump_cursor().row, 2);
-    assert_eq!(terminal.dump_cursor().col, 1);
+    assert_eq!(terminal.dump_cursor().col, 3);
 }
 
 #[test]
@@ -427,7 +427,7 @@ fn csi_erase_display_mode_3_clears_scrollback_only() {
         .with_scrollback_limit(4)
         .unwrap();
     let mut terminal = Terminal::new(config);
-    terminal.write_str("one\ntwo\nthree").unwrap();
+    terminal.write_str("one\r\ntwo\r\nthree").unwrap();
     assert_eq!(terminal.dump_scrollback().lines, vec!["one"]);
 
     terminal.write_str("\x1b[3J").unwrap();
@@ -445,7 +445,7 @@ fn ris_resets_terminal_state_to_initial_defaults() {
         .unwrap();
     let mut terminal = Terminal::new(config);
 
-    terminal.write_str("old\nscroll\nstate\n").unwrap();
+    terminal.write_str("old\r\nscroll\r\nstate\r\n").unwrap();
     assert!(!terminal.dump_scrollback().lines.is_empty());
 
     terminal
@@ -538,7 +538,7 @@ fn decstr_soft_reset_disables_autowrap() {
 fn csi_erase_display_mode_0_clears_from_cursor_to_screen_end() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
-        .write_str("abcd\nefgh\nijkl\x1b[2;3H\x1b[J")
+        .write_str("abcd\r\nefgh\r\nijkl\x1b[2;3H\x1b[J")
         .unwrap();
 
     let grid = terminal.dump_grid();
@@ -553,7 +553,7 @@ fn csi_erase_display_mode_0_clears_from_cursor_to_screen_end() {
 fn csi_erase_display_mode_1_clears_from_screen_start_to_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
-        .write_str("abcd\nefgh\nijkl\x1b[2;3H\x1b[1J")
+        .write_str("abcd\r\nefgh\r\nijkl\x1b[2;3H\x1b[1J")
         .unwrap();
 
     let grid = terminal.dump_grid();
@@ -568,7 +568,7 @@ fn csi_erase_display_mode_1_clears_from_screen_start_to_cursor() {
 fn csi_erase_display_mode_2_clears_screen_without_moving_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
-        .write_str("abcd\nefgh\nijkl\x1b[2;3H\x1b[2JZ")
+        .write_str("abcd\r\nefgh\r\nijkl\x1b[2;3H\x1b[2JZ")
         .unwrap();
 
     let grid = terminal.dump_grid();
@@ -582,7 +582,7 @@ fn csi_erase_display_mode_2_clears_screen_without_moving_cursor() {
 #[test]
 fn resize_preserves_visible_text_and_clamps_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 2).unwrap());
-    terminal.write_str("abc\ndef").unwrap();
+    terminal.write_str("abc\r\ndef").unwrap();
 
     terminal.resize(4, 3).unwrap();
 

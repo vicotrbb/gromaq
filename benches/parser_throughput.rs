@@ -17,15 +17,15 @@ use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
 use winit::keyboard::{Key, ModifiersState};
 
 const LARGE_OUTPUT: &str = "\
-\x1b[31;1merror\x1b[0m line one\n\
-normal log line with unicode 界 and attributes\n\
-\x1b[32mok\x1b[0m line three\n\
+\x1b[31;1merror\x1b[0m line one\r\n\
+normal log line with unicode 界 and attributes\r\n\
+\x1b[32mok\x1b[0m line three\r\n\
 ";
 
 const ASCII_RENDER_OUTPUT: &str = "\
-error status 0123456789 ABC xyz\n\
-normal log line with attributes\n\
-prompt $ cargo test --all\n\
+error status 0123456789 ABC xyz\r\n\
+normal log line with attributes\r\n\
+prompt $ cargo test --all\r\n\
 ";
 
 const BENCH_MONOSPACE_FONT_CANDIDATES: &[&str] = &[
@@ -99,7 +99,7 @@ fn scrollback_large_output(c: &mut Criterion) {
     let mut output = String::with_capacity(20_000);
     for line in 0..2_000 {
         use std::fmt::Write as _;
-        writeln!(&mut output, "line {line:04}").expect("writing to a String is infallible");
+        write!(&mut output, "line {line:04}\r\n").expect("writing to a String is infallible");
     }
 
     c.bench_function("scrollback_large_output", |b| {

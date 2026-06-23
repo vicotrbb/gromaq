@@ -206,7 +206,7 @@ fn csi_repeat_preceding_character_defaults_to_one_and_ignores_empty_history() {
 fn csi_insert_and_delete_lines_affect_rows_below_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 4).unwrap());
 
-    terminal.write_str("one\ntwo\nthree\nfour").unwrap();
+    terminal.write_str("one\r\ntwo\r\nthree\r\nfour").unwrap();
     terminal.write_str("\x1b[2;1H\x1b[Linserted").unwrap();
     assert_eq!(terminal.dump_grid().line_text(0), "one");
     assert_eq!(terminal.dump_grid().line_text(1), "inserted");
@@ -396,7 +396,7 @@ fn csi_horizontal_position_relative_moves_within_current_row() {
 fn csi_vertical_position_absolute_moves_within_current_column() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
 
-    terminal.write_str("ab\ncd\n\x1b[3G\x1b[1dZ").unwrap();
+    terminal.write_str("ab\r\ncd\r\n\x1b[3G\x1b[1dZ").unwrap();
 
     assert_eq!(terminal.dump_grid().line_text(0), "abZ");
     assert_eq!(terminal.dump_grid().line_text(1), "cd");
@@ -443,7 +443,9 @@ fn csi_cursor_previous_line_moves_up_and_returns_to_column_zero() {
 fn csi_scroll_up_shifts_viewport_without_moving_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(10, 4).unwrap());
 
-    terminal.write_str("one\ntwo\nthree\nfour\x1b[2S").unwrap();
+    terminal
+        .write_str("one\r\ntwo\r\nthree\r\nfour\x1b[2S")
+        .unwrap();
 
     let grid = terminal.dump_grid();
     assert_eq!(grid.line_text(0), "three");
@@ -458,7 +460,9 @@ fn csi_scroll_up_shifts_viewport_without_moving_cursor() {
 fn csi_scroll_down_shifts_viewport_without_moving_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(10, 4).unwrap());
 
-    terminal.write_str("one\ntwo\nthree\nfour\x1b[2T").unwrap();
+    terminal
+        .write_str("one\r\ntwo\r\nthree\r\nfour\x1b[2T")
+        .unwrap();
 
     let grid = terminal.dump_grid();
     assert_eq!(grid.line_text(0), "");
@@ -651,6 +655,33 @@ fn c1_index_scrolls_region_without_carriage_return() {
     assert_eq!(grid.line_text(4), "bottom");
     assert_eq!(terminal.dump_cursor().row, 3);
     assert_eq!(terminal.dump_cursor().col, 4);
+}
+
+#[test]
+fn c0_linefeed_controls_move_down_without_carriage_return_by_default() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;4H\nA\x1b[2;6H\x0bB\x1b[3;8H\x0cC")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(1), "   A");
+    assert_eq!(grid.line_text(2), "     B");
+    assert_eq!(grid.line_text(3), "       C");
+    assert_eq!(terminal.dump_cursor().row, 3);
+    assert_eq!(terminal.dump_cursor().col, 8);
+}
+
+#[test]
+fn ansi_linefeed_newline_mode_returns_to_column_zero() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal.write_str("\x1b[20h\x1b[1;5H\nZ").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(1), "Z");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 1);
 }
 
 #[test]

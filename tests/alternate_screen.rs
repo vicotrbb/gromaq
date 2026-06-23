@@ -40,11 +40,11 @@ fn alternate_screen_does_not_append_to_scrollback() {
             .unwrap(),
     );
 
-    terminal.write_str("one\ntwo").unwrap();
+    terminal.write_str("one\r\ntwo").unwrap();
     terminal
-        .write_str("\x1b[?1049halt\nlines\nignored")
+        .write_str("\x1b[?1049halt\r\nlines\r\nignored")
         .unwrap();
-    terminal.write_str("\x1b[?1049l\nthree").unwrap();
+    terminal.write_str("\x1b[?1049l\r\nthree").unwrap();
 
     assert_eq!(terminal.dump_scrollback().lines, vec!["one"]);
     assert_eq!(terminal.dump_grid().line_text(0), "two");

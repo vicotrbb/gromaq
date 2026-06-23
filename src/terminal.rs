@@ -196,6 +196,7 @@ struct SavedScreen {
     application_cursor_keys: bool,
     focus_event_reporting: bool,
     insert_mode: bool,
+    linefeed_newline_mode: bool,
     g0_dec_special_graphics: bool,
     g1_dec_special_graphics: bool,
     active_charset: CharacterSet,
@@ -230,6 +231,7 @@ pub struct Terminal {
     application_cursor_keys: bool,
     focus_event_reporting: bool,
     insert_mode: bool,
+    linefeed_newline_mode: bool,
     g0_dec_special_graphics: bool,
     g1_dec_special_graphics: bool,
     active_charset: CharacterSet,
@@ -280,6 +282,7 @@ impl Terminal {
             application_cursor_keys: false,
             focus_event_reporting: false,
             insert_mode: false,
+            linefeed_newline_mode: false,
             g0_dec_special_graphics: false,
             g1_dec_special_graphics: false,
             active_charset: CharacterSet::G0,
@@ -1292,6 +1295,7 @@ impl Terminal {
         self.origin_mode = false;
         self.application_cursor_keys = false;
         self.insert_mode = false;
+        self.linefeed_newline_mode = false;
         self.cursor.visible = true;
         self.g0_dec_special_graphics = false;
         self.g1_dec_special_graphics = false;
@@ -1333,6 +1337,7 @@ impl Terminal {
         self.application_cursor_keys = false;
         self.focus_event_reporting = false;
         self.insert_mode = false;
+        self.linefeed_newline_mode = false;
         self.g0_dec_special_graphics = false;
         self.g1_dec_special_graphics = false;
         self.active_charset = CharacterSet::G0;
@@ -1524,14 +1529,17 @@ impl Terminal {
     }
 
     fn set_mode(&mut self, mode: u16, enabled: bool) {
-        if mode == 4 {
-            self.insert_mode = enabled;
+        match mode {
+            4 => self.insert_mode = enabled,
+            20 => self.linefeed_newline_mode = enabled,
+            _ => {}
         }
     }
 
     fn mode_state(&self, mode: u16) -> Option<bool> {
         match mode {
             4 => Some(self.insert_mode),
+            20 => Some(self.linefeed_newline_mode),
             _ => None,
         }
     }
@@ -1716,6 +1724,7 @@ impl Terminal {
             application_cursor_keys: self.application_cursor_keys,
             focus_event_reporting: self.focus_event_reporting,
             insert_mode: self.insert_mode,
+            linefeed_newline_mode: self.linefeed_newline_mode,
             g0_dec_special_graphics: self.g0_dec_special_graphics,
             g1_dec_special_graphics: self.g1_dec_special_graphics,
             active_charset: self.active_charset,
@@ -1735,6 +1744,7 @@ impl Terminal {
         self.application_cursor_keys = false;
         self.focus_event_reporting = false;
         self.insert_mode = false;
+        self.linefeed_newline_mode = false;
         self.g0_dec_special_graphics = false;
         self.g1_dec_special_graphics = false;
         self.active_charset = CharacterSet::G0;
@@ -1755,6 +1765,7 @@ impl Terminal {
             self.application_cursor_keys = saved.application_cursor_keys;
             self.focus_event_reporting = saved.focus_event_reporting;
             self.insert_mode = saved.insert_mode;
+            self.linefeed_newline_mode = saved.linefeed_newline_mode;
             self.g0_dec_special_graphics = saved.g0_dec_special_graphics;
             self.g1_dec_special_graphics = saved.g1_dec_special_graphics;
             self.active_charset = saved.active_charset;
@@ -2201,7 +2212,9 @@ impl Perform for Terminal {
                 }
                 self.wrap_pending = false;
                 self.line_feed();
-                self.carriage_return();
+                if self.linefeed_newline_mode {
+                    self.carriage_return();
+                }
             }
             b'\r' => self.carriage_return(),
             0x08 => self.backspace(),

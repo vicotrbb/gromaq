@@ -23,7 +23,7 @@ fn copy_selection_returns_single_visible_cell() {
 #[test]
 fn copy_selection_spans_visible_rows_in_grid_order() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
-    terminal.write_str("alpha\nbravo\ncharlie").unwrap();
+    terminal.write_str("alpha\r\nbravo\r\ncharlie").unwrap();
 
     terminal.set_selection(SelectionRange::new((0, 2), (2, 3)));
 
@@ -43,7 +43,7 @@ fn copy_selection_omits_newline_across_soft_wrapped_rows() {
 #[test]
 fn copy_selection_preserves_newline_at_hard_breaks() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 3).unwrap());
-    terminal.write_str("hello\nworld").unwrap();
+    terminal.write_str("hello\r\nworld").unwrap();
 
     terminal.set_selection(SelectionRange::new((0, 0), (1, 4)));
 
