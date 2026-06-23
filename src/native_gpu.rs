@@ -485,17 +485,26 @@ pub struct ReadbackLayout {
 
 impl ReadbackLayout {
     /// Build a padded layout for an RGBA8 texture.
-    pub fn rgba8(width: u32, height: u32) -> Self {
-        let dense_bytes_per_row = width * 4;
+    pub fn rgba8(width: u32, height: u32) -> std::result::Result<Self, GpuBootstrapError> {
+        let dense_bytes_per_row = width.checked_mul(4).ok_or_else(|| {
+            GpuBootstrapError::SmokeReadback("RGBA8 row byte size is too large".to_owned())
+        })?;
         let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
-        let padded_bytes_per_row = dense_bytes_per_row.div_ceil(align) * align;
-        Self {
+        let padded_bytes_per_row = dense_bytes_per_row
+            .div_ceil(align)
+            .checked_mul(align)
+            .ok_or_else(|| {
+                GpuBootstrapError::SmokeReadback(
+                    "padded readback row byte size is too large".to_owned(),
+                )
+            })?;
+        Ok(Self {
             width,
             height,
             dense_bytes_per_row,
             padded_bytes_per_row,
             buffer_size: u64::from(padded_bytes_per_row) * u64::from(height),
-        }
+        })
     }
 }
 
@@ -1294,7 +1303,7 @@ fn read_texture_rgba8(
     width: u32,
     height: u32,
 ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
-    let layout = ReadbackLayout::rgba8(width, height);
+    let layout = ReadbackLayout::rgba8(width, height)?;
     let readback = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("gromaq-texture-readback"),
         size: layout.buffer_size,
@@ -1343,13 +1352,36 @@ fn read_dense_rgba8_from_buffer(
         .map_err(GpuBootstrapError::SmokeReadback)?;
 
     let mapped = slice.get_mapped_range();
-    let mut dense = Vec::with_capacity(
-        usize::try_from(layout.dense_bytes_per_row).unwrap_or(usize::MAX)
-            * usize::try_from(layout.height).unwrap_or(usize::MAX),
-    );
+    let dense_len = usize::try_from(layout.dense_bytes_per_row)
+        .ok()
+        .and_then(|row_bytes| {
+            usize::try_from(layout.height)
+                .ok()
+                .and_then(|height| row_bytes.checked_mul(height))
+        })
+        .ok_or_else(|| {
+            GpuBootstrapError::SmokeReadback("dense readback size is too large".to_owned())
+        })?;
+    let mut dense = Vec::new();
+    dense.try_reserve_exact(dense_len).map_err(|_| {
+        GpuBootstrapError::SmokeReadback("dense readback buffer is too large".to_owned())
+    })?;
     for row in 0..layout.height {
-        let start = usize::try_from(row * layout.padded_bytes_per_row).unwrap_or(usize::MAX);
-        let end = start + usize::try_from(layout.dense_bytes_per_row).unwrap_or(0);
+        let start = usize::try_from(u64::from(row) * u64::from(layout.padded_bytes_per_row))
+            .map_err(|_| {
+                GpuBootstrapError::SmokeReadback("readback row offset is too large".to_owned())
+            })?;
+        let row_bytes = usize::try_from(layout.dense_bytes_per_row).map_err(|_| {
+            GpuBootstrapError::SmokeReadback("readback row byte size is too large".to_owned())
+        })?;
+        let end = start.checked_add(row_bytes).ok_or_else(|| {
+            GpuBootstrapError::SmokeReadback("readback row end offset is too large".to_owned())
+        })?;
+        if end > mapped.len() {
+            return Err(GpuBootstrapError::SmokeReadback(
+                "readback row exceeds mapped buffer".to_owned(),
+            ));
+        }
         dense.extend_from_slice(&mapped[start..end]);
     }
     drop(mapped);

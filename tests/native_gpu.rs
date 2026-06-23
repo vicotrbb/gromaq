@@ -122,13 +122,23 @@ fn native_gpu_window_surface_preserves_backend_and_capabilities_for_app_handoff(
 
 #[test]
 fn readback_layout_aligns_rows_for_texture_copy() {
-    let layout = ReadbackLayout::rgba8(3, 2);
+    let layout = ReadbackLayout::rgba8(3, 2).unwrap();
 
     assert_eq!(layout.width, 3);
     assert_eq!(layout.height, 2);
     assert_eq!(layout.dense_bytes_per_row, 12);
     assert_eq!(layout.padded_bytes_per_row, 256);
     assert_eq!(layout.buffer_size, 512);
+}
+
+#[test]
+fn readback_layout_rejects_overflowing_rgba8_row_size() {
+    let error = ReadbackLayout::rgba8(u32::MAX, 1).unwrap_err();
+
+    assert_eq!(
+        error,
+        GpuBootstrapError::SmokeReadback("RGBA8 row byte size is too large".to_owned())
+    );
 }
 
 #[test]
