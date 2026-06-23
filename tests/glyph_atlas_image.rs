@@ -2,7 +2,7 @@ use gromaq::renderer::{GlyphAtlasImage, GlyphBitmap, GlyphEntry};
 
 #[test]
 fn glyph_atlas_image_packs_bitmaps_by_slot() {
-    let red = GlyphBitmap::solid_rgba8(
+    let red = GlyphBitmap::try_solid_rgba8(
         GlyphEntry {
             slot: 0,
             generation: 0,
@@ -10,8 +10,9 @@ fn glyph_atlas_image_packs_bitmaps_by_slot() {
         2,
         2,
         [255, 0, 0, 255],
-    );
-    let green = GlyphBitmap::solid_rgba8(
+    )
+    .unwrap();
+    let green = GlyphBitmap::try_solid_rgba8(
         GlyphEntry {
             slot: 1,
             generation: 0,
@@ -19,7 +20,8 @@ fn glyph_atlas_image_packs_bitmaps_by_slot() {
         2,
         2,
         [0, 255, 0, 255],
-    );
+    )
+    .unwrap();
 
     let image = GlyphAtlasImage::pack_rgba8(2, 2, 2, &[red, green]).unwrap();
 
@@ -95,7 +97,7 @@ fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
 
 #[test]
 fn glyph_bitmap_padding_rejects_oversized_target_before_allocation() {
-    let glyph = GlyphBitmap::solid_rgba8(
+    let glyph = GlyphBitmap::try_solid_rgba8(
         GlyphEntry {
             slot: 0,
             generation: 0,
@@ -103,7 +105,8 @@ fn glyph_bitmap_padding_rejects_oversized_target_before_allocation() {
         1,
         1,
         [255, 255, 255, 255],
-    );
+    )
+    .unwrap();
 
     let error = glyph.padded_to(u32::MAX, u32::MAX).unwrap_err();
 

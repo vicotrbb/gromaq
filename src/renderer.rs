@@ -1651,12 +1651,6 @@ impl GlyphBitmap {
         })
     }
 
-    /// Build a solid RGBA8 glyph bitmap for deterministic renderer tests.
-    pub fn solid_rgba8(entry: GlyphEntry, width: u32, height: u32, rgba: [u8; 4]) -> Self {
-        Self::try_solid_rgba8(entry, width, height, rgba)
-            .expect("deterministic solid glyph bitmap dimensions are valid")
-    }
-
     /// Return this glyph copied into the top-left of a larger transparent bitmap.
     pub fn padded_to(
         &self,

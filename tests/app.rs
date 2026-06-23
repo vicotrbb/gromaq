@@ -864,7 +864,7 @@ fn native_window_surface_presents_terminal_glyph_frame_through_backend() {
         2,
         2,
         1,
-        &[GlyphBitmap::solid_rgba8(
+        &[GlyphBitmap::try_solid_rgba8(
             GlyphEntry {
                 slot: 0,
                 generation: 0,
@@ -872,7 +872,8 @@ fn native_window_surface_presents_terminal_glyph_frame_through_backend() {
             2,
             2,
             [255, 255, 255, 255],
-        )],
+        )
+        .unwrap()],
     )
     .unwrap();
     let batch = GlyphQuadBatch {
