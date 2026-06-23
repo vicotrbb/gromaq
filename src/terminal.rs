@@ -638,14 +638,15 @@ impl Terminal {
         let height = u32::from(self.config.rows);
         let mut rgba =
             Vec::with_capacity(usize::from(self.config.cols) * usize::from(self.config.rows) * 4);
+        let grid = self.dump_grid();
+        let cursor = self.dump_cursor();
         for row in 0..self.config.rows {
             for col in 0..self.config.cols {
-                let color =
-                    if self.cursor.visible && self.cursor.row == row && self.cursor.col == col {
-                        [64, 160, 255, 255]
-                    } else {
-                        cell_screenshot_color(self.grid.cell(row, col))
-                    };
+                let color = if cursor.visible && cursor.row == row && cursor.col == col {
+                    [64, 160, 255, 255]
+                } else {
+                    cell_screenshot_color(grid.cell(row, col))
+                };
                 rgba.extend_from_slice(&color);
             }
         }
@@ -2323,7 +2324,7 @@ fn is_regional_indicator(ch: char) -> bool {
     matches!(ch, '\u{1f1e6}'..='\u{1f1ff}')
 }
 
-fn cell_screenshot_color(cell: &Cell) -> [u8; 4] {
+fn cell_screenshot_color(cell: &CellSnapshot) -> [u8; 4] {
     if cell.is_wide_trailing {
         return [255, 255, 255, 255];
     }
