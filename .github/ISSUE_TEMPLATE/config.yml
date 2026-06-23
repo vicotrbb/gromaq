@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Debugging guide
+    url: https://github.com/gromaq/gromaq/blob/main/DEBUGGING.md
+    about: Start here for deterministic debugging commands and proof boundaries.
+  - name: Compatibility matrix
+    url: https://github.com/gromaq/gromaq/blob/main/COMPATIBILITY.md
+    about: Check current workflow coverage and known proof gaps before filing.
