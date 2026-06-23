@@ -7,6 +7,7 @@ use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
 use crate::cell::{Cell, CellSnapshot, Color, Style, UnderlineStyle};
 use crate::clipboard::HostClipboard;
+use crate::config::validate_terminal_dimensions;
 use crate::dirty::{DirtyRegion, DirtyTracker};
 use crate::error::{GromaqError, Result};
 use crate::grid::{Grid, GridSnapshot};
@@ -84,20 +85,7 @@ impl TerminalConfig {
     }
 
     fn validate(self) -> Result<Self> {
-        if self.cols == 0 {
-            return Err(GromaqError::InvalidDimension {
-                field: "columns",
-                minimum: 1,
-                actual: u32::from(self.cols),
-            });
-        }
-        if self.rows == 0 {
-            return Err(GromaqError::InvalidDimension {
-                field: "rows",
-                minimum: 1,
-                actual: u32::from(self.rows),
-            });
-        }
+        validate_terminal_dimensions(self.cols, self.rows)?;
         if self.scrollback_limit > MAX_SCROLLBACK_LINES {
             return Err(GromaqError::InvalidScrollback {
                 maximum: MAX_SCROLLBACK_LINES,

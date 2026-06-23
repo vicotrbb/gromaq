@@ -19,6 +19,15 @@ pub enum GromaqError {
         actual: u32,
     },
 
+    /// Terminal grid area must stay within a bounded allocation size.
+    #[error("terminal grid must contain at most {maximum} cells, got {actual}")]
+    InvalidGridArea {
+        /// Inclusive upper bound.
+        maximum: u64,
+        /// Actual requested cell count.
+        actual: u64,
+    },
+
     /// Scrollback capacity must be bounded.
     #[error("scrollback limit must be at most {maximum}, got {actual}")]
     InvalidScrollback {

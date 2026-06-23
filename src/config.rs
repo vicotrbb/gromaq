@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{GromaqError, Result};
 
+/// Maximum supported visible terminal grid cells.
+pub const MAX_TERMINAL_CELLS: u64 = 1_000_000;
+
 /// Top-level Gromaq configuration.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct GromaqConfig {
@@ -18,20 +21,7 @@ pub struct GromaqConfig {
 impl GromaqConfig {
     /// Validate configuration values.
     pub fn validate(&self) -> Result<()> {
-        if self.terminal.cols == 0 {
-            return Err(GromaqError::InvalidDimension {
-                field: "columns",
-                minimum: 1,
-                actual: u32::from(self.terminal.cols),
-            });
-        }
-        if self.terminal.rows == 0 {
-            return Err(GromaqError::InvalidDimension {
-                field: "rows",
-                minimum: 1,
-                actual: u32::from(self.terminal.rows),
-            });
-        }
+        validate_terminal_dimensions(self.terminal.cols, self.terminal.rows)?;
         if self.terminal.scrollback_lines > 1_000_000 {
             return Err(GromaqError::InvalidScrollback {
                 maximum: 1_000_000,
@@ -52,6 +42,31 @@ impl GromaqConfig {
         }
         Ok(())
     }
+}
+
+pub(crate) fn validate_terminal_dimensions(cols: u16, rows: u16) -> Result<()> {
+    if cols == 0 {
+        return Err(GromaqError::InvalidDimension {
+            field: "columns",
+            minimum: 1,
+            actual: u32::from(cols),
+        });
+    }
+    if rows == 0 {
+        return Err(GromaqError::InvalidDimension {
+            field: "rows",
+            minimum: 1,
+            actual: u32::from(rows),
+        });
+    }
+    let cells = u64::from(cols) * u64::from(rows);
+    if cells > MAX_TERMINAL_CELLS {
+        return Err(GromaqError::InvalidGridArea {
+            maximum: MAX_TERMINAL_CELLS,
+            actual: cells,
+        });
+    }
+    Ok(())
 }
 
 /// Terminal section of the configuration file.
