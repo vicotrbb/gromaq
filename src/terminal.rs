@@ -923,6 +923,7 @@ impl Terminal {
                 }
             }
             self.dirty.mark_viewport(self.config.rows, self.config.cols);
+            self.perf.dirty_cells += u64::from(self.config.rows) * u64::from(self.config.cols);
             self.perf.scrolls += 1;
         } else {
             let count = count.min(region_rows);

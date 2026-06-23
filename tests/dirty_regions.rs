@@ -101,16 +101,19 @@ fn linefeed_at_scroll_bottom_marks_entire_viewport_dirty() {
     let mut terminal = Terminal::new(TerminalConfig::new(6, 3).unwrap());
     terminal.write_str("\x1b[3;1H").unwrap();
     terminal.take_dirty_regions();
+    let before = terminal.dump_perf_metrics();
 
     terminal.write_str("\n").unwrap();
 
     let regions = terminal.take_dirty_regions();
+    let after = terminal.dump_perf_metrics();
     assert_eq!(regions.len(), 1);
     assert_eq!(regions[0].row, 0);
     assert_eq!(regions[0].col, 0);
     assert_eq!(regions[0].rows, 3);
     assert_eq!(regions[0].cols, 6);
-    assert_eq!(terminal.dump_perf_metrics().scrolls, 1);
+    assert_eq!(after.scrolls, before.scrolls + 1);
+    assert_eq!(after.dirty_cells, before.dirty_cells + 18);
 }
 
 #[test]

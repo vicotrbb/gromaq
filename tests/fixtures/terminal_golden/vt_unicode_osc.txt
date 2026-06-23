@@ -12,4 +12,4 @@ edited_cell:text="X"
 linked_cell:text="l",hyperlink=Some("https://gromaq.dev/docs")
 emoji_cell:text="👨\u{200d}👩🏽",leading=true,trailing_cell_trailing=true
 tag_cell:text="🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}",leading=true,trailing_cell_trailing=true
-perf:parsed_bytes=176,dirty_cells=59,scrolls=2,resizes=0,dirty_batches=0
+perf:parsed_bytes=176,dirty_cells=155,scrolls=2,resizes=0,dirty_batches=0
