@@ -1142,7 +1142,14 @@ where
         ) else {
             return Ok(false);
         };
-        self.send_mouse_input(event)
+        if self.send_mouse_input(event)? {
+            return Ok(true);
+        }
+        Ok(match (input.kind, input.button) {
+            (MouseEventKind::Press, MouseButton::WheelUp) => self.terminal.scroll_display_up(1),
+            (MouseEventKind::Press, MouseButton::WheelDown) => self.terminal.scroll_display_down(1),
+            _ => false,
+        })
     }
 
     /// Encode pasted text according to terminal mode and write it to the PTY.

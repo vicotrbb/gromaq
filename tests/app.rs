@@ -2019,6 +2019,74 @@ fn native_terminal_runtime_maps_alternate_screen_window_mouse_wheel_to_pty_repor
 }
 
 #[test]
+fn native_terminal_runtime_scrolls_scrollback_on_unreported_wheel() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 6,
+        terminal_rows: 3,
+        scrollback_lines: 8,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"one\r\ntwo\r\nthree\r\nfour".to_vec());
+    runtime.pump_pty_output().unwrap();
+    runtime.pump_pty_output().unwrap();
+    assert_eq!(runtime.terminal().dump_grid().line_text(0), "two");
+    assert_eq!(runtime.terminal().dump_grid().line_text(2), "four");
+
+    assert!(
+        runtime
+            .send_window_mouse_input(
+                5.0,
+                5.0,
+                60,
+                30,
+                MouseEventKind::Press,
+                MouseButton::WheelUp,
+            )
+            .unwrap()
+    );
+
+    let scrolled = runtime.terminal().dump_grid();
+    assert_eq!(scrolled.line_text(0), "one");
+    assert_eq!(scrolled.line_text(1), "two");
+    assert_eq!(scrolled.line_text(2), "three");
+    assert!(!runtime.terminal().dump_cursor().visible);
+    assert!(runtime.shell_session().unwrap().input.borrow().is_empty());
+
+    assert!(
+        runtime
+            .send_window_mouse_input(
+                5.0,
+                5.0,
+                60,
+                30,
+                MouseEventKind::Press,
+                MouseButton::WheelDown,
+            )
+            .unwrap()
+    );
+
+    let live = runtime.terminal().dump_grid();
+    assert_eq!(live.line_text(0), "two");
+    assert_eq!(live.line_text(1), "three");
+    assert_eq!(live.line_text(2), "four");
+    assert!(runtime.terminal().dump_cursor().visible);
+}
+
+#[test]
 fn native_terminal_runtime_maps_alternate_screen_window_mouse_motion_to_pty_report() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {

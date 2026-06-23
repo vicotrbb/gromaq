@@ -33,7 +33,7 @@ Implemented and tested:
 - Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
 - Visible-grid selection and copy
 - Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
-- Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding
+- Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding, plus local scrollback navigation for non-reporting wheel input
 - PTY boundary plus a real shell-command lifecycle test
 - Interactive `/bin/sh` PTY input/output workflow through the native PTY writer and background reader
 - Real PTY command workflow tests for available `bash` and `zsh`
