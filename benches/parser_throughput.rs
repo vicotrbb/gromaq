@@ -13,7 +13,7 @@ use gromaq::native_gpu::{
     GpuBootstrap, GpuBootstrapConfig, GpuGlyphAtlasUploadRunner, GpuTerminalTextRunner,
     GpuTextAtlasUploadRunner, GpuTextureUploadRunner, GpuTexturedQuadRunner, NativeGpuContext,
 };
-use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
+use gromaq::pty::{PtyConfig, PtyError, PtySession, ShellCommand};
 use gromaq::renderer::{
     FrameScheduler, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
     PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
@@ -56,6 +56,7 @@ const SCROLLBACK_NAVIGATION_LINES: usize = 4_096;
 const SCROLLBACK_NAVIGATION_STEPS: usize = 512;
 const ALTERNATE_SCREEN_STAGES: usize = 3;
 const FRAME_SCHEDULER_TIMELINE_STEPS: usize = 512;
+const REAL_PTY_BENCH_LINES: usize = 512;
 const RUNTIME_PROTOCOL_INPUT_PAYLOAD: &[u8] =
     b"\x1b[?1004h\x1b[?1000h\x1b[?1006h\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
@@ -527,6 +528,54 @@ fn pty_runtime_pump_large_output(c: &mut Criterion) {
     });
 }
 
+fn real_pty_shell_large_output_burst(c: &mut Criterion) {
+    if !Path::new("/bin/sh").exists() {
+        skip_benchmark(c, "real_pty_shell_large_output_burst", "/bin/sh not found");
+        return;
+    }
+
+    c.bench_function("real_pty_shell_large_output_burst", |b| {
+        b.iter(|| {
+            let mut session = PtySession::spawn(PtyConfig {
+                rows: 24,
+                cols: 80,
+                pixel_width: 0,
+                pixel_height: 0,
+                shell: ShellCommand {
+                    program: "/bin/sh".into(),
+                    args: vec!["-lc".into(), real_pty_large_output_script().into()],
+                    cwd: None,
+                },
+            })
+            .unwrap();
+            session.start_output_reader().unwrap();
+
+            let marker = format!("gromaq-real-pty-{:04}", REAL_PTY_BENCH_LINES - 1);
+            let mut output = Vec::new();
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while Instant::now() < deadline {
+                output.extend(session.drain_available_output().unwrap());
+                if contains_bytes(&output, marker.as_bytes()) {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(1));
+            }
+
+            assert!(
+                contains_bytes(&output, marker.as_bytes()),
+                "real PTY benchmark did not observe {marker}"
+            );
+            assert!(
+                session
+                    .wait_timeout(Duration::from_secs(5))
+                    .unwrap()
+                    .is_some()
+            );
+            black_box(output.len());
+        });
+    });
+}
+
 fn runtime_bounded_state_batches(c: &mut Criterion) {
     let payloads = bounded_state_payloads();
     c.bench_function("runtime_bounded_state_batches", |b| {
@@ -873,6 +922,7 @@ criterion_group!(
     native_input_echo_render_cycle,
     font_rasterizer_combining_cell,
     pty_runtime_pump_large_output,
+    real_pty_shell_large_output_burst,
     runtime_bounded_state_batches,
     runtime_state_snapshot_bounded_session,
     runtime_continuous_output_batches,
@@ -918,6 +968,18 @@ fn bench_monospace_font_bytes() -> Result<Vec<u8>, String> {
             path.display()
         )
     })
+}
+
+fn real_pty_large_output_script() -> String {
+    format!(
+        "i=0; while [ \"$i\" -lt {REAL_PTY_BENCH_LINES} ]; do printf 'gromaq-real-pty-%04d\\n' \"$i\"; i=$((i + 1)); done"
+    )
+}
+
+fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
+    haystack
+        .windows(needle.len())
+        .any(|window| window == needle)
 }
 
 fn bounded_state_payloads() -> Vec<Vec<u8>> {

@@ -4,12 +4,13 @@ Gromaq uses Criterion for deterministic CPU-side benchmark coverage. These
 benchmarks are proof inputs for parser throughput, scrollback throughput, dirty
 region coalescing, scrollback viewport navigation, render planning, glyph quad
 generation, 144Hz frame-scheduler decisions, rasterized glyph cache reuse, prepared surface glyph-frame
-construction, native input-to-render plumbing, real-font rasterization, PTY
-output pumping, bounded runtime state under repeated output batches, and runtime
-alternate-screen transitions, plus runtime focus/mouse/terminal-response protocol
-input paths, texture and glyph-atlas GPU upload/readback, font-backed text-atlas
-GPU upload/readback, offscreen textured-quad GPU draw/readback, and offscreen
-terminal text GPU draw/readback.
+construction, native input-to-render plumbing, real-font rasterization,
+deterministic PTY output pumping, real PTY shell-output bursts, bounded runtime
+state under repeated output batches, and runtime alternate-screen transitions,
+plus runtime focus/mouse/terminal-response protocol input paths, texture and
+glyph-atlas GPU upload/readback, font-backed text-atlas GPU upload/readback,
+offscreen textured-quad GPU draw/readback, and offscreen terminal text GPU
+draw/readback.
 
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
@@ -83,6 +84,7 @@ The benchmark list should include:
 - `native_input_echo_render_cycle`
 - `font_rasterizer_combining_cell`
 - `pty_runtime_pump_large_output`
+- `real_pty_shell_large_output_burst`
 - `runtime_bounded_state_batches`
 - `runtime_state_snapshot_bounded_session`
 - `runtime_continuous_output_batches`
@@ -98,6 +100,8 @@ Some benchmarks load a local monospace font for real glyph rasterization. The
 benchmark harness checks common macOS and Linux font paths. If no candidate is
 available, the font-dependent benchmark name is still registered and emits a
 clear skip message instead of panicking; that skip does not prove rasterization
+throughput on the current machine. The real PTY benchmark registers a skip
+placeholder when `/bin/sh` is unavailable; that skip does not prove real PTY
 throughput on the current machine. The GPU draw/readback benchmarks similarly
 register skip placeholders when no compatible native GPU adapter can be created;
 that skip does not prove GPU draw/readback throughput on the current machine.
