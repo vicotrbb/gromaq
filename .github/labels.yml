@@ -1,0 +1,30 @@
+- name: bug
+  color: d73a4a
+  description: Incorrect terminal behavior or a regression with reproducible evidence.
+- name: compatibility
+  color: 5319e7
+  description: Shell, editor, multiplexer, pager, VT, ANSI, OSC, mouse, or clipboard coverage.
+- name: performance
+  color: fbca04
+  description: Frame time, latency, CPU, memory, throughput, allocation, or cache behavior.
+- name: needs-proof
+  color: bfd4f2
+  description: Requires stronger deterministic, PTY, GPU, benchmark, or live desktop evidence.
+- name: needs-triage
+  color: cfd3d7
+  description: Needs maintainer classification, reproduction, or scope confirmation.
+- name: good first issue
+  color: 7057ff
+  description: Small, well-scoped work suitable for a first contribution.
+- name: documentation
+  color: 0075ca
+  description: README, architecture, benchmarks, compatibility, debugging, or contributor docs.
+- name: tests
+  color: 0e8a16
+  description: Unit, integration, golden, PTY, smoke, fixture, or benchmark-list coverage.
+- name: gpu
+  color: c2e0c6
+  description: wgpu adapter, surface, atlas upload, textured draw, or presentation behavior.
+- name: blocked-live-proof
+  color: e99695
+  description: Needs live hardware, desktop window, OS clipboard, or external workflow evidence.

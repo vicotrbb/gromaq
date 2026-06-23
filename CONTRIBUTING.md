@@ -14,6 +14,8 @@ Gromaq is early. Contributions must preserve correctness, determinism, and perfo
 - Follow the fixture guidance in `TESTING.md`.
 - Follow the debugging workflow in `DEBUGGING.md` when investigating failures or
   adding compatibility evidence.
+- Use the label taxonomy in `.github/labels.yml` and the starter issue list in
+  `GOOD_FIRST_ISSUES.md` when shaping contributor work.
 
 ## Required Checks
 
