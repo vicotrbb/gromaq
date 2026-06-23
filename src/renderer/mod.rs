@@ -12,8 +12,10 @@ use crate::error::{GromaqError, Result};
 use crate::grid::GridSnapshot;
 use crate::terminal::{CursorShape, CursorSnapshot};
 
+mod color;
 mod scheduler;
 
+use color::{rgba8_to_normalized, style_background_rgba8, style_foreground_rgba};
 pub use scheduler::{FrameDecision, FrameScheduler, FrameSchedulerMetrics, RenderReason};
 
 const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 14;
@@ -2021,103 +2023,6 @@ impl GlyphQuadPlanner {
             ],
         })
     }
-}
-
-fn style_foreground_rgba(style: Style) -> [f32; 4] {
-    if style.hidden {
-        return [0.0, 0.0, 0.0, 0.0];
-    }
-    let color = if style.inverse {
-        style.background
-    } else {
-        style.foreground
-    };
-    let [red, green, blue] = color_rgb8(color);
-    let alpha = if style.dim { 0.66 } else { 1.0 };
-    [
-        f32::from(red) / 255.0,
-        f32::from(green) / 255.0,
-        f32::from(blue) / 255.0,
-        alpha,
-    ]
-}
-
-fn style_background_rgba8(style: Style) -> Option<[u8; 4]> {
-    let color = if style.inverse {
-        style.foreground
-    } else {
-        style.background
-    };
-    if color == Color::Default && !style.inverse {
-        return None;
-    }
-    let [red, green, blue] = color_rgb8(color);
-    Some([red, green, blue, 255])
-}
-
-fn rgba8_to_normalized([red, green, blue, alpha]: [u8; 4]) -> [f32; 4] {
-    [
-        f32::from(red) / 255.0,
-        f32::from(green) / 255.0,
-        f32::from(blue) / 255.0,
-        f32::from(alpha) / 255.0,
-    ]
-}
-
-fn color_rgb8(color: Color) -> [u8; 3] {
-    match color {
-        Color::Default => [229, 229, 229],
-        Color::Ansi(index) => ansi_color_rgb8(index),
-        Color::Indexed(index) => indexed_color_rgb8(index),
-        Color::Rgb(red, green, blue) => [red, green, blue],
-    }
-}
-
-fn ansi_color_rgb8(index: u8) -> [u8; 3] {
-    const ANSI_COLORS: [[u8; 3]; 16] = [
-        [0, 0, 0],
-        [205, 49, 49],
-        [13, 188, 121],
-        [229, 229, 16],
-        [36, 114, 200],
-        [188, 63, 188],
-        [17, 168, 205],
-        [229, 229, 229],
-        [102, 102, 102],
-        [241, 76, 76],
-        [35, 209, 139],
-        [245, 245, 67],
-        [59, 142, 234],
-        [214, 112, 214],
-        [41, 184, 219],
-        [255, 255, 255],
-    ];
-    ANSI_COLORS[usize::from(index.min(15))]
-}
-
-fn indexed_color_rgb8(index: u8) -> [u8; 3] {
-    match index {
-        0..=15 => ansi_color_rgb8(index),
-        16..=231 => {
-            let cube = index - 16;
-            let red = cube / 36;
-            let green = (cube % 36) / 6;
-            let blue = cube % 6;
-            [
-                color_cube_component(red),
-                color_cube_component(green),
-                color_cube_component(blue),
-            ]
-        }
-        232..=255 => {
-            let shade = 8 + ((index - 232) * 10);
-            [shade, shade, shade]
-        }
-    }
-}
-
-fn color_cube_component(value: u8) -> u8 {
-    if value == 0 { 0 } else { 55 + (value * 40) }
 }
 
 fn checked_background_quad_base_index(
