@@ -13,7 +13,7 @@ Compatibility proof is not complete.
 | Unicode wide and combining characters | Partial | `tests/terminal_state.rs` covers wide-cell leading/trailing metadata, combining marks attached to wide glyphs, and a simple emoji ZWJ sequence retained as one wide-cell cluster; broader grapheme-cluster shaping coverage pending |
 | Bounded scrollback | Partial | `tests/terminal_state.rs` covers bounded scrollback append and erase-display mode 3 scrollback clearing |
 | Visible-grid and scrollback resize reflow | Partial | `tests/reflow.rs` covers visible-grid soft-wrap/hard-newline/style/wide-cell reflow and styled scrollback row reflow |
-| Dirty-region tracking | Partial | `tests/dirty_regions.rs` |
+| Dirty-region tracking | Partial | `tests/dirty_regions.rs`; `cargo bench` includes `dirty_region_coalescing` for overlapping span/cell/region coalescing, containment, and drain behavior |
 | Structured performance counters | Partial | `tests/test_api.rs` covers parser bytes, dirty cells, non-empty dirty-region batches, scrolls, and resizes through `TerminalTestApi::dump_perf_metrics`; live frame-time/input-latency/CPU/memory acceptance proof pending |
 | Structured test API screenshots | Partial | `tests/test_api.rs` covers deterministic one-pixel-per-cell RGBA screenshots of visible terminal text and cursor state; live GPU/window screenshot proof pending |
 | Selection/copy | Partial | `tests/selection.rs` |

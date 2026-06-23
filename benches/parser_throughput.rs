@@ -10,7 +10,7 @@ use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
 use gromaq::renderer::{
     GlyphAtlas, GlyphAtlasConfig, GlyphQuadConfig, GlyphQuadPlanner, RenderPlanner,
 };
-use gromaq::{Terminal, TerminalConfig};
+use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
 
 const LARGE_OUTPUT: &str = "\
 \x1b[31;1merror\x1b[0m line one\n\
@@ -89,6 +89,31 @@ fn scrollback_large_output(c: &mut Criterion) {
             );
             terminal.write_bytes(black_box(output.as_bytes())).unwrap();
             black_box(terminal.dump_scrollback());
+        });
+    });
+}
+
+fn dirty_region_coalescing(c: &mut Criterion) {
+    c.bench_function("dirty_region_coalescing", |b| {
+        b.iter(|| {
+            let mut dirty = DirtyTracker::default();
+            for row in 0..36 {
+                dirty.mark_span(row, 0, 80);
+                dirty.mark_cell(row, row % 120);
+                dirty.mark_region(DirtyRegion {
+                    row,
+                    col: 40,
+                    rows: 1,
+                    cols: 40,
+                });
+            }
+            black_box(dirty.contains_region(DirtyRegion {
+                row: 0,
+                col: 0,
+                rows: 36,
+                cols: 80,
+            }));
+            black_box(dirty.take());
         });
     });
 }
@@ -221,6 +246,7 @@ criterion_group!(
     benches,
     parser_large_output,
     scrollback_large_output,
+    dirty_region_coalescing,
     render_plan_large_dirty_region,
     glyph_quad_generation_large_plan,
     rasterized_glyph_cache_hot_plan,

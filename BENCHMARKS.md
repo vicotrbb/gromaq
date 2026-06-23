@@ -12,12 +12,13 @@ Current benchmarks:
 
 - `parser_large_output`: parses ANSI-styled output with Unicode content.
 - `scrollback_large_output`: writes a prebuilt 2,000-line payload into a small viewport with bounded scrollback, avoiding fixture formatting work inside the measured loop.
+- `dirty_region_coalescing`: marks overlapping dirty spans/cells/regions, checks containment, and drains the coalesced scheduler region.
 - `render_plan_large_dirty_region`: builds CPU-side glyph draw commands from a large dirty viewport and exercises glyph atlas lookups.
 - `glyph_quad_generation_large_plan`: converts a prebuilt large terminal render plan into textured glyph quads and triangle indices for GPU buffer upload.
 - `rasterized_glyph_cache_hot_plan`: replays a pre-rasterized terminal render plan through the native glyph bitmap cache to measure the cached repeated-frame path.
 - `pty_runtime_pump_large_output`: drains queued PTY output through `NativeTerminalRuntime::pump_pty_output` into terminal state.
 
-Dirty-region tracking is currently unit-tested, not benchmarked separately. Renderer benchmarks will be added with the concrete `wgpu` pipeline.
+Dirty-region tracking is unit-tested and benchmarked for coalescing/containment/drain behavior. Renderer benchmarks will be added with the concrete `wgpu` pipeline.
 Frame-scheduler decisions are unit-tested with injected timestamps; they do not yet prove hardware-backed 144Hz rendering.
 PTY background reader, runtime pump behavior, and timed event-loop pump scheduling are integration-tested. PTY runtime pump throughput is benchmarked with deterministic queued output and feeds raw PTY bytes directly into the terminal parser; real PTY throughput and input-to-render latency are not yet benchmarked.
 Glyph-atlas cache behavior is unit-tested for identity, LRU eviction, and metrics; it does not yet prove rasterization speed or GPU upload performance.
@@ -36,4 +37,4 @@ The full terminal goal is not complete until benchmarks and runtime validation p
 - efficient glyph cache hit rate
 - no avoidable hot-path allocations
 
-This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, render-plan, glyph-quad, cached glyph-bitmap, and runtime PTY pump measurements for future regression tracking.
+This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, dirty-region, render-plan, glyph-quad, cached glyph-bitmap, and runtime PTY pump measurements for future regression tracking.
