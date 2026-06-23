@@ -2179,6 +2179,33 @@ fn native_terminal_runtime_sends_shift_page_keys_to_alternate_screen_apps() {
 }
 
 #[test]
+fn native_terminal_runtime_consumes_shift_page_keys_when_primary_scrollback_cannot_move() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+
+    assert!(
+        !runtime
+            .send_winit_key_input(&Key::Named(NamedKey::PageUp), ModifiersState::SHIFT)
+            .unwrap()
+    );
+
+    assert!(runtime.shell_session().unwrap().input.borrow().is_empty());
+}
+
+#[test]
 fn native_terminal_runtime_maps_alternate_screen_window_mouse_motion_to_pty_report() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {

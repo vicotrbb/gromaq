@@ -1059,12 +1059,16 @@ where
         modifiers: ModifiersState,
     ) -> Result<bool, NativeAppError> {
         if let Some(direction) = native_scrollback_key_direction(key, modifiers) {
+            let alternate_screen_active = self.terminal.is_alternate_screen_active();
             let rows = self.terminal.dump_grid().rows.saturating_sub(1).max(1);
             if match direction {
                 ScrollbackKeyDirection::Up => self.terminal.scroll_display_up(rows),
                 ScrollbackKeyDirection::Down => self.terminal.scroll_display_down(rows),
             } {
                 return Ok(true);
+            }
+            if !alternate_screen_active {
+                return Ok(false);
             }
         }
 

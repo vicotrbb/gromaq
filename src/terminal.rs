@@ -479,6 +479,11 @@ impl Terminal {
         }
     }
 
+    /// Whether the terminal is currently displaying the alternate screen buffer.
+    pub fn is_alternate_screen_active(&self) -> bool {
+        self.saved_primary.is_some()
+    }
+
     /// Scroll the displayed viewport upward into retained scrollback rows.
     pub fn scroll_display_up(&mut self, rows: u16) -> bool {
         if rows == 0 || self.saved_primary.is_some() {
