@@ -2180,6 +2180,14 @@ fn native_copy_shortcut_accepts_super_c_or_control_shift_c_without_plain_control
         &Key::Named(NamedKey::Copy),
         ModifiersState::empty()
     ));
+    assert!(is_native_copy_shortcut(
+        &Key::Named(NamedKey::Insert),
+        ModifiersState::CONTROL
+    ));
+    assert!(!is_native_copy_shortcut(
+        &Key::Named(NamedKey::Insert),
+        ModifiersState::empty()
+    ));
     assert!(!is_native_copy_shortcut(
         &Key::Character("c".into()),
         ModifiersState::CONTROL

@@ -1909,6 +1909,7 @@ fn wheel_mouse_button(delta: MouseScrollDelta) -> Option<MouseButton> {
 /// Whether a native key event should copy the active terminal selection.
 pub fn is_native_copy_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
     matches!(key, Key::Named(NamedKey::Copy))
+        || (matches!(key, Key::Named(NamedKey::Insert)) && modifiers.control_key())
         || (matches!(key, Key::Character(character) if character.eq_ignore_ascii_case("c"))
             && (modifiers.super_key() || (modifiers.control_key() && modifiers.shift_key())))
 }
