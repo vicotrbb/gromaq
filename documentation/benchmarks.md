@@ -13,6 +13,13 @@ The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, max, and bucketed p95 estimates, so
 live-window measurements can be reported from structured counters instead of
 subjective observation.
+On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
+echo byte, rendered 1 CPU-side frame, and reported render p95 4000000 ns plus
+input-to-render p95 6940000 ns. On the same date,
+`cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz target
+interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
+frames. These are deterministic smoke results, not live hardware acceptance
+measurements.
 
 ## Reproducible Local Run
 
