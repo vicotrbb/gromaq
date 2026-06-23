@@ -446,8 +446,12 @@ impl GpuTerminalTextRunner for NativeGpuContext {
         let quad_batch = GlyphQuadPlanner::new(quad_config)
             .plan(&frame.plan)
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
-        let target_width = u32::from(frame.plan.viewport_cols).saturating_mul(frame.slot_width);
-        let target_height = u32::from(frame.plan.viewport_rows).saturating_mul(frame.slot_height);
+        let (target_width, target_height) = checked_terminal_text_target_dimensions(
+            frame.plan.viewport_cols,
+            frame.plan.viewport_rows,
+            frame.slot_width,
+            frame.slot_height,
+        )?;
         let pixels = draw_glyph_quads_rgba8(
             &self.device,
             &self.queue,
@@ -466,6 +470,25 @@ impl GpuTerminalTextRunner for NativeGpuContext {
             drawn_pixels: pixels.chunks_exact(4).filter(|pixel| pixel[3] != 0).count(),
         })
     }
+}
+
+fn checked_terminal_text_target_dimensions(
+    cols: u16,
+    rows: u16,
+    slot_width: u32,
+    slot_height: u32,
+) -> std::result::Result<(u32, u32), GpuBootstrapError> {
+    let width = u32::from(cols).checked_mul(slot_width).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(
+            "terminal text target width is too large to represent".to_owned(),
+        )
+    })?;
+    let height = u32::from(rows).checked_mul(slot_height).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(
+            "terminal text target height is too large to represent".to_owned(),
+        )
+    })?;
+    Ok((width, height))
 }
 
 /// Padded RGBA8 texture readback layout.
@@ -1518,6 +1541,37 @@ mod tests {
         assert_eq!(
             error,
             GpuBootstrapError::SmokeReadback("textured draw buffers must be non-empty".to_owned())
+        );
+    }
+
+    #[test]
+    fn terminal_text_target_dimensions_reports_checked_size() {
+        let dimensions = checked_terminal_text_target_dimensions(80, 24, 8, 16).unwrap();
+
+        assert_eq!(dimensions, (640, 384));
+    }
+
+    #[test]
+    fn terminal_text_target_dimensions_rejects_overflowing_width() {
+        let error = checked_terminal_text_target_dimensions(2, 1, u32::MAX, 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback(
+                "terminal text target width is too large to represent".to_owned()
+            )
+        );
+    }
+
+    #[test]
+    fn terminal_text_target_dimensions_rejects_overflowing_height() {
+        let error = checked_terminal_text_target_dimensions(1, 2, 1, u32::MAX).unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback(
+                "terminal text target height is too large to represent".to_owned()
+            )
         );
     }
 
