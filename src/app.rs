@@ -1134,7 +1134,7 @@ pub struct NativeTerminalApp {
 
 impl NativeTerminalApp {
     /// Create a native terminal app handler.
-    pub fn new(config: NativeAppConfig) -> Self {
+    pub fn new(config: NativeAppConfig) -> Result<Self, NativeAppError> {
         let runtime_config = NativeTerminalRuntimeConfig::default();
         let resize_mapper = NativeResizeGridMapper::new(
             config.width,
@@ -1142,10 +1142,13 @@ impl NativeTerminalApp {
             runtime_config.terminal_cols,
             runtime_config.terminal_rows,
         )
-        .expect("default native window and terminal dimensions are non-zero");
-        let runtime = NativeTerminalRuntime::new(runtime_config)
-            .expect("default native terminal runtime config is valid");
-        Self {
+        .ok_or_else(|| {
+            NativeAppError::Runtime(
+                "native window and terminal reference dimensions must be non-zero".to_owned(),
+            )
+        })?;
+        let runtime = NativeTerminalRuntime::new(runtime_config)?;
+        Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
             renderer: WgpuRenderer::new(RendererConfig::default()),
@@ -1160,7 +1163,7 @@ impl NativeTerminalApp {
             window: None,
             window_id: None,
             startup_error: None,
-        }
+        })
     }
 
     /// Access lifecycle state.
@@ -1568,7 +1571,7 @@ impl From<NativeGlyphFrameError> for NativeAppError {
 pub fn run_native_app(config: NativeAppConfig) -> Result<(), NativeAppError> {
     let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
     let event_proxy = event_loop.create_proxy();
-    let mut app = NativeTerminalApp::new(config);
+    let mut app = NativeTerminalApp::new(config)?;
     app.set_event_proxy(NativeAppEventProxy::from(event_proxy));
     event_loop.run_app(&mut app)?;
     if let Some(error) = app.take_startup_error() {
@@ -1595,5 +1598,22 @@ mod tests {
         let duration = Duration::from_nanos(42);
 
         assert_eq!(saturating_duration_nanos(duration), 42);
+    }
+
+    #[test]
+    fn native_terminal_app_new_rejects_zero_window_reference_size() {
+        let config = NativeAppConfig {
+            width: 0,
+            ..NativeAppConfig::default()
+        };
+        let error = match NativeTerminalApp::new(config) {
+            Ok(_) => panic!("zero-width native app config should be rejected"),
+            Err(error) => error,
+        };
+
+        assert_eq!(
+            error.to_string(),
+            "native runtime failed: native window and terminal reference dimensions must be non-zero"
+        );
     }
 }
