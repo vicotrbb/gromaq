@@ -1608,14 +1608,7 @@ impl Terminal {
                 100..=107 => self.style.background = Color::Ansi((param - 100 + 8) as u8),
                 38 | 48 | 58 => {
                     if let Some(color) = parse_extended_color(&mut iter) {
-                        match param {
-                            38 => self.style.foreground = color,
-                            48 => self.style.background = color,
-                            58 => {
-                                self.style.underline_color_id = self.intern_underline_color(color)
-                            }
-                            _ => unreachable!("extended color SGR parameter is matched above"),
-                        }
+                        self.apply_extended_color_target(param, color);
                     }
                 }
                 _ => {}
@@ -1627,11 +1620,15 @@ impl Terminal {
         let Some((target, color)) = grouped_extended_color(param) else {
             return false;
         };
+        self.apply_extended_color_target(target, color)
+    }
+
+    fn apply_extended_color_target(&mut self, target: u16, color: Color) -> bool {
         match target {
             38 => self.style.foreground = color,
             48 => self.style.background = color,
             58 => self.style.underline_color_id = self.intern_underline_color(color),
-            _ => unreachable!("extended color SGR parameter is matched by grouped parser"),
+            _ => return false,
         }
         true
     }
