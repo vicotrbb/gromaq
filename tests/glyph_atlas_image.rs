@@ -48,6 +48,22 @@ fn glyph_atlas_image_rejects_wrong_bitmap_size() {
 }
 
 #[test]
+fn solid_glyph_bitmap_rejects_overflowing_dimensions_before_allocation() {
+    let error = GlyphBitmap::try_solid_rgba8(
+        GlyphEntry {
+            slot: 0,
+            generation: 0,
+        },
+        u32::MAX,
+        u32::MAX,
+        [255, 255, 255, 255],
+    )
+    .unwrap_err();
+
+    assert!(error.contains("image dimensions are too large"));
+}
+
+#[test]
 fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
     let width_error = GlyphAtlasImage::pack_rgba8(u32::MAX, 1, 2, &[]).unwrap_err();
     assert!(width_error.contains("width is too large"));

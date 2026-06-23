@@ -1457,21 +1457,33 @@ pub struct GlyphBitmap {
 }
 
 impl GlyphBitmap {
-    /// Build a solid RGBA8 glyph bitmap for deterministic renderer tests.
-    pub fn solid_rgba8(entry: GlyphEntry, width: u32, height: u32, rgba: [u8; 4]) -> Self {
-        let pixel_count = usize::try_from(width)
-            .unwrap_or(usize::MAX)
-            .saturating_mul(usize::try_from(height).unwrap_or(usize::MAX));
-        let mut pixels = Vec::with_capacity(pixel_count.saturating_mul(4));
+    /// Try to build a solid RGBA8 glyph bitmap without panicking on oversized dimensions.
+    pub fn try_solid_rgba8(
+        entry: GlyphEntry,
+        width: u32,
+        height: u32,
+        rgba: [u8; 4],
+    ) -> std::result::Result<Self, String> {
+        let pixel_count = rgba_pixel_count(width, height)?;
+        let mut pixels = Vec::new();
+        pixels
+            .try_reserve_exact(rgba_byte_len(width, height)?)
+            .map_err(|_| "solid glyph bitmap is too large to allocate".to_owned())?;
         for _ in 0..pixel_count {
             pixels.extend_from_slice(&rgba);
         }
-        Self {
+        Ok(Self {
             entry,
             width,
             height,
             rgba: pixels,
-        }
+        })
+    }
+
+    /// Build a solid RGBA8 glyph bitmap for deterministic renderer tests.
+    pub fn solid_rgba8(entry: GlyphEntry, width: u32, height: u32, rgba: [u8; 4]) -> Self {
+        Self::try_solid_rgba8(entry, width, height, rgba)
+            .expect("deterministic solid glyph bitmap dimensions are valid")
     }
 
     /// Return this glyph copied into the top-left of a larger transparent bitmap.
@@ -1524,7 +1536,7 @@ fn rgba_row_byte_len(width: u32) -> std::result::Result<usize, String> {
         .ok_or_else(|| "rgba row dimensions are too large".to_owned())
 }
 
-fn rgba_byte_len(width: u32, height: u32) -> std::result::Result<usize, String> {
+fn rgba_pixel_count(width: u32, height: u32) -> std::result::Result<usize, String> {
     usize::try_from(width)
         .ok()
         .and_then(|width| {
@@ -1532,7 +1544,12 @@ fn rgba_byte_len(width: u32, height: u32) -> std::result::Result<usize, String> 
                 .ok()
                 .and_then(|height| width.checked_mul(height))
         })
-        .and_then(|pixels| pixels.checked_mul(4))
+        .ok_or_else(|| "rgba image dimensions are too large".to_owned())
+}
+
+fn rgba_byte_len(width: u32, height: u32) -> std::result::Result<usize, String> {
+    rgba_pixel_count(width, height)?
+        .checked_mul(4)
         .ok_or_else(|| "rgba image dimensions are too large".to_owned())
 }
 
