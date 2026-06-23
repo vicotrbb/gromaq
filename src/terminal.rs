@@ -13,7 +13,7 @@ use crate::grid::{Grid, GridSnapshot};
 use crate::input::encode_winit_key_with_terminal_modes;
 use crate::mouse::{MouseEvent, MouseReportState};
 use crate::scrollback::{Scrollback, ScrollbackSnapshot};
-use crate::selection::SelectionRange;
+use crate::selection::{SelectionPoint, SelectionRange};
 
 const MAX_SCROLLBACK_LINES: usize = 1_000_000;
 const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
@@ -1816,26 +1816,45 @@ impl Terminal {
     }
 
     fn copy_range(&self, selection: SelectionRange) -> String {
-        let start_row = selection.start.row.min(self.config.rows - 1);
-        let end_row = selection.end.row.min(self.config.rows - 1);
+        let selection = self.clamp_selection_to_viewport(selection);
         let mut output = String::new();
-        for row in start_row..=end_row {
+        for row in selection.start.row..=selection.end.row {
             let start_col = if row == selection.start.row {
-                selection.start.col.min(self.config.cols - 1)
+                selection.start.col
             } else {
                 0
             };
             let end_col = if row == selection.end.row {
-                selection.end.col.min(self.config.cols - 1)
+                selection.end.col
             } else {
                 self.config.cols - 1
             };
             output.push_str(&self.copy_row_range(row, start_col, end_col));
-            if row < end_row && self.copy_boundary_needs_newline(row, end_col) {
+            if row < selection.end.row && self.copy_boundary_needs_newline(row, end_col) {
                 output.push('\n');
             }
         }
         output
+    }
+
+    fn clamp_selection_to_viewport(&self, selection: SelectionRange) -> SelectionRange {
+        let start = self.clamp_selection_point(selection.start);
+        let end = self.clamp_selection_point(selection.end);
+        if start <= end {
+            SelectionRange { start, end }
+        } else {
+            SelectionRange {
+                start: end,
+                end: start,
+            }
+        }
+    }
+
+    fn clamp_selection_point(&self, point: SelectionPoint) -> SelectionPoint {
+        SelectionPoint {
+            row: point.row.min(self.config.rows - 1),
+            col: point.col.min(self.config.cols - 1),
+        }
     }
 
     fn copy_row_range(&self, row: u16, start_col: u16, end_col: u16) -> String {

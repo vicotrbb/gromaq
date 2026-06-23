@@ -80,3 +80,23 @@ fn clearing_selection_removes_copy_text() {
 
     assert_eq!(terminal.copy_selection(), None);
 }
+
+#[test]
+fn copy_selection_clamps_rows_below_visible_grid() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 2).unwrap());
+    terminal.write_str("abcde\r\nvwxyz").unwrap();
+
+    terminal.set_selection(SelectionRange::new((4, 1), (4, 3)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "wxy");
+}
+
+#[test]
+fn copy_selection_renormalizes_after_viewport_clamping() {
+    let mut terminal = Terminal::new(TerminalConfig::new(5, 2).unwrap());
+    terminal.write_str("abcde\r\nvwxyz").unwrap();
+
+    terminal.set_selection(SelectionRange::new((5, 4), (6, 1)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "wxyz");
+}
