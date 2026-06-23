@@ -56,6 +56,19 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     ".github/ISSUE_TEMPLATE/performance_proof.md",
 ];
 
+const REQUIRED_ISSUE_LABELS: &[&str] = &[
+    "bug",
+    "compatibility",
+    "performance",
+    "needs-proof",
+    "needs-triage",
+    "good first issue",
+    "documentation",
+    "tests",
+    "gpu",
+    "blocked-live-proof",
+];
+
 const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo fmt --check",
     "git diff --check",
@@ -87,6 +100,21 @@ fn repository_keeps_required_release_readiness_files() {
         assert!(
             path.is_file(),
             "{required_file} must exist for repository release readiness"
+        );
+    }
+}
+
+#[test]
+fn repository_keeps_required_issue_labels() {
+    let labels_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/labels.yml");
+    let labels = fs::read_to_string(&labels_path).unwrap();
+
+    for label in REQUIRED_ISSUE_LABELS {
+        let marker = format!("- name: {label}");
+        assert!(
+            labels.lines().any(|line| line.trim() == marker),
+            "{} must define issue label `{label}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &labels_path)
         );
     }
 }
