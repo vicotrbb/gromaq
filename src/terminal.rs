@@ -1716,6 +1716,7 @@ impl Perform for Terminal {
             'M' => self.delete_lines(count),
             'S' => self.scroll_viewport_up(count),
             'T' => self.scroll_viewport_down(count),
+            '^' => self.scroll_viewport_down(count),
             '`' => self.set_cursor_col(count),
             'a' => self.move_cursor_right(count),
             'H' | 'f' => {

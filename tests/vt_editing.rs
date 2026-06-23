@@ -435,6 +435,23 @@ fn csi_scroll_down_respects_scroll_region() {
 }
 
 #[test]
+fn csi_scroll_down_ecma48_alias_respects_scroll_region() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
+        .unwrap();
+    terminal.write_str("\x1b[2;4r\x1b[2^").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "top");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(grid.line_text(2), "");
+    assert_eq!(grid.line_text(3), "one");
+    assert_eq!(grid.line_text(4), "bottom");
+}
+
+#[test]
 fn decstbm_constrains_linefeed_scrolling_to_region() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
