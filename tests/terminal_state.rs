@@ -83,6 +83,18 @@ fn dec_private_capability_status_reports_are_queued_as_terminal_responses() {
 }
 
 #[test]
+fn terminal_parameter_reports_are_queued_as_terminal_responses() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_str("\x1b[x\x1b[1x").unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[2;1;1;128;128;1;0x\x1b[3;1;1;128;128;1;0x"
+    );
+}
+
+#[test]
 fn text_area_size_report_uses_current_terminal_dimensions() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 

@@ -1271,6 +1271,15 @@ impl Terminal {
         }
     }
 
+    fn report_terminal_parameters(&mut self, mode: u16) {
+        match mode {
+            0 | 1 => self
+                .pending_response_bytes
+                .extend_from_slice(format!("\x1b[{};1;1;128;128;1;0x", mode + 2).as_bytes()),
+            _ => {}
+        }
+    }
+
     fn report_window_manipulation(&mut self, mode: u16) {
         match mode {
             11 => self.pending_response_bytes.extend_from_slice(b"\x1b[1t"),
@@ -1875,6 +1884,7 @@ impl Perform for Terminal {
             's' => self.save_cursor(),
             't' if intermediates.is_empty() => self.report_window_manipulation(first),
             'u' => self.restore_cursor(),
+            'x' if intermediates.is_empty() => self.report_terminal_parameters(first),
             'h' if intermediates.is_empty() => {
                 for mode in values {
                     self.set_mode(mode, true);
