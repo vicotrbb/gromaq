@@ -31,7 +31,7 @@ Implemented and tested:
 - Structured native runtime tracing for startup, PTY pump/input, render, and clean-frame skip diagnostics
 - Deterministic one-pixel-per-cell test API screenshot capture
 - Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
-- Visible-grid selection and copy
+- Visible-grid selection and copy, including displayed scrollback viewport rows
 - Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
 - Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding, plus local scrollback navigation for non-reporting wheel input
 - PTY boundary plus a real shell-command lifecycle test

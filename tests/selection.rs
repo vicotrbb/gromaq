@@ -31,6 +31,22 @@ fn copy_selection_spans_visible_rows_in_grid_order() {
 }
 
 #[test]
+fn copy_selection_uses_displayed_scrollback_view() {
+    let mut terminal = Terminal::new(
+        TerminalConfig::new(6, 3)
+            .unwrap()
+            .with_scrollback_limit(8)
+            .unwrap(),
+    );
+    terminal.write_str("one\r\ntwo\r\nthree\r\nfour").unwrap();
+
+    assert!(terminal.scroll_display_up(1));
+    terminal.set_selection(SelectionRange::new((0, 0), (1, 2)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "one\ntwo");
+}
+
+#[test]
 fn copy_selection_omits_newline_across_soft_wrapped_rows() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 3).unwrap());
     terminal.write_str("helloworld").unwrap();

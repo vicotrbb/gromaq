@@ -1958,6 +1958,8 @@ impl Terminal {
 
     fn copy_range(&self, selection: SelectionRange) -> String {
         let selection = self.clamp_selection_to_viewport(selection);
+        let grid = self.dump_grid();
+        let hard_breaks = self.displayed_hard_breaks();
         let mut output = String::new();
         for row in selection.start.row..=selection.end.row {
             let start_col = if row == selection.start.row {
@@ -1970,8 +1972,10 @@ impl Terminal {
             } else {
                 self.config.cols - 1
             };
-            output.push_str(&self.copy_row_range(row, start_col, end_col));
-            if row < selection.end.row && self.copy_boundary_needs_newline(row, end_col) {
+            output.push_str(&self.copy_row_range(&grid, row, start_col, end_col));
+            if row < selection.end.row
+                && self.copy_boundary_needs_newline(&hard_breaks, row, end_col)
+            {
                 output.push('\n');
             }
         }
@@ -1998,10 +2002,16 @@ impl Terminal {
         }
     }
 
-    fn copy_row_range(&self, row: u16, start_col: u16, end_col: u16) -> String {
-        let start_col = self.copy_start_col(row, start_col);
+    fn copy_row_range(
+        &self,
+        grid: &GridSnapshot,
+        row: u16,
+        start_col: u16,
+        end_col: u16,
+    ) -> String {
+        let start_col = self.copy_start_col(grid, row, start_col);
         let Some(end_col) = self
-            .last_visible_col_in_row(row)
+            .last_visible_col_in_row(grid, row)
             .map(|last_col| end_col.min(last_col))
         else {
             return String::new();
@@ -2013,7 +2023,7 @@ impl Terminal {
 
         let mut output = String::new();
         for col in start_col..=end_col {
-            let cell = self.grid.cell(row, col);
+            let cell = grid.cell(row, col);
             if cell.is_wide_trailing {
                 continue;
             }
@@ -2026,27 +2036,54 @@ impl Terminal {
         output
     }
 
-    fn copy_start_col(&self, row: u16, start_col: u16) -> u16 {
-        if start_col > 0 && self.grid.cell(row, start_col).is_wide_trailing {
+    fn copy_start_col(&self, grid: &GridSnapshot, row: u16, start_col: u16) -> u16 {
+        if start_col > 0 && grid.cell(row, start_col).is_wide_trailing {
             start_col - 1
         } else {
             start_col
         }
     }
 
-    fn last_visible_col_in_row(&self, row: u16) -> Option<u16> {
+    fn last_visible_col_in_row(&self, grid: &GridSnapshot, row: u16) -> Option<u16> {
         (0..self.config.cols).rev().find(|col| {
-            let cell = self.grid.cell(row, *col);
+            let cell = grid.cell(row, *col);
             !cell.text.is_empty() && !cell.is_wide_trailing
         })
     }
 
-    fn copy_boundary_needs_newline(&self, row: u16, end_col: u16) -> bool {
-        self.hard_breaks
-            .get(usize::from(row))
-            .copied()
-            .unwrap_or(false)
+    fn copy_boundary_needs_newline(&self, hard_breaks: &[bool], row: u16, end_col: u16) -> bool {
+        hard_breaks.get(usize::from(row)).copied().unwrap_or(false)
             || end_col < self.config.cols - 1
+    }
+
+    fn displayed_hard_breaks(&self) -> Vec<bool> {
+        if self.scrollback_view_offset == 0 {
+            return self.hard_breaks.clone();
+        }
+
+        let scrollback = self.scrollback.snapshot();
+        let history_rows = scrollback.hard_breaks.len();
+        let visible_rows = usize::from(self.config.rows);
+        let offset = self.scrollback_view_offset.min(history_rows);
+        let start = (history_rows + visible_rows).saturating_sub(visible_rows + offset);
+
+        (0..visible_rows)
+            .map(|row| {
+                let source_row = start + row;
+                if source_row < history_rows {
+                    scrollback
+                        .hard_breaks
+                        .get(source_row)
+                        .copied()
+                        .unwrap_or(false)
+                } else {
+                    self.hard_breaks
+                        .get(source_row - history_rows)
+                        .copied()
+                        .unwrap_or(false)
+                }
+            })
+            .collect()
     }
 
     fn mark_print_span(&mut self, row: u16, col: u16, cols: u16) {
