@@ -81,6 +81,15 @@ fn decid_queues_primary_device_attributes_response() {
 }
 
 #[test]
+fn c1_decid_queues_primary_device_attributes_response() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal.write_bytes(b"\x9a").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[?1;2c");
+}
+
+#[test]
 fn secondary_device_attributes_are_queued_as_terminal_responses() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 

@@ -23,6 +23,17 @@ fn escape_horizontal_tab_set_adds_custom_tab_stop() {
 }
 
 #[test]
+fn c1_horizontal_tab_set_adds_custom_tab_stop() {
+    let mut terminal = Terminal::new(TerminalConfig::new(16, 2).unwrap());
+
+    terminal.write_bytes(b"\x1b[1;6H\x88\x1b[1;1H\tZ").unwrap();
+
+    assert_eq!(terminal.dump_grid().line_text(0), "     Z");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 6);
+}
+
+#[test]
 fn csi_tab_clear_removes_current_default_tab_stop() {
     let mut terminal = Terminal::new(TerminalConfig::new(16, 2).unwrap());
 
@@ -535,6 +546,25 @@ fn escape_index_scrolls_region_without_carriage_return() {
 }
 
 #[test]
+fn c1_index_scrolls_region_without_carriage_return() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
+        .unwrap();
+    terminal.write_bytes(b"\x1b[2;4r\x1b[4;4H\x84Z").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "top");
+    assert_eq!(grid.line_text(1), "two");
+    assert_eq!(grid.line_text(2), "three");
+    assert_eq!(grid.line_text(3), "   Z");
+    assert_eq!(grid.line_text(4), "bottom");
+    assert_eq!(terminal.dump_cursor().row, 3);
+    assert_eq!(terminal.dump_cursor().col, 4);
+}
+
+#[test]
 fn escape_next_line_scrolls_region_and_returns_to_column_zero() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
@@ -554,6 +584,25 @@ fn escape_next_line_scrolls_region_and_returns_to_column_zero() {
 }
 
 #[test]
+fn c1_next_line_scrolls_region_and_returns_to_column_zero() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
+        .unwrap();
+    terminal.write_bytes(b"\x1b[2;4r\x1b[4;4H\x85Z").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "top");
+    assert_eq!(grid.line_text(1), "two");
+    assert_eq!(grid.line_text(2), "three");
+    assert_eq!(grid.line_text(3), "Z");
+    assert_eq!(grid.line_text(4), "bottom");
+    assert_eq!(terminal.dump_cursor().row, 3);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
 fn reverse_index_at_scroll_top_scrolls_region_down() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
@@ -561,6 +610,25 @@ fn reverse_index_at_scroll_top_scrolls_region_down() {
         .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
         .unwrap();
     terminal.write_str("\x1b[2;4r\x1b[2;1H\x1bM").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "top");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(grid.line_text(2), "one");
+    assert_eq!(grid.line_text(3), "two");
+    assert_eq!(grid.line_text(4), "bottom");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 0);
+}
+
+#[test]
+fn c1_reverse_index_at_scroll_top_scrolls_region_down() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
+        .unwrap();
+    terminal.write_bytes(b"\x1b[2;4r\x1b[2;1H\x8d").unwrap();
 
     let grid = terminal.dump_grid();
     assert_eq!(grid.line_text(0), "top");

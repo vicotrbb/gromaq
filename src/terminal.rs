@@ -1686,6 +1686,11 @@ impl Perform for Terminal {
             b'\t' => self.horizontal_tab(),
             0x0e => self.active_charset = CharacterSet::G1,
             0x0f => self.active_charset = CharacterSet::G0,
+            0x84 => self.index(),
+            0x85 => self.next_line(),
+            0x88 => self.set_horizontal_tab_stop(),
+            0x8d => self.reverse_index(),
+            0x9a => self.report_decid(),
             _ => {}
         }
     }
