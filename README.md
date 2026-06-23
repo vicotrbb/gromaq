@@ -24,7 +24,7 @@ Implemented and tested:
 - Styled scrollback row reflow during resize
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
-- Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab plus modified BackTab, control-punctuation bytes, physical numpad keys including Alt-modified numpad Enter and Alt-modified application-keypad sequences, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard copy/paste shortcuts including Control+Insert, Shift+Insert, and dedicated OS clipboard keys, mouse reports, and native `winit` key events
+- Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab plus modified BackTab, control-punctuation bytes, physical numpad keys including Alt-modified numpad Enter and Alt-modified application-keypad sequences, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard copy/paste shortcuts including Control+Insert, Shift+Insert, and dedicated OS clipboard keys, local Shift+PageUp/PageDown scrollback navigation, mouse reports, and native `winit` key events
 - Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, shell program/args/cwd validation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, deterministic config-file reload checks that preserve the last valid config on invalid changes, native app/runtime/renderer config mapping, live config-file polling for reloadable native terminal/frame/render/shell settings, and config-file native app launch
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
@@ -33,7 +33,7 @@ Implemented and tested:
 - Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
 - Visible-grid selection and copy, including displayed scrollback viewport rows
 - Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
-- Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding, plus local scrollback navigation for non-reporting wheel input
+- Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding, plus local scrollback navigation for non-reporting wheel input and Shift+PageUp/PageDown
 - PTY boundary plus a real shell-command lifecycle test
 - Interactive `/bin/sh` PTY input/output workflow through the native PTY writer and background reader
 - Real PTY command workflow tests for available `bash` and `zsh`

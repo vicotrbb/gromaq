@@ -2087,6 +2087,61 @@ fn native_terminal_runtime_scrolls_scrollback_on_unreported_wheel() {
 }
 
 #[test]
+fn native_terminal_runtime_scrolls_scrollback_on_shift_page_keys() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 6,
+        terminal_rows: 3,
+        scrollback_lines: 8,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix".to_vec());
+    runtime.pump_pty_output().unwrap();
+    runtime.pump_pty_output().unwrap();
+    assert_eq!(runtime.terminal().dump_grid().line_text(0), "four");
+    assert_eq!(runtime.terminal().dump_grid().line_text(2), "six");
+
+    assert!(
+        runtime
+            .send_winit_key_input(&Key::Named(NamedKey::PageUp), ModifiersState::SHIFT)
+            .unwrap()
+    );
+
+    let scrolled = runtime.terminal().dump_grid();
+    assert_eq!(scrolled.line_text(0), "two");
+    assert_eq!(scrolled.line_text(1), "three");
+    assert_eq!(scrolled.line_text(2), "four");
+    assert!(!runtime.terminal().dump_cursor().visible);
+    assert!(runtime.shell_session().unwrap().input.borrow().is_empty());
+
+    assert!(
+        runtime
+            .send_winit_key_input(&Key::Named(NamedKey::PageDown), ModifiersState::SHIFT)
+            .unwrap()
+    );
+
+    let live = runtime.terminal().dump_grid();
+    assert_eq!(live.line_text(0), "four");
+    assert_eq!(live.line_text(1), "five");
+    assert_eq!(live.line_text(2), "six");
+    assert!(runtime.terminal().dump_cursor().visible);
+    assert!(runtime.shell_session().unwrap().input.borrow().is_empty());
+}
+
+#[test]
 fn native_terminal_runtime_maps_alternate_screen_window_mouse_motion_to_pty_report() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {

@@ -1058,6 +1058,15 @@ where
         physical_key: Option<PhysicalKey>,
         modifiers: ModifiersState,
     ) -> Result<bool, NativeAppError> {
+        if let Some(direction) = native_scrollback_key_direction(key, modifiers) {
+            let rows = self.terminal.dump_grid().rows.saturating_sub(1).max(1);
+            let scrolled = match direction {
+                ScrollbackKeyDirection::Up => self.terminal.scroll_display_up(rows),
+                ScrollbackKeyDirection::Down => self.terminal.scroll_display_down(rows),
+            };
+            return Ok(scrolled);
+        }
+
         let Some(bytes) = self
             .terminal
             .encode_winit_key_event_input(key, physical_key, modifiers)
@@ -1927,6 +1936,31 @@ pub fn is_native_paste_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
         || (matches!(key, Key::Named(NamedKey::Insert)) && modifiers.shift_key())
         || (matches!(key, Key::Character(character) if character.eq_ignore_ascii_case("v"))
             && (modifiers.control_key() || modifiers.super_key()))
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ScrollbackKeyDirection {
+    Up,
+    Down,
+}
+
+fn native_scrollback_key_direction(
+    key: &Key,
+    modifiers: ModifiersState,
+) -> Option<ScrollbackKeyDirection> {
+    if !modifiers.shift_key()
+        || modifiers.control_key()
+        || modifiers.alt_key()
+        || modifiers.super_key()
+    {
+        return None;
+    }
+
+    match key {
+        Key::Named(NamedKey::PageUp) => Some(ScrollbackKeyDirection::Up),
+        Key::Named(NamedKey::PageDown) => Some(ScrollbackKeyDirection::Down),
+        _ => None,
+    }
 }
 
 /// Errors from launching the native application loop.
