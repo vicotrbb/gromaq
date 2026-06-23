@@ -2179,7 +2179,7 @@ fn native_terminal_runtime_sends_shift_page_keys_to_alternate_screen_apps() {
 }
 
 #[test]
-fn native_terminal_runtime_consumes_shift_page_keys_when_primary_scrollback_cannot_move() {
+fn native_terminal_runtime_leaves_shift_page_keys_unhandled_when_primary_scrollback_cannot_move() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 20,
