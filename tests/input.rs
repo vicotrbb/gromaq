@@ -65,6 +65,10 @@ fn encodes_winit_printable_and_named_keys() {
         Some(b"\r".to_vec())
     );
     assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Space), ModifiersState::empty()),
+        Some(b" ".to_vec())
+    );
+    assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::Tab), ModifiersState::SHIFT),
         Some(b"\x1b[Z".to_vec())
     );
@@ -286,6 +290,14 @@ fn encodes_winit_modified_terminal_characters() {
     assert_eq!(
         encode_winit_key(&Key::Character("x".into()), ModifiersState::ALT),
         Some(b"\x1bx".to_vec())
+    );
+    assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Space), ModifiersState::ALT),
+        Some(b"\x1b ".to_vec())
+    );
+    assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::Space), ModifiersState::CONTROL),
+        Some(vec![0x00])
     );
     assert_eq!(
         encode_winit_key(&Key::Named(NamedKey::Shift), ModifiersState::SHIFT),

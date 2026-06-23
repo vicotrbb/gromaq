@@ -131,6 +131,10 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
         Key::Named(NamedKey::Enter) => TestKey::Enter,
         Key::Named(NamedKey::Backspace) => TestKey::Backspace,
         Key::Named(NamedKey::Escape) => TestKey::Escape,
+        Key::Named(NamedKey::Space) => TestKey::ModifiedChar {
+            ch: ' ',
+            modifiers: key_modifiers,
+        },
         Key::Named(NamedKey::ArrowUp) => {
             if let Some(bytes) = encode_modified_csi_final(b'A', key_modifiers) {
                 return Some(bytes);
