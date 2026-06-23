@@ -806,6 +806,9 @@ where
     where
         C: HostClipboard,
     {
+        if self.shell_session.is_none() {
+            return Ok(false);
+        }
         let Some(text) = clipboard.read_text().filter(|text| !text.is_empty()) else {
             return Ok(false);
         };

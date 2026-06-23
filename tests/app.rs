@@ -1280,6 +1280,31 @@ fn native_terminal_runtime_reads_clipboard_and_encodes_paste_to_pty() {
 }
 
 #[test]
+fn native_terminal_runtime_does_not_count_clipboard_paste_without_session() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    let clipboard = MemoryClipboard::new("from clipboard");
+
+    assert!(!runtime.send_clipboard_paste(&clipboard).unwrap());
+
+    let metrics = runtime.dump_runtime_perf_metrics();
+    assert_eq!(metrics.clipboard_pastes, 0);
+    assert_eq!(metrics.paste_bytes, 0);
+    assert!(!runtime.has_shell_session());
+}
+
+#[test]
 fn native_terminal_runtime_syncs_osc52_clipboard_text_to_host_clipboard() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
