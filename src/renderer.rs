@@ -524,15 +524,17 @@ fn render_glyph_frame_to_view(
     });
     let vertex_bytes = surface_glyph_vertex_bytes(frame.batch, frame.width, frame.height)?;
     let index_bytes = surface_glyph_index_bytes(frame.batch);
+    let buffer_layout =
+        validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, frame.batch.indices.len())?;
     let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("gromaq-surface-glyph-vertices"),
-        size: u64::try_from(vertex_bytes.len()).unwrap_or(u64::MAX),
+        size: buffer_layout.vertex_buffer_size,
         usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
     let index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("gromaq-surface-glyph-indices"),
-        size: u64::try_from(index_bytes.len()).unwrap_or(u64::MAX),
+        size: buffer_layout.index_buffer_size,
         usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
@@ -567,11 +569,7 @@ fn render_glyph_frame_to_view(
         pass.set_bind_group(0, &bind_group, &[]);
         pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        pass.draw_indexed(
-            0..u32::try_from(frame.batch.indices.len()).unwrap_or(u32::MAX),
-            0,
-            0..1,
-        );
+        pass.draw_indexed(0..buffer_layout.index_count, 0, 0..1);
     }
     queue.submit([encoder.finish()]);
     Ok(())
@@ -581,6 +579,13 @@ fn render_glyph_frame_to_view(
 struct SurfaceGlyphAtlasLayout {
     row_bytes: u32,
     expected_len: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct SurfaceGlyphBufferLayout {
+    vertex_buffer_size: u64,
+    index_buffer_size: u64,
+    index_count: u32,
 }
 
 fn validate_surface_glyph_frame(
@@ -623,6 +628,32 @@ fn validate_surface_glyph_frame(
     Ok(SurfaceGlyphAtlasLayout {
         row_bytes,
         expected_len,
+    })
+}
+
+fn validate_surface_glyph_buffers(
+    vertex_bytes: &[u8],
+    index_bytes: &[u8],
+    index_count: usize,
+) -> std::result::Result<SurfaceGlyphBufferLayout, SurfaceFrameError> {
+    if vertex_bytes.is_empty() || index_bytes.is_empty() || index_count == 0 {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface glyph draw buffers must be non-empty".to_owned(),
+        ));
+    }
+    let vertex_buffer_size = u64::try_from(vertex_bytes.len()).map_err(|_| {
+        SurfaceFrameError::InvalidFrame("surface glyph vertex buffer is too large".to_owned())
+    })?;
+    let index_buffer_size = u64::try_from(index_bytes.len()).map_err(|_| {
+        SurfaceFrameError::InvalidFrame("surface glyph index buffer is too large".to_owned())
+    })?;
+    let index_count = u32::try_from(index_count).map_err(|_| {
+        SurfaceFrameError::InvalidFrame("surface glyph index count is too large".to_owned())
+    })?;
+    Ok(SurfaceGlyphBufferLayout {
+        vertex_buffer_size,
+        index_buffer_size,
+        index_count,
     })
 }
 
@@ -1890,6 +1921,53 @@ mod tests {
         assert_eq!(
             error,
             SurfaceFrameError::InvalidFrame("surface glyph atlas row size is too large".to_owned())
+        );
+    }
+
+    #[test]
+    fn surface_glyph_buffer_validation_reports_checked_sizes() {
+        let vertex_bytes = [1_u8, 2, 3, 4];
+        let index_bytes = [5_u8, 6, 7, 8];
+
+        let layout = validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, 1).unwrap();
+
+        assert_eq!(
+            layout,
+            SurfaceGlyphBufferLayout {
+                vertex_buffer_size: 4,
+                index_buffer_size: 4,
+                index_count: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn surface_glyph_buffer_validation_rejects_empty_buffers() {
+        let vertex_bytes = [];
+        let index_bytes = [1_u8, 2, 3, 4];
+
+        let error = validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame(
+                "surface glyph draw buffers must be non-empty".to_owned()
+            )
+        );
+    }
+
+    #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn surface_glyph_buffer_validation_rejects_oversized_index_count() {
+        let vertex_bytes = [1_u8, 2, 3, 4];
+        let index_bytes = [5_u8, 6, 7, 8];
+
+        let error =
+            validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, usize::MAX).unwrap_err();
+
+        assert_eq!(
+            error,
+            SurfaceFrameError::InvalidFrame("surface glyph index count is too large".to_owned())
         );
     }
 }
