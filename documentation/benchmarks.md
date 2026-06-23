@@ -26,6 +26,11 @@ lines and 128 styled scrollback cell rows, kept retained cell data within the
 4096-cell deterministic cap for a 32-column bounded runtime, rendered 4
 CPU-side dirty frames, and verified
 `gromaq-bounded-line-2047` in the render plan. On the same date,
+`cargo run -- --runtime-continuous-output-smoke` pumped 6912 bytes from 256
+lines across 32 small PTY batches, rendered each dirty batch, verified the
+configured 64-line scrollback cap, reported render p95 500000 ns, and checked
+that `gromaq-continuous-line-255` reached the latest visible render plan. On
+the same date,
 `cargo run -- --runtime-alternate-screen-smoke` pumped primary, alternate, and
 restore output stages through the runtime, rendered 3 CPU-side dirty frames,
 restored primary visible content, and suppressed alternate-screen scrollback.
@@ -67,6 +72,7 @@ The benchmark list should include:
 - `font_rasterizer_combining_cell`
 - `pty_runtime_pump_large_output`
 - `runtime_bounded_state_batches`
+- `runtime_continuous_output_batches`
 - `runtime_alternate_screen_stages`
 
 Some benchmarks load a local monospace font for real glyph rasterization. The

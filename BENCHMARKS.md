@@ -25,6 +25,7 @@ Current benchmarks:
 - `font_rasterizer_combining_cell`: rasterizes a shaped combining-mark terminal cell from a real system monospace font into an RGBA8 glyph bitmap.
 - `pty_runtime_pump_large_output`: drains queued PTY output through `NativeTerminalRuntime::pump_pty_output` into terminal state.
 - `runtime_bounded_state_batches`: pumps four deterministic long-output batches through `NativeTerminalRuntime`, renders each dirty frame, and observes capped scrollback state.
+- `runtime_continuous_output_batches`: pumps 32 small deterministic PTY batches through `NativeTerminalRuntime`, renders each dirty frame, and observes capped scrollback state.
 - `runtime_alternate_screen_stages`: pumps primary, alternate-screen, and restore output stages through `NativeTerminalRuntime`, rendering each dirty stage and observing restored primary state.
 
 Dirty-region tracking is unit-tested and benchmarked for coalescing/containment/drain behavior. Renderer benchmarks will be added with the concrete `wgpu` pipeline.
@@ -47,4 +48,4 @@ The full terminal goal is not complete until benchmarks and runtime validation p
 - efficient glyph cache hit rate
 - no avoidable hot-path allocations
 
-This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, dirty-region, render-plan, glyph-quad, prepared-frame, input echo-to-render, font-rasterization, cached glyph-bitmap, runtime PTY pump, bounded runtime state, and runtime alternate-screen measurements for future regression tracking. `cargo run -- --runtime-bounded-state-smoke` is a deterministic long-session state smoke for capped runtime scrollback, but it is not a live process-memory growth measurement.
+This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, dirty-region, render-plan, glyph-quad, prepared-frame, input echo-to-render, font-rasterization, cached glyph-bitmap, runtime PTY pump, bounded runtime state, continuous runtime output, and runtime alternate-screen measurements for future regression tracking. `cargo run -- --runtime-bounded-state-smoke` is a deterministic long-session state smoke for capped runtime scrollback, but it is not a live process-memory growth measurement.

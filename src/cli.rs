@@ -36,6 +36,9 @@ const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
 const RUNTIME_LARGE_OUTPUT_LINES: usize = 512;
 const RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES: usize = 128;
 const RUNTIME_BOUNDED_STATE_BATCHES: usize = 4;
+const RUNTIME_CONTINUOUS_OUTPUT_BATCHES: usize = 32;
+const RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH: usize = 8;
+const RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES: usize = 64;
 const RUNTIME_ALTERNATE_SCREEN_SMOKE_STAGES: usize = 3;
 const RUNTIME_REFLOW_SMOKE_LINK: &str = "https://gromaq.dev";
 const RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS: u64 = 16;
@@ -250,6 +253,7 @@ where
         && arg != "--runtime-perf-smoke"
         && arg != "--runtime-large-output-smoke"
         && arg != "--runtime-bounded-state-smoke"
+        && arg != "--runtime-continuous-output-smoke"
         && arg != "--runtime-alternate-screen-smoke"
         && arg != "--runtime-reflow-smoke"
         && arg != "--runtime-idle-smoke"
@@ -340,6 +344,9 @@ where
     }
     if arg == "--runtime-bounded-state-smoke" {
         return runtime_bounded_state_smoke_exit();
+    }
+    if arg == "--runtime-continuous-output-smoke" {
+        return runtime_continuous_output_smoke_exit();
     }
     if arg == "--runtime-alternate-screen-smoke" {
         return runtime_alternate_screen_smoke_exit();
@@ -553,7 +560,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
@@ -1026,26 +1033,26 @@ fn runtime_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
 }
 
 #[derive(Debug, Clone)]
-struct RuntimeBoundedStateSmokePtySpawner {
+struct RuntimeChunkedOutputSmokePtySpawner {
     payloads: Vec<Vec<u8>>,
 }
 
 #[derive(Debug)]
-struct RuntimeBoundedStateSmokePtySession {
+struct RuntimeChunkedOutputSmokePtySession {
     output: VecDeque<Vec<u8>>,
 }
 
-impl NativePtySpawner for RuntimeBoundedStateSmokePtySpawner {
-    type Session = RuntimeBoundedStateSmokePtySession;
+impl NativePtySpawner for RuntimeChunkedOutputSmokePtySpawner {
+    type Session = RuntimeChunkedOutputSmokePtySession;
 
     fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeBoundedStateSmokePtySession {
+        Ok(RuntimeChunkedOutputSmokePtySession {
             output: VecDeque::from(self.payloads.clone()),
         })
     }
 }
 
-impl NativePtySessionIo for RuntimeBoundedStateSmokePtySession {
+impl NativePtySessionIo for RuntimeChunkedOutputSmokePtySession {
     fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
         Ok(self.output.pop_front().unwrap_or_default())
     }
@@ -1083,7 +1090,7 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
     let total_lines = RUNTIME_LARGE_OUTPUT_LINES * RUNTIME_BOUNDED_STATE_BATCHES;
     let last_line = format!("gromaq-bounded-line-{:04}", total_lines - 1);
     let max_retained_cells = RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES * usize::from(32_u16);
-    let spawner = RuntimeBoundedStateSmokePtySpawner { payloads };
+    let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 32,
         terminal_rows: 8,
@@ -1188,6 +1195,120 @@ fn runtime_bounded_state_smoke_failure(reason: &str) -> CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("runtime bounded-state smoke failed: {reason}\n"),
+    }
+}
+
+fn runtime_continuous_output_payloads() -> Vec<Vec<u8>> {
+    (0..RUNTIME_CONTINUOUS_OUTPUT_BATCHES)
+        .map(|batch| {
+            let start = batch * RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH;
+            let end = start + RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH;
+            let mut payload = Vec::new();
+            for line in start..end {
+                payload.extend_from_slice(format!("gromaq-continuous-line-{line:03}\n").as_bytes());
+            }
+            payload
+        })
+        .collect()
+}
+
+fn runtime_continuous_output_smoke_exit() -> CliExit {
+    let payloads = runtime_continuous_output_payloads();
+    let expected_bytes: usize = payloads.iter().map(Vec::len).sum();
+    let total_lines = RUNTIME_CONTINUOUS_OUTPUT_BATCHES * RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH;
+    let last_line = format!("gromaq-continuous-line-{:03}", total_lines - 1);
+    let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
+    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 32,
+        terminal_rows: 8,
+        scrollback_lines: RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    }) {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_continuous_output_smoke_error(error),
+    };
+    if let Err(error) = runtime.start_shell(&spawner) {
+        return runtime_continuous_output_smoke_error(error);
+    }
+
+    let mut pumped_bytes = 0_usize;
+    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    for _ in 0..RUNTIME_CONTINUOUS_OUTPUT_BATCHES {
+        let batch_bytes = match runtime.pump_pty_output() {
+            Ok(bytes) => bytes,
+            Err(error) => return runtime_continuous_output_smoke_error(error),
+        };
+        pumped_bytes = pumped_bytes.saturating_add(batch_bytes);
+        if batch_bytes == 0 || !runtime.render_terminal_frame(&mut renderer) {
+            return runtime_continuous_output_smoke_failure(
+                "stream batch did not render a dirty frame",
+            );
+        }
+    }
+
+    let metrics = runtime.dump_runtime_perf_metrics();
+    let scrollback = runtime.terminal().dump_scrollback();
+    let visible_text = renderer
+        .last_plan()
+        .map(|plan| {
+            plan.glyphs
+                .iter()
+                .map(|glyph| glyph.text.as_str())
+                .collect::<String>()
+        })
+        .unwrap_or_default();
+
+    if pumped_bytes != expected_bytes
+        || metrics.pty_output_batches != RUNTIME_CONTINUOUS_OUTPUT_BATCHES as u64
+        || metrics.pty_output_bytes != expected_bytes as u64
+        || metrics.rendered_frames != RUNTIME_CONTINUOUS_OUTPUT_BATCHES as u64
+        || scrollback.lines.len() != RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES
+        || scrollback
+            .lines
+            .iter()
+            .any(|line| line == "gromaq-continuous-line-000")
+        || !visible_text.contains(&last_line)
+    {
+        return runtime_continuous_output_smoke_failure(
+            "continuous output stream did not stay responsive and bounded",
+        );
+    }
+
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "runtime continuous-output smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nlast visible line: {}\nrender p95 ns: {}\n",
+            RUNTIME_CONTINUOUS_OUTPUT_BATCHES,
+            total_lines,
+            pumped_bytes,
+            scrollback.lines.len(),
+            metrics.rendered_frames,
+            last_line,
+            metrics.render_time_p95_ns
+        ),
+        stderr: String::new(),
+    }
+}
+
+fn runtime_continuous_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime continuous-output smoke failed: {error}\n"),
+    }
+}
+
+fn runtime_continuous_output_smoke_failure(reason: &str) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime continuous-output smoke failed: {reason}\n"),
     }
 }
 
