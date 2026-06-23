@@ -48,6 +48,7 @@ const RUNTIME_ALTERNATE_SCREEN_SMOKE_STAGES: usize = 3;
 const RUNTIME_REFLOW_SMOKE_LINK: &str = "https://gromaq.dev";
 const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";
 const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1006h";
+const RUNTIME_RESPONSE_SMOKE_QUERIES: &str = "\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 const RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS: u64 = 16;
 
 /// Captured CLI result for tests and the binary wrapper.
@@ -267,6 +268,7 @@ where
         && arg != "--runtime-config-reload-smoke"
         && arg != "--runtime-focus-smoke"
         && arg != "--runtime-mouse-smoke"
+        && arg != "--runtime-response-smoke"
         && arg != "--runtime-idle-smoke"
         && arg != "--frame-scheduler-smoke"
     {
@@ -376,6 +378,9 @@ where
     }
     if arg == "--runtime-mouse-smoke" {
         return runtime_mouse_smoke_exit();
+    }
+    if arg == "--runtime-response-smoke" {
+        return runtime_response_smoke_exit();
     }
     if arg == "--runtime-idle-smoke" {
         return runtime_idle_smoke_exit();
@@ -583,7 +588,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
@@ -1099,6 +1104,74 @@ fn runtime_mouse_smoke_error(error: impl std::fmt::Display) -> CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("runtime mouse smoke failed: {error}\n"),
+    }
+}
+
+fn runtime_response_smoke_exit() -> CliExit {
+    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 24,
+        terminal_rows: 4,
+        scrollback_lines: 128,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    }) {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_response_smoke_error(error),
+    };
+    let spawner =
+        RuntimeInputCaptureSmokePtySpawner::new(RUNTIME_RESPONSE_SMOKE_QUERIES.as_bytes());
+    if let Err(error) = runtime.start_shell(&spawner) {
+        return runtime_response_smoke_error(error);
+    }
+
+    let pumped_bytes = match runtime.pump_pty_output() {
+        Ok(bytes) => bytes,
+        Err(error) => return runtime_response_smoke_error(error),
+    };
+    let metrics = runtime.dump_runtime_perf_metrics();
+    let input = runtime
+        .shell_session()
+        .map(|session| session.input.concat())
+        .unwrap_or_default();
+    let expected_response = b"\x1b[3;5R\x1b[0n\x1b[?1;2c\x1b[>0;1;0c";
+
+    if pumped_bytes != RUNTIME_RESPONSE_SMOKE_QUERIES.len()
+        || input != expected_response
+        || metrics.pty_response_writes != 1
+        || metrics.pty_response_bytes != expected_response.len() as u64
+        || metrics.pty_input_writes != 0
+    {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: "runtime response smoke failed: terminal responses did not reach PTY writes\n"
+                .to_owned(),
+        };
+    }
+
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "runtime response smoke: ok\npumped bytes: {}\nresponse writes: {}\nresponse bytes: {}\npty input writes: {}\n",
+            pumped_bytes,
+            metrics.pty_response_writes,
+            metrics.pty_response_bytes,
+            metrics.pty_input_writes
+        ),
+        stderr: String::new(),
+    }
+}
+
+fn runtime_response_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime response smoke failed: {error}\n"),
     }
 }
 
