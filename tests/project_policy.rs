@@ -34,6 +34,8 @@ const FORBIDDEN_DEPENDENCIES: &[&str] = &[
     "wry",
 ];
 
+const UNSAFE_FORBIDDEN_CRATE_ROOTS: &[&str] = &["src/lib.rs", "src/main.rs"];
+
 #[test]
 fn project_remains_native_rust_without_frontend_runtime_files() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -46,6 +48,22 @@ fn project_remains_native_rust_without_frontend_runtime_files() {
         violations.is_empty(),
         "frontend runtime files are not allowed in native-only Gromaq: {violations:#?}"
     );
+}
+
+#[test]
+fn crate_roots_forbid_unsafe_code() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    for crate_root in UNSAFE_FORBIDDEN_CRATE_ROOTS {
+        let path = root.join(crate_root);
+        let source = fs::read_to_string(&path).unwrap();
+        assert!(
+            source
+                .lines()
+                .any(|line| line.trim() == "#![forbid(unsafe_code)]"),
+            "{crate_root} must keep #![forbid(unsafe_code)]"
+        );
+    }
 }
 
 #[test]
