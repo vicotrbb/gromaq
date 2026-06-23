@@ -1573,30 +1573,30 @@ impl Terminal {
         }
     }
 
-    fn save_private_modes(&mut self, modes: &[u16]) {
+    fn save_private_modes(&mut self, modes: impl IntoIterator<Item = u16>) {
         for mode in modes {
-            let Some(enabled) = self.private_mode_state(*mode) else {
+            let Some(enabled) = self.private_mode_state(mode) else {
                 continue;
             };
             if let Some((_, saved)) = self
                 .saved_private_modes
                 .iter_mut()
-                .find(|(saved_mode, _)| saved_mode == mode)
+                .find(|(saved_mode, _)| *saved_mode == mode)
             {
                 *saved = enabled;
             } else {
-                self.saved_private_modes.push((*mode, enabled));
+                self.saved_private_modes.push((mode, enabled));
             }
         }
     }
 
-    fn restore_private_modes(&mut self, modes: &[u16]) {
+    fn restore_private_modes(&mut self, modes: impl IntoIterator<Item = u16>) {
         let restores: Vec<(u16, bool)> = modes
-            .iter()
+            .into_iter()
             .filter_map(|mode| {
                 self.saved_private_modes
                     .iter()
-                    .find(|(saved_mode, _)| saved_mode == mode)
+                    .find(|(saved_mode, _)| *saved_mode == mode)
                     .copied()
             })
             .collect();
@@ -2405,8 +2405,7 @@ impl Perform for Terminal {
         if ignore {
             return;
         }
-        let values = first_values(params);
-        let first = values.first().copied().unwrap_or(0);
+        let first = first_value(params, 0).unwrap_or(0);
         let count = if first == 0 { 1 } else { first };
         match action {
             'A' => self.move_cursor_up(count),
@@ -2431,8 +2430,8 @@ impl Perform for Terminal {
             '`' => self.set_cursor_col(count),
             'a' => self.move_cursor_right(count),
             'H' | 'f' => {
-                let row = values.first().copied().unwrap_or(1);
-                let col = values.get(1).copied().unwrap_or(1);
+                let row = first_value(params, 0).unwrap_or(1);
+                let col = first_value(params, 1).unwrap_or(1);
                 self.set_cursor_position(row, col);
             }
             'G' => self.set_cursor_col(count),
@@ -2448,34 +2447,34 @@ impl Perform for Terminal {
             'p' if intermediates == b"?$" => self.report_mode_state(true, first),
             'p' if intermediates == b"!" => self.soft_reset(),
             'q' if intermediates == b" " => self.set_cursor_shape(first),
-            'r' if intermediates == b"?" => self.restore_private_modes(&values),
+            'r' if intermediates == b"?" => self.restore_private_modes(first_values(params)),
             'r' => {
-                let top = values.first().copied().unwrap_or(1);
-                let bottom = values.get(1).copied().unwrap_or(self.config.rows);
+                let top = first_value(params, 0).unwrap_or(1);
+                let bottom = first_value(params, 1).unwrap_or(self.config.rows);
                 self.set_scroll_region(top, bottom);
             }
-            's' if intermediates == b"?" => self.save_private_modes(&values),
+            's' if intermediates == b"?" => self.save_private_modes(first_values(params)),
             's' => self.save_cursor(),
             't' if intermediates.is_empty() => self.report_window_manipulation(first),
             'u' => self.restore_cursor(),
             'x' if intermediates.is_empty() => self.report_terminal_parameters(first),
             'h' if intermediates.is_empty() => {
-                for mode in values {
+                for mode in first_values(params) {
                     self.set_mode(mode, true);
                 }
             }
             'l' if intermediates.is_empty() => {
-                for mode in values {
+                for mode in first_values(params) {
                     self.set_mode(mode, false);
                 }
             }
             'h' if intermediates == b"?" => {
-                for mode in values {
+                for mode in first_values(params) {
                     self.set_private_mode(mode, true);
                 }
             }
             'l' if intermediates == b"?" => {
-                for mode in values {
+                for mode in first_values(params) {
                     self.set_private_mode(mode, false);
                 }
             }
@@ -2559,11 +2558,17 @@ impl Perform for Terminal {
     }
 }
 
-fn first_values(params: &Params) -> Vec<u16> {
+fn first_value(params: &Params, index: usize) -> Option<u16> {
+    params
+        .iter()
+        .nth(index)
+        .and_then(|param| param.first().copied())
+}
+
+fn first_values(params: &Params) -> impl Iterator<Item = u16> + '_ {
     params
         .iter()
         .map(|param| param.first().copied().unwrap_or(0))
-        .collect()
 }
 
 fn default_tab_stops(cols: u16) -> Vec<bool> {
