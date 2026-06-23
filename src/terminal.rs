@@ -834,6 +834,50 @@ impl Terminal {
         }
     }
 
+    fn active_sgr_parameters(&self) -> Vec<String> {
+        let mut params = Vec::new();
+        if self.style.bold {
+            params.push("1".to_owned());
+        }
+        if self.style.dim {
+            params.push("2".to_owned());
+        }
+        if self.style.italic {
+            params.push("3".to_owned());
+        }
+        if self.style.underline {
+            params.push(match self.style.underline_style {
+                UnderlineStyle::Single => "4".to_owned(),
+                UnderlineStyle::Double => "21".to_owned(),
+                UnderlineStyle::Curly => "4:3".to_owned(),
+                UnderlineStyle::Dotted => "4:4".to_owned(),
+                UnderlineStyle::Dashed => "4:5".to_owned(),
+            });
+        }
+        if self.style.blink {
+            params.push("5".to_owned());
+        }
+        if self.style.inverse {
+            params.push("7".to_owned());
+        }
+        if self.style.hidden {
+            params.push("8".to_owned());
+        }
+        if self.style.strikethrough {
+            params.push("9".to_owned());
+        }
+        if self.style.overline {
+            params.push("53".to_owned());
+        }
+        push_sgr_color_parameters(&mut params, 30, 90, 38, self.style.foreground);
+        push_sgr_color_parameters(&mut params, 40, 100, 48, self.style.background);
+
+        if params.is_empty() {
+            params.push("0".to_owned());
+        }
+        params
+    }
+
     fn absolute_cursor_row(&self, row: u16) -> u16 {
         let row = row.saturating_sub(1);
         if self.origin_mode {
@@ -1383,6 +1427,9 @@ impl Terminal {
 
     fn report_decrqss(&mut self, request: &[u8]) {
         match request {
+            b"m" => self.pending_response_bytes.extend_from_slice(
+                format!("\x1bP1$r{}m\x1b\\", self.active_sgr_parameters().join(";")).as_bytes(),
+            ),
             b"r" => self.pending_response_bytes.extend_from_slice(
                 format!(
                     "\x1bP1$r{};{}r\x1b\\",
@@ -2146,6 +2193,30 @@ fn default_tab_stops(cols: u16) -> Vec<bool> {
         tab_stops[col] = true;
     }
     tab_stops
+}
+
+fn push_sgr_color_parameters(
+    params: &mut Vec<String>,
+    normal_base: u16,
+    bright_base: u16,
+    extended_prefix: u16,
+    color: Color,
+) {
+    match color {
+        Color::Default => {}
+        Color::Ansi(index) if index < 8 => {
+            params.push((normal_base + u16::from(index)).to_string());
+        }
+        Color::Ansi(index) if index < 16 => {
+            params.push((bright_base + u16::from(index - 8)).to_string());
+        }
+        Color::Ansi(index) | Color::Indexed(index) => {
+            params.push(format!("{extended_prefix}:5:{index}"));
+        }
+        Color::Rgb(red, green, blue) => {
+            params.push(format!("{extended_prefix}:2:{red}:{green}:{blue}"));
+        }
+    }
 }
 
 fn parse_extended_color<I>(iter: &mut std::iter::Peekable<I>) -> Option<Color>
