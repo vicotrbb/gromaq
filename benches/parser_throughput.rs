@@ -42,6 +42,7 @@ const BENCH_MONOSPACE_FONT_CANDIDATES: &[&str] = &[
 const BOUNDED_STATE_BATCHES: usize = 4;
 const BOUNDED_STATE_LINES_PER_BATCH: usize = 512;
 const BOUNDED_STATE_SCROLLBACK_LINES: usize = 128;
+const ALTERNATE_SCREEN_STAGES: usize = 3;
 
 #[derive(Debug)]
 struct BenchPtySession {
@@ -471,6 +472,65 @@ fn runtime_bounded_state_batches(c: &mut Criterion) {
     });
 }
 
+fn runtime_alternate_screen_stages(c: &mut Criterion) {
+    let payloads = alternate_screen_payloads();
+    c.bench_function("runtime_alternate_screen_stages", |b| {
+        b.iter(|| {
+            let spawner = BenchPayloadPtySpawner {
+                payloads: payloads.clone(),
+            };
+            let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+                terminal_cols: 24,
+                terminal_rows: 4,
+                scrollback_lines: 16,
+                pixel_width: 0,
+                pixel_height: 0,
+                shell: ShellCommand {
+                    program: "/bin/sh".into(),
+                    args: Vec::new(),
+                    cwd: None,
+                },
+            })
+            .unwrap();
+            runtime.start_shell(&spawner).unwrap();
+            let mut renderer = WgpuRenderer::new(RendererConfig::default());
+            let mut bytes = 0_usize;
+            let mut frames = 0_u64;
+            let mut alt_rendered = false;
+
+            for stage in 0..ALTERNATE_SCREEN_STAGES {
+                let pumped = runtime.pump_pty_output().unwrap();
+                bytes = bytes.saturating_add(pumped);
+                if runtime.render_terminal_frame(&mut renderer) {
+                    frames += 1;
+                }
+                if stage == 1 {
+                    alt_rendered = renderer
+                        .last_plan()
+                        .map(|plan| {
+                            plan.glyphs
+                                .iter()
+                                .map(|glyph| glyph.text.as_str())
+                                .collect::<String>()
+                                .contains("alt-view")
+                        })
+                        .unwrap_or(false);
+                }
+            }
+
+            let grid = runtime.terminal().dump_grid();
+            let scrollback = runtime.terminal().dump_scrollback();
+            black_box(bytes);
+            black_box(frames);
+            black_box(alt_rendered);
+            black_box(grid.line_text(0));
+            black_box(grid.line_text(1));
+            black_box(scrollback.lines.len());
+            black_box(runtime.dump_runtime_perf_metrics());
+        });
+    });
+}
+
 criterion_group!(
     benches,
     parser_large_output,
@@ -483,7 +543,8 @@ criterion_group!(
     native_input_echo_render_cycle,
     font_rasterizer_combining_cell,
     pty_runtime_pump_large_output,
-    runtime_bounded_state_batches
+    runtime_bounded_state_batches,
+    runtime_alternate_screen_stages
 );
 criterion_main!(benches);
 
@@ -520,4 +581,12 @@ fn bounded_state_payloads() -> Vec<Vec<u8>> {
             payload
         })
         .collect()
+}
+
+fn alternate_screen_payloads() -> Vec<Vec<u8>> {
+    vec![
+        b"primary\n".to_vec(),
+        b"\x1b[?1049halt-view\n".to_vec(),
+        b"\x1b[?1049lrestored\n".to_vec(),
+    ]
 }

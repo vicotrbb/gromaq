@@ -4,8 +4,8 @@ Gromaq uses Criterion for deterministic CPU-side benchmark coverage. These
 benchmarks are proof inputs for parser throughput, scrollback throughput, dirty
 region coalescing, render planning, glyph quad generation, rasterized glyph
 cache reuse, prepared surface glyph-frame construction, native input-to-render
-plumbing, real-font rasterization, PTY output pumping, and bounded runtime
-state under repeated output batches.
+plumbing, real-font rasterization, PTY output pumping, bounded runtime state
+under repeated output batches, and runtime alternate-screen transitions.
 
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
@@ -65,6 +65,7 @@ The benchmark list should include:
 - `font_rasterizer_combining_cell`
 - `pty_runtime_pump_large_output`
 - `runtime_bounded_state_batches`
+- `runtime_alternate_screen_stages`
 
 Some benchmarks load a local monospace font for real glyph rasterization. The
 benchmark harness checks common macOS and Linux font paths. If no candidate is
