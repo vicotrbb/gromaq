@@ -131,6 +131,18 @@ fn sgr_accepts_colon_delimited_underline_styles_without_italic_side_effects() {
 }
 
 #[test]
+fn unsupported_colon_delimited_underline_style_is_ignored() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("\x1b[4:9mA").unwrap();
+
+    let style = terminal.dump_grid().cell(0, 0).style;
+    assert!(!style.underline);
+    assert_eq!(style.underline_style, UnderlineStyle::Single);
+    assert!(!style.strikethrough);
+}
+
+#[test]
 fn sgr_sets_and_resets_underline_color() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 

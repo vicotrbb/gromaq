@@ -2564,7 +2564,7 @@ fn apply_grouped_sgr_param(style: &mut Style, param: &[u16]) -> bool {
                     style.underline = true;
                     style.underline_style = UnderlineStyle::Dashed;
                 }
-                _ => return false,
+                _ => {}
             }
             true
         }
