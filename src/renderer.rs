@@ -983,7 +983,7 @@ pub trait GpuRenderer {
         grid: &GridSnapshot,
         cursor: CursorSnapshot,
         dirty_regions: &[DirtyRegion],
-    );
+    ) -> Result<()>;
 }
 
 /// `wgpu` backend marker and configuration holder.
@@ -1037,7 +1037,7 @@ impl GpuRenderer for WgpuRenderer {
         grid: &GridSnapshot,
         cursor: CursorSnapshot,
         dirty_regions: &[DirtyRegion],
-    ) {
+    ) -> Result<()> {
         let full_viewport;
         let regions = if self.config.dirty_regions {
             dirty_regions
@@ -1050,11 +1050,11 @@ impl GpuRenderer for WgpuRenderer {
             }];
             &full_viewport
         };
-        self.last_plan = Some(
-            self.planner
-                .plan_frame(grid, cursor, regions, &mut self.glyph_atlas)
-                .expect("render planning is infallible with a valid glyph atlas"),
-        );
+        let plan = self
+            .planner
+            .plan_frame(grid, cursor, regions, &mut self.glyph_atlas)?;
+        self.last_plan = Some(plan);
+        Ok(())
     }
 }
 

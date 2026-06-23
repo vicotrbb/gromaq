@@ -18,6 +18,7 @@ use winit::window::{Window, WindowAttributes, WindowId};
 
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::{ConfigFileReloader, GromaqConfig};
+use crate::error::{GromaqError, Result as GromaqResult};
 use crate::font::{FontRasterError, RasterizedGlyphCache};
 use crate::input::key_modifiers_from_winit;
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
@@ -365,7 +366,7 @@ pub fn render_and_present_terminal_glyph_frame<S, B>(
 where
     B: SurfaceFrameBackend,
 {
-    if !runtime.render_terminal_frame(renderer) {
+    if !runtime.render_terminal_frame(renderer)? {
         return Ok(false);
     }
     let clear_color = renderer.config().clear_color;
@@ -822,7 +823,7 @@ impl<S> NativeTerminalRuntime<S> {
     }
 
     /// Render the current terminal frame when dirty regions are pending.
-    pub fn render_terminal_frame<R>(&mut self, renderer: &mut R) -> bool
+    pub fn render_terminal_frame<R>(&mut self, renderer: &mut R) -> GromaqResult<bool>
     where
         R: GpuRenderer,
     {
@@ -835,14 +836,14 @@ impl<S> NativeTerminalRuntime<S> {
                 clean_frame_skips = self.perf.clean_frame_skips,
                 "skipped clean native terminal frame"
             );
-            return false;
+            return Ok(false);
         }
         let render_started = Instant::now();
         renderer.render_frame(
             &self.terminal.dump_grid(),
             self.terminal.dump_cursor(),
             &dirty_regions,
-        );
+        )?;
         let elapsed_ns = saturating_duration_nanos(render_started.elapsed());
         self.perf.rendered_frames += 1;
         self.perf.render_time_samples += 1;
@@ -862,7 +863,7 @@ impl<S> NativeTerminalRuntime<S> {
         if let Some(input_started) = self.pending_input_to_render_started.take() {
             self.record_input_to_render_latency(saturating_duration_nanos(input_started.elapsed()));
         }
-        true
+        Ok(true)
     }
 
     /// Force the next renderer pass to cover the visible terminal viewport.
@@ -1740,7 +1741,8 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                             | SurfaceFrameError::Validation
                             | SurfaceFrameError::InvalidFrame(_),
                         )
-                        | NativeGlyphFrameError::Font(_) => {
+                        | NativeGlyphFrameError::Font(_)
+                        | NativeGlyphFrameError::Renderer(_) => {
                             self.startup_error = Some(error.to_string());
                             event_loop.exit();
                         }
@@ -1889,7 +1891,7 @@ impl NativeTerminalApp {
 
     fn present_redraw_frame(&mut self) -> Result<(), NativeGlyphFrameError> {
         let Some(surface) = &mut self.surface else {
-            self.runtime.render_terminal_frame(&mut self.renderer);
+            self.runtime.render_terminal_frame(&mut self.renderer)?;
             return Ok(());
         };
         if let Some(glyph_cache) = &mut self.glyph_cache {
@@ -1900,7 +1902,7 @@ impl NativeTerminalApp {
                 surface,
             )?;
         } else {
-            self.runtime.render_terminal_frame(&mut self.renderer);
+            self.runtime.render_terminal_frame(&mut self.renderer)?;
             surface.clear_and_present(self.renderer.config().clear_color)?;
         }
         Ok(())
@@ -2009,6 +2011,9 @@ pub enum NativeGlyphFrameError {
     /// Surface frame acquisition, drawing, or presentation failed.
     #[error("native glyph surface presentation failed: {0}")]
     Surface(#[from] SurfaceFrameError),
+    /// CPU-side render planning failed before presentation.
+    #[error("native glyph render planning failed: {0}")]
+    Renderer(#[from] GromaqError),
 }
 
 impl From<OsError> for NativeAppError {
@@ -2052,6 +2057,7 @@ impl From<NativeGlyphFrameError> for NativeAppError {
         match value {
             NativeGlyphFrameError::Font(error) => Self::Runtime(error.to_string()),
             NativeGlyphFrameError::Surface(error) => Self::Gpu(error.to_string()),
+            NativeGlyphFrameError::Renderer(error) => Self::Runtime(error.to_string()),
         }
     }
 }

@@ -28,7 +28,9 @@ fn wgpu_renderer_records_last_planned_frame() {
     let dirty = terminal.take_dirty_regions();
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
 
-    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    renderer
+        .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
+        .unwrap();
 
     let plan = renderer
         .last_plan()
@@ -56,7 +58,9 @@ fn wgpu_renderer_uses_configured_font_size_for_render_plan() {
     let dirty = terminal.take_dirty_regions();
     let mut renderer = WgpuRenderer::new(config);
 
-    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    renderer
+        .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
+        .unwrap();
 
     let plan = renderer.last_plan().unwrap();
     assert_eq!(plan.glyphs.len(), 1);
@@ -83,7 +87,9 @@ fn wgpu_renderer_reconfigure_updates_future_frame_planning() {
     terminal.write_str("A").unwrap();
     let dirty = terminal.take_dirty_regions();
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
-    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    renderer
+        .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
+        .unwrap();
     assert!(renderer.last_plan().is_some());
 
     renderer.reconfigure(RendererConfig {
@@ -95,7 +101,9 @@ fn wgpu_renderer_reconfigure_updates_future_frame_planning() {
 
     terminal.write_str("\rB").unwrap();
     let dirty = terminal.take_dirty_regions();
-    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    renderer
+        .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
+        .unwrap();
 
     let plan = renderer.last_plan().unwrap();
     assert_eq!(plan.glyphs[0].font_size_px, 20);
@@ -116,7 +124,9 @@ fn wgpu_renderer_can_plan_full_viewport_when_dirty_regions_are_disabled() {
         ..RendererConfig::default()
     });
 
-    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    renderer
+        .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
+        .unwrap();
 
     let plan = renderer
         .last_plan()
@@ -143,7 +153,9 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     terminal.write_str("ABA").unwrap();
     let dirty = terminal.take_dirty_regions();
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
-    renderer.render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty);
+    renderer
+        .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
+        .unwrap();
     let plan = renderer.last_plan().unwrap();
     let font_bytes = std::fs::read(system_mono_font()).unwrap();
     let mut glyph_cache = RasterizedGlyphCache::from_bytes(font_bytes).unwrap();

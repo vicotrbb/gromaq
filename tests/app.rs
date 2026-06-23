@@ -27,8 +27,9 @@ use gromaq::renderer::{
     WgpuRenderer,
 };
 use gromaq::{
-    ConfigFileReloader, CursorSnapshot, GridSnapshot, GromaqConfig, KeyModifiers, MemoryClipboard,
-    MouseButton, MouseEvent, MouseEventKind, SelectionRange, Terminal, TerminalConfig,
+    ConfigFileReloader, CursorSnapshot, GridSnapshot, GromaqConfig, GromaqError, KeyModifiers,
+    MemoryClipboard, MouseButton, MouseEvent, MouseEventKind, SelectionRange, Terminal,
+    TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
@@ -85,6 +86,7 @@ impl NativePtySpawner for MockPtySpawner {
 struct MockFrameRenderer {
     frames: Vec<RenderedFrame>,
     render_delay: Duration,
+    render_error: Option<GromaqError>,
 }
 
 #[derive(Debug)]
@@ -100,7 +102,10 @@ impl GpuRenderer for MockFrameRenderer {
         grid: &GridSnapshot,
         cursor: CursorSnapshot,
         dirty_regions: &[DirtyRegion],
-    ) {
+    ) -> gromaq::Result<()> {
+        if let Some(error) = self.render_error.take() {
+            return Err(error);
+        }
         if !self.render_delay.is_zero() {
             std::thread::sleep(self.render_delay);
         }
@@ -109,6 +114,7 @@ impl GpuRenderer for MockFrameRenderer {
             cursor,
             dirty_regions: dirty_regions.to_vec(),
         });
+        Ok(())
     }
 }
 
@@ -371,14 +377,39 @@ fn native_terminal_runtime_invalidates_clean_frame_for_redraw() {
             .unwrap();
     let mut renderer = MockFrameRenderer::default();
 
-    assert!(!runtime.render_terminal_frame(&mut renderer));
+    assert!(!runtime.render_terminal_frame(&mut renderer).unwrap());
     runtime.invalidate_terminal_frame();
 
-    assert!(runtime.render_terminal_frame(&mut renderer));
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
     let metrics = runtime.dump_runtime_perf_metrics();
     assert_eq!(metrics.render_attempts, 2);
     assert_eq!(metrics.clean_frame_skips, 1);
     assert_eq!(metrics.rendered_frames, 1);
+}
+
+#[test]
+fn native_terminal_runtime_propagates_renderer_errors_without_counting_frame() {
+    let mut runtime =
+        NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig::default())
+            .unwrap();
+    runtime.invalidate_terminal_frame();
+    let mut renderer = MockFrameRenderer {
+        render_error: Some(GromaqError::GlyphAtlasInvariant {
+            reason: "forced renderer failure",
+        }),
+        ..MockFrameRenderer::default()
+    };
+
+    let error = runtime.render_terminal_frame(&mut renderer).unwrap_err();
+
+    assert_eq!(
+        error.to_string(),
+        "glyph atlas invariant violation: forced renderer failure"
+    );
+    let metrics = runtime.dump_runtime_perf_metrics();
+    assert_eq!(metrics.render_attempts, 1);
+    assert_eq!(metrics.rendered_frames, 0);
+    assert_eq!(metrics.render_time_samples, 0);
 }
 
 #[test]
@@ -961,13 +992,13 @@ fn native_terminal_runtime_renders_dirty_terminal_frame_once() {
     runtime.pump_pty_output().unwrap();
     let mut renderer = MockFrameRenderer::default();
 
-    assert!(runtime.render_terminal_frame(&mut renderer));
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
     assert_eq!(renderer.frames.len(), 1);
     assert_eq!(renderer.frames[0].first_line, "hello");
     assert_eq!(renderer.frames[0].cursor.row, 1);
     assert!(!renderer.frames[0].dirty_regions.is_empty());
 
-    assert!(!runtime.render_terminal_frame(&mut renderer));
+    assert!(!runtime.render_terminal_frame(&mut renderer).unwrap());
     assert_eq!(renderer.frames.len(), 1);
 }
 
@@ -1163,8 +1194,8 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
         render_delay: Duration::from_millis(1),
         ..MockFrameRenderer::default()
     };
-    assert!(runtime.render_terminal_frame(&mut renderer));
-    assert!(!runtime.render_terminal_frame(&mut renderer));
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+    assert!(!runtime.render_terminal_frame(&mut renderer).unwrap());
 
     let metrics = runtime.dump_runtime_perf_metrics();
     assert_eq!(metrics.pty_output_batches, 2);

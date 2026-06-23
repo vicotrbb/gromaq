@@ -352,7 +352,7 @@ fn native_input_echo_render_cycle(c: &mut Criterion) {
                 .send_winit_key_input(black_box(&key), black_box(ModifiersState::empty()))
                 .unwrap();
             let pumped = runtime.pump_pty_output().unwrap();
-            let rendered = runtime.render_terminal_frame(&mut renderer);
+            let rendered = runtime.render_terminal_frame(&mut renderer).unwrap();
             black_box(sent);
             black_box(pumped);
             black_box(rendered);
@@ -461,7 +461,7 @@ fn runtime_bounded_state_batches(c: &mut Criterion) {
             for _ in 0..BOUNDED_STATE_BATCHES {
                 let pumped = runtime.pump_pty_output().unwrap();
                 bytes = bytes.saturating_add(pumped);
-                if runtime.render_terminal_frame(&mut renderer) {
+                if runtime.render_terminal_frame(&mut renderer).unwrap() {
                     frames += 1;
                 }
             }
@@ -503,7 +503,7 @@ fn runtime_continuous_output_batches(c: &mut Criterion) {
             for _ in 0..CONTINUOUS_OUTPUT_BATCHES {
                 let pumped = runtime.pump_pty_output().unwrap();
                 bytes = bytes.saturating_add(pumped);
-                if runtime.render_terminal_frame(&mut renderer) {
+                if runtime.render_terminal_frame(&mut renderer).unwrap() {
                     frames += 1;
                 }
             }
@@ -546,7 +546,7 @@ fn runtime_alternate_screen_stages(c: &mut Criterion) {
             for stage in 0..ALTERNATE_SCREEN_STAGES {
                 let pumped = runtime.pump_pty_output().unwrap();
                 bytes = bytes.saturating_add(pumped);
-                if runtime.render_terminal_frame(&mut renderer) {
+                if runtime.render_terminal_frame(&mut renderer).unwrap() {
                     frames += 1;
                 }
                 if stage == 1 {

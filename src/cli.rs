@@ -798,7 +798,10 @@ fn runtime_perf_smoke_exit() -> CliExit {
         Err(error) => return runtime_perf_smoke_error(error),
     };
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
-    let rendered = runtime.render_terminal_frame(&mut renderer);
+    let rendered = match runtime.render_terminal_frame(&mut renderer) {
+        Ok(rendered) => rendered,
+        Err(error) => return runtime_perf_smoke_error(error),
+    };
     let metrics = runtime.dump_runtime_perf_metrics();
 
     if !sent || pumped_bytes == 0 || !rendered || metrics.input_to_render_samples == 0 {
@@ -856,7 +859,11 @@ fn runtime_idle_smoke_exit() -> CliExit {
     };
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
     for _ in 0..RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS {
-        if runtime.render_terminal_frame(&mut renderer) {
+        let rendered = match runtime.render_terminal_frame(&mut renderer) {
+            Ok(rendered) => rendered,
+            Err(error) => return runtime_idle_smoke_error(error),
+        };
+        if rendered {
             return runtime_idle_smoke_failure("clean runtime produced a rendered frame");
         }
     }
@@ -975,7 +982,10 @@ fn runtime_large_output_smoke_exit() -> CliExit {
         Err(error) => return runtime_large_output_smoke_error(error),
     };
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
-    let rendered = runtime.render_terminal_frame(&mut renderer);
+    let rendered = match runtime.render_terminal_frame(&mut renderer) {
+        Ok(rendered) => rendered,
+        Err(error) => return runtime_large_output_smoke_error(error),
+    };
     let metrics = runtime.dump_runtime_perf_metrics();
     let scrollback = runtime.terminal().dump_scrollback();
     let visible_text = renderer
@@ -1118,7 +1128,11 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
             Err(error) => return runtime_bounded_state_smoke_error(error),
         };
         pumped_bytes = pumped_bytes.saturating_add(batch_bytes);
-        if batch_bytes == 0 || !runtime.render_terminal_frame(&mut renderer) {
+        let rendered = match runtime.render_terminal_frame(&mut renderer) {
+            Ok(rendered) => rendered,
+            Err(error) => return runtime_bounded_state_smoke_error(error),
+        };
+        if batch_bytes == 0 || !rendered {
             return runtime_bounded_state_smoke_failure(
                 "output batch did not render a dirty frame",
             );
@@ -1245,7 +1259,11 @@ fn runtime_continuous_output_smoke_exit() -> CliExit {
             Err(error) => return runtime_continuous_output_smoke_error(error),
         };
         pumped_bytes = pumped_bytes.saturating_add(batch_bytes);
-        if batch_bytes == 0 || !runtime.render_terminal_frame(&mut renderer) {
+        let rendered = match runtime.render_terminal_frame(&mut renderer) {
+            Ok(rendered) => rendered,
+            Err(error) => return runtime_continuous_output_smoke_error(error),
+        };
+        if batch_bytes == 0 || !rendered {
             return runtime_continuous_output_smoke_failure(
                 "stream batch did not render a dirty frame",
             );
@@ -1377,7 +1395,11 @@ fn runtime_alternate_screen_smoke_exit() -> CliExit {
             Err(error) => return runtime_alternate_screen_smoke_error(error),
         };
         pumped_bytes = pumped_bytes.saturating_add(stage_bytes);
-        if stage_bytes == 0 || !runtime.render_terminal_frame(&mut renderer) {
+        let rendered = match runtime.render_terminal_frame(&mut renderer) {
+            Ok(rendered) => rendered,
+            Err(error) => return runtime_alternate_screen_smoke_error(error),
+        };
+        if stage_bytes == 0 || !rendered {
             return runtime_alternate_screen_smoke_failure(
                 "alternate-screen stage did not produce a rendered dirty frame",
             );
@@ -1536,7 +1558,10 @@ fn runtime_reflow_smoke_exit() -> CliExit {
         return runtime_reflow_smoke_error(error);
     }
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
-    let rendered = runtime.render_terminal_frame(&mut renderer);
+    let rendered = match runtime.render_terminal_frame(&mut renderer) {
+        Ok(rendered) => rendered,
+        Err(error) => return runtime_reflow_smoke_error(error),
+    };
     let metrics = runtime.dump_runtime_perf_metrics();
     let grid = runtime.terminal().dump_grid();
     let scrollback = runtime.terminal().dump_scrollback();
@@ -1770,7 +1795,11 @@ fn runtime_glyph_frame_smoke_exit() -> CliExit {
         Err(error) => return runtime_glyph_frame_smoke_error(error),
     };
     let mut renderer = WgpuRenderer::new(RendererConfig::default());
-    if !runtime.render_terminal_frame(&mut renderer) {
+    let rendered = match runtime.render_terminal_frame(&mut renderer) {
+        Ok(rendered) => rendered,
+        Err(error) => return runtime_glyph_frame_smoke_error(error),
+    };
+    if !rendered {
         return runtime_glyph_frame_smoke_failure("runtime output did not produce a dirty frame");
     }
     let atlas_metrics = renderer.glyph_atlas_metrics();
