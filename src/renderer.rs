@@ -1275,10 +1275,18 @@ impl GlyphQuadPlanner {
         let slot = glyph.atlas_entry.slot;
         let slot_col = slot % self.config.atlas_columns;
         let slot_row = slot / self.config.atlas_columns;
-        let atlas_x0 = slot_col.saturating_mul(self.config.atlas_slot_width_px);
-        let atlas_y0 = slot_row.saturating_mul(self.config.atlas_slot_height_px);
-        let atlas_x1 = atlas_x0.saturating_add(self.config.atlas_slot_width_px);
-        let atlas_y1 = atlas_y0.saturating_add(self.config.atlas_slot_height_px);
+        let atlas_x0 = slot_col
+            .checked_mul(self.config.atlas_slot_width_px)
+            .ok_or(GlyphQuadError::SlotOutsideAtlas { slot })?;
+        let atlas_y0 = slot_row
+            .checked_mul(self.config.atlas_slot_height_px)
+            .ok_or(GlyphQuadError::SlotOutsideAtlas { slot })?;
+        let atlas_x1 = atlas_x0
+            .checked_add(self.config.atlas_slot_width_px)
+            .ok_or(GlyphQuadError::SlotOutsideAtlas { slot })?;
+        let atlas_y1 = atlas_y0
+            .checked_add(self.config.atlas_slot_height_px)
+            .ok_or(GlyphQuadError::SlotOutsideAtlas { slot })?;
         if atlas_x1 > self.config.atlas_width_px || atlas_y1 > self.config.atlas_height_px {
             return Err(GlyphQuadError::SlotOutsideAtlas { slot });
         }

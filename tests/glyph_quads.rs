@@ -1,6 +1,6 @@
 use gromaq::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner, PlannedGlyph,
-    RenderPlan, RenderPlanner,
+    GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadError, GlyphQuadPlanner,
+    PlannedGlyph, RenderPlan, RenderPlanner,
 };
 use gromaq::{CursorShape, CursorSnapshot, Style, Terminal, TerminalConfig};
 
@@ -154,5 +154,51 @@ fn glyph_quad_planner_rejects_slots_outside_the_atlas_image() {
         }],
     };
 
-    assert!(GlyphQuadPlanner::new(config).plan(&plan).is_err());
+    assert_eq!(
+        GlyphQuadPlanner::new(config).plan(&plan).unwrap_err(),
+        GlyphQuadError::SlotOutsideAtlas { slot: 1 }
+    );
+}
+
+#[test]
+fn glyph_quad_planner_rejects_overflowing_atlas_coordinates() {
+    let config = GlyphQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 16,
+        atlas_slot_width_px: u32::MAX,
+        atlas_slot_height_px: 20,
+        atlas_columns: 1,
+        atlas_width_px: u32::MAX,
+        atlas_height_px: 20,
+    };
+    let plan = RenderPlan {
+        viewport_cols: 1,
+        viewport_rows: 1,
+        cursor: CursorSnapshot {
+            row: 0,
+            col: 0,
+            visible: true,
+            shape: CursorShape::Block,
+            blinking: true,
+        },
+        clear_regions: Vec::new(),
+        glyphs: vec![PlannedGlyph {
+            row: 0,
+            col: 0,
+            text: "B".to_owned(),
+            ch: 'B',
+            style: Style::default(),
+            font_size_px: 14,
+            is_wide: false,
+            atlas_entry: GlyphEntry {
+                slot: 1,
+                generation: 0,
+            },
+        }],
+    };
+
+    assert_eq!(
+        GlyphQuadPlanner::new(config).plan(&plan).unwrap_err(),
+        GlyphQuadError::SlotOutsideAtlas { slot: 1 }
+    );
 }
