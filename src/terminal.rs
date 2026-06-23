@@ -20,6 +20,7 @@ const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
 const MAX_OSC8_HYPERLINK_BYTES: usize = 4096;
 const MAX_OSC8_HYPERLINKS: usize = u16::MAX as usize;
 const MAX_UNDERLINE_COLORS: usize = u16::MAX as usize;
+const MAX_DCS_PAYLOAD_BYTES: usize = 64;
 
 /// Core terminal dimensions and scrollback configuration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -209,6 +210,11 @@ struct DirtyRun {
     col_end: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DcsHandler {
+    Decrqss,
+}
+
 /// Deterministic terminal emulator state.
 pub struct Terminal {
     config: TerminalConfig,
@@ -244,6 +250,8 @@ pub struct Terminal {
     current_hyperlink_id: u16,
     underline_colors: Vec<Color>,
     bracketed_paste: bool,
+    dcs_handler: Option<DcsHandler>,
+    dcs_payload: Vec<u8>,
     pending_response_bytes: Vec<u8>,
     style: Style,
     last_printable_char: Option<char>,
@@ -292,6 +300,8 @@ impl Terminal {
             current_hyperlink_id: 0,
             underline_colors: Vec::new(),
             bracketed_paste: false,
+            dcs_handler: None,
+            dcs_payload: Vec::new(),
             pending_response_bytes: Vec::new(),
             style: Style::default(),
             last_printable_char: None,
@@ -1360,6 +1370,22 @@ impl Terminal {
         }
     }
 
+    fn report_decrqss(&mut self, request: &[u8]) {
+        match request {
+            b"r" => self.pending_response_bytes.extend_from_slice(
+                format!(
+                    "\x1bP1$r{};{}r\x1b\\",
+                    self.scroll_top + 1,
+                    self.scroll_bottom + 1
+                )
+                .as_bytes(),
+            ),
+            _ => self
+                .pending_response_bytes
+                .extend_from_slice(b"\x1bP0$r\x1b\\"),
+        }
+    }
+
     fn report_window_manipulation(&mut self, mode: u16) {
         match mode {
             11 => self.pending_response_bytes.extend_from_slice(b"\x1b[1t"),
@@ -1874,6 +1900,33 @@ fn map_dec_special_graphics(ch: char) -> char {
 }
 
 impl Perform for Terminal {
+    fn hook(&mut self, _params: &Params, intermediates: &[u8], ignore: bool, action: char) {
+        self.dcs_payload.clear();
+        self.dcs_handler = if !ignore && intermediates == b"$" && action == 'q' {
+            Some(DcsHandler::Decrqss)
+        } else {
+            None
+        };
+    }
+
+    fn put(&mut self, byte: u8) {
+        if self.dcs_handler.is_some() && self.dcs_payload.len() < MAX_DCS_PAYLOAD_BYTES {
+            self.dcs_payload.push(byte);
+        } else {
+            self.dcs_handler = None;
+            self.dcs_payload.clear();
+        }
+    }
+
+    fn unhook(&mut self) {
+        let Some(DcsHandler::Decrqss) = self.dcs_handler.take() else {
+            self.dcs_payload.clear();
+            return;
+        };
+        let request = std::mem::take(&mut self.dcs_payload);
+        self.report_decrqss(&request);
+    }
+
     fn print(&mut self, c: char) {
         let dec_special_graphics = match self.active_charset {
             CharacterSet::G0 => self.g0_dec_special_graphics,

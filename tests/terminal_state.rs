@@ -138,6 +138,27 @@ fn dec_private_mode_reports_return_mode_state() {
 }
 
 #[test]
+fn decrqss_reports_scroll_margin_status_string() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
+
+    terminal.write_str("\x1b[2;4r\x1bP$qr\x1b\\").unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1bP1$r2;4r\x1b\\"
+    );
+}
+
+#[test]
+fn decrqss_rejects_unsupported_status_strings() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
+
+    terminal.write_str("\x1bP$qz\x1b\\").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1bP0$r\x1b\\");
+}
+
+#[test]
 fn text_area_size_report_uses_current_terminal_dimensions() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
