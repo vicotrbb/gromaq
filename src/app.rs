@@ -585,6 +585,18 @@ pub struct NativeRuntimePerfSnapshot {
     pub render_time_max_ns: u64,
 }
 
+fn saturating_usize_to_u64(value: usize) -> u64 {
+    u64::try_from(value).unwrap_or(u64::MAX)
+}
+
+fn saturating_duration_nanos(duration: Duration) -> u64 {
+    u64::try_from(duration.as_nanos()).unwrap_or(u64::MAX)
+}
+
+fn add_usize_counter(counter: &mut u64, value: usize) {
+    *counter = (*counter).saturating_add(saturating_usize_to_u64(value));
+}
+
 /// Spawns PTY sessions for the native terminal runtime.
 pub trait NativePtySpawner {
     /// Session handle kept alive by the runtime.
@@ -708,7 +720,7 @@ impl<S> NativeTerminalRuntime<S> {
             self.terminal.dump_cursor(),
             &dirty_regions,
         );
-        let elapsed_ns = u64::try_from(render_started.elapsed().as_nanos()).unwrap_or(u64::MAX);
+        let elapsed_ns = saturating_duration_nanos(render_started.elapsed());
         self.perf.rendered_frames += 1;
         self.perf.render_time_samples += 1;
         self.perf.render_time_total_ns = self.perf.render_time_total_ns.saturating_add(elapsed_ns);
@@ -774,7 +786,7 @@ where
             return Ok(0);
         }
         self.perf.pty_output_batches += 1;
-        self.perf.pty_output_bytes += u64::try_from(output.len()).unwrap_or(u64::MAX);
+        add_usize_counter(&mut self.perf.pty_output_bytes, output.len());
         self.terminal
             .write_bytes(&output)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
@@ -784,7 +796,7 @@ where
                 .write_input(&response)
                 .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
             self.perf.pty_response_writes += 1;
-            self.perf.pty_response_bytes += u64::try_from(response.len()).unwrap_or(u64::MAX);
+            add_usize_counter(&mut self.perf.pty_response_bytes, response.len());
         }
         Ok(output.len())
     }
@@ -798,7 +810,7 @@ where
             .write_input(bytes)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         self.perf.pty_input_writes += 1;
-        self.perf.pty_input_bytes += u64::try_from(bytes.len()).unwrap_or(u64::MAX);
+        add_usize_counter(&mut self.perf.pty_input_bytes, bytes.len());
         Ok(())
     }
 
@@ -911,7 +923,7 @@ where
         let had_session = self.shell_session.is_some();
         self.send_pty_input(&bytes)?;
         if had_session {
-            self.perf.paste_bytes += u64::try_from(text.len()).unwrap_or(u64::MAX);
+            add_usize_counter(&mut self.perf.paste_bytes, text.len());
         }
         Ok(())
     }
@@ -937,7 +949,7 @@ where
         let had_session = self.shell_session.is_some();
         self.send_pty_input(text.as_bytes())?;
         if had_session {
-            self.perf.committed_text_bytes += u64::try_from(text.len()).unwrap_or(u64::MAX);
+            add_usize_counter(&mut self.perf.committed_text_bytes, text.len());
         }
         Ok(())
     }
@@ -1563,4 +1575,25 @@ pub fn run_native_app(config: NativeAppConfig) -> Result<(), NativeAppError> {
         return Err(NativeAppError::WindowCreation(error));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn runtime_perf_counter_adds_usize_values_with_saturation() {
+        let mut counter = u64::MAX - 1;
+
+        add_usize_counter(&mut counter, 8);
+
+        assert_eq!(counter, u64::MAX);
+    }
+
+    #[test]
+    fn runtime_perf_duration_nanos_reports_u64_values() {
+        let duration = Duration::from_nanos(42);
+
+        assert_eq!(saturating_duration_nanos(duration), 42);
+    }
 }
