@@ -38,6 +38,21 @@ fn disabled_autowrap_overwrites_rightmost_cell_without_wrapping() {
 }
 
 #[test]
+fn dec_private_mode_restore_restores_saved_autowrap_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[?7s\x1b[?7labcdE\x1b[?7rFG")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "abcF");
+    assert_eq!(grid.line_text(1), "G");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
 fn byte_input_parses_text_and_escape_sequences_without_string_conversion() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
 

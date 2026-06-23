@@ -232,6 +232,7 @@ pub struct Terminal {
     saved_cursor: Option<Cursor>,
     saved_dec_cursor: Option<SavedCursorState>,
     saved_primary: Option<SavedScreen>,
+    saved_private_modes: Vec<(u16, bool)>,
     selection: Option<SelectionRange>,
     dirty: DirtyTracker,
     dirty_run: Option<DirtyRun>,
@@ -279,6 +280,7 @@ impl Terminal {
             saved_cursor: None,
             saved_dec_cursor: None,
             saved_primary: None,
+            saved_private_modes: Vec::new(),
             selection: None,
             dirty: DirtyTracker::default(),
             dirty_run: None,
@@ -1116,6 +1118,7 @@ impl Terminal {
         self.saved_cursor = None;
         self.saved_dec_cursor = None;
         self.saved_primary = None;
+        self.saved_private_modes.clear();
         self.selection = None;
         self.dirty = DirtyTracker::default();
         self.dirty_run = None;
@@ -1237,6 +1240,55 @@ impl Terminal {
             1006 => self.mouse.set_sgr_protocol(enabled),
             2004 => self.bracketed_paste = enabled,
             _ => {}
+        }
+    }
+
+    fn private_mode_state(&self, mode: u16) -> Option<bool> {
+        match mode {
+            1 => Some(self.application_cursor_keys),
+            6 => Some(self.origin_mode),
+            7 => Some(self.auto_wrap),
+            12 => Some(self.cursor.blinking),
+            25 => Some(self.cursor.visible),
+            1000 => Some(self.mouse.button_reporting_enabled()),
+            1002 => Some(self.mouse.button_motion_reporting_enabled()),
+            1003 => Some(self.mouse.any_motion_reporting_enabled()),
+            1004 => Some(self.focus_event_reporting),
+            1006 => Some(self.mouse.sgr_protocol_enabled()),
+            2004 => Some(self.bracketed_paste),
+            _ => None,
+        }
+    }
+
+    fn save_private_modes(&mut self, modes: &[u16]) {
+        for mode in modes {
+            let Some(enabled) = self.private_mode_state(*mode) else {
+                continue;
+            };
+            if let Some((_, saved)) = self
+                .saved_private_modes
+                .iter_mut()
+                .find(|(saved_mode, _)| saved_mode == mode)
+            {
+                *saved = enabled;
+            } else {
+                self.saved_private_modes.push((*mode, enabled));
+            }
+        }
+    }
+
+    fn restore_private_modes(&mut self, modes: &[u16]) {
+        let restores: Vec<(u16, bool)> = modes
+            .iter()
+            .filter_map(|mode| {
+                self.saved_private_modes
+                    .iter()
+                    .find(|(saved_mode, _)| saved_mode == mode)
+                    .copied()
+            })
+            .collect();
+        for (mode, enabled) in restores {
+            self.set_private_mode(mode, enabled);
         }
     }
 
@@ -1876,11 +1928,13 @@ impl Perform for Terminal {
             'n' if intermediates == b"?" => self.report_private_device_status(first),
             'p' if intermediates == b"!" => self.soft_reset(),
             'q' if intermediates == b" " => self.set_cursor_shape(first),
+            'r' if intermediates == b"?" => self.restore_private_modes(&values),
             'r' => {
                 let top = values.first().copied().unwrap_or(1);
                 let bottom = values.get(1).copied().unwrap_or(self.config.rows);
                 self.set_scroll_region(top, bottom);
             }
+            's' if intermediates == b"?" => self.save_private_modes(&values),
             's' => self.save_cursor(),
             't' if intermediates.is_empty() => self.report_window_manipulation(first),
             'u' => self.restore_cursor(),

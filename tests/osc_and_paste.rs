@@ -110,3 +110,16 @@ fn paste_encoding_is_plain_text_until_bracketed_paste_is_enabled() {
     terminal.write_str("\x1b[?2004l").unwrap();
     assert_eq!(terminal.encode_paste_text("abc"), b"abc");
 }
+
+#[test]
+fn dec_private_mode_restore_restores_saved_bracketed_paste_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[?2004h\x1b[?2004s\x1b[?2004l")
+        .unwrap();
+    assert_eq!(terminal.encode_paste_text("abc"), b"abc");
+
+    terminal.write_str("\x1b[?2004r").unwrap();
+    assert_eq!(terminal.encode_paste_text("abc"), b"\x1b[200~abc\x1b[201~");
+}

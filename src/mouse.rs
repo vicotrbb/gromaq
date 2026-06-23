@@ -75,6 +75,26 @@ impl MouseReportState {
         };
     }
 
+    /// Whether button-event reporting is active.
+    pub fn button_reporting_enabled(self) -> bool {
+        self.mode != MouseReportMode::Disabled
+    }
+
+    /// Whether button-motion reporting is active.
+    pub fn button_motion_reporting_enabled(self) -> bool {
+        self.mode == MouseReportMode::ButtonMotion
+    }
+
+    /// Whether any-motion reporting is active.
+    pub fn any_motion_reporting_enabled(self) -> bool {
+        self.mode == MouseReportMode::AnyMotion
+    }
+
+    /// Whether SGR mouse encoding is active.
+    pub fn sgr_protocol_enabled(self) -> bool {
+        self.protocol == MouseProtocol::Sgr
+    }
+
     /// Encode a mouse event according to active reporting modes.
     pub fn encode(self, event: MouseEvent) -> Option<Vec<u8>> {
         if self.protocol != MouseProtocol::Sgr || !self.mode.reports(event.kind) {
