@@ -11,6 +11,7 @@ Gromaq is early. Contributions must preserve correctness, determinism, and perfo
 - Treat warnings and Clippy findings as failures.
 - Add tests before behavior changes.
 - Document benchmark commands and proof boundaries.
+- Follow the fixture guidance in `TESTING.md`.
 
 ## Required Checks
 

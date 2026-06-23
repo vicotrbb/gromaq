@@ -104,6 +104,8 @@ cargo bench
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in
 [`documentation/benchmarks.md`](documentation/benchmarks.md).
+Test fixture conventions and live-proof boundaries are documented in
+[`TESTING.md`](TESTING.md).
 
 Clippy warnings are treated as failures. The codebase forbids `unsafe` in the crate.
 
