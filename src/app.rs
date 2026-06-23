@@ -175,6 +175,39 @@ pub struct NativeWindowMouseInput {
     pub modifiers: ModifiersState,
 }
 
+/// Tracks currently pressed native mouse buttons for cursor-move reporting.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct NativeMouseButtonTracker {
+    left: bool,
+    middle: bool,
+    right: bool,
+}
+
+impl NativeMouseButtonTracker {
+    /// Record a native button press or release.
+    pub fn set_pressed(&mut self, button: MouseButton, pressed: bool) {
+        match button {
+            MouseButton::Left => self.left = pressed,
+            MouseButton::Middle => self.middle = pressed,
+            MouseButton::Right => self.right = pressed,
+            MouseButton::None | MouseButton::WheelUp | MouseButton::WheelDown => {}
+        }
+    }
+
+    /// Mouse event kind and button identity to use for a cursor-move event.
+    pub fn cursor_move_event(self) -> (MouseEventKind, MouseButton) {
+        if self.left {
+            (MouseEventKind::Drag, MouseButton::Left)
+        } else if self.middle {
+            (MouseEventKind::Drag, MouseButton::Middle)
+        } else if self.right {
+            (MouseEventKind::Drag, MouseButton::Right)
+        } else {
+            (MouseEventKind::Motion, MouseButton::None)
+        }
+    }
+}
+
 /// Terminal and PTY size requested by a native resize event.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NativePtyResize {
@@ -1080,6 +1113,7 @@ pub struct NativeTerminalApp {
     surface: Option<NativeWindowSurface<WgpuSurfaceBackend<'static>>>,
     modifiers: ModifiersState,
     cursor_position: Option<PhysicalPosition<f64>>,
+    mouse_buttons: NativeMouseButtonTracker,
     resize_mapper: NativeResizeGridMapper,
     window: Option<Arc<Window>>,
     window_id: Option<WindowId>,
@@ -1109,6 +1143,7 @@ impl NativeTerminalApp {
             surface: None,
             modifiers: ModifiersState::empty(),
             cursor_position: None,
+            mouse_buttons: NativeMouseButtonTracker::default(),
             resize_mapper,
             window: None,
             window_id: None,
@@ -1310,6 +1345,11 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_position = Some(position);
+                let (kind, button) = self.mouse_buttons.cursor_move_event();
+                if let Err(error) = self.send_current_mouse_input(kind, button) {
+                    self.startup_error = Some(error.to_string());
+                    event_loop.exit();
+                }
             }
             WindowEvent::Focused(focused) => {
                 if let Err(error) = self.runtime.send_focus_event(focused).map(|_| ()) {
@@ -1320,6 +1360,7 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
             WindowEvent::MouseInput { state, button, .. } => {
                 if let Some(button) = native_mouse_button(button) {
                     let kind = if state == ElementState::Pressed {
+                        self.mouse_buttons.set_pressed(button, true);
                         MouseEventKind::Press
                     } else {
                         MouseEventKind::Release
@@ -1327,6 +1368,9 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     if let Err(error) = self.send_current_mouse_input(kind, button) {
                         self.startup_error = Some(error.to_string());
                         event_loop.exit();
+                    }
+                    if state == ElementState::Released {
+                        self.mouse_buttons.set_pressed(button, false);
                     }
                 }
             }

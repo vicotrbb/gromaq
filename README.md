@@ -43,7 +43,7 @@ Implemented and tested:
 - Native window resize mapping to terminal dimensions with redraw request
 - Native keyboard, application cursor-key, application keypad, focus-report, committed text, clipboard paste, terminal paste, and default/SGR terminal mouse-report bytes written to the retained PTY session
 - OSC 52 clipboard payload write-through to the host clipboard abstraction plus a native OSC 52 clipboard smoke command
-- Native window mouse coordinates mapped to terminal grid mouse reports
+- Native window mouse coordinates mapped to terminal grid mouse press/release/drag/motion reports
 - Timed native event-loop PTY polling with output-driven redraw requests
 - PTY background-reader output-ready notifications through native event-loop user events
 - Native redraw events render dirty terminal snapshots through the renderer boundary
