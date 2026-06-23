@@ -2634,7 +2634,10 @@ where
             let b = u8::try_from(b).ok()?;
             Some(Color::Rgb(r, g, b))
         }
-        _ => None,
+        _ => {
+            let _ = iter.next();
+            None
+        }
     }
 }
 

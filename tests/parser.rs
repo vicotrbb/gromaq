@@ -255,6 +255,26 @@ fn sgr_invalid_semicolon_truecolor_does_not_leak_components_as_attributes() {
 }
 
 #[test]
+fn sgr_invalid_semicolon_extended_color_mode_does_not_leak_payload_as_attributes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[31;44mA\x1b[38;6;1mB\x1b[48;6;5mC")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let foreground_payload = grid.cell(0, 1).style;
+    assert_eq!(foreground_payload.foreground, Color::Ansi(1));
+    assert_eq!(foreground_payload.background, Color::Ansi(4));
+    assert!(!foreground_payload.bold);
+
+    let background_payload = grid.cell(0, 2).style;
+    assert_eq!(background_payload.foreground, Color::Ansi(1));
+    assert_eq!(background_payload.background, Color::Ansi(4));
+    assert!(!background_payload.blink);
+}
+
+#[test]
 fn sgr_ignores_invalid_grouped_extended_color_params() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 
