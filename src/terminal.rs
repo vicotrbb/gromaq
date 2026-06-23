@@ -680,14 +680,21 @@ impl Terminal {
         if self.append_zwj_joined_char(ch) {
             return;
         }
-        let width_u16 = if width == 2 { 2 } else { 1 };
-        if self.auto_wrap && (self.wrap_pending || self.cursor.col + width_u16 > self.config.cols) {
+        let requested_width = if width == 2 { 2 } else { 1 };
+        if self.auto_wrap
+            && (self.wrap_pending || self.cursor.col + requested_width > self.config.cols)
+        {
             self.wrap_pending = false;
             self.carriage_return();
             self.line_feed();
         }
+        let span_width = if requested_width == 2 && self.cursor.col + 1 < self.config.cols {
+            2
+        } else {
+            1
+        };
         if self.insert_mode {
-            self.insert_blank_chars(width_u16);
+            self.insert_blank_chars(span_width);
         }
         self.clear_stale_wide_neighbors(self.cursor.row, self.cursor.col);
         let cell = self.grid.cell_mut(self.cursor.row, self.cursor.col);
@@ -695,12 +702,12 @@ impl Terminal {
             text: ch.to_string(),
             style: self.style,
             hyperlink_id: self.current_hyperlink_id,
-            is_wide_leading: width == 2,
+            is_wide_leading: span_width == 2,
             is_wide_trailing: false,
         };
-        self.mark_print_span(self.cursor.row, self.cursor.col, width_u16);
+        self.mark_print_span(self.cursor.row, self.cursor.col, span_width);
         self.perf.dirty_cells += 1;
-        if width == 2 && self.cursor.col + 1 < self.config.cols {
+        if span_width == 2 {
             let trailing = self.grid.cell_mut(self.cursor.row, self.cursor.col + 1);
             *trailing = Cell {
                 text: String::new(),
@@ -711,11 +718,11 @@ impl Terminal {
             };
             self.perf.dirty_cells += 1;
         }
-        if self.cursor.col + width_u16 >= self.config.cols {
+        if self.cursor.col + span_width >= self.config.cols {
             self.cursor.col = self.config.cols - 1;
             self.wrap_pending = self.auto_wrap;
         } else {
-            self.cursor.col += width_u16;
+            self.cursor.col += span_width;
             self.wrap_pending = false;
         }
         self.last_printable_char = Some(ch);

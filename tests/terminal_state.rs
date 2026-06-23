@@ -38,6 +38,22 @@ fn disabled_autowrap_overwrites_rightmost_cell_without_wrapping() {
 }
 
 #[test]
+fn disabled_autowrap_wide_character_at_right_edge_uses_single_cell_span() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("\x1b[?7labc界").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cell(0, 3).text, "界");
+    assert!(!grid.cell(0, 3).is_wide_leading);
+    assert!(!grid.cell(0, 3).is_wide_trailing);
+    assert_eq!(grid.line_text(0), "abc界");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
 fn dec_private_mode_restore_restores_saved_autowrap_state() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
 
