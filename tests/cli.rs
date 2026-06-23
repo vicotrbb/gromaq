@@ -181,7 +181,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -271,6 +271,30 @@ fn runtime_large_output_smoke_cli_reports_rendered_burst_without_gpu_bootstrap()
             .contains("last visible line: gromaq-runtime-line-511")
     );
     assert!(exit.stdout.contains("render p95 ns:"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_bounded_state_smoke_cli_reports_capped_long_session_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-bounded-state-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime bounded-state smoke: ok"));
+    assert!(exit.stdout.contains("batches: 4"));
+    assert!(exit.stdout.contains("lines: 2048"));
+    assert!(exit.stdout.contains("pumped bytes:"));
+    assert!(exit.stdout.contains("scrollback cap: 128"));
+    assert!(exit.stdout.contains("scrollback lines: 128"));
+    assert!(exit.stdout.contains("rendered frames: 4"));
+    assert!(
+        exit.stdout
+            .contains("last visible line: gromaq-bounded-line-2047")
+    );
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }

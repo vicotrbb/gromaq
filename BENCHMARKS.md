@@ -45,4 +45,4 @@ The full terminal goal is not complete until benchmarks and runtime validation p
 - efficient glyph cache hit rate
 - no avoidable hot-path allocations
 
-This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, dirty-region, render-plan, glyph-quad, prepared-frame, input echo-to-render, font-rasterization, cached glyph-bitmap, and runtime PTY pump measurements for future regression tracking.
+This benchmark harness does not yet prove those acceptance targets. It establishes reproducible parser, scrollback, dirty-region, render-plan, glyph-quad, prepared-frame, input echo-to-render, font-rasterization, cached glyph-bitmap, and runtime PTY pump measurements for future regression tracking. `cargo run -- --runtime-bounded-state-smoke` is a deterministic long-session state smoke for capped runtime scrollback, but it is not a live process-memory growth measurement.

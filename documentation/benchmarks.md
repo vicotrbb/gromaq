@@ -19,7 +19,11 @@ input-to-render p95 6940000 ns. On the same date,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 verified `gromaq-runtime-line-511` in the render plan, and reported render p95
-500000 ns. On the same date, `cargo run -- --runtime-reflow-smoke` pumped 80
+500000 ns. On the same date, `cargo run -- --runtime-bounded-state-smoke`
+pumped 51200 bytes from 2048 lines across 4 batches, retained 128 scrollback
+lines, rendered 4 CPU-side dirty frames, and verified
+`gromaq-bounded-line-2047` in the render plan. On the same date,
+`cargo run -- --runtime-reflow-smoke` pumped 80
 bytes, reported 1 resize event, preserved 2 reflowed scrollback lines with
 styled metadata, rendered visible lines `klmno|pqrst`, and rendered 1 CPU-side
 dirty frame. On the same date, `cargo run -- --runtime-idle-smoke` pumped 0
