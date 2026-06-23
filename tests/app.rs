@@ -641,6 +641,23 @@ fn native_mouse_grid_mapper_converts_window_pixels_to_terminal_cells() {
         mapper.mouse_event_at(800.0, 399.0, MouseEventKind::Press, MouseButton::Left),
         None
     );
+    assert_eq!(
+        mapper.mouse_event_at(-1.0, 10.0, MouseEventKind::Press, MouseButton::Left),
+        None
+    );
+    assert_eq!(
+        mapper.mouse_event_at(f64::NAN, 10.0, MouseEventKind::Press, MouseButton::Left),
+        None
+    );
+    assert_eq!(
+        mapper.mouse_event_at(
+            10.0,
+            f64::INFINITY,
+            MouseEventKind::Press,
+            MouseButton::Left
+        ),
+        None
+    );
     assert_eq!(NativeMouseGridMapper::new(0, 400, 80, 20), None);
 }
 
