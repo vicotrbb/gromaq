@@ -183,7 +183,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -549,6 +549,27 @@ fn runtime_focus_smoke_cli_reports_focus_events_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("focus inputs: 2"));
     assert!(exit.stdout.contains("pty input writes: 2"));
     assert!(exit.stdout.contains("pty input bytes: 6"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_mouse_smoke_cli_reports_mouse_events_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-mouse-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime mouse smoke: ok"));
+    assert!(exit.stdout.contains("pumped bytes: 16"));
+    assert!(exit.stdout.contains("press reported: true"));
+    assert!(exit.stdout.contains("release reported: true"));
+    assert!(exit.stdout.contains("wheel reported: true"));
+    assert!(exit.stdout.contains("mouse inputs: 3"));
+    assert!(exit.stdout.contains("pty input writes: 3"));
+    assert!(exit.stdout.contains("pty input bytes: 28"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }

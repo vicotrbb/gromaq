@@ -81,6 +81,7 @@ Implemented and tested:
 - Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
 - Deterministic runtime config reload smoke with `--runtime-config-reload-smoke`
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
+- Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime clean-frame idle smoke with `--runtime-idle-smoke`
 - Deterministic 144Hz frame-scheduler smoke with `--frame-scheduler-smoke`
 - GPU renderer boundary with deterministic render-plan and glyph-quad generation
@@ -136,6 +137,7 @@ cargo run -- --runtime-alternate-screen-smoke
 cargo run -- --runtime-reflow-smoke
 cargo run -- --runtime-config-reload-smoke
 cargo run -- --runtime-focus-smoke
+cargo run -- --runtime-mouse-smoke
 cargo run -- --runtime-idle-smoke
 cargo run -- --frame-scheduler-smoke
 cargo fmt --check
