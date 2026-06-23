@@ -2196,6 +2196,14 @@ fn native_paste_shortcut_accepts_dedicated_paste_key() {
         &Key::Named(NamedKey::Paste),
         ModifiersState::empty()
     ));
+    assert!(is_native_paste_shortcut(
+        &Key::Named(NamedKey::Insert),
+        ModifiersState::SHIFT
+    ));
+    assert!(!is_native_paste_shortcut(
+        &Key::Named(NamedKey::Insert),
+        ModifiersState::empty()
+    ));
 }
 
 #[test]

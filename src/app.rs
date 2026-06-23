@@ -1916,6 +1916,7 @@ pub fn is_native_copy_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
 /// Whether a native key event should paste from the host clipboard.
 pub fn is_native_paste_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
     matches!(key, Key::Named(NamedKey::Paste))
+        || (matches!(key, Key::Named(NamedKey::Insert)) && modifiers.shift_key())
         || (matches!(key, Key::Character(character) if character.eq_ignore_ascii_case("v"))
             && (modifiers.control_key() || modifiers.super_key()))
 }
