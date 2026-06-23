@@ -36,6 +36,14 @@ const FORBIDDEN_DEPENDENCIES: &[&str] = &[
 
 const UNSAFE_FORBIDDEN_CRATE_ROOTS: &[&str] = &["src/lib.rs", "src/main.rs"];
 
+const REQUIRED_CI_COMMANDS: &[&str] = &[
+    "cargo fmt --check",
+    "git diff --check",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo test --all",
+    "cargo bench --bench parser_throughput -- --list",
+];
+
 #[test]
 fn project_remains_native_rust_without_frontend_runtime_files() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -48,6 +56,20 @@ fn project_remains_native_rust_without_frontend_runtime_files() {
         violations.is_empty(),
         "frontend runtime files are not allowed in native-only Gromaq: {violations:#?}"
     );
+}
+
+#[test]
+fn ci_workflow_runs_required_root_checks() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for command in REQUIRED_CI_COMMANDS {
+        assert!(
+            workflow.contains(command),
+            "{} must run `{command}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
 }
 
 #[test]
