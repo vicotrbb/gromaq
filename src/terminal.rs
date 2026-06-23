@@ -1044,6 +1044,9 @@ impl Terminal {
                 let cols = self.config.cols - self.cursor.col;
                 self.dirty.mark_span(self.cursor.row, self.cursor.col, cols);
                 self.perf.dirty_cells += u64::from(cols);
+                if self.cursor.col == 0 {
+                    self.hard_breaks[usize::from(self.cursor.row)] = false;
+                }
             }
             1 => {
                 for col in 0..=self.cursor.col {
@@ -1052,9 +1055,13 @@ impl Terminal {
                 let cols = self.cursor.col + 1;
                 self.dirty.mark_span(self.cursor.row, 0, cols);
                 self.perf.dirty_cells += u64::from(cols);
+                if self.cursor.col + 1 == self.config.cols {
+                    self.hard_breaks[usize::from(self.cursor.row)] = false;
+                }
             }
             2 => {
                 self.grid.clear_row(self.cursor.row, self.style);
+                self.hard_breaks[usize::from(self.cursor.row)] = false;
                 self.dirty.mark_span(self.cursor.row, 0, self.config.cols);
                 self.perf.dirty_cells += u64::from(self.config.cols);
             }
