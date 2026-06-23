@@ -15,11 +15,12 @@ use gromaq::native_gpu::{
 };
 use gromaq::pty::{PtyConfig, PtyError, PtySession, ShellCommand};
 use gromaq::renderer::{
-    FrameScheduler, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
-    PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
+    FrameScheduler, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphKey, GlyphQuadConfig,
+    GlyphQuadPlanner, PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
 };
 use gromaq::{
-    DirtyRegion, DirtyTracker, MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig,
+    DirtyRegion, DirtyTracker, MouseButton, MouseEvent, MouseEventKind, Style, Terminal,
+    TerminalConfig,
 };
 use winit::keyboard::{Key, ModifiersState};
 
@@ -57,6 +58,9 @@ const SCROLLBACK_NAVIGATION_STEPS: usize = 512;
 const ALTERNATE_SCREEN_STAGES: usize = 3;
 const FRAME_SCHEDULER_TIMELINE_STEPS: usize = 512;
 const REAL_PTY_BENCH_LINES: usize = 512;
+const GLYPH_ATLAS_HOT_KEYS: usize = 64;
+const GLYPH_ATLAS_CHURN_KEYS: usize = 512;
+const GLYPH_ATLAS_LOOKUPS: usize = 4_096;
 const RUNTIME_PROTOCOL_INPUT_PAYLOAD: &[u8] =
     b"\x1b[?1004h\x1b[?1000h\x1b[?1006h\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
@@ -233,6 +237,36 @@ fn dirty_region_coalescing(c: &mut Criterion) {
                 cols: 80,
             }));
             black_box(dirty.take());
+        });
+    });
+}
+
+fn glyph_atlas_cache_churn(c: &mut Criterion) {
+    let hot_keys = glyph_atlas_bench_keys(GLYPH_ATLAS_HOT_KEYS);
+    let churn_keys = glyph_atlas_bench_keys(GLYPH_ATLAS_CHURN_KEYS);
+
+    c.bench_function("glyph_atlas_cache_churn", |b| {
+        b.iter(|| {
+            let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(128).unwrap());
+            for key in &hot_keys {
+                atlas.lookup_or_insert(key.clone()).unwrap();
+            }
+
+            for index in 0..GLYPH_ATLAS_LOOKUPS {
+                let hot = &hot_keys[index % hot_keys.len()];
+                black_box(atlas.lookup_or_insert(black_box(hot.clone())).unwrap());
+
+                if index % 4 == 0 {
+                    let churn = &churn_keys[index % churn_keys.len()];
+                    black_box(atlas.lookup_or_insert(black_box(churn.clone())).unwrap());
+                }
+            }
+
+            let metrics = atlas.metrics();
+            black_box(metrics.hits);
+            black_box(metrics.misses);
+            black_box(metrics.evictions);
+            black_box(metrics.entries);
         });
     });
 }
@@ -969,6 +1003,7 @@ criterion_group!(
     scrollback_large_output,
     scrollback_view_navigation,
     dirty_region_coalescing,
+    glyph_atlas_cache_churn,
     frame_scheduler_144hz_timeline,
     render_plan_large_dirty_region,
     glyph_quad_generation_large_plan,
@@ -1036,6 +1071,29 @@ fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
     haystack
         .windows(needle.len())
         .any(|window| window == needle)
+}
+
+fn glyph_atlas_bench_keys(count: usize) -> Vec<GlyphKey> {
+    (0..count)
+        .map(|index| {
+            let style = if index % 3 == 0 {
+                Style {
+                    bold: true,
+                    ..Style::default()
+                }
+            } else if index % 5 == 0 {
+                Style {
+                    italic: true,
+                    ..Style::default()
+                }
+            } else {
+                Style::default()
+            };
+            let text = format!("g{index:03}");
+            let first = text.chars().next().unwrap();
+            GlyphKey::for_text(&text, first, style, 14 + (index % 4) as u16)
+        })
+        .collect()
 }
 
 fn bounded_state_payloads() -> Vec<Vec<u8>> {
