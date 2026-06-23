@@ -15,7 +15,7 @@ Implemented and tested:
 - Bounded OSC icon-label/title handling, bounded OSC 8 hyperlink cell metadata, and bounded OSC 52 clipboard-text decoding
 - File-backed golden terminal-state fixtures covering ANSI styling, OSC 8 hyperlink metadata, OSC title/icon-label and clipboard state, terminal-generated status/capability responses, wide-cell state, scrollback, cursor state, performance counters, and alternate-screen restoration, with update guidance in `tests/fixtures/README.md`
 - Bracketed paste mode encoding
-- Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, emoji-modifier clusters, regional-indicator pairs, and emoji ZWJ clusters
+- Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, emoji-modifier clusters, regional-indicator pairs, emoji ZWJ clusters, and ZWJ clusters with internal emoji variation selectors
 - Bounded scrollback
 - Core scrollback viewport navigation for displaying retained history through the grid and screenshot snapshot APIs
 - Long-output scrollback eviction capped to the configured scrollback limit

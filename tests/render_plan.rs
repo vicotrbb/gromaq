@@ -110,6 +110,34 @@ fn render_plan_preserves_multi_part_zwj_sequence_with_multiple_modifiers() {
 }
 
 #[test]
+fn render_plan_preserves_zwj_sequence_with_internal_emoji_variation_selector() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal
+        .write_str("👩\u{200d}❤\u{fe0f}\u{200d}💋\u{200d}👨")
+        .unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(14);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.glyphs.len(), 1);
+    assert_eq!(
+        plan.glyphs[0].text,
+        "👩\u{200d}❤\u{fe0f}\u{200d}💋\u{200d}👨"
+    );
+    assert!(plan.glyphs[0].is_wide);
+    assert_eq!(atlas.metrics().entries, 1);
+}
+
+#[test]
 fn render_plan_preserves_rainbow_flag_zwj_sequence_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal.write_str("🏳️\u{200d}🌈").unwrap();
