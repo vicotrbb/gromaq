@@ -306,9 +306,7 @@ impl GpuTextureUploadRunner for NativeGpuContext {
         let first_pixel = pixels
             .get(0..4)
             .ok_or_else(|| GpuBootstrapError::SmokeReadback("empty upload readback".to_owned()))?;
-        let last_pixel = pixels
-            .get(pixels.len().saturating_sub(4)..)
-            .ok_or_else(|| GpuBootstrapError::SmokeReadback("empty upload readback".to_owned()))?;
+        let last_pixel = last_rgba_pixel(&pixels, "upload readback")?;
         let matching_bytes = pixels
             .iter()
             .zip(pattern.rgba.iter())
@@ -328,6 +326,18 @@ impl GpuTextureUploadRunner for NativeGpuContext {
             total_bytes: pattern.rgba.len(),
         })
     }
+}
+
+fn last_rgba_pixel<'a>(
+    pixels: &'a [u8],
+    label: &'static str,
+) -> std::result::Result<&'a [u8], GpuBootstrapError> {
+    let start = pixels.len().checked_sub(4).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(format!("{label} is shorter than one RGBA pixel"))
+    })?;
+    pixels.get(start..).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(format!("{label} is shorter than one RGBA pixel"))
+    })
 }
 
 impl GpuGlyphAtlasUploadRunner for NativeGpuContext {
@@ -1599,6 +1609,28 @@ mod tests {
         assert_eq!(
             error,
             GpuBootstrapError::SmokeReadback("terminal text vertex bytes are too large".to_owned())
+        );
+    }
+
+    #[test]
+    fn last_rgba_pixel_reports_checked_slice() {
+        assert_eq!(
+            last_rgba_pixel(&[1, 2, 3, 4], "readback").unwrap(),
+            &[1, 2, 3, 4]
+        );
+        assert_eq!(
+            last_rgba_pixel(&[1, 2, 3, 4, 5, 6, 7, 8], "readback").unwrap(),
+            &[5, 6, 7, 8]
+        );
+    }
+
+    #[test]
+    fn last_rgba_pixel_rejects_short_buffers() {
+        let error = last_rgba_pixel(&[1, 2, 3], "readback").unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback("readback is shorter than one RGBA pixel".to_owned())
         );
     }
 
