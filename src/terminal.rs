@@ -1254,10 +1254,17 @@ impl Terminal {
     }
 
     fn report_private_device_status(&mut self, mode: u16) {
-        if mode == 6 {
-            self.pending_response_bytes.extend_from_slice(
+        match mode {
+            6 => self.pending_response_bytes.extend_from_slice(
                 format!("\x1b[?{};{}R", self.cursor.row + 1, self.cursor.col + 1).as_bytes(),
-            );
+            ),
+            15 => self.pending_response_bytes.extend_from_slice(b"\x1b[?11n"),
+            25 => self.pending_response_bytes.extend_from_slice(b"\x1b[?20n"),
+            26 => self
+                .pending_response_bytes
+                .extend_from_slice(b"\x1b[?27;1;0;0n"),
+            53 => self.pending_response_bytes.extend_from_slice(b"\x1b[?50n"),
+            _ => {}
         }
     }
 

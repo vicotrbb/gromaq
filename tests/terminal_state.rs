@@ -69,6 +69,20 @@ fn dec_private_cursor_position_report_includes_private_marker() {
 }
 
 #[test]
+fn dec_private_capability_status_reports_are_queued_as_terminal_responses() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[?15n\x1b[?25n\x1b[?26n\x1b[?53n")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[?11n\x1b[?20n\x1b[?27;1;0;0n\x1b[?50n"
+    );
+}
+
+#[test]
 fn text_area_size_report_uses_current_terminal_dimensions() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 
