@@ -24,7 +24,8 @@ pub mod test_api;
 pub use cell::{Cell, CellSnapshot, Color, Style, UnderlineStyle};
 pub use clipboard::{HostClipboard, MemoryClipboard, NativeClipboard};
 pub use config::{
-    FontSettings, GromaqConfig, PerformanceSettings, ShellSettings, TerminalSettings,
+    ConfigFileReloader, ConfigReload, FontSettings, GromaqConfig, PerformanceSettings,
+    ShellSettings, TerminalSettings,
 };
 pub use dirty::{DirtyRegion, DirtyTracker};
 pub use error::{GromaqError, Result};

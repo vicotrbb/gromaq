@@ -1,6 +1,6 @@
 use std::fs;
 
-use gromaq::{GromaqConfig, GromaqError, ShellSettings, TerminalConfig};
+use gromaq::{ConfigFileReloader, GromaqConfig, GromaqError, ShellSettings, TerminalConfig};
 
 #[test]
 fn default_config_is_valid() {
@@ -182,6 +182,94 @@ fn missing_config_file_reports_read_error() {
     let error = GromaqConfig::from_toml_file(&path).unwrap_err();
 
     assert!(matches!(error, GromaqError::ConfigRead { .. }));
+}
+
+#[test]
+fn config_file_reloader_reports_unchanged_valid_file() {
+    let path = test_config_path("gromaq-config-reload-unchanged.toml");
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 100
+        "#,
+    )
+    .unwrap();
+    let mut reloader = ConfigFileReloader::from_file(path.clone()).unwrap();
+
+    let reload = reloader.reload_if_changed().unwrap();
+
+    assert!(!reload.changed);
+    assert_eq!(reload.config.terminal.cols, 100);
+    assert_eq!(reloader.current().terminal.cols, 100);
+    assert_eq!(reloader.path(), path.as_path());
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn config_file_reloader_applies_changed_valid_file() {
+    let path = test_config_path("gromaq-config-reload-changed.toml");
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 100
+        "#,
+    )
+    .unwrap();
+    let mut reloader = ConfigFileReloader::from_file(path.clone()).unwrap();
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 132
+        rows = 40
+        "#,
+    )
+    .unwrap();
+
+    let reload = reloader.reload_if_changed().unwrap();
+
+    assert!(reload.changed);
+    assert_eq!(reload.config.terminal.cols, 132);
+    assert_eq!(reload.config.terminal.rows, 40);
+    assert_eq!(reloader.current().terminal.cols, 132);
+    assert_eq!(reloader.current().terminal.rows, 40);
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn config_file_reloader_preserves_previous_config_when_changed_file_is_invalid() {
+    let path = test_config_path("gromaq-config-reload-invalid.toml");
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 100
+        "#,
+    )
+    .unwrap();
+    let mut reloader = ConfigFileReloader::from_file(path.clone()).unwrap();
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 0
+        "#,
+    )
+    .unwrap();
+
+    let error = reloader.reload_if_changed().unwrap_err();
+
+    assert!(matches!(
+        error,
+        GromaqError::InvalidDimension {
+            field: "columns",
+            ..
+        }
+    ));
+    assert_eq!(reloader.current().terminal.cols, 100);
+    let _ = fs::remove_file(path);
 }
 
 #[test]

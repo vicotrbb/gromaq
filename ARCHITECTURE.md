@@ -18,7 +18,7 @@ The core library owns deterministic terminal state:
 - `mouse`: DEC mouse reporting state and SGR event encoding
 - `font`: Swash-backed font-byte loading, glyph rasterization to RGBA8 atlas bitmaps, and renderer-plan glyph bitmap caching
 - `native_gpu`: native `wgpu` adapter/device bootstrap and adapter diagnostics
-- `config`: validated user configuration
+- `config`: validated user configuration and deterministic config-file reload checks
 - `test_api`: structured debug and validation API with deterministic performance counters and cell screenshots
 
 The core is headless and tested without a window or GPU. This keeps terminal behavior reproducible. Test API performance counters expose parser bytes, dirty cells, dirty-region batches, scrolls, and resizes for deterministic validation. Test API screenshots are deterministic one-pixel-per-cell RGBA captures of terminal state; live GPU/window screenshot proof remains part of the native rendering validation gap.
