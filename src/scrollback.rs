@@ -22,6 +22,14 @@ impl Scrollback {
         }
     }
 
+    /// Update the retained line limit and evict oldest rows when the new limit is smaller.
+    pub fn set_limit(&mut self, limit: usize) {
+        self.limit = limit;
+        while self.lines.len() > self.limit {
+            self.lines.pop_front();
+        }
+    }
+
     /// Push one hard-break line, evicting the oldest line when capacity is reached.
     pub fn push(&mut self, line: String) {
         let cells = line

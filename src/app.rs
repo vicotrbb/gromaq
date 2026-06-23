@@ -809,6 +809,11 @@ impl<S> NativeTerminalRuntime<S> {
         &self.terminal
     }
 
+    /// Access runtime configuration.
+    pub fn config(&self) -> &NativeTerminalRuntimeConfig {
+        &self.config
+    }
+
     /// Return deterministic native runtime counters.
     pub fn dump_runtime_perf_metrics(&self) -> NativeRuntimePerfSnapshot {
         self.perf
@@ -856,6 +861,11 @@ impl<S> NativeTerminalRuntime<S> {
             self.record_input_to_render_latency(saturating_duration_nanos(input_started.elapsed()));
         }
         true
+    }
+
+    /// Force the next renderer pass to cover the visible terminal viewport.
+    pub fn invalidate_terminal_frame(&mut self) {
+        self.terminal.invalidate_viewport();
     }
 
     fn record_input_to_render_latency(&mut self, elapsed_ns: u64) {
@@ -1128,11 +1138,39 @@ where
         self.terminal
             .resize_with_pixel_size(size.cols, size.rows, size.pixel_width, size.pixel_height)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        self.config.terminal_cols = size.cols;
+        self.config.terminal_rows = size.rows;
+        self.config.pixel_width = size.pixel_width;
+        self.config.pixel_height = size.pixel_height;
         if let Some(session) = self.shell_session.as_mut() {
             session
                 .resize(size)
                 .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         }
+        self.perf.resize_events += 1;
+        Ok(())
+    }
+
+    /// Reconfigure terminal dimensions, pixel size, and scrollback retention without restarting the PTY.
+    pub fn reconfigure_terminal(
+        &mut self,
+        config: NativeTerminalRuntimeConfig,
+    ) -> Result<(), NativeAppError> {
+        self.terminal
+            .reconfigure(config.terminal_config()?)
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        let resize = NativePtyResize {
+            cols: config.terminal_cols,
+            rows: config.terminal_rows,
+            pixel_width: config.pixel_width,
+            pixel_height: config.pixel_height,
+        };
+        if let Some(session) = self.shell_session.as_mut() {
+            session
+                .resize(resize)
+                .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        }
+        self.config = config;
         self.perf.resize_events += 1;
         Ok(())
     }
@@ -1406,15 +1444,59 @@ impl NativeTerminalApp {
         config: &GromaqConfig,
     ) -> Result<(), NativeAppError> {
         let app_config = NativeAppConfig::from_gromaq_config(config)?;
+        let mut runtime_config = NativeTerminalRuntimeConfig::from_gromaq_config(
+            config,
+            self.runtime.config().shell.clone(),
+        )?;
+        let (reference_width_px, reference_height_px, pixel_width, pixel_height) =
+            self.reload_reference_size(&app_config);
+        runtime_config.pixel_width = pixel_width;
+        runtime_config.pixel_height = pixel_height;
+        let resize_mapper = NativeResizeGridMapper::new(
+            reference_width_px,
+            reference_height_px,
+            runtime_config.terminal_cols,
+            runtime_config.terminal_rows,
+        )
+        .ok_or_else(|| {
+            NativeAppError::Runtime(
+                "native window and terminal reference dimensions must be non-zero".to_owned(),
+            )
+        })?;
         let renderer_config = RendererConfig::from_gromaq_config(config)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         let clear_color = self.renderer.config().clear_color;
+        if self.runtime.config() != &runtime_config {
+            self.runtime.reconfigure_terminal(runtime_config)?;
+        }
+        self.resize_mapper = resize_mapper;
         self.lifecycle.apply_config(app_config);
         self.renderer.reconfigure(RendererConfig {
             clear_color,
             ..renderer_config
         });
+        self.runtime.invalidate_terminal_frame();
         Ok(())
+    }
+
+    fn reload_reference_size(&self, app_config: &NativeAppConfig) -> (u32, u32, u16, u16) {
+        if let Some(window) = &self.window {
+            let size = window.inner_size();
+            if size.width > 0 && size.height > 0 {
+                return (
+                    size.width,
+                    size.height,
+                    clamp_u32_to_u16(size.width),
+                    clamp_u32_to_u16(size.height),
+                );
+            }
+        }
+        (
+            app_config.width,
+            app_config.height,
+            self.runtime.config().pixel_width,
+            self.runtime.config().pixel_height,
+        )
     }
 
     /// Take a startup error captured from the event handler.

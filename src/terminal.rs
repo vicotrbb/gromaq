@@ -345,19 +345,26 @@ impl Terminal {
             scrollback_limit: self.config.scrollback_limit,
         }
         .validate()?;
+        self.reconfigure(config)
+    }
+
+    /// Reconfigure terminal dimensions, pixel size, and scrollback retention.
+    pub fn reconfigure(&mut self, config: TerminalConfig) -> Result<()> {
+        let config = config.validate()?;
         self.flush_dirty_run();
-        self.scrollback.reflow(self.config.cols, cols);
-        let (grid, hard_breaks) = self.reflow_visible_grid(cols, rows);
+        self.scrollback.set_limit(config.scrollback_limit);
+        self.scrollback.reflow(self.config.cols, config.cols);
+        let (grid, hard_breaks) = self.reflow_visible_grid(config.cols, config.rows);
         self.grid = grid;
         self.hard_breaks = hard_breaks;
-        self.tab_stops = default_tab_stops(cols);
+        self.tab_stops = default_tab_stops(config.cols);
         self.scroll_top = 0;
-        self.scroll_bottom = rows - 1;
-        self.cursor.row = self.cursor.row.min(rows - 1);
-        self.cursor.col = self.cursor.col.min(cols - 1);
+        self.scroll_bottom = config.rows - 1;
+        self.cursor.row = self.cursor.row.min(config.rows - 1);
+        self.cursor.col = self.cursor.col.min(config.cols - 1);
         self.wrap_pending = false;
         self.selection = None;
-        self.dirty.mark_viewport(rows, cols);
+        self.dirty.mark_viewport(config.rows, config.cols);
         self.config = config;
         self.perf.resizes += 1;
         Ok(())
@@ -440,6 +447,12 @@ impl Terminal {
             self.perf.dirty_region_batches += 1;
         }
         regions
+    }
+
+    /// Mark the full visible viewport dirty for the next renderer pass.
+    pub fn invalidate_viewport(&mut self) {
+        self.flush_dirty_run();
+        self.dirty.mark_viewport(self.config.rows, self.config.cols);
     }
 
     /// Set a visible-grid selection.

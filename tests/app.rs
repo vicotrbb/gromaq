@@ -290,6 +290,63 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
 }
 
 #[test]
+fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig {
+            terminal_cols: 20,
+            terminal_rows: 4,
+            scrollback_lines: 100,
+            pixel_width: 0,
+            pixel_height: 0,
+            shell: ShellCommand {
+                program: "/bin/sh".into(),
+                args: Vec::new(),
+                cwd: None,
+            },
+        },
+        RendererConfig::default(),
+    )
+    .unwrap();
+    let mut config = GromaqConfig::default();
+    config.terminal.cols = 12;
+    config.terminal.rows = 3;
+    config.terminal.scrollback_lines = 16;
+    config.shell.program = Some("/bin/zsh".to_owned());
+
+    app.apply_reloadable_gromaq_config(&config).unwrap();
+
+    assert_eq!(app.runtime().terminal().dump_grid().cols, 12);
+    assert_eq!(app.runtime().terminal().dump_grid().rows, 3);
+    assert_eq!(app.runtime().config().terminal_cols, 12);
+    assert_eq!(app.runtime().config().terminal_rows, 3);
+    assert_eq!(app.runtime().config().scrollback_lines, 16);
+    assert_eq!(
+        app.runtime().config().shell.program,
+        PathBuf::from("/bin/sh")
+    );
+    assert_eq!(app.runtime().dump_runtime_perf_metrics().resize_events, 1);
+    assert!(!app.runtime().has_shell_session());
+}
+
+#[test]
+fn native_terminal_runtime_invalidates_clean_frame_for_redraw() {
+    let mut runtime =
+        NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig::default())
+            .unwrap();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(!runtime.render_terminal_frame(&mut renderer));
+    runtime.invalidate_terminal_frame();
+
+    assert!(runtime.render_terminal_frame(&mut renderer));
+    let metrics = runtime.dump_runtime_perf_metrics();
+    assert_eq!(metrics.render_attempts, 2);
+    assert_eq!(metrics.clean_frame_skips, 1);
+    assert_eq!(metrics.rendered_frames, 1);
+}
+
+#[test]
 fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
     let path = test_app_config_path("reload-render-config.toml");
     fs::write(&path, "[performance]\ntarget_fps = 144\n").unwrap();
@@ -306,6 +363,11 @@ fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
     fs::write(
         &path,
         r#"
+        [terminal]
+        cols = 24
+        rows = 6
+        scrollback_lines = 64
+
         [performance]
         target_fps = 120
         dirty_region_rendering = false
@@ -318,6 +380,9 @@ fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
 
     assert!(app.reload_config_if_changed().unwrap());
     assert_eq!(app.lifecycle().config().target_fps, 120);
+    assert_eq!(app.runtime().terminal().dump_grid().cols, 24);
+    assert_eq!(app.runtime().terminal().dump_grid().rows, 6);
+    assert_eq!(app.runtime().config().scrollback_lines, 64);
     assert_eq!(app.renderer().config().target_fps, 120);
     assert!(!app.renderer().config().dirty_regions);
     assert_eq!(app.renderer().config().font_size_px, 18);
@@ -1151,6 +1216,10 @@ fn native_terminal_runtime_resizes_terminal_and_pty_session() {
 
     assert_eq!(runtime.terminal().dump_grid().cols, 10);
     assert_eq!(runtime.terminal().dump_grid().rows, 6);
+    assert_eq!(runtime.config().terminal_cols, 10);
+    assert_eq!(runtime.config().terminal_rows, 6);
+    assert_eq!(runtime.config().pixel_width, 800);
+    assert_eq!(runtime.config().pixel_height, 480);
     let session = runtime.shell_session().unwrap();
     assert_eq!(
         session.resizes.borrow().as_slice(),
