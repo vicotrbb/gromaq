@@ -14,7 +14,7 @@ use gromaq::native_gpu::{
     GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
 use gromaq::renderer::RendererConfig;
-use gromaq::{HostClipboard, MemoryClipboard};
+use gromaq::{GromaqConfig, HostClipboard, MemoryClipboard};
 
 #[derive(Debug)]
 struct MockBackend {
@@ -183,9 +183,29 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--config-template"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stderr.is_empty());
+    assert!(exit.stdout.contains("[terminal]"));
+    assert!(exit.stdout.contains("[shell]"));
+    assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
+    assert!(exit.stdout.contains("[font]"));
+    assert!(exit.stdout.contains("[performance]"));
+    let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
+    assert_eq!(parsed, GromaqConfig::default());
     assert!(backend.requests.borrow().is_empty());
 }
 

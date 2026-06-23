@@ -64,6 +64,7 @@ Implemented and tested:
 - GPU texture upload/readback smoke test with `--gpu-upload-smoke`
 - Deterministic glyph atlas image packing and GPU upload/readback smoke test with `--gpu-glyph-atlas-smoke`
 - Font-backed terminal text atlas packing and GPU upload/readback smoke test with `--gpu-text-atlas-smoke`
+- TOML config template output with `--config-template`
 - TOML config validation command with `--config-check <path>`
 - TOML config native app launch with `--config <path>`
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
@@ -117,6 +118,7 @@ cargo run -- --gpu-terminal-text-smoke
 cargo run -- --clipboard-smoke
 cargo run -- --config path/to/gromaq.toml
 cargo run -- --config-check path/to/gromaq.toml
+cargo run -- --config-template
 cargo run -- --osc52-clipboard-smoke
 cargo run -- --runtime-clipboard-paste-smoke
 cargo run -- --runtime-glyph-frame-smoke

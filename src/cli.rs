@@ -239,6 +239,7 @@ where
         && arg != "--clipboard-smoke"
         && arg != "--config"
         && arg != "--config-check"
+        && arg != "--config-template"
         && arg != "--osc52-clipboard-smoke"
         && arg != "--runtime-clipboard-paste-smoke"
         && arg != "--runtime-glyph-frame-smoke"
@@ -272,6 +273,16 @@ where
             };
         }
         return config_check_exit(path.as_ref());
+    }
+    if arg == "--config-template" {
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        return config_template_exit();
     }
     if arg == "--config" {
         let Some(path) = args.next() else {
@@ -538,7 +549,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
@@ -611,6 +622,24 @@ fn config_check_exit(path: &str) -> CliExit {
             stdout: String::new(),
             stderr: format!("config check failed: {error}\n"),
         },
+    }
+}
+
+fn config_template_exit() -> CliExit {
+    let config = GromaqConfig::default();
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
+            config.terminal.cols,
+            config.terminal.rows,
+            config.terminal.scrollback_lines,
+            config.font.family,
+            config.font.size_px,
+            config.performance.target_fps,
+            config.performance.dirty_region_rendering
+        ),
+        stderr: String::new(),
     }
 }
 
