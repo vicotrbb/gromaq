@@ -8,8 +8,9 @@ use thiserror::Error;
 
 use crate::font::{RasterizedGlyphBatch, RasterizedGlyphCache};
 use crate::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphQuadBatch, GlyphQuadConfig,
-    GlyphQuadPlanner, RenderPlan, RenderPlanner, WgpuSurfaceBackend,
+    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, GlyphAtlas, GlyphAtlasConfig,
+    GlyphAtlasImage, GlyphQuadBatch, GlyphQuadConfig, GlyphQuadPlanner, RenderPlan, RenderPlanner,
+    WgpuSurfaceBackend,
 };
 use crate::{Terminal, TerminalConfig};
 
@@ -468,6 +469,12 @@ impl GpuTerminalTextRunner for NativeGpuContext {
         let quad_batch = GlyphQuadPlanner::new(quad_config)
             .plan(&frame.plan)
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
+        let background_batch = BackgroundQuadPlanner::new(BackgroundQuadConfig {
+            cell_width_px: frame.slot_width,
+            cell_height_px: frame.slot_height,
+        })
+        .plan(&frame.plan)
+        .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
         let (target_width, target_height) = checked_terminal_text_target_dimensions(
             frame.plan.viewport_cols,
             frame.plan.viewport_rows,
@@ -478,6 +485,7 @@ impl GpuTerminalTextRunner for NativeGpuContext {
             &self.device,
             &self.queue,
             &frame.image,
+            &background_batch,
             &quad_batch,
             target_width,
             target_height,
@@ -486,6 +494,7 @@ impl GpuTerminalTextRunner for NativeGpuContext {
             width: target_width,
             height: target_height,
             glyphs: frame.plan.glyphs.len(),
+            background_quads: background_batch.quads.len(),
             quads: quad_batch.quads.len(),
             rasterized_glyphs: frame.batch.rasterized,
             reused_glyphs: frame.batch.reused,
@@ -752,6 +761,8 @@ pub struct GpuTerminalTextReport {
     pub height: u32,
     /// Number of terminal glyph draw commands in the render plan.
     pub glyphs: usize,
+    /// Number of solid background quads drawn before glyph quads.
+    pub background_quads: usize,
     /// Number of textured glyph quads drawn.
     pub quads: usize,
     /// Count of distinct glyphs rasterized from the font.
@@ -794,7 +805,7 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
     terminal
-        .write_str("\x1b[31mA😀A")
+        .write_str("\x1b[42m \x1b[0;31mA😀A")
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(
@@ -1070,6 +1081,7 @@ fn draw_textured_quad_rgba8(
         TexturedDrawInput {
             pattern,
             source_layout,
+            background: None,
             vertex_bytes: &textured_quad_vertex_bytes(),
             index_bytes: &textured_quad_index_bytes(),
             index_count: 6,
@@ -1084,6 +1096,7 @@ fn draw_glyph_quads_rgba8(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
     image: &GlyphAtlasImage,
+    background_batch: &BackgroundQuadBatch,
     batch: &GlyphQuadBatch,
     width: u32,
     height: u32,
@@ -1098,12 +1111,22 @@ fn draw_glyph_quads_rgba8(
     let vertices = glyph_quad_vertex_bytes(batch, width, height)?;
     let indices = glyph_quad_index_bytes(batch);
     let index_count = checked_textured_index_count(batch.indices.len())?;
+    let background = if background_batch.quads.is_empty() {
+        None
+    } else {
+        Some(BackgroundDrawInput {
+            vertex_bytes: background_quad_vertex_bytes(background_batch, width, height)?,
+            index_bytes: background_quad_index_bytes(background_batch),
+            index_count: checked_textured_index_count(background_batch.indices.len())?,
+        })
+    };
     draw_textured_vertices_rgba8(
         device,
         queue,
         TexturedDrawInput {
             pattern: &pattern,
             source_layout,
+            background,
             vertex_bytes: &vertices,
             index_bytes: &indices,
             index_count,
@@ -1117,12 +1140,19 @@ fn draw_glyph_quads_rgba8(
 struct TexturedDrawInput<'a> {
     pattern: &'a UploadPattern,
     source_layout: UploadPatternLayout,
+    background: Option<BackgroundDrawInput>,
     vertex_bytes: &'a [u8],
     index_bytes: &'a [u8],
     index_count: u32,
     index_format: wgpu::IndexFormat,
     width: u32,
     height: u32,
+}
+
+struct BackgroundDrawInput {
+    vertex_bytes: Vec<u8>,
+    index_bytes: Vec<u8>,
+    index_count: u32,
 }
 
 fn checked_textured_index_count(index_count: usize) -> std::result::Result<u32, GpuBootstrapError> {
@@ -1159,12 +1189,38 @@ fn validate_textured_draw_buffers(
     })
 }
 
+fn validate_background_draw_buffers(
+    input: &BackgroundDrawInput,
+) -> std::result::Result<TexturedDrawBufferLayout, GpuBootstrapError> {
+    if input.vertex_bytes.is_empty() || input.index_bytes.is_empty() || input.index_count == 0 {
+        return Err(GpuBootstrapError::SmokeReadback(
+            "background draw buffers must be non-empty".to_owned(),
+        ));
+    }
+    let vertex_buffer_size = u64::try_from(input.vertex_bytes.len()).map_err(|_| {
+        GpuBootstrapError::SmokeReadback("background vertex buffer is too large".to_owned())
+    })?;
+    let index_buffer_size = u64::try_from(input.index_bytes.len()).map_err(|_| {
+        GpuBootstrapError::SmokeReadback("background index buffer is too large".to_owned())
+    })?;
+    Ok(TexturedDrawBufferLayout {
+        vertex_buffer_size,
+        index_buffer_size,
+        index_count: input.index_count,
+    })
+}
+
 fn draw_textured_vertices_rgba8(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
     input: TexturedDrawInput<'_>,
 ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
     let buffer_layout = validate_textured_draw_buffers(&input)?;
+    let background_layout = input
+        .background
+        .as_ref()
+        .map(validate_background_draw_buffers)
+        .transpose()?;
 
     let source = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("gromaq-textured-quad-source"),
@@ -1310,6 +1366,85 @@ fn draw_textured_vertices_rgba8(
         multiview_mask: None,
         cache: None,
     });
+    let background_draw = if let (Some(background), Some(layout)) =
+        (&input.background, background_layout)
+    {
+        let background_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("gromaq-background-quad-shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(BACKGROUND_QUAD_WGSL)),
+        });
+        let background_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("gromaq-background-quad-pipeline-layout"),
+                bind_group_layouts: &[],
+                immediate_size: 0,
+            });
+        let background_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("gromaq-background-quad-pipeline"),
+            layout: Some(&background_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &background_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: 24,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x2,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 8,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &background_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let background_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-background-quad-vertices"),
+            size: layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let background_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-background-quad-indices"),
+            size: layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&background_vertex_buffer, 0, &background.vertex_bytes);
+        queue.write_buffer(&background_index_buffer, 0, &background.index_bytes);
+        Some((
+            background_pipeline,
+            background_vertex_buffer,
+            background_index_buffer,
+            layout.index_count,
+        ))
+    } else {
+        None
+    };
     let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("gromaq-textured-quad-vertices"),
         size: buffer_layout.vertex_buffer_size,
@@ -1345,6 +1480,14 @@ fn draw_textured_vertices_rgba8(
             occlusion_query_set: None,
             multiview_mask: None,
         });
+        if let Some((background_pipeline, vertex_buffer, index_buffer, index_count)) =
+            &background_draw
+        {
+            pass.set_pipeline(background_pipeline);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bind_group, &[]);
         pass.set_vertex_buffer(0, vertex_buffer.slice(..));
@@ -1371,6 +1514,63 @@ fn textured_quad_index_bytes() -> Vec<u8> {
     [0_u16, 1, 2, 0, 2, 3]
         .into_iter()
         .flat_map(u16::to_le_bytes)
+        .collect()
+}
+
+fn background_quad_vertex_bytes(
+    batch: &BackgroundQuadBatch,
+    width: u32,
+    height: u32,
+) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
+    if width == 0 || height == 0 {
+        return Err(GpuBootstrapError::SmokeReadback(
+            "terminal text render target dimensions must be non-zero".to_owned(),
+        ));
+    }
+    let width = width as f32;
+    let height = height as f32;
+    let mut bytes = Vec::new();
+    bytes
+        .try_reserve_exact(background_quad_vertex_byte_capacity(batch.quads.len())?)
+        .map_err(|_| {
+            GpuBootstrapError::SmokeReadback(
+                "terminal background vertex bytes are too large to allocate".to_owned(),
+            )
+        })?;
+    for quad in &batch.quads {
+        for vertex in quad.vertices {
+            let ndc_x = (vertex.position[0] / width * 2.0) - 1.0;
+            let ndc_y = 1.0 - (vertex.position[1] / height * 2.0);
+            for value in [
+                ndc_x,
+                ndc_y,
+                vertex.color_rgba[0],
+                vertex.color_rgba[1],
+                vertex.color_rgba[2],
+                vertex.color_rgba[3],
+            ] {
+                bytes.extend_from_slice(&value.to_le_bytes());
+            }
+        }
+    }
+    Ok(bytes)
+}
+
+fn background_quad_vertex_byte_capacity(
+    quad_count: usize,
+) -> std::result::Result<usize, GpuBootstrapError> {
+    quad_count.checked_mul(4 * 6 * 4).ok_or_else(|| {
+        GpuBootstrapError::SmokeReadback(
+            "terminal background vertex bytes are too large".to_owned(),
+        )
+    })
+}
+
+fn background_quad_index_bytes(batch: &BackgroundQuadBatch) -> Vec<u8> {
+    batch
+        .indices
+        .iter()
+        .flat_map(|index| index.to_le_bytes())
         .collect()
 }
 
@@ -1430,6 +1630,31 @@ fn glyph_quad_index_bytes(batch: &GlyphQuadBatch) -> Vec<u8> {
         .flat_map(|index| index.to_le_bytes())
         .collect()
 }
+
+const BACKGROUND_QUAD_WGSL: &str = r#"
+struct VertexIn {
+    @location(0) position: vec2<f32>,
+    @location(1) color: vec4<f32>,
+};
+
+struct VertexOut {
+    @builtin(position) position: vec4<f32>,
+    @location(0) color: vec4<f32>,
+};
+
+@vertex
+fn vs_main(input: VertexIn) -> VertexOut {
+    var output: VertexOut;
+    output.position = vec4<f32>(input.position, 0.0, 1.0);
+    output.color = input.color;
+    return output;
+}
+
+@fragment
+fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
+    return input.color;
+}
+"#;
 
 const TEXTURED_QUAD_WGSL: &str = r#"
 struct VertexIn {
@@ -1574,6 +1799,7 @@ mod tests {
         TexturedDrawInput {
             pattern,
             source_layout,
+            background: None,
             vertex_bytes,
             index_bytes,
             index_count,
@@ -1659,6 +1885,58 @@ mod tests {
         assert_eq!(
             error,
             GpuBootstrapError::SmokeReadback("terminal text vertex bytes are too large".to_owned())
+        );
+    }
+
+    #[test]
+    fn background_quad_vertex_byte_capacity_uses_checked_multiplication() {
+        assert_eq!(background_quad_vertex_byte_capacity(2).unwrap(), 192);
+
+        let error = background_quad_vertex_byte_capacity((usize::MAX / 96) + 1).unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback(
+                "terminal background vertex bytes are too large".to_owned()
+            )
+        );
+    }
+
+    #[test]
+    fn background_draw_buffer_layout_reports_checked_sizes() {
+        let input = BackgroundDrawInput {
+            vertex_bytes: vec![1, 2, 3, 4],
+            index_bytes: vec![5, 6, 7, 8],
+            index_count: 1,
+        };
+
+        let layout = validate_background_draw_buffers(&input).unwrap();
+
+        assert_eq!(
+            layout,
+            TexturedDrawBufferLayout {
+                vertex_buffer_size: 4,
+                index_buffer_size: 4,
+                index_count: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn background_draw_buffer_layout_rejects_empty_buffers() {
+        let input = BackgroundDrawInput {
+            vertex_bytes: Vec::new(),
+            index_bytes: vec![1, 2, 3, 4],
+            index_count: 1,
+        };
+
+        let error = validate_background_draw_buffers(&input).unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback(
+                "background draw buffers must be non-empty".to_owned()
+            )
         );
     }
 

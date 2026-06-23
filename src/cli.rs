@@ -475,10 +475,11 @@ where
             Ok(report) => CliExit {
                 code: 0,
                 stdout: format!(
-                    "GPU terminal text smoke: ok\nsize: {}x{}\nglyphs: {}\nquads: {}\nrasterized glyphs: {}\nreused glyphs: {}\nfirst drawn pixel: {:?}\ndrawn pixels: {}\n",
+                    "GPU terminal text smoke: ok\nsize: {}x{}\nglyphs: {}\nbackground quads: {}\nquads: {}\nrasterized glyphs: {}\nreused glyphs: {}\nfirst drawn pixel: {:?}\ndrawn pixels: {}\n",
                     report.width,
                     report.height,
                     report.glyphs,
+                    report.background_quads,
                     report.quads,
                     report.rasterized_glyphs,
                     report.reused_glyphs,
