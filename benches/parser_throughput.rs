@@ -13,7 +13,9 @@ use gromaq::renderer::{
     GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
     PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
 };
-use gromaq::{DirtyRegion, DirtyTracker, Terminal, TerminalConfig};
+use gromaq::{
+    DirtyRegion, DirtyTracker, MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig,
+};
 use winit::keyboard::{Key, ModifiersState};
 
 const LARGE_OUTPUT: &str = "\
@@ -48,6 +50,8 @@ const CONTINUOUS_OUTPUT_SCROLLBACK_LINES: usize = 64;
 const SCROLLBACK_NAVIGATION_LINES: usize = 4_096;
 const SCROLLBACK_NAVIGATION_STEPS: usize = 512;
 const ALTERNATE_SCREEN_STAGES: usize = 3;
+const RUNTIME_PROTOCOL_INPUT_PAYLOAD: &[u8] =
+    b"\x1b[?1004h\x1b[?1000h\x1b[?1006h\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
 #[derive(Debug)]
 struct BenchPtySession {
@@ -650,6 +654,73 @@ fn runtime_alternate_screen_stages(c: &mut Criterion) {
     });
 }
 
+fn runtime_protocol_input_reports(c: &mut Criterion) {
+    let payloads = vec![RUNTIME_PROTOCOL_INPUT_PAYLOAD.to_vec()];
+    c.bench_function("runtime_protocol_input_reports", |b| {
+        b.iter(|| {
+            let spawner = BenchPayloadPtySpawner {
+                payloads: payloads.clone(),
+            };
+            let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+                terminal_cols: 24,
+                terminal_rows: 4,
+                scrollback_lines: 128,
+                pixel_width: 0,
+                pixel_height: 0,
+                shell: ShellCommand {
+                    program: "/bin/sh".into(),
+                    args: Vec::new(),
+                    cwd: None,
+                },
+            })
+            .unwrap();
+            runtime.start_shell(&spawner).unwrap();
+
+            let pumped = runtime.pump_pty_output().unwrap();
+            let focused = runtime.send_focus_event(true).unwrap();
+            let blurred = runtime.send_focus_event(false).unwrap();
+            let pressed = runtime
+                .send_mouse_input(MouseEvent::new(
+                    MouseEventKind::Press,
+                    MouseButton::Left,
+                    2,
+                    1,
+                ))
+                .unwrap();
+            let released = runtime
+                .send_mouse_input(MouseEvent::new(
+                    MouseEventKind::Release,
+                    MouseButton::Left,
+                    2,
+                    1,
+                ))
+                .unwrap();
+            let wheel = runtime
+                .send_mouse_input(MouseEvent::new(
+                    MouseEventKind::Press,
+                    MouseButton::WheelUp,
+                    0,
+                    0,
+                ))
+                .unwrap();
+            let metrics = runtime.dump_runtime_perf_metrics();
+
+            black_box(pumped);
+            black_box(focused);
+            black_box(blurred);
+            black_box(pressed);
+            black_box(released);
+            black_box(wheel);
+            black_box(metrics.pty_response_writes);
+            black_box(metrics.pty_response_bytes);
+            black_box(metrics.focus_inputs);
+            black_box(metrics.mouse_inputs);
+            black_box(metrics.pty_input_writes);
+            black_box(metrics.pty_input_bytes);
+        });
+    });
+}
+
 criterion_group!(
     benches,
     parser_large_output,
@@ -666,7 +737,8 @@ criterion_group!(
     runtime_bounded_state_batches,
     runtime_state_snapshot_bounded_session,
     runtime_continuous_output_batches,
-    runtime_alternate_screen_stages
+    runtime_alternate_screen_stages,
+    runtime_protocol_input_reports
 );
 criterion_main!(benches);
 
