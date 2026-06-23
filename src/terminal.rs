@@ -823,6 +823,17 @@ impl Terminal {
         self.cursor.blinking = blinking;
     }
 
+    fn cursor_shape_parameter(&self) -> u16 {
+        match (self.cursor.shape, self.cursor.blinking) {
+            (CursorShape::Block, true) => 1,
+            (CursorShape::Block, false) => 2,
+            (CursorShape::Underline, true) => 3,
+            (CursorShape::Underline, false) => 4,
+            (CursorShape::Bar, true) => 5,
+            (CursorShape::Bar, false) => 6,
+        }
+    }
+
     fn absolute_cursor_row(&self, row: u16) -> u16 {
         let row = row.saturating_sub(1);
         if self.origin_mode {
@@ -1379,6 +1390,9 @@ impl Terminal {
                     self.scroll_bottom + 1
                 )
                 .as_bytes(),
+            ),
+            b" q" => self.pending_response_bytes.extend_from_slice(
+                format!("\x1bP1$r{} q\x1b\\", self.cursor_shape_parameter()).as_bytes(),
             ),
             _ => self
                 .pending_response_bytes

@@ -150,6 +150,15 @@ fn decrqss_reports_scroll_margin_status_string() {
 }
 
 #[test]
+fn decrqss_reports_cursor_shape_status_string() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
+
+    terminal.write_str("\x1b[6 q\x1bP$q q\x1b\\").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1bP1$r6 q\x1b\\");
+}
+
+#[test]
 fn decrqss_rejects_unsupported_status_strings() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
 
