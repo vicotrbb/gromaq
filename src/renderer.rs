@@ -1633,10 +1633,12 @@ impl GlyphBitmap {
             ));
         }
 
+        let source_height = usize::try_from(self.height)
+            .map_err(|_| "rgba image dimensions are too large".to_owned())?;
         let mut rgba = zeroed_rgba_buffer(target_width, target_height)?;
-        for row in 0..usize::try_from(self.height).unwrap_or(0) {
-            let source_start = row.saturating_mul(source_row_bytes);
-            let target_start = row.saturating_mul(target_row_bytes);
+        for row in 0..source_height {
+            let source_start = checked_rgba_row_offset(row, source_row_bytes)?;
+            let target_start = checked_rgba_row_offset(row, target_row_bytes)?;
             rgba[target_start..target_start + source_row_bytes]
                 .copy_from_slice(&self.rgba[source_start..source_start + source_row_bytes]);
         }
@@ -1672,6 +1674,11 @@ fn rgba_byte_len(width: u32, height: u32) -> std::result::Result<usize, String> 
     rgba_pixel_count(width, height)?
         .checked_mul(4)
         .ok_or_else(|| "rgba image dimensions are too large".to_owned())
+}
+
+fn checked_rgba_row_offset(row: usize, row_bytes: usize) -> std::result::Result<usize, String> {
+    row.checked_mul(row_bytes)
+        .ok_or_else(|| "rgba row offset is too large".to_owned())
 }
 
 fn zeroed_rgba_buffer(width: u32, height: u32) -> std::result::Result<Vec<u8>, String> {
@@ -2014,6 +2021,15 @@ mod tests {
         }];
 
         assert_eq!(atlas_columns_for_glyphs(&glyphs), 65_536);
+    }
+
+    #[test]
+    fn rgba_row_offset_uses_checked_multiplication() {
+        assert_eq!(checked_rgba_row_offset(3, 8).unwrap(), 24);
+
+        let error = checked_rgba_row_offset((usize::MAX / 8) + 1, 8).unwrap_err();
+
+        assert_eq!(error, "rgba row offset is too large");
     }
 
     #[test]
