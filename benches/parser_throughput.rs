@@ -39,10 +39,33 @@ const BENCH_MONOSPACE_FONT_CANDIDATES: &[&str] = &[
     "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
 ];
 
+const BOUNDED_STATE_BATCHES: usize = 4;
+const BOUNDED_STATE_LINES_PER_BATCH: usize = 512;
+const BOUNDED_STATE_SCROLLBACK_LINES: usize = 128;
+
 #[derive(Debug)]
 struct BenchPtySession {
     output: VecDeque<Vec<u8>>,
     echo_input: bool,
+}
+
+#[derive(Debug)]
+struct BenchPayloadPtySession {
+    output: VecDeque<Vec<u8>>,
+}
+
+impl NativePtySessionIo for BenchPayloadPtySession {
+    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
+        Ok(self.output.pop_front().unwrap_or_default())
+    }
+
+    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
+        Ok(())
+    }
+
+    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
+        Ok(())
+    }
 }
 
 impl NativePtySessionIo for BenchPtySession {
@@ -66,6 +89,21 @@ impl NativePtySessionIo for BenchPtySession {
 struct BenchPtySpawner {
     chunks: usize,
     echo_input: bool,
+}
+
+#[derive(Debug, Clone)]
+struct BenchPayloadPtySpawner {
+    payloads: Vec<Vec<u8>>,
+}
+
+impl NativePtySpawner for BenchPayloadPtySpawner {
+    type Session = BenchPayloadPtySession;
+
+    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
+        Ok(BenchPayloadPtySession {
+            output: VecDeque::from(self.payloads.clone()),
+        })
+    }
 }
 
 impl NativePtySpawner for BenchPtySpawner {
@@ -391,6 +429,48 @@ fn pty_runtime_pump_large_output(c: &mut Criterion) {
     });
 }
 
+fn runtime_bounded_state_batches(c: &mut Criterion) {
+    let payloads = bounded_state_payloads();
+    c.bench_function("runtime_bounded_state_batches", |b| {
+        b.iter(|| {
+            let spawner = BenchPayloadPtySpawner {
+                payloads: payloads.clone(),
+            };
+            let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+                terminal_cols: 32,
+                terminal_rows: 8,
+                scrollback_lines: BOUNDED_STATE_SCROLLBACK_LINES,
+                pixel_width: 0,
+                pixel_height: 0,
+                shell: ShellCommand {
+                    program: "/bin/sh".into(),
+                    args: Vec::new(),
+                    cwd: None,
+                },
+            })
+            .unwrap();
+            runtime.start_shell(&spawner).unwrap();
+            let mut renderer = WgpuRenderer::new(RendererConfig::default());
+            let mut bytes = 0_usize;
+            let mut frames = 0_u64;
+
+            for _ in 0..BOUNDED_STATE_BATCHES {
+                let pumped = runtime.pump_pty_output().unwrap();
+                bytes = bytes.saturating_add(pumped);
+                if runtime.render_terminal_frame(&mut renderer) {
+                    frames += 1;
+                }
+            }
+
+            let scrollback = runtime.terminal().dump_scrollback();
+            black_box(bytes);
+            black_box(frames);
+            black_box(scrollback.lines.len());
+            black_box(runtime.dump_runtime_perf_metrics());
+        });
+    });
+}
+
 criterion_group!(
     benches,
     parser_large_output,
@@ -402,7 +482,8 @@ criterion_group!(
     prepared_surface_glyph_frame_large_plan,
     native_input_echo_render_cycle,
     font_rasterizer_combining_cell,
-    pty_runtime_pump_large_output
+    pty_runtime_pump_large_output,
+    runtime_bounded_state_batches
 );
 criterion_main!(benches);
 
@@ -425,4 +506,18 @@ fn bench_monospace_font_bytes() -> Result<Vec<u8>, String> {
             path.display()
         )
     })
+}
+
+fn bounded_state_payloads() -> Vec<Vec<u8>> {
+    (0..BOUNDED_STATE_BATCHES)
+        .map(|batch| {
+            let start = batch * BOUNDED_STATE_LINES_PER_BATCH;
+            let end = start + BOUNDED_STATE_LINES_PER_BATCH;
+            let mut payload = Vec::new();
+            for line in start..end {
+                payload.extend_from_slice(format!("gromaq-bounded-line-{line:04}\n").as_bytes());
+            }
+            payload
+        })
+        .collect()
 }
