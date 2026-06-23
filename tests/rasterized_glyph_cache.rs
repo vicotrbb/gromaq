@@ -9,11 +9,16 @@ fn system_mono_font() -> PathBuf {
         "/System/Library/Fonts/SFNSMono.ttf",
         "/System/Library/Fonts/Menlo.ttc",
         "/System/Library/Fonts/Supplemental/Courier New.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+        "/usr/share/fonts/dejavu-sans-fonts/DejaVuSansMono.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
+        "/usr/share/fonts/liberation/LiberationMono-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
     ]
     .into_iter()
     .map(PathBuf::from)
     .find(|path| path.exists())
-    .expect("expected a local macOS monospace font for renderer glyph rasterization proof")
+    .expect("expected a local system monospace font for renderer glyph rasterization proof")
 }
 
 fn system_emoji_font() -> PathBuf {

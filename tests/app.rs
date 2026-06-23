@@ -1861,10 +1861,15 @@ fn system_mono_font() -> Vec<u8> {
         PathBuf::from("/System/Library/Fonts/SFNSMono.ttf"),
         PathBuf::from("/System/Library/Fonts/Menlo.ttc"),
         PathBuf::from("/System/Library/Fonts/Supplemental/Courier New.ttf"),
+        PathBuf::from("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"),
+        PathBuf::from("/usr/share/fonts/dejavu-sans-fonts/DejaVuSansMono.ttf"),
+        PathBuf::from("/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf"),
+        PathBuf::from("/usr/share/fonts/liberation/LiberationMono-Regular.ttf"),
+        PathBuf::from("/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf"),
     ];
     let path = candidates
         .into_iter()
         .find(|path| path.exists())
-        .expect("macOS monospace test font is available");
+        .expect("system monospace test font is available");
     std::fs::read(path).expect("test font can be read")
 }
