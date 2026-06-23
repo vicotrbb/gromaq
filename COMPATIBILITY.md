@@ -31,7 +31,7 @@ Compatibility proof is not complete.
 | `zsh` | Partial | `tests/pty.rs` runs a short command and scripted interactive input/output through a real PTY when `zsh` is available |
 | `fish` | Partial | `tests/pty.rs` runs a short command and scripted interactive input/output through a real PTY when `fish` is available |
 | `nushell` | Partial | `tests/pty.rs` runs a short command and scripted interactive input/output through a real PTY when `nu` is available |
-| `vim` / `nvim` | Partial | `tests/pty.rs` runs `vim --version` and `nvim --version` through a real PTY when available, and runs an interactive `vim` insert/write/quit workflow through a real PTY when `vim` is available; broader editor workflows and `nvim` interactive proof pending |
+| `vim` / `nvim` | Partial | `tests/pty.rs` runs `vim --version` and `nvim --version` through a real PTY when available, and runs interactive insert/write/quit workflows through a real PTY when `vim` or `nvim` are available; broader editor workflows pending |
 | `tmux` | Partial | `tests/pty.rs` runs `tmux -V` through a real PTY when available and runs an interactive tmux pane command workflow through a real PTY when `tmux` is available; live multiplexer pane mouse-reporting workflows pending |
 | `less` | Partial | `tests/pty.rs` runs `less --version` through a real PTY when available and runs an interactive less search/quit workflow through a real PTY when `less` is available; broader pager workflows pending |
 | `top` / `htop` / `btop` | Partial | `tests/pty.rs` runs a bounded `top` snapshot and `htop`/`btop` version checks through a real PTY when available; interactive full-screen process-monitor workflows pending |

@@ -318,6 +318,37 @@ fn pty_session_runs_nvim_version_when_available() {
 }
 
 #[test]
+fn pty_session_runs_nvim_interactive_edit_when_available() {
+    let Some(_program) = find_program("nvim") else {
+        eprintln!("skipping nvim interactive PTY workflow test because nvim is not on PATH");
+        return;
+    };
+    let file = test_temp_path("nvim-interactive.txt");
+    let _ = fs::remove_file(&file);
+    let command = format!(
+        "TERM=xterm-256color nvim -u NONE -n -i NONE -N --noplugin {}",
+        shell_quote_path(&file)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session
+        .write_all(b"igromaq-nvim-interactive\x1b:wq\r")
+        .unwrap();
+
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let edited = fs::read_to_string(&file).unwrap();
+    assert_eq!(edited, "gromaq-nvim-interactive\n");
+    let _ = fs::remove_file(file);
+}
+
+#[test]
 fn pty_session_runs_tmux_version_when_available() {
     assert_program_outputs_when_available("tmux", &["-V"], "tmux");
 }

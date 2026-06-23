@@ -37,7 +37,7 @@ Implemented and tested:
 - Real PTY command lifecycle checks for available `fish`, `nushell`, `vim`, `nvim`, `tmux`, `less`, `top`, `htop`, `btop`, `ssh`, `kubectl`, and `cargo test`
 - Real PTY `cargo test -- --nocapture` fixture workflow with deterministic large output
 - Scripted interactive PTY workflow checks for available `bash`, `zsh`, `fish`, and `nushell`
-- Scripted interactive PTY workflow checks for available `vim`, `tmux`, and `less`
+- Scripted interactive PTY workflow checks for available `vim`, `nvim`, `tmux`, and `less`
 - Real PTY background-reader large-output burst drain test
 - No-argument binary dispatch to the native terminal app loop
 - Launched native app runtime starts and retains a shell PTY session
