@@ -702,7 +702,7 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
     terminal
-        .write_str("AA\u{0301}A")
+        .write_str("A😀A")
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(
@@ -718,9 +718,7 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
             &mut atlas,
         )
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
-    let font_bytes = std::fs::read(system_mono_font_path()?)
-        .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
-    let mut cache = RasterizedGlyphCache::from_bytes(font_bytes)
+    let mut cache = RasterizedGlyphCache::from_font_bytes(system_smoke_font_bytes()?)
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let batch = cache
         .rasterize_plan(&plan)
@@ -773,6 +771,26 @@ fn system_mono_font_path() -> std::result::Result<PathBuf, GpuBootstrapError> {
             "no supported system monospace font found for text atlas smoke".to_owned(),
         )
     })
+}
+
+fn system_smoke_font_bytes() -> std::result::Result<Vec<Vec<u8>>, GpuBootstrapError> {
+    let mut font_bytes = vec![
+        std::fs::read(system_mono_font_path()?)
+            .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
+    ];
+    for fallback_path in [
+        "/System/Library/Fonts/Apple Color Emoji.ttc",
+        "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
+    ] {
+        let path = Path::new(fallback_path);
+        if path.exists() {
+            font_bytes.push(
+                std::fs::read(path)
+                    .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
+            );
+        }
+    }
+    Ok(font_bytes)
 }
 
 async fn request_native_wgpu_context(
