@@ -210,6 +210,11 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         [performance]
         target_fps = 120
         dirty_region_rendering = true
+
+        [shell]
+        program = "/bin/zsh"
+        args = ["-l"]
+        cwd = "/tmp"
         "#,
     )
     .unwrap();
@@ -221,6 +226,9 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("config check: ok"));
     assert!(exit.stdout.contains("terminal: 96x32"));
     assert!(exit.stdout.contains("scrollback lines: 2048"));
+    assert!(exit.stdout.contains("shell: /bin/zsh"));
+    assert!(exit.stdout.contains("shell args: -l"));
+    assert!(exit.stdout.contains("shell cwd: /tmp"));
     assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: true"));
@@ -619,6 +627,11 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
 
         [font]
         size_px = 16.5
+
+        [shell]
+        program = "/bin/zsh"
+        args = ["-l", "-i"]
+        cwd = "/tmp"
         "#,
     )
     .unwrap();
@@ -650,6 +663,11 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             terminal_cols: 132,
             terminal_rows: 40,
             scrollback_lines: 4096,
+            shell: gromaq::pty::ShellCommand {
+                program: "/bin/zsh".into(),
+                args: vec!["-l".into(), "-i".into()],
+                cwd: Some("/tmp".into()),
+            },
             ..NativeTerminalRuntimeConfig::default()
         }
     );

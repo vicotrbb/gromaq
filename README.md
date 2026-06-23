@@ -24,7 +24,7 @@ Implemented and tested:
 - Dirty-region tracking for renderer scheduling
 - Native `winit` app lifecycle boundary and window attributes
 - Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab, control-punctuation bytes, application cursor-key mode, application keypad mode, focus reports, committed platform text, paste payloads, native clipboard paste shortcuts including the dedicated OS Paste key, mouse reports, and native `winit` key events
-- Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, native app/runtime/renderer config mapping, and config-file native app launch
+- Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, shell program/args/cwd validation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, native app/runtime/renderer config mapping, and config-file native app launch
 - Structured `TerminalTestApi`
 - Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, measured native render durations, and app-input-to-render latency
 - Structured native runtime tracing for startup, PTY pump/input, render, and clean-frame skip diagnostics
@@ -132,6 +132,28 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 cargo bench --bench parser_throughput -- --list
 cargo bench
+```
+
+Example config:
+
+```toml
+[terminal]
+cols = 132
+rows = 40
+scrollback_lines = 4096
+
+[shell]
+program = "/bin/zsh"
+args = ["-l"]
+cwd = "/tmp"
+
+[font]
+family = "monospace"
+size_px = 16.5
+
+[performance]
+target_fps = 144
+dirty_region_rendering = true
 ```
 
 Benchmark coverage, expected benchmark names, reproducible local run steps, and

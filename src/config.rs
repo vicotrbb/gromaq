@@ -19,6 +19,8 @@ pub const MAX_FONT_SIZE_PX: f32 = 512.0;
 pub struct GromaqConfig {
     /// Terminal dimensions and history.
     pub terminal: TerminalSettings,
+    /// Shell command configuration.
+    pub shell: ShellSettings,
     /// Font configuration.
     pub font: FontSettings,
     /// Performance-related targets.
@@ -77,8 +79,28 @@ impl GromaqConfig {
                 actual: self.performance.target_fps,
             });
         }
+        validate_shell_settings(&self.shell)?;
         Ok(())
     }
+}
+
+fn validate_shell_settings(shell: &ShellSettings) -> Result<()> {
+    if shell
+        .program
+        .as_ref()
+        .is_some_and(|program| program.trim().is_empty())
+    {
+        return Err(GromaqError::InvalidShellProgram);
+    }
+    for (index, arg) in shell.args.iter().enumerate() {
+        if arg.is_empty() {
+            return Err(GromaqError::InvalidShellArgument { index });
+        }
+    }
+    if shell.cwd.as_ref().is_some_and(|cwd| cwd.trim().is_empty()) {
+        return Err(GromaqError::InvalidShellCwd);
+    }
+    Ok(())
 }
 
 pub(crate) fn validate_terminal_dimensions(cols: u16, rows: u16) -> Result<()> {
@@ -126,6 +148,21 @@ impl Default for TerminalSettings {
             scrollback_lines: 10_000,
         }
     }
+}
+
+/// Shell section of the configuration file.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ShellSettings {
+    /// Optional shell program path or name. Defaults to the user's system shell.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub program: Option<String>,
+    /// Optional shell arguments.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<String>,
+    /// Optional shell working directory.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cwd: Option<String>,
 }
 
 /// Font section of the configuration file.

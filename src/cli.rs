@@ -2,6 +2,7 @@
 
 use std::{
     collections::VecDeque,
+    path::PathBuf,
     time::{Duration, Instant},
 };
 
@@ -15,7 +16,7 @@ use crate::app::{
     run_native_app_with_runtime_and_renderer_config,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
-use crate::config::GromaqConfig;
+use crate::config::{GromaqConfig, ShellSettings};
 use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
     GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
@@ -82,9 +83,9 @@ impl NativeAppLaunchConfig {
     pub fn from_gromaq_config(config: &GromaqConfig) -> Result<Self, NativeAppLaunchError> {
         let app = NativeAppConfig::from_gromaq_config(config)
             .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
-        let runtime =
-            NativeTerminalRuntimeConfig::from_gromaq_config(config, ShellCommand::default_shell())
-                .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
+        let shell = shell_command_from_settings(&config.shell);
+        let runtime = NativeTerminalRuntimeConfig::from_gromaq_config(config, shell)
+            .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
         let renderer = RendererConfig {
             target_fps: config.performance.target_fps,
             dirty_regions: config.performance.dirty_region_rendering,
@@ -97,6 +98,21 @@ impl NativeAppLaunchConfig {
             renderer,
         })
     }
+}
+
+fn shell_command_from_settings(settings: &ShellSettings) -> ShellCommand {
+    let mut shell = settings
+        .program
+        .as_ref()
+        .map(|program| ShellCommand {
+            program: program.into(),
+            args: Vec::new(),
+            cwd: None,
+        })
+        .unwrap_or_else(ShellCommand::default_shell);
+    shell.args = settings.args.iter().map(Into::into).collect();
+    shell.cwd = settings.cwd.as_ref().map(PathBuf::from);
+    shell
 }
 
 /// Launches the native terminal app for the no-argument CLI path.
@@ -575,11 +591,14 @@ fn config_check_exit(path: &str) -> CliExit {
         Ok(config) => CliExit {
             code: 0,
             stdout: format!(
-                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nfont: {} {}px\ntarget fps: {}\ndirty-region rendering: {}\n",
+                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ntarget fps: {}\ndirty-region rendering: {}\n",
                 path,
                 config.terminal.cols,
                 config.terminal.rows,
                 config.terminal.scrollback_lines,
+                config.shell.program.as_deref().unwrap_or("<default>"),
+                format_config_list(&config.shell.args),
+                config.shell.cwd.as_deref().unwrap_or("<default>"),
                 config.font.family,
                 config.font.size_px,
                 config.performance.target_fps,
@@ -592,6 +611,14 @@ fn config_check_exit(path: &str) -> CliExit {
             stdout: String::new(),
             stderr: format!("config check failed: {error}\n"),
         },
+    }
+}
+
+fn format_config_list(values: &[String]) -> String {
+    if values.is_empty() {
+        "<none>".to_owned()
+    } else {
+        values.join(" ")
     }
 }
 

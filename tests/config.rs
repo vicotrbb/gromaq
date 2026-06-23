@@ -1,6 +1,6 @@
 use std::fs;
 
-use gromaq::{GromaqConfig, GromaqError, TerminalConfig};
+use gromaq::{GromaqConfig, GromaqError, ShellSettings, TerminalConfig};
 
 #[test]
 fn default_config_is_valid() {
@@ -67,6 +67,7 @@ fn partial_toml_config_uses_defaults_and_validates() {
         GromaqConfig::default().terminal.scrollback_lines
     );
     assert_eq!(config.font.family, "JetBrains Mono");
+    assert_eq!(config.shell, ShellSettings::default());
     assert_eq!(
         config.performance.target_fps,
         GromaqConfig::default().performance.target_fps
@@ -90,6 +91,58 @@ fn toml_config_validation_rejects_invalid_values() {
             ..
         }
     ));
+}
+
+#[test]
+fn shell_toml_config_accepts_program_args_and_cwd() {
+    let config = GromaqConfig::from_toml_str(
+        r#"
+        [shell]
+        program = "/bin/zsh"
+        args = ["-l", "-i"]
+        cwd = "/tmp"
+        "#,
+    )
+    .unwrap();
+
+    assert_eq!(config.shell.program.as_deref(), Some("/bin/zsh"));
+    assert_eq!(config.shell.args, ["-l", "-i"]);
+    assert_eq!(config.shell.cwd.as_deref(), Some("/tmp"));
+}
+
+#[test]
+fn invalid_shell_settings_are_rejected() {
+    let invalid_cases = [
+        (
+            r#"
+            [shell]
+            program = "   "
+            "#,
+            "shell program",
+        ),
+        (
+            r#"
+            [shell]
+            args = [""]
+            "#,
+            "shell argument",
+        ),
+        (
+            r#"
+            [shell]
+            cwd = "   "
+            "#,
+            "shell working directory",
+        ),
+    ];
+
+    for (toml, expected_message) in invalid_cases {
+        let error = GromaqConfig::from_toml_str(toml).unwrap_err();
+        assert!(
+            error.to_string().contains(expected_message),
+            "{error} did not contain {expected_message}"
+        );
+    }
 }
 
 #[test]
@@ -135,12 +188,16 @@ fn missing_config_file_reports_read_error() {
 fn config_serializes_to_valid_pretty_toml() {
     let mut config = GromaqConfig::default();
     config.terminal.cols = 96;
+    config.shell.program = Some("/bin/zsh".to_owned());
+    config.shell.args = vec!["-l".to_owned()];
+    config.shell.cwd = Some("/tmp".to_owned());
     config.font.family = "Gromaq Mono".to_owned();
 
     let toml = config.to_toml_string().unwrap();
     let parsed = GromaqConfig::from_toml_str(&toml).unwrap();
 
     assert!(toml.contains("[terminal]"));
+    assert!(toml.contains("[shell]"));
     assert_eq!(parsed, config);
 }
 

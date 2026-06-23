@@ -57,6 +57,21 @@ pub enum GromaqError {
         actual: u32,
     },
 
+    /// Configured shell program must contain a usable command.
+    #[error("shell program must not be empty")]
+    InvalidShellProgram,
+
+    /// Configured shell arguments must contain usable values.
+    #[error("shell argument at index {index} must not be empty")]
+    InvalidShellArgument {
+        /// Index of the invalid argument.
+        index: usize,
+    },
+
+    /// Configured shell working directory must contain a usable path.
+    #[error("shell working directory must not be empty")]
+    InvalidShellCwd,
+
     /// Loading a configuration file from disk failed.
     #[error("failed to read config file {path}: {message}")]
     ConfigRead {
