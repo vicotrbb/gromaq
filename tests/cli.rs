@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fs;
 
 use gromaq::app::NativeAppConfig;
 use gromaq::cli::{
@@ -181,9 +182,82 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn config_check_cli_validates_toml_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("valid-config.toml");
+    fs::write(
+        &path,
+        r#"
+        [terminal]
+        cols = 96
+        rows = 32
+        scrollback_lines = 2048
+
+        [font]
+        family = "Gromaq Mono"
+        size_px = 16.5
+
+        [performance]
+        target_fps = 120
+        dirty_region_rendering = true
+        "#,
+    )
+    .unwrap();
+
+    let path_arg = path.to_string_lossy().into_owned();
+    let exit = run_with_backend(["gromaq", "--config-check", path_arg.as_str()], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("config check: ok"));
+    assert!(exit.stdout.contains("terminal: 96x32"));
+    assert!(exit.stdout.contains("scrollback lines: 2048"));
+    assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
+    assert!(exit.stdout.contains("target fps: 120"));
+    assert!(exit.stdout.contains("dirty-region rendering: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn config_check_cli_reports_invalid_config_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("invalid-config.toml");
+    fs::write(&path, "[performance]\ntarget_fps = 0\n").unwrap();
+
+    let path_arg = path.to_string_lossy().into_owned();
+    let exit = run_with_backend(["gromaq", "--config-check", path_arg.as_str()], &backend);
+
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.contains("config check failed:"));
+    assert!(exit.stderr.contains("target fps"));
+    assert!(backend.requests.borrow().is_empty());
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn config_check_cli_requires_path() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--config-check"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.contains("missing config path"));
     assert!(backend.requests.borrow().is_empty());
 }
 
@@ -519,6 +593,15 @@ fn no_arguments_launches_native_terminal_app() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
     assert_eq!(app.launches.borrow()[0], NativeAppConfig::default());
+}
+
+fn test_cli_config_path(name: &str) -> std::path::PathBuf {
+    let directory = std::env::current_dir()
+        .unwrap()
+        .join("target")
+        .join("gromaq-cli-tests");
+    fs::create_dir_all(&directory).unwrap();
+    directory.join(format!("{}-{name}", std::process::id()))
 }
 
 #[test]

@@ -14,6 +14,7 @@ use crate::app::{
     NativeTerminalRuntimeConfig, load_default_native_glyph_cache, run_native_app,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
+use crate::config::GromaqConfig;
 use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
     GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
@@ -196,6 +197,7 @@ where
         && arg != "--gpu-textured-quad-smoke"
         && arg != "--gpu-terminal-text-smoke"
         && arg != "--clipboard-smoke"
+        && arg != "--config-check"
         && arg != "--osc52-clipboard-smoke"
         && arg != "--runtime-clipboard-paste-smoke"
         && arg != "--runtime-glyph-frame-smoke"
@@ -212,6 +214,23 @@ where
             stdout: String::new(),
             stderr: format!("{}unknown argument: {arg}\n", usage()),
         };
+    }
+    if arg == "--config-check" {
+        let Some(path) = args.next() else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}missing config path for --config-check\n", usage()),
+            };
+        };
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        return config_check_exit(path.as_ref());
     }
     if let Some(extra) = args.next() {
         return CliExit {
@@ -454,7 +473,32 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config-check <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+}
+
+fn config_check_exit(path: &str) -> CliExit {
+    match GromaqConfig::from_toml_file(path) {
+        Ok(config) => CliExit {
+            code: 0,
+            stdout: format!(
+                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nfont: {} {}px\ntarget fps: {}\ndirty-region rendering: {}\n",
+                path,
+                config.terminal.cols,
+                config.terminal.rows,
+                config.terminal.scrollback_lines,
+                config.font.family,
+                config.font.size_px,
+                config.performance.target_fps,
+                config.performance.dirty_region_rendering
+            ),
+            stderr: String::new(),
+        },
+        Err(error) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!("config check failed: {error}\n"),
+        },
+    }
 }
 
 fn frame_scheduler_smoke_exit() -> CliExit {
