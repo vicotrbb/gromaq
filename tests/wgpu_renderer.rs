@@ -26,7 +26,7 @@ fn wgpu_renderer_records_last_planned_frame() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("abcd").unwrap();
     let dirty = terminal.take_dirty_regions();
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
 
     renderer
         .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
@@ -56,7 +56,7 @@ fn wgpu_renderer_uses_configured_font_size_for_render_plan() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
     terminal.write_str("A").unwrap();
     let dirty = terminal.take_dirty_regions();
-    let mut renderer = WgpuRenderer::new(config);
+    let mut renderer = WgpuRenderer::new(config).unwrap();
 
     renderer
         .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
@@ -86,7 +86,7 @@ fn wgpu_renderer_reconfigure_updates_future_frame_planning() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
     terminal.write_str("A").unwrap();
     let dirty = terminal.take_dirty_regions();
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
     renderer
         .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
         .unwrap();
@@ -122,7 +122,8 @@ fn wgpu_renderer_can_plan_full_viewport_when_dirty_regions_are_disabled() {
     let mut renderer = WgpuRenderer::new(RendererConfig {
         dirty_regions: false,
         ..RendererConfig::default()
-    });
+    })
+    .unwrap();
 
     renderer
         .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
@@ -152,7 +153,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("ABA").unwrap();
     let dirty = terminal.take_dirty_regions();
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
     renderer
         .render_frame(&terminal.dump_grid(), terminal.dump_cursor(), &dirty)
         .unwrap();

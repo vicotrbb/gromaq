@@ -800,7 +800,10 @@ fn runtime_perf_smoke_exit() -> CliExit {
         Ok(bytes) => bytes,
         Err(error) => return runtime_perf_smoke_error(error),
     };
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_perf_smoke_error(error),
+    };
     let rendered = match runtime.render_terminal_frame(&mut renderer) {
         Ok(rendered) => rendered,
         Err(error) => return runtime_perf_smoke_error(error),
@@ -860,7 +863,10 @@ fn runtime_idle_smoke_exit() -> CliExit {
         Ok(bytes) => bytes,
         Err(error) => return runtime_idle_smoke_error(error),
     };
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_idle_smoke_error(error),
+    };
     for _ in 0..RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS {
         let rendered = match runtime.render_terminal_frame(&mut renderer) {
             Ok(rendered) => rendered,
@@ -984,7 +990,10 @@ fn runtime_large_output_smoke_exit() -> CliExit {
         Ok(bytes) => bytes,
         Err(error) => return runtime_large_output_smoke_error(error),
     };
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_large_output_smoke_error(error),
+    };
     let rendered = match runtime.render_terminal_frame(&mut renderer) {
         Ok(rendered) => rendered,
         Err(error) => return runtime_large_output_smoke_error(error),
@@ -1124,7 +1133,10 @@ fn runtime_bounded_state_smoke_exit() -> CliExit {
     }
 
     let mut pumped_bytes = 0_usize;
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_bounded_state_smoke_error(error),
+    };
     for _ in 0..RUNTIME_BOUNDED_STATE_BATCHES {
         let batch_bytes = match runtime.pump_pty_output() {
             Ok(bytes) => bytes,
@@ -1255,7 +1267,10 @@ fn runtime_continuous_output_smoke_exit() -> CliExit {
     }
 
     let mut pumped_bytes = 0_usize;
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_continuous_output_smoke_error(error),
+    };
     for _ in 0..RUNTIME_CONTINUOUS_OUTPUT_BATCHES {
         let batch_bytes = match runtime.pump_pty_output() {
             Ok(bytes) => bytes,
@@ -1390,7 +1405,10 @@ fn runtime_alternate_screen_smoke_exit() -> CliExit {
     }
 
     let mut pumped_bytes = 0_usize;
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_alternate_screen_smoke_error(error),
+    };
     let mut alt_rendered_text = String::new();
     for stage in 0..RUNTIME_ALTERNATE_SCREEN_SMOKE_STAGES {
         let stage_bytes = match runtime.pump_pty_output() {
@@ -1560,7 +1578,10 @@ fn runtime_reflow_smoke_exit() -> CliExit {
     if let Err(error) = runtime.resize_terminal(resize) {
         return runtime_reflow_smoke_error(error);
     }
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_reflow_smoke_error(error),
+    };
     let rendered = match runtime.render_terminal_frame(&mut renderer) {
         Ok(rendered) => rendered,
         Err(error) => return runtime_reflow_smoke_error(error),
@@ -1797,7 +1818,10 @@ fn runtime_glyph_frame_smoke_exit() -> CliExit {
         Ok(bytes) => bytes,
         Err(error) => return runtime_glyph_frame_smoke_error(error),
     };
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
+        Ok(renderer) => renderer,
+        Err(error) => return runtime_glyph_frame_smoke_error(error),
+    };
     let rendered = match runtime.render_terminal_frame(&mut renderer) {
         Ok(rendered) => rendered,
         Err(error) => return runtime_glyph_frame_smoke_error(error),

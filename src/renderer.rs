@@ -997,15 +997,14 @@ pub struct WgpuRenderer {
 
 impl WgpuRenderer {
     /// Create a renderer boundary. Device creation is part of the native UI bootstrap.
-    pub fn new(config: RendererConfig) -> Self {
-        let atlas_config = GlyphAtlasConfig::new(DEFAULT_GLYPH_ATLAS_CAPACITY)
-            .expect("default glyph atlas capacity is non-zero");
-        Self {
+    pub fn new(config: RendererConfig) -> Result<Self> {
+        let atlas_config = GlyphAtlasConfig::new(DEFAULT_GLYPH_ATLAS_CAPACITY)?;
+        Ok(Self {
             planner: RenderPlanner::new(config.font_size_px),
             config,
             glyph_atlas: GlyphAtlas::new(atlas_config),
             last_plan: None,
-        }
+        })
     }
 
     /// Access renderer configuration.

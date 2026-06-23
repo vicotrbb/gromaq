@@ -1461,7 +1461,7 @@ impl NativeTerminalApp {
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
-            renderer: WgpuRenderer::new(renderer_config),
+            renderer: WgpuRenderer::new(renderer_config)?,
             glyph_cache: load_default_native_glyph_cache().ok(),
             pty_spawner: RealNativePtySpawner::default(),
             gpu_context: None,
@@ -2022,6 +2022,12 @@ pub enum NativeGlyphFrameError {
 impl From<OsError> for NativeAppError {
     fn from(value: OsError) -> Self {
         Self::WindowCreation(value.to_string())
+    }
+}
+
+impl From<GromaqError> for NativeAppError {
+    fn from(value: GromaqError) -> Self {
+        Self::Runtime(value.to_string())
     }
 }
 

@@ -1027,7 +1027,7 @@ fn native_redraw_presents_dirty_runtime_frame_as_glyph_frame() {
     .unwrap();
     runtime.start_shell(&spawner).unwrap();
     runtime.pump_pty_output().unwrap();
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
     let mut glyph_cache = RasterizedGlyphCache::from_bytes(system_mono_font()).unwrap();
     let backend = MockSurfaceBackend::default();
     let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());

@@ -343,7 +343,7 @@ fn native_input_echo_render_cycle(c: &mut Criterion) {
     })
     .unwrap();
     runtime.start_shell(&spawner).unwrap();
-    let mut renderer = WgpuRenderer::new(RendererConfig::default());
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
     let key = Key::Character("x".into());
 
     c.bench_function("native_input_echo_render_cycle", |b| {
@@ -454,7 +454,7 @@ fn runtime_bounded_state_batches(c: &mut Criterion) {
             })
             .unwrap();
             runtime.start_shell(&spawner).unwrap();
-            let mut renderer = WgpuRenderer::new(RendererConfig::default());
+            let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
             let mut bytes = 0_usize;
             let mut frames = 0_u64;
 
@@ -496,7 +496,7 @@ fn runtime_continuous_output_batches(c: &mut Criterion) {
             })
             .unwrap();
             runtime.start_shell(&spawner).unwrap();
-            let mut renderer = WgpuRenderer::new(RendererConfig::default());
+            let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
             let mut bytes = 0_usize;
             let mut frames = 0_u64;
 
@@ -538,7 +538,7 @@ fn runtime_alternate_screen_stages(c: &mut Criterion) {
             })
             .unwrap();
             runtime.start_shell(&spawner).unwrap();
-            let mut renderer = WgpuRenderer::new(RendererConfig::default());
+            let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
             let mut bytes = 0_usize;
             let mut frames = 0_u64;
             let mut alt_rendered = false;
