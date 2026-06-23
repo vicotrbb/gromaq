@@ -109,6 +109,7 @@ fn glyph_quad_planner_rejects_slots_outside_the_atlas_image() {
         glyphs: vec![PlannedGlyph {
             row: 0,
             col: 0,
+            text: "B".to_owned(),
             ch: 'B',
             style: Style::default(),
             font_size_px: 14,

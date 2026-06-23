@@ -50,7 +50,7 @@ Compatibility proof is not complete.
 | `wgpu` surface lifecycle and configuration execution | Partial | `tests/surface_config.rs` covers config planning, configure/reconfigure/zero-size lifecycle state, and applying configure/reconfigure actions to a surface backend; `tests/app.rs` covers app-owned native window surface state across initial configure, resize, zero-size suspension, clear-frame presentation delegation, and glyph-frame presentation delegation; live window surface creation pending |
 | Deterministic 144Hz frame scheduler | Partial | `tests/frame_scheduler.rs` |
 | Deterministic glyph atlas cache | Partial | `tests/glyph_atlas.rs` |
-| Dirty-region render planning | Partial | `tests/render_plan.rs`, `tests/wgpu_renderer.rs` |
+| Dirty-region render planning | Partial | `tests/render_plan.rs`, `tests/wgpu_renderer.rs`; render plans retain full multi-codepoint cell text for simple ZWJ clusters while rasterization still uses the first scalar |
 | Terminal glyph quad generation | Partial | `tests/glyph_quads.rs` builds pixel-space quads and atlas UVs, including wide glyphs, from render-plan output |
 | End-to-end mouse workflows | Not proven | `tmux`, editors, and alternate-screen app scenarios pending |
 | Hardware-backed frame pacing | Not proven | Native surface clear-present loop is wired, but 144Hz frame pacing has not been measured on live hardware |

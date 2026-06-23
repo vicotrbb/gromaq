@@ -998,11 +998,13 @@ impl RenderPlanner {
                     let Some(ch) = cell.text.chars().next() else {
                         continue;
                     };
+                    let text = cell.text.clone();
                     let glyph_key = GlyphKey::new(ch, cell.style, self.font_size_px);
                     let atlas_entry = atlas.lookup_or_insert(glyph_key)?;
                     glyphs.push(PlannedGlyph {
                         row,
                         col,
+                        text,
                         ch,
                         style: cell.style,
                         font_size_px: self.font_size_px,
@@ -1038,12 +1040,14 @@ pub struct RenderPlan {
 }
 
 /// One glyph draw command inside a render plan.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlannedGlyph {
     /// Grid row.
     pub row: u16,
     /// Grid column.
     pub col: u16,
+    /// Full terminal cell text to draw.
+    pub text: String,
     /// Character to draw.
     pub ch: char,
     /// Cell style for the glyph.
@@ -1101,6 +1105,8 @@ pub struct GlyphVertex {
 /// One textured glyph quad derived from a planned glyph.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlyphQuad {
+    /// Full terminal cell text represented by this quad.
+    pub text: String,
     /// Character represented by this quad.
     pub ch: char,
     /// Atlas entry sampled by this quad.
@@ -1188,6 +1194,7 @@ impl GlyphQuadPlanner {
         let v1 = atlas_y1 as f32 / self.config.atlas_height_px as f32;
 
         Ok(GlyphQuad {
+            text: glyph.text.clone(),
             ch: glyph.ch,
             atlas_entry: glyph.atlas_entry,
             vertices: [

@@ -411,6 +411,7 @@ fn native_window_surface_presents_terminal_glyph_frame_through_backend() {
     .unwrap();
     let batch = GlyphQuadBatch {
         quads: vec![GlyphQuad {
+            text: "A".to_owned(),
             ch: 'A',
             atlas_entry: GlyphEntry {
                 slot: 0,
