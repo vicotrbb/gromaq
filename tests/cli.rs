@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use gromaq::app::NativeAppConfig;
 use gromaq::cli::{
     AdapterReport, CliExit, NativeAppLaunchError, NativeAppLauncher, run_with_backend,
-    run_with_backend_and_app,
+    run_with_backend_and_app, run_with_backend_and_clipboard,
 };
 use gromaq::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrapBackend, GpuBootstrapError, GpuBootstrapRequest,
@@ -12,6 +12,7 @@ use gromaq::native_gpu::{
     GpuTextAtlasUploadRunner, GpuTextureUploadReport, GpuTextureUploadRunner,
     GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
+use gromaq::{HostClipboard, MemoryClipboard};
 
 #[derive(Debug)]
 struct MockBackend {
@@ -26,6 +27,11 @@ struct MockContext {
 #[derive(Debug)]
 struct MockAppLauncher {
     launches: RefCell<Vec<NativeAppConfig>>,
+}
+
+#[derive(Debug)]
+struct ReadOnlyClipboard {
+    text: String,
 }
 
 impl GpuBootstrapBackend for MockBackend {
@@ -59,6 +65,14 @@ impl NativeAppLauncher for MockAppLauncher {
         self.launches.borrow_mut().push(config);
         Ok(())
     }
+}
+
+impl HostClipboard for ReadOnlyClipboard {
+    fn read_text(&self) -> Option<String> {
+        Some(self.text.clone())
+    }
+
+    fn write_text(&mut self, _text: &str) {}
 }
 
 impl GpuSmokeRunner for MockContext {
@@ -167,9 +181,84 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn clipboard_smoke_cli_roundtrips_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let mut clipboard = MemoryClipboard::new("previous clipboard");
+
+    let exit =
+        run_with_backend_and_clipboard(["gromaq", "--clipboard-smoke"], &backend, &mut clipboard);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("clipboard smoke: ok"));
+    assert!(exit.stdout.contains("roundtrip bytes: 22"));
+    assert!(exit.stdout.contains("previous text restored: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(clipboard.read_text().as_deref(), Some("previous clipboard"));
+}
+
+#[test]
+fn clipboard_smoke_cli_clears_sentinel_without_previous_text() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let mut clipboard = MemoryClipboard::default();
+
+    let exit =
+        run_with_backend_and_clipboard(["gromaq", "--clipboard-smoke"], &backend, &mut clipboard);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("clipboard smoke: ok"));
+    assert!(exit.stdout.contains("previous text restored: false"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(clipboard.read_text().as_deref(), Some(""));
+}
+
+#[test]
+fn clipboard_smoke_cli_clears_stale_sentinel_text() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let mut clipboard = MemoryClipboard::new("gromaq clipboard smoke");
+
+    let exit =
+        run_with_backend_and_clipboard(["gromaq", "--clipboard-smoke"], &backend, &mut clipboard);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("clipboard smoke: ok"));
+    assert!(exit.stdout.contains("previous text restored: false"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(clipboard.read_text().as_deref(), Some(""));
+}
+
+#[test]
+fn clipboard_smoke_cli_reports_readback_mismatch() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let mut clipboard = ReadOnlyClipboard {
+        text: "unchanged".to_owned(),
+    };
+
+    let exit =
+        run_with_backend_and_clipboard(["gromaq", "--clipboard-smoke"], &backend, &mut clipboard);
+
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.contains(
+        "clipboard smoke failed: expected \"gromaq clipboard smoke\", read \"unchanged\""
+    ));
     assert!(backend.requests.borrow().is_empty());
 }
 

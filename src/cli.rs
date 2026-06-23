@@ -3,11 +3,14 @@
 use thiserror::Error;
 
 use crate::app::{NativeAppConfig, run_native_app};
+use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
     GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
     GpuTextureUploadRunner, GpuTexturedQuadRunner,
 };
+
+const CLIPBOARD_SMOKE_TEXT: &str = "gromaq clipboard smoke";
 
 /// Captured CLI result for tests and the binary wrapper.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -66,7 +69,35 @@ where
         + GpuTexturedQuadRunner
         + GpuTerminalTextRunner,
 {
-    run_with_optional_app(args, backend, Option::<&RealNativeAppLauncher>::None)
+    let mut clipboard = NativeClipboard::new();
+    run_with_backend_and_clipboard(args, backend, &mut clipboard)
+}
+
+/// Run the CLI with injected GPU and clipboard boundaries.
+pub fn run_with_backend_and_clipboard<I, S, B, C>(
+    args: I,
+    backend: &B,
+    clipboard: &mut C,
+) -> CliExit
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+    B: GpuBootstrapBackend,
+    B::Context: AdapterReport
+        + GpuSmokeRunner
+        + GpuTextureUploadRunner
+        + GpuGlyphAtlasUploadRunner
+        + GpuTextAtlasUploadRunner
+        + GpuTexturedQuadRunner
+        + GpuTerminalTextRunner,
+    C: HostClipboard,
+{
+    run_with_optional_app_and_clipboard(
+        args,
+        backend,
+        Option::<&RealNativeAppLauncher>::None,
+        clipboard,
+    )
 }
 
 /// Run the CLI with injected GPU and native app launch boundaries.
@@ -84,10 +115,16 @@ where
         + GpuTerminalTextRunner,
     A: NativeAppLauncher,
 {
-    run_with_optional_app(args, backend, Some(app_launcher))
+    let mut clipboard = NativeClipboard::new();
+    run_with_optional_app_and_clipboard(args, backend, Some(app_launcher), &mut clipboard)
 }
 
-fn run_with_optional_app<I, S, B, A>(args: I, backend: &B, app_launcher: Option<&A>) -> CliExit
+fn run_with_optional_app_and_clipboard<I, S, B, A, C>(
+    args: I,
+    backend: &B,
+    app_launcher: Option<&A>,
+    clipboard: &mut C,
+) -> CliExit
 where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
@@ -100,6 +137,7 @@ where
         + GpuTexturedQuadRunner
         + GpuTerminalTextRunner,
     A: NativeAppLauncher,
+    C: HostClipboard,
 {
     let mut args = args.into_iter();
     let _program = args.next();
@@ -132,6 +170,7 @@ where
         && arg != "--gpu-text-atlas-smoke"
         && arg != "--gpu-textured-quad-smoke"
         && arg != "--gpu-terminal-text-smoke"
+        && arg != "--clipboard-smoke"
     {
         return CliExit {
             code: 2,
@@ -145,6 +184,10 @@ where
             stdout: String::new(),
             stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref(),),
         };
+    }
+
+    if arg == "--clipboard-smoke" {
+        return clipboard_smoke_exit(clipboard);
     }
 
     let bootstrap = GpuBootstrap::new(GpuBootstrapConfig::native_default());
@@ -346,7 +389,45 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke]\n".to_owned()
+}
+
+fn clipboard_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> CliExit {
+    let previous_text = clipboard.read_text();
+    clipboard.write_text(CLIPBOARD_SMOKE_TEXT);
+    let observed = clipboard.read_text();
+    let restorable_previous_text = previous_text
+        .as_deref()
+        .filter(|text| *text != CLIPBOARD_SMOKE_TEXT);
+    let restored_previous_text = restorable_previous_text.is_some();
+    match restorable_previous_text {
+        Some(previous_text) => clipboard.write_text(previous_text),
+        None => clipboard.write_text(""),
+    }
+
+    match observed {
+        Some(text) if text == CLIPBOARD_SMOKE_TEXT => CliExit {
+            code: 0,
+            stdout: format!(
+                "clipboard smoke: ok\nroundtrip bytes: {}\nprevious text restored: {}\n",
+                CLIPBOARD_SMOKE_TEXT.len(),
+                restored_previous_text
+            ),
+            stderr: String::new(),
+        },
+        Some(text) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!(
+                "clipboard smoke failed: expected {CLIPBOARD_SMOKE_TEXT:?}, read {text:?}\n"
+            ),
+        },
+        None => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: "clipboard smoke failed: read no text after write\n".to_owned(),
+        },
+    }
 }
 
 impl From<GpuBootstrapError> for CliExit {

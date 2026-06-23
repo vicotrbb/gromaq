@@ -28,7 +28,7 @@ Implemented and tested:
 - Deterministic one-pixel-per-cell test API screenshot capture
 - Alternate-screen enter/leave restoration
 - Visible-grid selection and copy
-- Host clipboard abstraction with deterministic in-memory and native OS text adapters
+- Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
 - SGR mouse reporting mode and press/release/drag/motion event encoding
 - PTY boundary plus a real shell-command lifecycle test
 - Real PTY command workflow tests for available `bash` and `zsh`
@@ -93,6 +93,7 @@ cargo run -- --gpu-glyph-atlas-smoke
 cargo run -- --gpu-text-atlas-smoke
 cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
+cargo run -- --clipboard-smoke
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
