@@ -45,6 +45,7 @@ const RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH: usize = 8;
 const RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES: usize = 64;
 const RUNTIME_ALTERNATE_SCREEN_SMOKE_STAGES: usize = 3;
 const RUNTIME_REFLOW_SMOKE_LINK: &str = "https://gromaq.dev";
+const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";
 const RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS: u64 = 16;
 
 /// Captured CLI result for tests and the binary wrapper.
@@ -262,6 +263,7 @@ where
         && arg != "--runtime-alternate-screen-smoke"
         && arg != "--runtime-reflow-smoke"
         && arg != "--runtime-config-reload-smoke"
+        && arg != "--runtime-focus-smoke"
         && arg != "--runtime-idle-smoke"
         && arg != "--frame-scheduler-smoke"
     {
@@ -365,6 +367,9 @@ where
     }
     if arg == "--runtime-config-reload-smoke" {
         return runtime_config_reload_smoke_exit();
+    }
+    if arg == "--runtime-focus-smoke" {
+        return runtime_focus_smoke_exit();
     }
     if arg == "--runtime-idle-smoke" {
         return runtime_idle_smoke_exit();
@@ -572,7 +577,7 @@ fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
 
 fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
@@ -783,6 +788,47 @@ impl NativePtySessionIo for RuntimePerfSmokePtySession {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+struct RuntimeFocusSmokePtySpawner;
+
+#[derive(Debug)]
+struct RuntimeFocusSmokePtySession {
+    output: VecDeque<Vec<u8>>,
+    input: Vec<Vec<u8>>,
+}
+
+impl Default for RuntimeFocusSmokePtySession {
+    fn default() -> Self {
+        Self {
+            output: VecDeque::from([RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING.as_bytes().to_vec()]),
+            input: Vec::new(),
+        }
+    }
+}
+
+impl NativePtySpawner for RuntimeFocusSmokePtySpawner {
+    type Session = RuntimeFocusSmokePtySession;
+
+    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
+        Ok(RuntimeFocusSmokePtySession::default())
+    }
+}
+
+impl NativePtySessionIo for RuntimeFocusSmokePtySession {
+    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
+        Ok(self.output.pop_front().unwrap_or_default())
+    }
+
+    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
+        self.input.push(bytes.to_vec());
+        Ok(())
+    }
+
+    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
+        Ok(())
+    }
+}
+
 fn runtime_perf_smoke_exit() -> CliExit {
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 24,
@@ -854,6 +900,83 @@ fn runtime_perf_smoke_error(error: impl std::fmt::Display) -> CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("runtime perf smoke failed: {error}\n"),
+    }
+}
+
+fn runtime_focus_smoke_exit() -> CliExit {
+    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 24,
+        terminal_rows: 4,
+        scrollback_lines: 128,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    }) {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_focus_smoke_error(error),
+    };
+    if let Err(error) = runtime.start_shell(&RuntimeFocusSmokePtySpawner) {
+        return runtime_focus_smoke_error(error);
+    }
+
+    let pumped_bytes = match runtime.pump_pty_output() {
+        Ok(bytes) => bytes,
+        Err(error) => return runtime_focus_smoke_error(error),
+    };
+    let focused = match runtime.send_focus_event(true) {
+        Ok(focused) => focused,
+        Err(error) => return runtime_focus_smoke_error(error),
+    };
+    let blurred = match runtime.send_focus_event(false) {
+        Ok(blurred) => blurred,
+        Err(error) => return runtime_focus_smoke_error(error),
+    };
+    let metrics = runtime.dump_runtime_perf_metrics();
+    let input = runtime
+        .shell_session()
+        .map(|session| session.input.concat())
+        .unwrap_or_default();
+
+    if pumped_bytes != RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING.len()
+        || !focused
+        || !blurred
+        || input != b"\x1b[I\x1b[O"
+        || metrics.focus_inputs != 2
+        || metrics.pty_input_writes != 2
+        || metrics.pty_input_bytes != 6
+    {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: "runtime focus smoke failed: focus reports did not reach PTY writes\n"
+                .to_owned(),
+        };
+    }
+
+    CliExit {
+        code: 0,
+        stdout: format!(
+            "runtime focus smoke: ok\npumped bytes: {}\nfocus in reported: {}\nfocus out reported: {}\nfocus inputs: {}\npty input writes: {}\npty input bytes: {}\n",
+            pumped_bytes,
+            focused,
+            blurred,
+            metrics.focus_inputs,
+            metrics.pty_input_writes,
+            metrics.pty_input_bytes
+        ),
+        stderr: String::new(),
+    }
+}
+
+fn runtime_focus_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime focus smoke failed: {error}\n"),
     }
 }
 
