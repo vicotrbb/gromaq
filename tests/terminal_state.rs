@@ -182,6 +182,20 @@ fn decrqss_reports_active_sgr_status_string() {
 }
 
 #[test]
+fn decrqss_reports_sgr_underline_color_status_string() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[4;58:2:17:34:51m\x1bP$qm\x1b\\\x1b[59m\x1bP$qm\x1b\\")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1bP1$r4;58:2:17:34:51m\x1b\\\x1bP1$r4m\x1b\\"
+    );
+}
+
+#[test]
 fn decrqss_rejects_unsupported_status_strings() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 5).unwrap());
 

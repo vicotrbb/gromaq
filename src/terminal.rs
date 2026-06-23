@@ -871,11 +871,24 @@ impl Terminal {
         }
         push_sgr_color_parameters(&mut params, 30, 90, 38, self.style.foreground);
         push_sgr_color_parameters(&mut params, 40, 100, 48, self.style.background);
+        if let Some(color) = self.active_underline_color() {
+            push_sgr_extended_color_parameter(&mut params, 58, color);
+        }
 
         if params.is_empty() {
             params.push("0".to_owned());
         }
         params
+    }
+
+    fn active_underline_color(&self) -> Option<Color> {
+        if self.style.underline_color_id == 0 {
+            return None;
+        }
+        self.underline_colors
+            .get(usize::from(self.style.underline_color_id - 1))
+            .copied()
+            .filter(|color| *color != Color::Default)
     }
 
     fn absolute_cursor_row(&self, row: u16) -> u16 {
@@ -2215,6 +2228,18 @@ fn push_sgr_color_parameters(
         }
         Color::Rgb(red, green, blue) => {
             params.push(format!("{extended_prefix}:2:{red}:{green}:{blue}"));
+        }
+    }
+}
+
+fn push_sgr_extended_color_parameter(params: &mut Vec<String>, prefix: u16, color: Color) {
+    match color {
+        Color::Default => {}
+        Color::Ansi(index) | Color::Indexed(index) => {
+            params.push(format!("{prefix}:5:{index}"));
+        }
+        Color::Rgb(red, green, blue) => {
+            params.push(format!("{prefix}:2:{red}:{green}:{blue}"));
         }
     }
 }
