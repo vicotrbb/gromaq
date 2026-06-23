@@ -29,7 +29,7 @@ Implemented and tested:
 - Alternate-screen enter/leave restoration
 - Visible-grid selection and copy
 - Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
-- SGR mouse reporting mode and press/release/drag/motion event encoding
+- Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding
 - PTY boundary plus a real shell-command lifecycle test
 - Real PTY command workflow tests for available `bash` and `zsh`
 - Real PTY command lifecycle checks for available `fish`, `nushell`, `vim`, `nvim`, `tmux`, `less`, `top`, `htop`, `btop`, `ssh`, `kubectl`, and `cargo test`
@@ -40,7 +40,7 @@ Implemented and tested:
 - Raw PTY byte ingestion into the terminal parser without lossy string conversion on the pump hot path
 - Native runtime terminal resize with retained PTY resize notification
 - Native window resize mapping to terminal dimensions with redraw request
-- Native keyboard, application cursor-key, focus-report, committed text, clipboard paste, terminal paste, and terminal mouse-report bytes written to the retained PTY session
+- Native keyboard, application cursor-key, focus-report, committed text, clipboard paste, terminal paste, and default/SGR terminal mouse-report bytes written to the retained PTY session
 - OSC 52 clipboard payload write-through to the host clipboard abstraction plus a native OSC 52 clipboard smoke command
 - Native window mouse coordinates mapped to terminal grid mouse reports
 - Timed native event-loop PTY polling with output-driven redraw requests

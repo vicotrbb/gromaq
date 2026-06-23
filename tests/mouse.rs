@@ -25,6 +25,18 @@ fn sgr_mouse_press_and_release_are_encoded_when_enabled() {
 }
 
 #[test]
+fn default_mouse_protocol_reports_press_and_release_when_sgr_is_disabled() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?1000h").unwrap();
+
+    let press = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 2, 1);
+    let release = MouseEvent::new(MouseEventKind::Release, MouseButton::Left, 2, 1);
+
+    assert_eq!(terminal.encode_mouse_event(press).unwrap(), b"\x1b[M #\"");
+    assert_eq!(terminal.encode_mouse_event(release).unwrap(), b"\x1b[M##\"");
+}
+
+#[test]
 fn disabling_mouse_reporting_stops_encoding_events() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     terminal.write_str("\x1b[?1000h\x1b[?1006h").unwrap();
@@ -46,6 +58,26 @@ fn sgr_mouse_wheel_events_use_xterm_button_codes() {
         terminal.encode_mouse_event(event).unwrap(),
         b"\x1b[<64;1;1M"
     );
+}
+
+#[test]
+fn default_mouse_protocol_reports_wheel_button_codes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?1000h").unwrap();
+
+    let event = MouseEvent::new(MouseEventKind::Press, MouseButton::WheelDown, 0, 0);
+
+    assert_eq!(terminal.encode_mouse_event(event).unwrap(), b"\x1b[Ma!!");
+}
+
+#[test]
+fn default_mouse_protocol_rejects_coordinates_outside_byte_encoding() {
+    let mut terminal = Terminal::new(TerminalConfig::new(240, 3).unwrap());
+    terminal.write_str("\x1b[?1000h").unwrap();
+
+    let event = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 224, 0);
+
+    assert_eq!(terminal.encode_mouse_event(event), None);
 }
 
 #[test]

@@ -3,7 +3,7 @@
 /// Mouse reporting protocol.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MouseProtocol {
-    /// X10/default protocol is not emitted by this foundation slice.
+    /// Xterm default `CSI M Cb Cx Cy` protocol.
     Default,
     /// SGR 1006 protocol.
     Sgr,
@@ -97,25 +97,52 @@ impl MouseReportState {
 
     /// Encode a mouse event according to active reporting modes.
     pub fn encode(self, event: MouseEvent) -> Option<Vec<u8>> {
-        if self.protocol != MouseProtocol::Sgr || !self.mode.reports(event.kind) {
+        if !self.mode.reports(event.kind) {
             return None;
         }
-        let suffix = match event.kind {
-            MouseEventKind::Press | MouseEventKind::Drag | MouseEventKind::Motion => 'M',
-            MouseEventKind::Release => 'm',
-        };
         let code = event.button.code() + event.kind.motion_code_offset();
-        Some(
-            format!(
-                "\x1b[<{};{};{}{}",
-                code,
-                event.col + 1,
-                event.row + 1,
-                suffix
-            )
-            .into_bytes(),
-        )
+        match self.protocol {
+            MouseProtocol::Default => {
+                let code = if event.kind == MouseEventKind::Release {
+                    MouseButton::None.code()
+                } else {
+                    code
+                };
+                encode_default_mouse_event(code, event)
+            }
+            MouseProtocol::Sgr => {
+                let suffix = match event.kind {
+                    MouseEventKind::Press | MouseEventKind::Drag | MouseEventKind::Motion => 'M',
+                    MouseEventKind::Release => 'm',
+                };
+                Some(
+                    format!(
+                        "\x1b[<{};{};{}{}",
+                        code,
+                        event.col + 1,
+                        event.row + 1,
+                        suffix
+                    )
+                    .into_bytes(),
+                )
+            }
+        }
     }
+}
+
+fn encode_default_mouse_event(code: u16, event: MouseEvent) -> Option<Vec<u8>> {
+    Some(vec![
+        0x1b,
+        b'[',
+        b'M',
+        default_mouse_byte(code)?,
+        default_mouse_byte(event.col.checked_add(1)?)?,
+        default_mouse_byte(event.row.checked_add(1)?)?,
+    ])
+}
+
+fn default_mouse_byte(value: u16) -> Option<u8> {
+    u8::try_from(value.checked_add(32)?).ok()
 }
 
 impl MouseReportMode {
