@@ -255,6 +255,44 @@ fn csi_delete_lines_respects_scroll_region_bottom() {
 }
 
 #[test]
+fn csi_insert_lines_ignores_cursor_outside_scroll_region() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
+        .unwrap();
+    terminal
+        .write_str("\x1b[2;4r\x1b[1;1H\x1b[L\x1b[5;1H\x1b[L")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "top");
+    assert_eq!(grid.line_text(1), "one");
+    assert_eq!(grid.line_text(2), "two");
+    assert_eq!(grid.line_text(3), "three");
+    assert_eq!(grid.line_text(4), "bottom");
+}
+
+#[test]
+fn csi_delete_lines_ignores_cursor_outside_scroll_region() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[1;1Htop\x1b[2;1Hone\x1b[3;1Htwo\x1b[4;1Hthree\x1b[5;1Hbottom")
+        .unwrap();
+    terminal
+        .write_str("\x1b[2;4r\x1b[1;1H\x1b[M\x1b[5;1H\x1b[M")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "top");
+    assert_eq!(grid.line_text(1), "one");
+    assert_eq!(grid.line_text(2), "two");
+    assert_eq!(grid.line_text(3), "three");
+    assert_eq!(grid.line_text(4), "bottom");
+}
+
+#[test]
 fn dec_and_sco_save_restore_cursor_positions() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 

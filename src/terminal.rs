@@ -1177,12 +1177,10 @@ impl Terminal {
 
     fn insert_blank_lines(&mut self, count: u16) {
         self.flush_dirty_run();
-        let bottom = if self.cursor.row >= self.scroll_top && self.cursor.row <= self.scroll_bottom
-        {
-            self.scroll_bottom
-        } else {
-            self.config.rows - 1
-        };
+        if self.cursor.row < self.scroll_top || self.cursor.row > self.scroll_bottom {
+            return;
+        }
+        let bottom = self.scroll_bottom;
         self.grid
             .insert_blank_rows_in_region(self.cursor.row, bottom, count, self.style);
         self.insert_hard_break_rows_in_region(self.cursor.row, bottom, count);
@@ -1198,12 +1196,10 @@ impl Terminal {
 
     fn delete_lines(&mut self, count: u16) {
         self.flush_dirty_run();
-        let bottom = if self.cursor.row >= self.scroll_top && self.cursor.row <= self.scroll_bottom
-        {
-            self.scroll_bottom
-        } else {
-            self.config.rows - 1
-        };
+        if self.cursor.row < self.scroll_top || self.cursor.row > self.scroll_bottom {
+            return;
+        }
+        let bottom = self.scroll_bottom;
         self.grid
             .delete_rows_in_region(self.cursor.row, bottom, count, self.style);
         self.delete_hard_break_rows_in_region(self.cursor.row, bottom, count);
