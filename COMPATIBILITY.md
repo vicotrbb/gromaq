@@ -37,8 +37,8 @@ Compatibility proof is not complete.
 | `top` / `htop` / `btop` | Partial | `tests/pty.rs` runs a bounded `top` snapshot and `htop`/`btop` version checks through a real PTY when available; interactive full-screen process-monitor workflows pending |
 | `ssh` | Partial | `tests/pty.rs` runs `ssh -V` through a real PTY when available; remote/session workflow pending |
 | `kubectl` output | Partial | `tests/pty.rs` runs `kubectl version --client=true` through a real PTY when available; large/live Kubernetes output scenarios pending |
-| `cargo test` workflow | Partial | `tests/pty.rs` runs `cargo test --quiet` through a real PTY against a tiny fixture project when `cargo` is available; large repo test-output scenarios pending |
-| Large continuous output | Partial | Criterion parser and scrollback benches; `tests/terminal_state.rs` feeds 200 lines through terminal state and proves scrollback remains capped to the 32 newest retained rows; `tests/pty.rs` drains a 2,000-line real PTY burst through the background reader |
+| `cargo test` workflow | Partial | `tests/pty.rs` runs `cargo test --quiet` and a 256-line `cargo test -- --nocapture` output workflow through a real PTY against a fixture project when `cargo` is available; large real-repo test-output scenarios pending |
+| Large continuous output | Partial | Criterion parser and scrollback benches; `tests/terminal_state.rs` feeds 200 lines through terminal state and proves scrollback remains capped to the 32 newest retained rows; `tests/pty.rs` drains a 2,000-line real PTY burst through the background reader and verifies a 256-line real `cargo test -- --nocapture` output stream |
 | Native `wgpu` adapter/device bootstrap | Partial | `tests/native_gpu.rs`, `tests/cli.rs`, `cargo run -- --gpu-info` on 2026-06-22 reported `Apple M1 Pro` / `Metal` |
 | Offscreen GPU render/readback smoke | Partial | `cargo run -- --gpu-smoke` on 2026-06-22 read back `[26, 51, 77, 255]` from a 4x4 clear |
 | GPU texture upload/readback smoke | Partial | `cargo run -- --gpu-upload-smoke` on 2026-06-22 matched `16/16` uploaded bytes |

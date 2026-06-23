@@ -443,6 +443,23 @@ fn pty_session_runs_cargo_test_workflow_when_available() {
     );
 }
 
+#[test]
+fn pty_session_runs_large_cargo_test_output_when_available() {
+    assert_program_outputs_when_available_with_timeout(
+        "cargo",
+        &[
+            "test",
+            "--manifest-path",
+            "tests/fixtures/tiny_cargo_project/Cargo.toml",
+            "fixture_emits_large_test_output",
+            "--",
+            "--nocapture",
+        ],
+        "gromaq-cargo-output-255",
+        Duration::from_secs(20),
+    );
+}
+
 fn assert_shell_command_outputs(shell_name: &str, expected: &str) {
     let Some(program) = find_program(shell_name) else {
         eprintln!("skipping {shell_name} PTY workflow test because {shell_name} is not on PATH");
