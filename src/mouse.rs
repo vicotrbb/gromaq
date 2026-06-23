@@ -106,20 +106,13 @@ impl MouseReportState {
                 encode_default_mouse_event(code, event)
             }
             MouseProtocol::Sgr => {
+                let col = event.col.checked_add(1)?;
+                let row = event.row.checked_add(1)?;
                 let suffix = match event.kind {
                     MouseEventKind::Press | MouseEventKind::Drag | MouseEventKind::Motion => 'M',
                     MouseEventKind::Release => 'm',
                 };
-                Some(
-                    format!(
-                        "\x1b[<{};{};{}{}",
-                        code,
-                        event.col + 1,
-                        event.row + 1,
-                        suffix
-                    )
-                    .into_bytes(),
-                )
+                Some(format!("\x1b[<{};{};{}{}", code, col, row, suffix).into_bytes())
             }
         }
     }

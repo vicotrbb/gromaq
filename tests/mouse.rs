@@ -109,6 +109,16 @@ fn default_mouse_protocol_rejects_coordinates_outside_byte_encoding() {
 }
 
 #[test]
+fn sgr_mouse_protocol_rejects_coordinates_that_cannot_be_one_based() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?1000h\x1b[?1006h").unwrap();
+
+    let event = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, u16::MAX, 0);
+
+    assert_eq!(terminal.encode_mouse_event(event), None);
+}
+
+#[test]
 fn button_motion_mode_reports_drag_but_not_plain_motion() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     terminal.write_str("\x1b[?1002h\x1b[?1006h").unwrap();
