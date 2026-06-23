@@ -105,6 +105,9 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
     application_keypad: bool,
 ) -> Option<Vec<u8>> {
     let key_modifiers = key_modifiers_from_winit(modifiers);
+    if key_modifiers.contains(KeyModifiers::SUPER) {
+        return None;
+    }
     if let Some(physical_key) = physical_key
         && let Some(bytes) =
             encode_winit_keypad_key(physical_key, key_modifiers, application_keypad)

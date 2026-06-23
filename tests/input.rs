@@ -378,3 +378,22 @@ fn encodes_winit_modified_terminal_characters() {
         None
     );
 }
+
+#[test]
+fn super_modified_keys_are_reserved_for_native_shortcuts() {
+    assert_eq!(
+        encode_winit_key(&Key::Character("l".into()), ModifiersState::SUPER),
+        None
+    );
+    assert_eq!(
+        encode_winit_key(&Key::Named(NamedKey::ArrowLeft), ModifiersState::SUPER),
+        None
+    );
+    assert_eq!(
+        encode_winit_key(
+            &Key::Named(NamedKey::PageDown),
+            ModifiersState::SUPER | ModifiersState::SHIFT
+        ),
+        None
+    );
+}
