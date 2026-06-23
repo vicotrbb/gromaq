@@ -245,7 +245,10 @@ fn encode_winit_keypad_key(
             KeyCode::NumpadEqual => b'X',
             _ => return None,
         };
-        return Some(vec![0x1b, b'O', final_byte]);
+        return Some(encode_alt_prefixed_key(
+            &[0x1b, b'O', final_byte],
+            modifiers,
+        ));
     }
 
     let ch = match code {

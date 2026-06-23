@@ -140,6 +140,22 @@ fn terminal_encodes_physical_numpad_keys_in_application_keypad_mode() {
     assert_eq!(
         terminal.encode_winit_key_event_input(
             &Key::Character("1".into()),
+            Some(PhysicalKey::Code(KeyCode::Numpad1)),
+            ModifiersState::ALT,
+        ),
+        Some(b"\x1b\x1bOq".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Named(NamedKey::Enter),
+            Some(PhysicalKey::Code(KeyCode::NumpadEnter)),
+            ModifiersState::ALT,
+        ),
+        Some(b"\x1b\x1bOM".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
             None,
             ModifiersState::empty(),
         ),
