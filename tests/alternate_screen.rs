@@ -74,3 +74,24 @@ fn alternate_screen_does_not_append_to_scrollback() {
     assert_eq!(terminal.dump_grid().line_text(0), "two");
     assert_eq!(terminal.dump_grid().line_text(1), "three");
 }
+
+#[test]
+fn alternate_screen_resize_reflows_saved_primary_before_restore() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+
+    terminal.write_str("abcdefghi").unwrap();
+    terminal.write_str("\x1b[?1049halt").unwrap();
+    terminal.resize(4, 3).unwrap();
+    assert_eq!(terminal.dump_grid().line_text(0), "alt");
+
+    terminal.write_str("\x1b[?1049l").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.cols, 4);
+    assert_eq!(grid.rows, 3);
+    assert_eq!(grid.line_text(0), "abcd");
+    assert_eq!(grid.line_text(1), "efgh");
+    assert_eq!(grid.line_text(2), "i");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
