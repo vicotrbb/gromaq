@@ -181,6 +181,39 @@ fn terminal_encodes_physical_numpad_keys_in_application_keypad_mode() {
 }
 
 #[test]
+fn terminal_encodes_physical_numpad_keys_after_decpam_decpnm() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+
+    terminal.write_str("\x1b=").unwrap();
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
+            Some(PhysicalKey::Code(KeyCode::Numpad1)),
+            ModifiersState::empty(),
+        ),
+        Some(b"\x1bOq".to_vec())
+    );
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Named(NamedKey::Enter),
+            Some(PhysicalKey::Code(KeyCode::NumpadEnter)),
+            ModifiersState::empty(),
+        ),
+        Some(b"\x1bOM".to_vec())
+    );
+
+    terminal.write_str("\x1b>").unwrap();
+    assert_eq!(
+        terminal.encode_winit_key_event_input(
+            &Key::Character("1".into()),
+            Some(PhysicalKey::Code(KeyCode::Numpad1)),
+            ModifiersState::empty(),
+        ),
+        Some(b"1".to_vec())
+    );
+}
+
+#[test]
 fn terminal_restores_saved_application_keypad_mode() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
 

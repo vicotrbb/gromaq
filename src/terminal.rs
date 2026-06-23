@@ -2688,6 +2688,8 @@ impl Perform for Terminal {
             (b"", b'E') => self.next_line(),
             (b"", b'H') => self.set_horizontal_tab_stop(),
             (b"", b'M') => self.reverse_index(),
+            (b"", b'=') => self.application_keypad = true,
+            (b"", b'>') => self.application_keypad = false,
             (b"", b'7') => self.save_dec_cursor(),
             (b"", b'8') => self.restore_dec_cursor(),
             (b"", b'Z') => self.report_decid(),
