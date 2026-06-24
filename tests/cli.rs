@@ -83,6 +83,8 @@ impl NativeAppLauncher for MockAppLauncher {
         self.launches.borrow_mut().push(config);
         Ok(NativeAppRunReport {
             frames_presented,
+            monitor_refresh_millihertz: Some(60_000),
+            frame_interval_target_fps: 60,
             frame_interval_samples: frames_presented.saturating_sub(1),
             frame_interval_avg_ns: 6_940_000,
             frame_interval_max_ns: 8_000_000,
@@ -480,7 +482,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 180\nframes presented: 180\ntarget fps: 144\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 180\nframes presented: 180\ntarget fps: 144\nmonitor refresh mhz: 60000\nframe interval target fps: 60\nelapsed ns: "
     ));
     assert!(exit.stdout.contains("frame interval samples: 179\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));

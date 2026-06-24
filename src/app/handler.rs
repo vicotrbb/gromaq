@@ -32,8 +32,12 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     event_loop.exit();
                     return;
                 }
+                let monitor_refresh_millihertz = window
+                    .current_monitor()
+                    .and_then(|monitor| monitor.refresh_rate_millihertz());
                 self.window = Some(window);
-                self.lifecycle.on_window_created();
+                self.lifecycle
+                    .on_window_created_with_monitor_refresh(monitor_refresh_millihertz);
                 if let Err(error) = self.runtime.start_shell(&self.pty_spawner) {
                     self.startup_error = Some(error.to_string());
                     event_loop.exit();

@@ -148,6 +148,7 @@ pub struct NativeAppLifecycle {
     redraw_requests: u64,
     frames_presented: u64,
     next_redraw_at: Option<Instant>,
+    monitor_refresh_millihertz: Option<u32>,
     frame_intervals: PresentedFrameIntervals,
 }
 
@@ -162,6 +163,7 @@ impl NativeAppLifecycle {
             redraw_requests: 0,
             frames_presented: 0,
             next_redraw_at: None,
+            monitor_refresh_millihertz: None,
             frame_intervals: PresentedFrameIntervals::default(),
         }
     }
@@ -187,8 +189,17 @@ impl NativeAppLifecycle {
 
     /// Record that the native window was created.
     pub fn on_window_created(&mut self) {
+        self.on_window_created_with_monitor_refresh(None);
+    }
+
+    /// Record that the native window was created on a monitor with a known refresh rate.
+    pub fn on_window_created_with_monitor_refresh(
+        &mut self,
+        monitor_refresh_millihertz: Option<u32>,
+    ) {
         self.has_window = true;
         self.windows_created += 1;
+        self.monitor_refresh_millihertz = monitor_refresh_millihertz;
     }
 
     /// Handle the event-loop idle boundary before waiting for more events.
@@ -232,7 +243,7 @@ impl NativeAppLifecycle {
     /// Next timer deadline for polling PTY output without forcing a redraw.
     pub fn next_pty_pump_deadline(&self, now: Instant) -> Option<Instant> {
         if self.has_window && !self.close_requested {
-            let next_pty_pump_at = now + self.config.target_frame_interval();
+            let next_pty_pump_at = now + self.frame_interval_target_duration();
             Some(
                 self.next_redraw_at
                     .map(|next_redraw_at| next_redraw_at.min(next_pty_pump_at))
@@ -271,7 +282,7 @@ impl NativeAppLifecycle {
             self.close_requested = true;
             NativeAppAction::Exit
         } else if self.config.redraw_until_presented_frame_limit && self.has_window {
-            self.next_redraw_at = Some(presented_at + self.config.target_frame_interval());
+            self.next_redraw_at = Some(presented_at + self.frame_interval_target_duration());
             NativeAppAction::None
         } else {
             NativeAppAction::None
@@ -309,11 +320,32 @@ impl NativeAppLifecycle {
             self.windows_created,
             self.redraw_requests,
             self.frames_presented,
+            self.monitor_refresh_millihertz,
+            self.frame_interval_target_fps(),
         )
     }
 
     fn record_frame_presented_at(&mut self, presented_at: Instant) {
+        let target_fps = self.frame_interval_target_fps();
         self.frame_intervals
-            .record_presented_at(presented_at, self.config.target_fps);
+            .record_presented_at(presented_at, target_fps);
     }
+
+    fn frame_interval_target_fps(&self) -> u32 {
+        self.monitor_refresh_millihertz
+            .map(refresh_millihertz_to_fps)
+            .map(|refresh_fps| refresh_fps.min(self.config.target_fps.max(1)))
+            .unwrap_or_else(|| self.config.target_fps.max(1))
+    }
+
+    fn frame_interval_target_duration(&self) -> Duration {
+        Duration::from_nanos(NANOS_PER_SECOND / u64::from(self.frame_interval_target_fps()))
+    }
+}
+
+fn refresh_millihertz_to_fps(refresh_millihertz: u32) -> u32 {
+    refresh_millihertz
+        .saturating_add(999)
+        .saturating_div(1_000)
+        .max(1)
 }

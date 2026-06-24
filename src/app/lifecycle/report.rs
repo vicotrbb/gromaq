@@ -17,6 +17,10 @@ pub struct NativeAppRunReport {
     pub redraw_requests: u64,
     /// Count of redraw events observed by the app boundary.
     pub frames_presented: u64,
+    /// Active monitor refresh rate in millihertz, if the platform reported one.
+    pub monitor_refresh_millihertz: Option<u32>,
+    /// Effective FPS target used for presented-frame interval accounting.
+    pub frame_interval_target_fps: u32,
     /// Count of measured intervals between presented frames.
     pub frame_interval_samples: u64,
     /// Total measured presented-frame interval duration in nanoseconds.
@@ -65,11 +69,15 @@ impl PresentedFrameIntervals {
         windows_created: u64,
         redraw_requests: u64,
         frames_presented: u64,
+        monitor_refresh_millihertz: Option<u32>,
+        frame_interval_target_fps: u32,
     ) -> NativeAppRunReport {
         NativeAppRunReport {
             windows_created,
             redraw_requests,
             frames_presented,
+            monitor_refresh_millihertz,
+            frame_interval_target_fps,
             frame_interval_samples: self.samples,
             frame_interval_total_ns: self.total_ns,
             frame_interval_avg_ns: self.avg_ns,
@@ -109,9 +117,11 @@ mod tests {
             144,
         );
 
-        let report = intervals.run_report(1, 2, 3);
+        let report = intervals.run_report(1, 2, 3, None, 144);
 
         assert_eq!(report.frame_interval_samples, 2);
+        assert_eq!(report.monitor_refresh_millihertz, None);
+        assert_eq!(report.frame_interval_target_fps, 144);
         assert_eq!(report.dropped_frames, 2);
     }
 }

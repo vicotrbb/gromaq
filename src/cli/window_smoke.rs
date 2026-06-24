@@ -46,12 +46,17 @@ where
     match app_launcher.launch(launch_config) {
         Ok(report) => {
             if command == CliCommand::WindowPerfSmoke {
-                let frame_pacing_accepted = window_frame_pacing_accepted(&report, target_fps);
+                let monitor_refresh_millihertz = report
+                    .monitor_refresh_millihertz
+                    .map(|refresh| refresh.to_string())
+                    .unwrap_or_else(|| "unknown".to_owned());
+                let frame_pacing_accepted = window_frame_pacing_accepted(&report);
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\ndropped frames: {}\nframe pacing accepted: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nframe interval target fps: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\ndropped frames: {}\nframe pacing accepted: {}\n",
                         report.frames_presented,
+                        report.frame_interval_target_fps,
                         started_at.elapsed().as_nanos(),
                         report.frame_interval_samples,
                         report.frame_interval_avg_ns,
@@ -78,8 +83,8 @@ where
     }
 }
 
-fn window_frame_pacing_accepted(report: &crate::app::NativeAppRunReport, target_fps: u32) -> bool {
-    let target_interval_ns = 1_000_000_000 / u64::from(target_fps.max(1));
+fn window_frame_pacing_accepted(report: &crate::app::NativeAppRunReport) -> bool {
+    let target_interval_ns = 1_000_000_000 / u64::from(report.frame_interval_target_fps.max(1));
     report.frame_interval_samples > 0
         && report.frame_interval_p95_ns <= target_interval_ns
         && report.dropped_frames == 0
