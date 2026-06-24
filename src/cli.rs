@@ -11,6 +11,10 @@ use base64::{Engine as _, engine::general_purpose};
 use thiserror::Error;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
+mod gpu;
+use gpu::gpu_command_exit;
+pub use gpu::{AdapterReport, GpuCommandContext};
+
 use crate::app::{
     NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalApp,
     NativeTerminalRuntime, NativeTerminalRuntimeConfig, is_native_paste_shortcut,
@@ -19,11 +23,7 @@ use crate::app::{
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::config::{ConfigFileReloader, GromaqConfig, ShellSettings};
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
-use crate::native_gpu::{
-    GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
-    GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
-    GpuTextureUploadRunner, GpuTexturedQuadRunner,
-};
+use crate::native_gpu::GpuBootstrapBackend;
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
 use crate::renderer::{
     FrameDecision, FrameScheduler, PreparedSurfaceGlyphFrame, RenderReason, RendererConfig,
@@ -153,13 +153,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
     B: GpuBootstrapBackend,
-    B::Context: AdapterReport
-        + GpuSmokeRunner
-        + GpuTextureUploadRunner
-        + GpuGlyphAtlasUploadRunner
-        + GpuTextAtlasUploadRunner
-        + GpuTexturedQuadRunner
-        + GpuTerminalTextRunner,
+    B::Context: GpuCommandContext,
 {
     let mut clipboard = NativeClipboard::new();
     run_with_backend_and_clipboard(args, backend, &mut clipboard)
@@ -175,13 +169,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
     B: GpuBootstrapBackend,
-    B::Context: AdapterReport
-        + GpuSmokeRunner
-        + GpuTextureUploadRunner
-        + GpuGlyphAtlasUploadRunner
-        + GpuTextAtlasUploadRunner
-        + GpuTexturedQuadRunner
-        + GpuTerminalTextRunner,
+    B::Context: GpuCommandContext,
     C: HostClipboard,
 {
     run_with_optional_app_and_clipboard(
@@ -198,13 +186,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
     B: GpuBootstrapBackend,
-    B::Context: AdapterReport
-        + GpuSmokeRunner
-        + GpuTextureUploadRunner
-        + GpuGlyphAtlasUploadRunner
-        + GpuTextAtlasUploadRunner
-        + GpuTexturedQuadRunner
-        + GpuTerminalTextRunner,
+    B::Context: GpuCommandContext,
     A: NativeAppLauncher,
 {
     let mut clipboard = NativeClipboard::new();
@@ -221,13 +203,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
     B: GpuBootstrapBackend,
-    B::Context: AdapterReport
-        + GpuSmokeRunner
-        + GpuTextureUploadRunner
-        + GpuGlyphAtlasUploadRunner
-        + GpuTextAtlasUploadRunner
-        + GpuTexturedQuadRunner
-        + GpuTerminalTextRunner,
+    B::Context: GpuCommandContext,
     A: NativeAppLauncher,
     C: HostClipboard,
 {
@@ -389,207 +365,7 @@ where
         return frame_scheduler_smoke_exit();
     }
 
-    let bootstrap = GpuBootstrap::new(GpuBootstrapConfig::native_default());
-    match bootstrap.initialize_with(backend) {
-        Ok(context) if arg == "--gpu-info" => gpu_info_exit(context.adapter_report()),
-        Ok(context) if arg == "--gpu-smoke" => match context.run_smoke() {
-            Ok(report) => CliExit {
-                code: 0,
-                stdout: format!(
-                    "GPU smoke: ok\nsize: {}x{}\nfirst pixel: {:?}\nnon-zero bytes: {}\n",
-                    report.width, report.height, report.first_pixel, report.nonzero_bytes
-                ),
-                stderr: String::new(),
-            },
-            Err(error) => CliExit::from(error),
-        },
-        Ok(context) if arg == "--gpu-upload-smoke" => match context.run_texture_upload_smoke() {
-            Ok(report) => CliExit {
-                code: 0,
-                stdout: format!(
-                    "GPU upload smoke: ok\nsize: {}x{}\nfirst pixel: {:?}\nlast pixel: {:?}\nmatching bytes: {}/{}\n",
-                    report.width,
-                    report.height,
-                    report.first_pixel,
-                    report.last_pixel,
-                    report.matching_bytes,
-                    report.total_bytes
-                ),
-                stderr: String::new(),
-            },
-            Err(error) => CliExit::from(error),
-        },
-        Ok(context) if arg == "--gpu-glyph-atlas-smoke" => {
-            match context.run_glyph_atlas_upload_smoke() {
-                Ok(report) => CliExit {
-                    code: 0,
-                    stdout: format!(
-                        "GPU glyph atlas smoke: ok\nsize: {}x{}\noccupied slots: {}\nfirst pixel: {:?}\nsecond slot first pixel: {:?}\nmatching bytes: {}/{}\n",
-                        report.width,
-                        report.height,
-                        report.occupied_slots,
-                        report.first_pixel,
-                        report.second_slot_first_pixel,
-                        report.matching_bytes,
-                        report.total_bytes
-                    ),
-                    stderr: String::new(),
-                },
-                Err(error) => CliExit::from(error),
-            }
-        }
-        Ok(context) if arg == "--gpu-text-atlas-smoke" => {
-            match context.run_text_atlas_upload_smoke() {
-                Ok(report) => CliExit {
-                    code: 0,
-                    stdout: format!(
-                        "GPU text atlas smoke: ok\nsize: {}x{}\noccupied slots: {}\nrasterized glyphs: {}\nreused glyphs: {}\ncovered pixels: {}\nmatching bytes: {}/{}\n",
-                        report.width,
-                        report.height,
-                        report.occupied_slots,
-                        report.rasterized_glyphs,
-                        report.reused_glyphs,
-                        report.covered_pixels,
-                        report.matching_bytes,
-                        report.total_bytes
-                    ),
-                    stderr: String::new(),
-                },
-                Err(error) => CliExit::from(error),
-            }
-        }
-        Ok(context) if arg == "--gpu-textured-quad-smoke" => {
-            match context.run_textured_quad_smoke() {
-                Ok(report) => CliExit {
-                    code: 0,
-                    stdout: format!(
-                        "GPU textured quad smoke: ok\nsize: {}x{}\nfirst pixel: {:?}\ndrawn pixels: {}\n",
-                        report.width, report.height, report.first_pixel, report.drawn_pixels
-                    ),
-                    stderr: String::new(),
-                },
-                Err(error) => CliExit::from(error),
-            }
-        }
-        Ok(context) => match context.run_terminal_text_smoke() {
-            Ok(report) => CliExit {
-                code: 0,
-                stdout: format!(
-                    "GPU terminal text smoke: ok\nsize: {}x{}\nglyphs: {}\nbackground quads: {}\nquads: {}\ndecoration quads: {}\ncursor quads: {}\nrasterized glyphs: {}\nreused glyphs: {}\nfirst drawn pixel: {:?}\ncursor pixel: {:?}\ndrawn pixels: {}\n",
-                    report.width,
-                    report.height,
-                    report.glyphs,
-                    report.background_quads,
-                    report.quads,
-                    report.decoration_quads,
-                    report.cursor_quads,
-                    report.rasterized_glyphs,
-                    report.reused_glyphs,
-                    report.first_drawn_pixel,
-                    report.cursor_pixel,
-                    report.drawn_pixels
-                ),
-                stderr: String::new(),
-            },
-            Err(error) => CliExit::from(error),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("{error}\n"),
-        },
-    }
-}
-
-/// Adapter metadata reporting abstraction.
-pub trait AdapterReport {
-    /// Return stable adapter metadata.
-    fn adapter_report(&self) -> &GpuAdapterSnapshot;
-}
-
-impl AdapterReport for GpuAdapterSnapshot {
-    fn adapter_report(&self) -> &GpuAdapterSnapshot {
-        self
-    }
-}
-
-impl GpuSmokeRunner for GpuAdapterSnapshot {
-    fn run_smoke(&self) -> Result<crate::native_gpu::GpuSmokeReport, GpuBootstrapError> {
-        Err(GpuBootstrapError::SmokeReadback(
-            "adapter metadata does not own a live GPU context".to_owned(),
-        ))
-    }
-}
-
-impl GpuTextureUploadRunner for GpuAdapterSnapshot {
-    fn run_texture_upload_smoke(
-        &self,
-    ) -> Result<crate::native_gpu::GpuTextureUploadReport, GpuBootstrapError> {
-        Err(GpuBootstrapError::SmokeReadback(
-            "adapter metadata does not own a live GPU context".to_owned(),
-        ))
-    }
-}
-
-impl GpuGlyphAtlasUploadRunner for GpuAdapterSnapshot {
-    fn run_glyph_atlas_upload_smoke(
-        &self,
-    ) -> Result<crate::native_gpu::GpuGlyphAtlasUploadReport, GpuBootstrapError> {
-        Err(GpuBootstrapError::SmokeReadback(
-            "adapter metadata does not own a live GPU context".to_owned(),
-        ))
-    }
-}
-
-impl GpuTextAtlasUploadRunner for GpuAdapterSnapshot {
-    fn run_text_atlas_upload_smoke(
-        &self,
-    ) -> Result<crate::native_gpu::GpuTextAtlasUploadReport, GpuBootstrapError> {
-        Err(GpuBootstrapError::SmokeReadback(
-            "adapter metadata does not own a live GPU context".to_owned(),
-        ))
-    }
-}
-
-impl GpuTexturedQuadRunner for GpuAdapterSnapshot {
-    fn run_textured_quad_smoke(
-        &self,
-    ) -> Result<crate::native_gpu::GpuTexturedQuadReport, GpuBootstrapError> {
-        Err(GpuBootstrapError::SmokeReadback(
-            "adapter metadata does not own a live GPU context".to_owned(),
-        ))
-    }
-}
-
-impl GpuTerminalTextRunner for GpuAdapterSnapshot {
-    fn run_terminal_text_smoke(
-        &self,
-    ) -> Result<crate::native_gpu::GpuTerminalTextReport, GpuBootstrapError> {
-        Err(GpuBootstrapError::SmokeReadback(
-            "adapter metadata does not own a live GPU context".to_owned(),
-        ))
-    }
-}
-
-impl AdapterReport for crate::native_gpu::NativeGpuContext {
-    fn adapter_report(&self) -> &GpuAdapterSnapshot {
-        self.adapter()
-    }
-}
-
-fn format_adapter(adapter: &GpuAdapterSnapshot) -> String {
-    format!(
-        "GPU adapter: {}\nbackend: {}\ndevice type: {}\nvendor: {}\ndevice: {}\n",
-        adapter.name, adapter.backend, adapter.device_type, adapter.vendor, adapter.device
-    )
-}
-
-fn gpu_info_exit(adapter: &GpuAdapterSnapshot) -> CliExit {
-    CliExit {
-        code: 0,
-        stdout: format_adapter(adapter),
-        stderr: String::new(),
-    }
+    gpu_command_exit(arg, backend)
 }
 
 fn usage() -> String {
@@ -2746,14 +2522,4 @@ fn restore_clipboard_after_smoke<C: HostClipboard>(
         None => clipboard.write_text(""),
     }
     restored_previous_text
-}
-
-impl From<GpuBootstrapError> for CliExit {
-    fn from(value: GpuBootstrapError) -> Self {
-        Self {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("{value}\n"),
-        }
-    }
 }
