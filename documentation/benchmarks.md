@@ -24,8 +24,8 @@ can be reported from structured counters instead of subjective observation.
 On 2026-06-24, `cargo run -- --window-perf-smoke` launched a bounded live native
 window run, presented 180 frames, measured 179 presented-frame intervals, reported
 monitor refresh 120000 mHz, effective frame interval target 120 fps, average
-interval 14873777 ns, max interval 39652125 ns, p95 bucket 16000000 ns, 5
-dropped frames, 178 intervals over target, 3 intervals over double target, and
+interval 8569704 ns, max interval 38291375 ns, p95 bucket 10000000 ns, 4
+dropped frames, 85 intervals over target, 2 intervals over double target, and
 `frame pacing accepted: false`. This is live-window evidence, but it is still
 not a 144Hz acceptance pass.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY

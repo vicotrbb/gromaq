@@ -68,37 +68,20 @@ fn native_app_lifecycle_requests_bounded_continuous_redraw_until_frame_limit() {
 
     assert_eq!(
         lifecycle.on_redraw_requested_at(first_presented_at),
-        NativeAppAction::None
+        NativeAppAction::RequestRedraw
     );
     assert_eq!(lifecycle.frames_presented(), 1);
-    assert_eq!(lifecycle.redraw_requests(), 0);
+    assert_eq!(lifecycle.redraw_requests(), 1);
     assert_eq!(
         lifecycle.next_pty_pump_deadline(first_presented_at),
         Some(first_presented_at + target_interval)
     );
 
     assert_eq!(
-        lifecycle.on_about_to_wait_at(first_presented_at + target_interval / 2),
-        NativeAppAction::None
-    );
-
-    assert_eq!(
-        lifecycle.on_about_to_wait_at(first_presented_at + target_interval),
-        NativeAppAction::RequestRedraw
-    );
-    assert_eq!(lifecycle.redraw_requests(), 1);
-
-    assert_eq!(
         lifecycle.on_redraw_requested_at(first_presented_at + target_interval),
-        NativeAppAction::None
+        NativeAppAction::RequestRedraw
     );
     assert_eq!(lifecycle.frames_presented(), 2);
-    assert_eq!(lifecycle.redraw_requests(), 1);
-
-    assert_eq!(
-        lifecycle.on_about_to_wait_at(first_presented_at + target_interval * 2),
-        NativeAppAction::RequestRedraw
-    );
     assert_eq!(lifecycle.redraw_requests(), 2);
 
     assert_eq!(
@@ -178,7 +161,7 @@ fn native_app_lifecycle_accounts_frame_intervals_against_monitor_refresh() {
 }
 
 #[test]
-fn native_app_lifecycle_schedules_redraws_against_monitor_refresh() {
+fn native_app_lifecycle_schedules_pty_wake_against_monitor_refresh() {
     let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
         target_fps: 144,
         exit_after_presented_frames: Some(2),
@@ -192,15 +175,11 @@ fn native_app_lifecycle_schedules_redraws_against_monitor_refresh() {
 
     assert_eq!(
         lifecycle.on_redraw_requested_at(first_presented_at),
-        NativeAppAction::None
+        NativeAppAction::RequestRedraw
     );
     assert_eq!(
         lifecycle.next_pty_pump_deadline(first_presented_at),
         Some(first_presented_at + monitor_frame_interval)
-    );
-    assert_eq!(
-        lifecycle.on_about_to_wait_at(first_presented_at + monitor_frame_interval),
-        NativeAppAction::RequestRedraw
     );
 }
 
