@@ -219,6 +219,10 @@ paths are also supported. Supported named aliases currently include
 fallback font files, or an unresolved-font diagnostic if a named family cannot
 be found.
 
+Terminal text can be zoomed at runtime with browser-style shortcuts:
+Control/Super `+`, Control/Super `-`, Control/Super `0`, and Control/Super
+mouse wheel.
+
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in
 [`documentation/benchmarks.md`](documentation/benchmarks.md).
