@@ -11,7 +11,8 @@ input/output roundtrips, bounded runtime state under repeated output batches,
 and runtime alternate-screen transitions, plus runtime
 focus/mouse/terminal-response protocol input paths, texture and glyph-atlas GPU
 upload/readback, font-backed text-atlas GPU upload/readback, offscreen
-textured-quad GPU draw/readback, and offscreen terminal text GPU draw/readback.
+textured-quad GPU draw/readback, offscreen terminal text GPU draw/readback, and
+repeated offscreen terminal text GPU draw/readback timing.
 
 They do not prove the full performance acceptance target by themselves. Hardware
 backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
@@ -68,8 +69,12 @@ times at 50 ms intervals, reported max process CPU of 1.8% against the 5.0%
 budget, and preserved the 16 clean-frame skips with 0 rendered frames. On
 2026-06-23, `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz
 target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
-frames. These are deterministic smoke results, not live hardware acceptance
-measurements.
+frames. On 2026-06-24, `cargo run -- --gpu-terminal-text-perf-smoke` measured
+16 repeated offscreen terminal text GPU draw/readback frames at 144x36 pixels,
+reported 1452 drawn pixels on the final frame, and reported min/avg/max/p95
+draw/readback timings of 6093125/6624872/9264000/9264000 ns. These are
+deterministic smoke results and offscreen GPU draw/readback timing results, not
+live hardware acceptance measurements.
 
 ## Reproducible Local Run
 

@@ -70,6 +70,7 @@ Implemented and tested:
 - TOML config native app launch with `--config <path>`
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
 - Offscreen terminal text GPU draw/readback smoke test with solid background, foreground-tinted glyph, text-decoration, and cursor output via `--gpu-terminal-text-smoke`
+- Repeated offscreen terminal text GPU draw/readback timing smoke with `--gpu-terminal-text-perf-smoke`
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
 - Deterministic runtime local scrollback navigation smoke with `--runtime-scrollback-smoke`
@@ -125,6 +126,7 @@ cargo run -- --gpu-glyph-atlas-smoke
 cargo run -- --gpu-text-atlas-smoke
 cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
+cargo run -- --gpu-terminal-text-perf-smoke
 cargo run -- --clipboard-smoke
 cargo run -- --config path/to/gromaq.toml
 cargo run -- --config-check path/to/gromaq.toml

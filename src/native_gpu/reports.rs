@@ -157,3 +157,32 @@ pub trait GpuTerminalTextRunner {
         &self,
     ) -> std::result::Result<GpuTerminalTextReport, GpuBootstrapError>;
 }
+
+/// Repeated live GPU terminal-text draw/readback timing summary.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GpuTerminalTextPerfReport {
+    /// Number of draw/readback frames measured.
+    pub frames: usize,
+    /// Render target width in pixels.
+    pub width: u32,
+    /// Render target height in pixels.
+    pub height: u32,
+    /// Number of output pixels with non-zero alpha on the final measured frame.
+    pub drawn_pixels: usize,
+    /// Fastest measured draw/readback duration in nanoseconds.
+    pub min_ns: u128,
+    /// Average measured draw/readback duration in nanoseconds.
+    pub avg_ns: u128,
+    /// Slowest measured draw/readback duration in nanoseconds.
+    pub max_ns: u128,
+    /// Inclusive p95 draw/readback duration in nanoseconds.
+    pub p95_ns: u128,
+}
+
+/// Interface for contexts that can time repeated terminal-text GPU draw/readbacks.
+pub trait GpuTerminalTextPerfRunner {
+    /// Run repeated terminal-text GPU draw/readback timing.
+    fn run_terminal_text_perf_smoke(
+        &self,
+    ) -> std::result::Result<GpuTerminalTextPerfReport, GpuBootstrapError>;
+}

@@ -3,8 +3,8 @@
 use super::CliExit;
 use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrap, GpuBootstrapBackend, GpuBootstrapConfig, GpuBootstrapError,
-    GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextRunner, GpuTextAtlasUploadRunner,
-    GpuTextureUploadRunner, GpuTexturedQuadRunner,
+    GpuGlyphAtlasUploadRunner, GpuSmokeRunner, GpuTerminalTextPerfRunner, GpuTerminalTextRunner,
+    GpuTextAtlasUploadRunner, GpuTextureUploadRunner, GpuTexturedQuadRunner,
 };
 
 /// Adapter metadata reporting abstraction.
@@ -22,6 +22,7 @@ pub trait GpuCommandContext:
     + GpuTextAtlasUploadRunner
     + GpuTexturedQuadRunner
     + GpuTerminalTextRunner
+    + GpuTerminalTextPerfRunner
 {
 }
 
@@ -33,6 +34,7 @@ impl<T> GpuCommandContext for T where
         + GpuTextAtlasUploadRunner
         + GpuTexturedQuadRunner
         + GpuTerminalTextRunner
+        + GpuTerminalTextPerfRunner
 {
 }
 
@@ -84,6 +86,14 @@ impl GpuTerminalTextRunner for GpuAdapterSnapshot {
     fn run_terminal_text_smoke(
         &self,
     ) -> Result<crate::native_gpu::GpuTerminalTextReport, GpuBootstrapError> {
+        Err(metadata_without_live_context_error())
+    }
+}
+
+impl GpuTerminalTextPerfRunner for GpuAdapterSnapshot {
+    fn run_terminal_text_perf_smoke(
+        &self,
+    ) -> Result<crate::native_gpu::GpuTerminalTextPerfReport, GpuBootstrapError> {
         Err(metadata_without_live_context_error())
     }
 }
@@ -175,6 +185,26 @@ where
                     stdout: format!(
                         "GPU textured quad smoke: ok\nsize: {}x{}\nfirst pixel: {:?}\ndrawn pixels: {}\n",
                         report.width, report.height, report.first_pixel, report.drawn_pixels
+                    ),
+                    stderr: String::new(),
+                },
+                Err(error) => CliExit::from(error),
+            }
+        }
+        Ok(context) if arg == "--gpu-terminal-text-perf-smoke" => {
+            match context.run_terminal_text_perf_smoke() {
+                Ok(report) => CliExit {
+                    code: 0,
+                    stdout: format!(
+                        "GPU terminal text perf smoke: ok\nframes: {}\nsize: {}x{}\ndrawn pixels: {}\nmin ns: {}\navg ns: {}\nmax ns: {}\np95 ns: {}\n",
+                        report.frames,
+                        report.width,
+                        report.height,
+                        report.drawn_pixels,
+                        report.min_ns,
+                        report.avg_ns,
+                        report.max_ns,
+                        report.p95_ns
                     ),
                     stderr: String::new(),
                 },

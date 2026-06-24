@@ -9,9 +9,9 @@ use gromaq::cli::{
 use gromaq::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrapBackend, GpuBootstrapError, GpuBootstrapRequest,
     GpuGlyphAtlasUploadReport, GpuGlyphAtlasUploadRunner, GpuSmokeReport, GpuSmokeRunner,
-    GpuTerminalTextReport, GpuTerminalTextRunner, GpuTextAtlasUploadReport,
-    GpuTextAtlasUploadRunner, GpuTextureUploadReport, GpuTextureUploadRunner,
-    GpuTexturedQuadReport, GpuTexturedQuadRunner,
+    GpuTerminalTextPerfReport, GpuTerminalTextPerfRunner, GpuTerminalTextReport,
+    GpuTerminalTextRunner, GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner,
+    GpuTextureUploadReport, GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
 use gromaq::renderer::RendererConfig;
 use gromaq::{GromaqConfig, HostClipboard, MemoryClipboard};
@@ -160,6 +160,21 @@ impl GpuTerminalTextRunner for MockContext {
     }
 }
 
+impl GpuTerminalTextPerfRunner for MockContext {
+    fn run_terminal_text_perf_smoke(&self) -> Result<GpuTerminalTextPerfReport, GpuBootstrapError> {
+        Ok(GpuTerminalTextPerfReport {
+            frames: 16,
+            width: 80,
+            height: 24,
+            drawn_pixels: 160,
+            min_ns: 1_000,
+            avg_ns: 2_000,
+            max_ns: 3_000,
+            p95_ns: 3_000,
+        })
+    }
+}
+
 #[test]
 fn gpu_info_cli_reports_adapter_metadata() {
     let backend = MockBackend {
@@ -188,7 +203,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -956,6 +971,27 @@ fn gpu_terminal_text_smoke_cli_reports_draw_result() {
     );
     assert!(exit.stdout.contains("cursor pixel: [229, 229, 229, 255]"));
     assert!(exit.stdout.contains("drawn pixels: 160"));
+    assert!(exit.stderr.is_empty());
+    assert_eq!(backend.requests.borrow().len(), 1);
+}
+
+#[test]
+fn gpu_terminal_text_perf_smoke_cli_reports_timing_result() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--gpu-terminal-text-perf-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("GPU terminal text perf smoke: ok"));
+    assert!(exit.stdout.contains("frames: 16"));
+    assert!(exit.stdout.contains("80x24"));
+    assert!(exit.stdout.contains("drawn pixels: 160"));
+    assert!(exit.stdout.contains("min ns: 1000"));
+    assert!(exit.stdout.contains("avg ns: 2000"));
+    assert!(exit.stdout.contains("max ns: 3000"));
+    assert!(exit.stdout.contains("p95 ns: 3000"));
     assert!(exit.stderr.is_empty());
     assert_eq!(backend.requests.borrow().len(), 1);
 }
