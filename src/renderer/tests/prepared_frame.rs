@@ -1,7 +1,8 @@
 use crate::cell::Style;
 use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY};
 use crate::renderer::{
-    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame, RenderPlan, SurfaceFrameError,
+    GlyphBitmap, GlyphEntry, PlannedBackground, PlannedGlyph, PreparedSurfaceGlyphFrame,
+    RenderPlan, SurfaceFrameError,
 };
 use crate::terminal::{CursorShape, CursorSnapshot};
 
@@ -239,4 +240,87 @@ fn prepared_surface_glyph_frame_preserves_shaped_glyph_placement_in_atlas() {
             .iter()
             .all(|byte| *byte == 0)
     );
+}
+
+#[test]
+fn prepared_surface_glyph_frame_preview_renders_background_glyph_and_cursor_pixels() {
+    let entry = GlyphEntry {
+        slot: 0,
+        generation: 0,
+    };
+    let plan = RenderPlan {
+        viewport_cols: 2,
+        viewport_rows: 1,
+        cursor: CursorSnapshot {
+            row: 0,
+            col: 1,
+            visible: true,
+            shape: CursorShape::Block,
+            blinking: true,
+        },
+        default_foreground_rgb8: [240, 240, 240],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
+        clear_regions: Vec::new(),
+        backgrounds: vec![PlannedBackground {
+            row: 0,
+            col: 0,
+            cols: 1,
+            color_rgba8: [30, 40, 50, 255],
+        }],
+        decorations: Vec::new(),
+        glyphs: vec![PlannedGlyph {
+            row: 0,
+            col: 0,
+            text: "A".to_owned(),
+            ch: 'A',
+            style: Style::default(),
+            font_size_px: 8,
+            is_wide: false,
+            atlas_entry: entry,
+        }],
+    };
+    let glyphs = [GlyphBitmap {
+        entry,
+        origin_x: 0,
+        origin_y: 0,
+        width: 2,
+        height: 2,
+        rgba: vec![255; 2 * 2 * 4],
+    }];
+
+    let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+        &plan,
+        &glyphs,
+        2,
+        2,
+        [0.0, 0.0, 0.0, 1.0],
+        [244, 192, 106, 255],
+        0,
+    )
+    .unwrap();
+
+    let preview = prepared.preview_rgba8().unwrap();
+
+    assert_eq!(preview.width, 4);
+    assert_eq!(preview.height, 2);
+    assert_eq!(preview.rgba.len(), 4 * 2 * 4);
+    assert_eq!(
+        preview_pixel(&preview.rgba, preview.width, 0, 0),
+        [240, 240, 240, 255]
+    );
+    assert_eq!(
+        preview_pixel(&preview.rgba, preview.width, 2, 0),
+        [244, 192, 106, 255]
+    );
+}
+
+fn preview_pixel(rgba: &[u8], width: u32, x: u32, y: u32) -> [u8; 4] {
+    let offset = ((y * width + x) * 4) as usize;
+    [
+        rgba[offset],
+        rgba[offset + 1],
+        rgba[offset + 2],
+        rgba[offset + 3],
+    ]
 }

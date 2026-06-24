@@ -1,4 +1,6 @@
 use std::cell::RefCell;
+use std::fs;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use gromaq::MemoryClipboard;
 use gromaq::cli::{run_with_backend, run_with_backend_and_clipboard};
@@ -57,6 +59,43 @@ fn runtime_glyph_frame_smoke_cli_reports_prepared_frame_without_gpu_bootstrap() 
     assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_glyph_frame_snapshot_cli_writes_preview_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = std::env::temp_dir().join(format!(
+        "gromaq-runtime-glyph-frame-{}.ppm",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--runtime-glyph-frame-snapshot",
+            path.to_str().unwrap(),
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime glyph frame snapshot: ok"));
+    assert!(exit.stdout.contains("bytes written:"));
+    assert!(exit.stdout.contains("frame size:"));
+    assert!(exit.stdout.contains("prepared quads:"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+
+    let snapshot = fs::read(&path).unwrap();
+    fs::remove_file(&path).unwrap();
+    assert!(snapshot.starts_with(b"P6\n"));
+    assert!(snapshot.windows(4).any(|bytes| bytes == b"\n255"));
+    assert!(snapshot.len() > 128);
 }
 
 #[test]

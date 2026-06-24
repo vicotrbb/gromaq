@@ -29,7 +29,9 @@ use gpu::{gpu_command_exit, gpu_terminal_text_snapshot_exit};
 use runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
 use runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
-use runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
+use runtime_glyph_frame_smoke::{
+    runtime_glyph_frame_smoke_exit, runtime_glyph_frame_snapshot_exit,
+};
 use runtime_input_smoke::{
     runtime_focus_smoke_exit, runtime_idle_cpu_smoke_exit, runtime_idle_smoke_exit,
     runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit, runtime_perf_p95_smoke_exit,
@@ -188,6 +190,26 @@ where
         }
         return gpu_terminal_text_snapshot_exit(path.as_ref(), backend);
     }
+    if command == CliCommand::RuntimeGlyphFrameSnapshot {
+        let Some(path) = args.next() else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!(
+                    "{}missing snapshot path for --runtime-glyph-frame-snapshot\n",
+                    usage()
+                ),
+            };
+        };
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        return runtime_glyph_frame_snapshot_exit(path.as_ref());
+    }
     if matches!(
         command,
         CliCommand::WindowSmoke | CliCommand::WindowPerfSmoke
@@ -240,6 +262,7 @@ where
         CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),
         CliCommand::RuntimeGlyphFrameSmoke => runtime_glyph_frame_smoke_exit(),
+        CliCommand::RuntimeGlyphFrameSnapshot => unreachable!(),
         CliCommand::RuntimeScrollbackSmoke => runtime_scrollback_smoke_exit(),
         CliCommand::RuntimePerfSmoke => runtime_perf_smoke_exit(),
         CliCommand::RuntimePerfBudgetSmoke => runtime_perf_budget_smoke_exit(),

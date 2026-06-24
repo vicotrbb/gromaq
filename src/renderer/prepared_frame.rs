@@ -10,6 +10,7 @@ use crate::renderer::prepared_frame_atlas::{atlas_columns_for_glyphs, transparen
 use crate::renderer::prepared_frame_geometry::{
     checked_surface_frame_pixel_dimension, translate_background_batch, translate_glyph_batch,
 };
+use crate::renderer::prepared_frame_preview::{PreparedFramePreview, preview_surface_glyph_frame};
 
 /// Glyph frame data ready for presentation to a native surface.
 #[derive(Debug, Clone, Copy)]
@@ -182,6 +183,11 @@ impl PreparedSurfaceGlyphFrame {
             height: self.height,
             clear_color: self.clear_color,
         }
+    }
+
+    /// Render this prepared glyph frame into a deterministic CPU-side RGBA8 preview.
+    pub fn preview_rgba8(&self) -> std::result::Result<PreparedFramePreview, SurfaceFrameError> {
+        preview_surface_glyph_frame(self.as_surface_glyph_frame())
     }
 
     /// Packed atlas image for this frame.

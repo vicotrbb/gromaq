@@ -17,6 +17,7 @@ mod plan;
 mod prepared_frame;
 mod prepared_frame_atlas;
 mod prepared_frame_geometry;
+mod prepared_frame_preview;
 mod quads;
 mod scheduler;
 mod surface;
@@ -34,6 +35,7 @@ pub use plan::{
     TextDecorationKind,
 };
 pub use prepared_frame::{PreparedSurfaceGlyphFrame, SurfaceGlyphFrame};
+pub use prepared_frame_preview::PreparedFramePreview;
 pub use quads::{
     BackgroundQuad, BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadError,
     BackgroundQuadPlanner, BackgroundVertex, CursorQuadConfig, CursorQuadPlanner, GlyphQuad,
