@@ -175,6 +175,9 @@ impl GpuTerminalTextRunner for MockContext {
             rasterized_glyphs: 2,
             reused_glyphs: 1,
             first_drawn_pixel: [13, 188, 121, 255],
+            background_pixel: [9, 13, 18, 255],
+            glyph_pixel: [244, 247, 251, 255],
+            glyph_background_contrast_x100: 1842,
             cursor_pixel: [229, 229, 229, 255],
             drawn_pixels: 160,
         })

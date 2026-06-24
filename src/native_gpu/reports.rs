@@ -144,6 +144,12 @@ pub struct GpuTerminalTextReport {
     pub reused_glyphs: usize,
     /// First non-transparent RGBA8 output pixel after drawing.
     pub first_drawn_pixel: [u8; 4],
+    /// Sampled terminal background pixel from the themed text surface.
+    pub background_pixel: [u8; 4],
+    /// Sampled foreground glyph pixel distinct from background and cursor pixels.
+    pub glyph_pixel: [u8; 4],
+    /// WCAG contrast ratio between sampled foreground glyph and background, multiplied by 100.
+    pub glyph_background_contrast_x100: u32,
     /// First sampled RGBA8 pixel from the cursor quad after drawing.
     pub cursor_pixel: [u8; 4],
     /// Number of output pixels with non-zero alpha after drawing.

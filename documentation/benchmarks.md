@@ -81,13 +81,18 @@ budget, and preserved the 16 clean-frame skips with 0 rendered frames. On
 2026-06-23, `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz
 target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
 frames. On 2026-06-24, `cargo run -- --gpu-terminal-text-smoke` drew a 144x36
-offscreen terminal frame with 3 glyphs, 3 glyph quads, 1 background quad, 1
-decoration quad, 1 cursor quad, 2 rasterized glyphs, 1 reused glyph, 1452 drawn
-pixels, and a nonblank first drawn pixel. On the same date,
+offscreen terminal frame with 4 glyphs, 4 glyph quads, 1 background quad, 1
+decoration quad, 1 cursor quad, 3 rasterized glyphs, 1 reused glyph, 1476 drawn
+pixels, a sampled background pixel of `[1, 1, 2, 255]`, a sampled glyph pixel of
+`[254, 253, 214, 254]`, and a contrast ratio of 2010 x100 against the 700 x100
+minimum smoke gate. On the same date,
 `cargo run -- --gpu-terminal-text-perf-smoke` measured 16 repeated offscreen
 terminal text GPU draw/readback frames at 144x36 pixels, reported 1452 drawn
 pixels on the final frame, and reported min/avg/max/p95 draw/readback timings of
-6093125/6624872/9264000/9264000 ns. These are deterministic smoke results and
+6093125/6624872/9264000/9264000 ns. After the contrast-gated default-theme
+fixture update, a targeted rerun reported 1476 drawn pixels and
+min/avg/max/p95 draw/readback timings of 6312709/7511208/12016584/12016584 ns.
+These are deterministic smoke results and
 offscreen GPU draw/readback timing results, not live hardware acceptance
 measurements.
 

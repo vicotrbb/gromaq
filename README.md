@@ -69,7 +69,7 @@ Implemented and tested:
 - TOML config validation command with `--config-check <path>`
 - TOML config native app launch with `--config <path>`
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
-- Offscreen terminal text GPU draw/readback smoke test with solid background, foreground-tinted glyph, text-decoration, and cursor output via `--gpu-terminal-text-smoke`
+- Offscreen terminal text GPU draw/readback smoke test with a contrast-gated default-theme glyph sample, solid background, text-decoration, and cursor output via `--gpu-terminal-text-smoke`
 - Repeated offscreen terminal text GPU draw/readback timing smoke with `--gpu-terminal-text-perf-smoke`
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`

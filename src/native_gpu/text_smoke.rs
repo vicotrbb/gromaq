@@ -31,7 +31,7 @@ pub(super) fn build_text_atlas_smoke_frame()
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
     terminal
-        .write_str("\x1b[42m \x1b[0;4;31mA😀A")
+        .write_str("\x1b[48:2:9:13:18;38:2:244:247:251m A😀A\x1b[0;4;31mB")
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(
@@ -55,13 +55,13 @@ pub(super) fn build_text_atlas_smoke_frame()
     let slot_width = batch
         .bitmaps
         .iter()
-        .map(|glyph| glyph.width)
+        .map(|glyph| glyph.terminal_slot_width(0))
         .max()
         .ok_or_else(|| GpuBootstrapError::SmokeReadback("empty text atlas batch".to_owned()))?;
     let slot_height = batch
         .bitmaps
         .iter()
-        .map(|glyph| glyph.height)
+        .map(|glyph| glyph.terminal_slot_height(0))
         .max()
         .ok_or_else(|| GpuBootstrapError::SmokeReadback("empty text atlas batch".to_owned()))?;
     let padded = batch
@@ -69,7 +69,7 @@ pub(super) fn build_text_atlas_smoke_frame()
         .iter()
         .map(|glyph| {
             glyph
-                .padded_to(slot_width, slot_height)
+                .padded_to_terminal_slot(slot_width, slot_height)
                 .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))
         })
         .collect::<std::result::Result<Vec<_>, _>>()?;

@@ -60,6 +60,9 @@ fn gpu_terminal_text_smoke_cli_reports_draw_result() {
         exit.stdout
             .contains("first drawn pixel: [13, 188, 121, 255]")
     );
+    assert!(exit.stdout.contains("background pixel: [9, 13, 18, 255]"));
+    assert!(exit.stdout.contains("glyph pixel: [244, 247, 251, 255]"));
+    assert!(exit.stdout.contains("glyph/background contrast x100: 1842"));
     assert!(exit.stdout.contains("cursor pixel: [229, 229, 229, 255]"));
     assert!(exit.stdout.contains("drawn pixels: 160"));
     assert!(exit.stderr.is_empty());
