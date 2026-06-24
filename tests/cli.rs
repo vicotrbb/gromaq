@@ -521,9 +521,11 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         launches: RefCell::new(Vec::new()),
     };
     let path = test_cli_config_path("launch-config.toml");
+    let font_path = system_mono_font_path();
     fs::write(
         &path,
-        r#"
+        format!(
+            r#"
         [terminal]
         cols = 132
         rows = 40
@@ -534,6 +536,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         dirty_region_rendering = false
 
         [font]
+        family = "{}"
         size_px = 16.5
 
         [shell]
@@ -541,6 +544,8 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         args = ["-l", "-i"]
         cwd = "/tmp"
         "#,
+            font_path.display()
+        ),
     )
     .unwrap();
 
@@ -590,6 +595,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             ..RendererConfig::default()
         }
     );
+    assert_eq!(launches[0].font_family, font_path.to_string_lossy());
     assert_eq!(launches[0].config_path.as_deref(), Some(path.as_path()));
     let _ = fs::remove_file(path);
 }
@@ -624,4 +630,21 @@ fn test_cli_config_path(name: &str) -> std::path::PathBuf {
         .join("gromaq-cli-tests");
     fs::create_dir_all(&directory).unwrap();
     directory.join(format!("{}-{name}", std::process::id()))
+}
+
+fn system_mono_font_path() -> std::path::PathBuf {
+    [
+        "/System/Library/Fonts/SFNSMono.ttf",
+        "/System/Library/Fonts/Menlo.ttc",
+        "/System/Library/Fonts/Supplemental/Courier New.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+        "/usr/share/fonts/dejavu-sans-fonts/DejaVuSansMono.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
+        "/usr/share/fonts/liberation/LiberationMono-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
+    ]
+    .into_iter()
+    .map(std::path::PathBuf::from)
+    .find(|path| path.exists())
+    .expect("system monospace test font is available")
 }

@@ -1,10 +1,11 @@
 use gromaq::app::{
     NativeTerminalRuntime, NativeTerminalRuntimeConfig, load_default_native_glyph_cache,
+    load_native_glyph_cache,
 };
 use gromaq::renderer::{GlyphAtlas, GlyphAtlasConfig, RenderPlanner};
 use gromaq::{GromaqError, Terminal, TerminalConfig};
 
-use crate::support::{MockFrameRenderer, MockPtySession};
+use crate::support::{MockFrameRenderer, MockPtySession, system_mono_font_path};
 
 #[test]
 fn native_terminal_runtime_invalidates_clean_frame_for_redraw() {
@@ -60,6 +61,29 @@ fn default_native_glyph_cache_loads_system_monospace_font() {
     let cache = load_default_native_glyph_cache().unwrap();
 
     assert!(cache.is_empty());
+}
+
+#[test]
+fn configured_native_glyph_cache_loads_explicit_font_file_path() {
+    let font_path = system_mono_font_path();
+
+    let cache = load_native_glyph_cache(&font_path.to_string_lossy()).unwrap();
+
+    assert!(cache.is_empty());
+}
+
+#[test]
+fn configured_native_glyph_cache_rejects_missing_explicit_font_file_path() {
+    let error = match load_native_glyph_cache("/definitely/missing/gromaq-font.ttf") {
+        Ok(_) => panic!("missing explicit font path should be rejected"),
+        Err(error) => error,
+    };
+
+    assert!(
+        error
+            .to_string()
+            .contains("configured font file does not exist")
+    );
 }
 
 #[test]

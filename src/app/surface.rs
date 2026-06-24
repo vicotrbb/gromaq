@@ -197,27 +197,55 @@ where
     Ok(report)
 }
 
+/// Build a native glyph cache from a configured font path or the default system monospace font.
+pub fn load_native_glyph_cache(font_family: &str) -> Result<RasterizedGlyphCache, NativeAppError> {
+    if let Some(path) = configured_font_file_path(font_family)? {
+        return load_glyph_cache_from_primary_font(path);
+    }
+    load_default_native_glyph_cache()
+}
+
 /// Build the default native glyph cache from a system monospace font.
 pub fn load_default_native_glyph_cache() -> Result<RasterizedGlyphCache, NativeAppError> {
-    for path in DEFAULT_MONOSPACE_FONT_CANDIDATES {
-        if Path::new(path).exists() {
-            let mut font_bytes = vec![
-                std::fs::read(path).map_err(|error| NativeAppError::Runtime(error.to_string()))?,
-            ];
-            for fallback_path in DEFAULT_FALLBACK_FONT_CANDIDATES {
-                if Path::new(fallback_path).exists() {
-                    font_bytes.push(
-                        std::fs::read(fallback_path)
-                            .map_err(|error| NativeAppError::Runtime(error.to_string()))?,
-                    );
-                }
-            }
-            return RasterizedGlyphCache::from_font_bytes(font_bytes).map_err(NativeAppError::from);
-        }
+    if let Some(path) = DEFAULT_MONOSPACE_FONT_CANDIDATES
+        .iter()
+        .map(Path::new)
+        .find(|path| path.exists())
+    {
+        return load_glyph_cache_from_primary_font(path);
     }
     Err(NativeAppError::Runtime(
         "no default monospace system font found".to_owned(),
     ))
+}
+
+fn configured_font_file_path(font_family: &str) -> Result<Option<&Path>, NativeAppError> {
+    let path = Path::new(font_family);
+    if path.is_file() {
+        return Ok(Some(path));
+    }
+    if path.is_absolute() || font_family.contains('/') || font_family.contains('\\') {
+        return Err(NativeAppError::Runtime(format!(
+            "configured font file does not exist: {font_family}"
+        )));
+    }
+    Ok(None)
+}
+
+fn load_glyph_cache_from_primary_font(path: &Path) -> Result<RasterizedGlyphCache, NativeAppError> {
+    let mut font_bytes =
+        vec![std::fs::read(path).map_err(|error| NativeAppError::Runtime(error.to_string()))?];
+    for fallback_path in DEFAULT_FALLBACK_FONT_CANDIDATES
+        .iter()
+        .map(Path::new)
+        .filter(|path| path.exists())
+    {
+        font_bytes.push(
+            std::fs::read(fallback_path)
+                .map_err(|error| NativeAppError::Runtime(error.to_string()))?,
+        );
+    }
+    RasterizedGlyphCache::from_font_bytes(font_bytes).map_err(NativeAppError::from)
 }
 
 const DEFAULT_MONOSPACE_FONT_CANDIDATES: &[&str] = &[

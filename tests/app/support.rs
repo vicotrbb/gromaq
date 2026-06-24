@@ -153,6 +153,10 @@ pub(crate) fn supported_surface_capabilities() -> wgpu::SurfaceCapabilities {
 }
 
 pub(crate) fn system_mono_font() -> Vec<u8> {
+    std::fs::read(system_mono_font_path()).expect("test font can be read")
+}
+
+pub(crate) fn system_mono_font_path() -> PathBuf {
     let candidates = [
         PathBuf::from("/System/Library/Fonts/SFNSMono.ttf"),
         PathBuf::from("/System/Library/Fonts/Menlo.ttc"),
@@ -163,9 +167,8 @@ pub(crate) fn system_mono_font() -> Vec<u8> {
         PathBuf::from("/usr/share/fonts/liberation/LiberationMono-Regular.ttf"),
         PathBuf::from("/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf"),
     ];
-    let path = candidates
+    candidates
         .into_iter()
         .find(|path| path.exists())
-        .expect("system monospace test font is available");
-    std::fs::read(path).expect("test font can be read")
+        .expect("system monospace test font is available")
 }

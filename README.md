@@ -206,6 +206,10 @@ blinking, and surface padding; every field in `[theme]` can still be overridden
 directly in TOML. The theme fields are documented in
 [`documentation/theme.md`](documentation/theme.md).
 
+`font.family` accepts the default `monospace` family name, other family names
+for future platform font discovery, or an explicit `.ttf`/`.ttc` file path to
+use as the primary native rasterization font.
+
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in
 [`documentation/benchmarks.md`](documentation/benchmarks.md).

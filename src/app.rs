@@ -41,7 +41,8 @@ pub use pty_bridge::{
 pub use runtime::NativeTerminalRuntime;
 pub use surface::{
     NativeGlyphFramePresentation, NativeWindowSurface, load_default_native_glyph_cache,
-    render_and_present_terminal_glyph_frame, render_and_present_terminal_glyph_frame_report,
+    load_native_glyph_cache, render_and_present_terminal_glyph_frame,
+    render_and_present_terminal_glyph_frame_report,
 };
 
 /// Native terminal application handler for the `winit` event loop.
@@ -50,6 +51,7 @@ pub struct NativeTerminalApp {
     runtime: NativeTerminalRuntime<PtySession>,
     renderer: WgpuRenderer,
     glyph_cache: RasterizedGlyphCache,
+    font_family: String,
     pty_spawner: RealNativePtySpawner,
     gpu_context: Option<NativeGpuContext>,
     surface: Option<NativeWindowSurface<WgpuSurfaceBackend<'static>>>,
@@ -84,9 +86,25 @@ impl NativeTerminalApp {
     /// Create a native terminal app handler with explicit runtime and renderer configuration.
     pub fn new_with_runtime_and_renderer_config(
         config: NativeAppConfig,
-        mut runtime_config: NativeTerminalRuntimeConfig,
+        runtime_config: NativeTerminalRuntimeConfig,
         renderer_config: RendererConfig,
     ) -> Result<Self, NativeAppError> {
+        Self::new_with_runtime_renderer_and_font_config(
+            config,
+            runtime_config,
+            renderer_config,
+            "monospace",
+        )
+    }
+
+    /// Create a native terminal app with explicit runtime, renderer, and font configuration.
+    pub fn new_with_runtime_renderer_and_font_config(
+        config: NativeAppConfig,
+        mut runtime_config: NativeTerminalRuntimeConfig,
+        renderer_config: RendererConfig,
+        font_family: impl Into<String>,
+    ) -> Result<Self, NativeAppError> {
+        let font_family = font_family.into();
         if config.width == 0 || config.height == 0 {
             return Err(NativeAppError::Runtime(
                 "native window dimensions must be non-zero".to_owned(),
@@ -111,7 +129,8 @@ impl NativeTerminalApp {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
             renderer: WgpuRenderer::new(renderer_config)?,
-            glyph_cache: load_default_native_glyph_cache()?,
+            glyph_cache: load_native_glyph_cache(&font_family)?,
+            font_family,
             pty_spawner: RealNativePtySpawner::default(),
             gpu_context: None,
             surface: None,
@@ -139,6 +158,11 @@ impl NativeTerminalApp {
     /// Access renderer state.
     pub fn renderer(&self) -> &WgpuRenderer {
         &self.renderer
+    }
+
+    /// Active configured font family or file path used by the native glyph cache.
+    pub fn font_family(&self) -> &str {
+        &self.font_family
     }
 
     /// Take a startup error captured from the event handler.
@@ -185,12 +209,30 @@ pub fn run_native_app_with_runtime_renderer_and_config_file(
     renderer_config: RendererConfig,
     config_path: Option<&Path>,
 ) -> Result<NativeAppRunReport, NativeAppError> {
-    let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
-    let event_proxy = event_loop.create_proxy();
-    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+    run_native_app_with_runtime_renderer_font_and_config_file(
         config,
         runtime_config,
         renderer_config,
+        "monospace",
+        config_path,
+    )
+}
+
+/// Run the native `winit` terminal application loop with explicit runtime, renderer, font, and config reload path.
+pub fn run_native_app_with_runtime_renderer_font_and_config_file(
+    config: NativeAppConfig,
+    runtime_config: NativeTerminalRuntimeConfig,
+    renderer_config: RendererConfig,
+    font_family: impl Into<String>,
+    config_path: Option<&Path>,
+) -> Result<NativeAppRunReport, NativeAppError> {
+    let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
+    let event_proxy = event_loop.create_proxy();
+    let mut app = NativeTerminalApp::new_with_runtime_renderer_and_font_config(
+        config,
+        runtime_config,
+        renderer_config,
+        font_family,
     )?;
     if let Some(config_path) = config_path {
         app.set_config_reloader(

@@ -5,7 +5,7 @@ use thiserror::Error;
 use super::CliExit;
 use crate::app::{
     NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig,
-    run_native_app_with_runtime_renderer_and_config_file,
+    run_native_app_with_runtime_renderer_font_and_config_file,
 };
 use crate::config::{CursorStyleSetting, GromaqConfig, ShellSettings, format_theme_preset};
 use crate::pty::ShellCommand;
@@ -28,7 +28,7 @@ impl NativeAppLaunchError {
 }
 
 /// Native launch configuration derived from defaults or a user config file.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NativeAppLaunchConfig {
     /// Window and frame-pacing configuration.
     pub app: NativeAppConfig,
@@ -36,8 +36,22 @@ pub struct NativeAppLaunchConfig {
     pub runtime: NativeTerminalRuntimeConfig,
     /// Renderer configuration for glyph planning and frame presentation.
     pub renderer: RendererConfig,
+    /// Font family name or explicit font file path for native glyph rasterization.
+    pub font_family: String,
     /// Optional TOML config path to poll for reloadable changes after launch.
     pub config_path: Option<PathBuf>,
+}
+
+impl Default for NativeAppLaunchConfig {
+    fn default() -> Self {
+        Self {
+            app: NativeAppConfig::default(),
+            runtime: NativeTerminalRuntimeConfig::default(),
+            renderer: RendererConfig::default(),
+            font_family: "monospace".to_owned(),
+            config_path: None,
+        }
+    }
 }
 
 impl NativeAppLaunchConfig {
@@ -54,6 +68,7 @@ impl NativeAppLaunchConfig {
             app,
             runtime,
             renderer,
+            font_family: config.font.family.clone(),
             config_path: None,
         })
     }
@@ -77,10 +92,11 @@ impl NativeAppLauncher for RealNativeAppLauncher {
         &self,
         config: NativeAppLaunchConfig,
     ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
-        run_native_app_with_runtime_renderer_and_config_file(
+        run_native_app_with_runtime_renderer_font_and_config_file(
             config.app,
             config.runtime,
             config.renderer,
+            config.font_family,
             config.config_path.as_deref(),
         )
         .map_err(|error| NativeAppLaunchError::new(error.to_string()))

@@ -8,7 +8,7 @@ use gromaq::renderer::RendererConfig;
 use gromaq::{ConfigFileReloader, CursorShape, CursorStyleSetting, GromaqConfig};
 use winit::dpi::Size;
 
-use crate::support::test_app_config_path;
+use crate::support::{system_mono_font_path, test_app_config_path};
 
 fn expected_grid_for_window(
     width_px: u32,
@@ -166,6 +166,21 @@ fn native_app_can_start_with_explicit_renderer_config() {
 }
 
 #[test]
+fn native_app_can_start_with_configured_font_file_path() {
+    let font_path = system_mono_font_path();
+
+    let app = NativeTerminalApp::new_with_runtime_renderer_and_font_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+        font_path.to_string_lossy(),
+    )
+    .unwrap();
+
+    assert_eq!(app.font_family(), font_path.to_string_lossy());
+}
+
+#[test]
 fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime() {
     let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
         NativeAppConfig::default(),
@@ -214,6 +229,24 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
         ),
         expected_grid_for_window(1280, 800, app.renderer().config())
     );
+    assert!(!app.runtime().has_shell_session());
+}
+
+#[test]
+fn native_app_applies_reloadable_font_file_path_without_restarting_runtime() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+    )
+    .unwrap();
+    let font_path = system_mono_font_path();
+    let mut config = GromaqConfig::default();
+    config.font.family = font_path.to_string_lossy().into_owned();
+
+    app.apply_reloadable_gromaq_config(&config).unwrap();
+
+    assert_eq!(app.font_family(), font_path.to_string_lossy());
     assert!(!app.runtime().has_shell_session());
 }
 
