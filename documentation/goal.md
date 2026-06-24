@@ -61,6 +61,7 @@ Architecture should include:
 - frame scheduler
 - dirty-region tracking
 - configuration system
+- theme engine with first-class defaults and user overrides
 - test/control API for debug builds
 - benchmark harness
 
@@ -93,6 +94,7 @@ Required test types:
 - Unicode width tests
 - ANSI/VT compatibility tests
 - selection/copy tests
+- theme and legibility tests
 - snapshot tests where appropriate
 - performance regression tests
 
@@ -123,10 +125,12 @@ Required validation methods:
 - compare golden fixtures
 - compare screenshots where useful
 - compare behavior against reference terminals where possible
+- compare default visual output against curated reference-quality terminals such as Ghostty and well-configured iTerm2 setups
 - run compatibility scenarios for vim, neovim, tmux, shells, and large-output programs
 - verify resize behavior
 - verify alternate screen behavior
 - verify colors, cursor, attributes, and styles
+- verify default text contrast, prompt legibility, cursor visibility, selection colors, padding, and window surface readability
 - verify mouse reporting modes
 - verify copy/paste and selection behavior
 
@@ -212,6 +216,40 @@ The terminal is not complete until these are true:
 - Handles keyboard shortcuts predictably.
 - Handles mouse interaction where supported.
 - Has a documented compatibility matrix.
+
+## Visual Experience and Theme Acceptance Criteria
+
+The terminal is not complete until it looks and feels excellent out of the box.
+
+The default experience must be:
+
+- beautiful, modern, and coherent without user configuration
+- strongly inspired by the polish of terminals such as Ghostty and carefully configured iTerm2 setups
+- readable at normal laptop and desktop viewing distances
+- high contrast without harshness
+- comfortable for long daily sessions
+- visually stable during shell prompts, command output, alternate screen apps, resizing, and high-throughput output
+- free of muddy low-contrast foreground/background combinations
+- free of cramped text, awkward padding, clipping, or visually noisy default colors
+- professional enough for open-source screenshots, README demos, and daily use
+
+The theme engine must provide configurable building blocks for:
+
+- background, foreground, cursor, selection, ANSI, and bright ANSI colors
+- surface padding and cell spacing where practical
+- font family, font size, line height, and fallback font behavior
+- cursor style and cursor color
+- inactive/dim text treatment where supported
+- named built-in themes, including one excellent default theme
+- importable/exportable theme configuration in documented TOML
+
+The visual system must be tested and validated with:
+
+- deterministic config parsing tests for theme settings
+- renderer or prepared-frame tests proving colors propagate into GPU draw data
+- screenshot or pixel-level validation where useful
+- manual visual smoke evidence for the default theme
+- documentation that explains theme configuration clearly
 
 ## Rust Quality Standards
 
@@ -302,6 +340,8 @@ The goal is complete only when:
 - the terminal launches successfully
 - the terminal can run real shells
 - the terminal is GPU-rendered
+- the default theme is beautiful, legible, and polished enough to use without configuration
+- theme configuration exposes the expected user-facing building blocks
 - the terminal sustains 144Hz on supported hardware
 - benchmarks prove performance targets
 - tests prove correctness
