@@ -1,7 +1,10 @@
 //! Keyboard input encoding.
 
 use bitflags::bitflags;
-use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
+use keypad::encode_winit_keypad_key;
+use winit::keyboard::{Key, ModifiersState, NamedKey, PhysicalKey};
+
+mod keypad;
 
 bitflags! {
     /// Keyboard modifier flags.
@@ -222,68 +225,6 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
         &[key],
         application_cursor_keys,
     ))
-}
-
-fn encode_winit_keypad_key(
-    physical_key: PhysicalKey,
-    modifiers: KeyModifiers,
-    application_keypad: bool,
-) -> Option<Vec<u8>> {
-    let PhysicalKey::Code(code) = physical_key else {
-        return None;
-    };
-
-    if application_keypad {
-        let final_byte = match code {
-            KeyCode::Numpad0 => b'p',
-            KeyCode::Numpad1 => b'q',
-            KeyCode::Numpad2 => b'r',
-            KeyCode::Numpad3 => b's',
-            KeyCode::Numpad4 => b't',
-            KeyCode::Numpad5 => b'u',
-            KeyCode::Numpad6 => b'v',
-            KeyCode::Numpad7 => b'w',
-            KeyCode::Numpad8 => b'x',
-            KeyCode::Numpad9 => b'y',
-            KeyCode::NumpadDecimal => b'n',
-            KeyCode::NumpadDivide => b'o',
-            KeyCode::NumpadMultiply => b'j',
-            KeyCode::NumpadSubtract => b'm',
-            KeyCode::NumpadAdd => b'k',
-            KeyCode::NumpadEnter => b'M',
-            KeyCode::NumpadEqual => b'X',
-            _ => return None,
-        };
-        return Some(encode_alt_prefixed_key(
-            &[0x1b, b'O', final_byte],
-            modifiers,
-        ));
-    }
-
-    let ch = match code {
-        KeyCode::Numpad0 => '0',
-        KeyCode::Numpad1 => '1',
-        KeyCode::Numpad2 => '2',
-        KeyCode::Numpad3 => '3',
-        KeyCode::Numpad4 => '4',
-        KeyCode::Numpad5 => '5',
-        KeyCode::Numpad6 => '6',
-        KeyCode::Numpad7 => '7',
-        KeyCode::Numpad8 => '8',
-        KeyCode::Numpad9 => '9',
-        KeyCode::NumpadDecimal => '.',
-        KeyCode::NumpadDivide => '/',
-        KeyCode::NumpadMultiply => '*',
-        KeyCode::NumpadSubtract => '-',
-        KeyCode::NumpadAdd => '+',
-        KeyCode::NumpadEqual => '=',
-        KeyCode::NumpadEnter => return Some(encode_alt_prefixed_key(b"\r", modifiers)),
-        _ => return None,
-    };
-
-    let mut bytes = Vec::new();
-    encode_modified_char(&mut bytes, ch, modifiers);
-    Some(bytes)
 }
 
 /// Convert `winit` modifier state to terminal modifier flags.
