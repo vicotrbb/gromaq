@@ -5,6 +5,7 @@ use super::surface::SurfaceBackend;
 use glyph_pass::render_glyph_frame_to_view;
 
 mod glyph_pass;
+mod solid_draw;
 
 /// Errors produced while acquiring or presenting a native surface frame.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
