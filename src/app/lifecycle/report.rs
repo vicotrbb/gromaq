@@ -3,10 +3,11 @@
 use std::time::Instant;
 
 use super::super::perf::{
-    RuntimeDurationHistogram, average_duration_nanos, saturating_duration_nanos,
+    RuntimeDurationHistogram, average_duration_nanos, percentile_rank, saturating_duration_nanos,
 };
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
+const PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY: usize = 512;
 
 /// Native app event-loop report captured after the app exits.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -57,6 +58,8 @@ pub struct NativeAppRunReport {
     pub frame_interval_max_ns: u64,
     /// Approximate p95 presented-frame interval in nanoseconds, using fixed buckets.
     pub frame_interval_p95_ns: u64,
+    /// Exact p95 presented-frame interval in nanoseconds when all intervals fit in telemetry.
+    pub frame_interval_p95_exact_ns: u64,
     /// Count of measured intervals that exceeded the effective target frame interval.
     pub frame_intervals_over_target: u64,
     /// Count of measured intervals that exceeded twice the effective target frame interval.
@@ -65,7 +68,7 @@ pub struct NativeAppRunReport {
     pub dropped_frames: u64,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct PresentedFrameIntervals {
     last_presented_at: Option<Instant>,
     samples: u64,
@@ -76,6 +79,26 @@ pub(super) struct PresentedFrameIntervals {
     intervals_over_double_target: u64,
     dropped_frames: u64,
     histogram: RuntimeDurationHistogram,
+    interval_samples_ns: [u64; PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY],
+    interval_sample_len: usize,
+}
+
+impl Default for PresentedFrameIntervals {
+    fn default() -> Self {
+        Self {
+            last_presented_at: None,
+            samples: 0,
+            total_ns: 0,
+            avg_ns: 0,
+            max_ns: 0,
+            intervals_over_target: 0,
+            intervals_over_double_target: 0,
+            dropped_frames: 0,
+            histogram: RuntimeDurationHistogram::default(),
+            interval_samples_ns: [0; PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY],
+            interval_sample_len: 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -122,6 +145,10 @@ impl PresentedFrameIntervals {
             self.avg_ns = average_duration_nanos(self.total_ns, self.samples);
             self.max_ns = self.max_ns.max(elapsed_ns);
             self.histogram.record(elapsed_ns);
+            if self.interval_sample_len < PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY {
+                self.interval_samples_ns[self.interval_sample_len] = elapsed_ns;
+                self.interval_sample_len += 1;
+            }
         }
         self.last_presented_at = Some(presented_at);
     }
@@ -151,10 +178,23 @@ impl PresentedFrameIntervals {
             frame_interval_avg_ns: self.avg_ns,
             frame_interval_max_ns: self.max_ns,
             frame_interval_p95_ns: self.histogram.p95_upper_bound_ns(self.samples),
+            frame_interval_p95_exact_ns: self.exact_p95_ns(),
             frame_intervals_over_target: self.intervals_over_target,
             frame_intervals_over_double_target: self.intervals_over_double_target,
             dropped_frames: self.dropped_frames,
         }
+    }
+
+    fn exact_p95_ns(self) -> u64 {
+        if self.samples == 0 || usize::try_from(self.samples).ok() != Some(self.interval_sample_len)
+        {
+            return 0;
+        }
+        let mut samples = self.interval_samples_ns;
+        samples[..self.interval_sample_len].sort_unstable();
+        let rank = percentile_rank(self.samples, 95).saturating_sub(1);
+        let index = usize::try_from(rank).unwrap_or(self.interval_sample_len - 1);
+        samples[index]
     }
 }
 
@@ -206,8 +246,53 @@ mod tests {
         assert_eq!(report.window_height_px, None);
         assert_eq!(report.window_scale_milliscale, None);
         assert_eq!(report.frame_interval_target_fps, 144);
+        assert_eq!(report.frame_interval_p95_exact_ns, 20_833_332);
         assert_eq!(report.frame_intervals_over_target, 1);
         assert_eq!(report.frame_intervals_over_double_target, 1);
         assert_eq!(report.dropped_frames, 2);
+    }
+
+    #[test]
+    fn presented_frame_intervals_exact_p95_requires_full_bounded_sample_set() {
+        let started_at = Instant::now();
+        let mut intervals = PresentedFrameIntervals::default();
+
+        for frame in 0..=PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY {
+            intervals.record_presented_at(
+                started_at + std::time::Duration::from_nanos(frame as u64),
+                144,
+            );
+        }
+
+        let report = intervals.run_report(NativeAppRunReportInput {
+            frames_presented: u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 1).unwrap(),
+            frame_interval_target_fps: 144,
+            ..NativeAppRunReportInput::default()
+        });
+
+        assert_eq!(
+            report.frame_interval_samples,
+            u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY).unwrap()
+        );
+        assert_eq!(report.frame_interval_p95_exact_ns, 1);
+
+        intervals.record_presented_at(
+            started_at
+                + std::time::Duration::from_nanos(
+                    u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 1).unwrap(),
+                ),
+            144,
+        );
+        let report = intervals.run_report(NativeAppRunReportInput {
+            frames_presented: u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 2).unwrap(),
+            frame_interval_target_fps: 144,
+            ..NativeAppRunReportInput::default()
+        });
+
+        assert_eq!(
+            report.frame_interval_samples,
+            u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 1).unwrap()
+        );
+        assert_eq!(report.frame_interval_p95_exact_ns, 0);
     }
 }

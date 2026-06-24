@@ -162,7 +162,7 @@ pub(super) fn dirty_region_cell_count(regions: &[DirtyRegion]) -> u64 {
     })
 }
 
-fn percentile_rank(samples: u64, percentile: u8) -> u64 {
+pub(super) fn percentile_rank(samples: u64, percentile: u8) -> u64 {
     let samples = u128::from(samples);
     let percentile = u128::from(percentile);
     let rank = samples.saturating_mul(percentile).saturating_add(99) / 100;
