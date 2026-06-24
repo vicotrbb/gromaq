@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-use std::collections::VecDeque;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{
@@ -10,159 +8,34 @@ use std::time::Duration;
 
 use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
-    NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativePtySessionIo,
-    NativePtySpawner, NativeResizeGridMapper, NativeRuntimePerfSnapshot,
-    NativeRuntimeStateSnapshot, NativeTerminalApp, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig, NativeWindowMouseInput, NativeWindowSurface, RealNativePtySpawner,
-    is_native_copy_shortcut, is_native_paste_shortcut, load_default_native_glyph_cache,
-    render_and_present_terminal_glyph_frame_report,
+    NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativePtySpawner,
+    NativeResizeGridMapper, NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot,
+    NativeTerminalApp, NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowMouseInput,
+    NativeWindowSurface, RealNativePtySpawner, is_native_copy_shortcut, is_native_paste_shortcut,
+    load_default_native_glyph_cache, render_and_present_terminal_glyph_frame_report,
 };
-use gromaq::dirty::DirtyRegion;
 use gromaq::font::RasterizedGlyphCache;
 use gromaq::native_gpu::NativeGpuWindowSurface;
-use gromaq::pty::{PtyConfig, PtyError, ShellCommand};
+use gromaq::pty::{PtyConfig, ShellCommand};
 use gromaq::renderer::{
     BackgroundQuadBatch, GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphBitmap, GlyphEntry,
-    GlyphQuad, GlyphQuadBatch, GlyphVertex, GpuRenderer, RenderPlanner, RendererConfig,
-    SurfaceBackend, SurfaceFrameBackend, SurfaceFrameError, SurfaceGlyphFrame,
+    GlyphQuad, GlyphQuadBatch, GlyphVertex, RenderPlanner, RendererConfig, SurfaceGlyphFrame,
     SurfaceLifecycleAction, WgpuRenderer,
 };
 use gromaq::{
-    ConfigFileReloader, CursorSnapshot, GridSnapshot, GromaqConfig, GromaqError, KeyModifiers,
-    MemoryClipboard, MouseButton, MouseEvent, MouseEventKind, SelectionRange, Terminal,
-    TerminalConfig,
+    ConfigFileReloader, GromaqConfig, GromaqError, KeyModifiers, MemoryClipboard, MouseButton,
+    MouseEvent, MouseEventKind, SelectionRange, Terminal, TerminalConfig,
 };
 use winit::dpi::Size;
 use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
 
-#[derive(Debug, Default)]
-struct MockPtySession {
-    output: RefCell<VecDeque<Vec<u8>>>,
-    input: RefCell<Vec<Vec<u8>>>,
-    resizes: RefCell<Vec<NativePtyResize>>,
-}
+#[path = "app/support.rs"]
+mod support;
 
-fn test_app_config_path(name: &str) -> PathBuf {
-    let directory = std::env::current_dir()
-        .unwrap()
-        .join("target")
-        .join("gromaq-app-tests");
-    fs::create_dir_all(&directory).unwrap();
-    directory.join(format!("{}-{name}", std::process::id()))
-}
-
-impl NativePtySessionIo for MockPtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.borrow_mut().pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
-        self.input.borrow_mut().push(bytes.to_vec());
-        Ok(())
-    }
-
-    fn resize(&mut self, size: NativePtyResize) -> Result<(), PtyError> {
-        self.resizes.borrow_mut().push(size);
-        Ok(())
-    }
-}
-
-#[derive(Debug, Default)]
-struct MockPtySpawner {
-    configs: RefCell<Vec<PtyConfig>>,
-}
-
-impl NativePtySpawner for MockPtySpawner {
-    type Session = MockPtySession;
-
-    fn spawn(&self, config: PtyConfig) -> Result<Self::Session, PtyError> {
-        self.configs.borrow_mut().push(config);
-        let session = MockPtySession::default();
-        session.output.borrow_mut().push_back(b"hello\r\n".to_vec());
-        Ok(session)
-    }
-}
-
-#[derive(Debug, Default)]
-struct MockFrameRenderer {
-    frames: Vec<RenderedFrame>,
-    render_delay: Duration,
-    render_error: Option<GromaqError>,
-}
-
-#[derive(Debug)]
-struct RenderedFrame {
-    first_line: String,
-    cursor: CursorSnapshot,
-    dirty_regions: Vec<DirtyRegion>,
-}
-
-impl GpuRenderer for MockFrameRenderer {
-    fn render_frame(
-        &mut self,
-        grid: &GridSnapshot,
-        cursor: CursorSnapshot,
-        dirty_regions: &[DirtyRegion],
-    ) -> gromaq::Result<()> {
-        if let Some(error) = self.render_error.take() {
-            return Err(error);
-        }
-        if !self.render_delay.is_zero() {
-            std::thread::sleep(self.render_delay);
-        }
-        self.frames.push(RenderedFrame {
-            first_line: grid.line_text(0),
-            cursor,
-            dirty_regions: dirty_regions.to_vec(),
-        });
-        Ok(())
-    }
-}
-
-#[derive(Debug, Default)]
-struct MockSurfaceBackend {
-    configured_sizes: RefCell<Vec<(u32, u32)>>,
-    presented_clear_colors: RefCell<Vec<[f64; 4]>>,
-    presented_glyph_frames: RefCell<Vec<PresentedGlyphFrame>>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct PresentedGlyphFrame {
-    width: u32,
-    height: u32,
-    quads: usize,
-    atlas_pixels: usize,
-}
-
-impl SurfaceBackend for MockSurfaceBackend {
-    fn configure(&mut self, config: &wgpu::SurfaceConfiguration) {
-        self.configured_sizes
-            .borrow_mut()
-            .push((config.width, config.height));
-    }
-}
-
-impl SurfaceFrameBackend for MockSurfaceBackend {
-    fn clear_and_present(&mut self, clear_color: [f64; 4]) -> Result<(), SurfaceFrameError> {
-        self.presented_clear_colors.borrow_mut().push(clear_color);
-        Ok(())
-    }
-
-    fn present_glyph_frame(
-        &mut self,
-        frame: SurfaceGlyphFrame<'_>,
-    ) -> Result<(), SurfaceFrameError> {
-        self.presented_glyph_frames
-            .borrow_mut()
-            .push(PresentedGlyphFrame {
-                width: frame.width,
-                height: frame.height,
-                quads: frame.batch.quads.len(),
-                atlas_pixels: frame.atlas.rgba.len() / 4,
-            });
-        Ok(())
-    }
-}
+use support::{
+    MockFrameRenderer, MockPtySession, MockPtySpawner, MockSurfaceBackend, PresentedGlyphFrame,
+    supported_surface_capabilities, system_mono_font, test_app_config_path,
+};
 
 #[test]
 fn native_app_config_builds_terminal_window_attributes() {
@@ -2752,31 +2625,4 @@ fn native_terminal_runtime_ignores_empty_pty_input_writes() {
         runtime.dump_runtime_perf_metrics(),
         NativeRuntimePerfSnapshot::default()
     );
-}
-
-fn supported_surface_capabilities() -> wgpu::SurfaceCapabilities {
-    wgpu::SurfaceCapabilities {
-        formats: vec![wgpu::TextureFormat::Bgra8UnormSrgb],
-        present_modes: vec![wgpu::PresentMode::Fifo],
-        alpha_modes: vec![wgpu::CompositeAlphaMode::Opaque],
-        usages: wgpu::TextureUsages::RENDER_ATTACHMENT,
-    }
-}
-
-fn system_mono_font() -> Vec<u8> {
-    let candidates = [
-        PathBuf::from("/System/Library/Fonts/SFNSMono.ttf"),
-        PathBuf::from("/System/Library/Fonts/Menlo.ttc"),
-        PathBuf::from("/System/Library/Fonts/Supplemental/Courier New.ttf"),
-        PathBuf::from("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"),
-        PathBuf::from("/usr/share/fonts/dejavu-sans-fonts/DejaVuSansMono.ttf"),
-        PathBuf::from("/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf"),
-        PathBuf::from("/usr/share/fonts/liberation/LiberationMono-Regular.ttf"),
-        PathBuf::from("/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf"),
-    ];
-    let path = candidates
-        .into_iter()
-        .find(|path| path.exists())
-        .expect("system monospace test font is available");
-    std::fs::read(path).expect("test font can be read")
 }
