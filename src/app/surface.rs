@@ -10,6 +10,33 @@ use crate::renderer::{
 
 use super::{NativeAppError, NativeGlyphFrameError, NativeTerminalRuntime};
 
+/// Structured result from preparing and presenting a native terminal glyph frame.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct NativeGlyphFramePresentation {
+    /// Whether dirty terminal state was rendered through the renderer boundary.
+    pub rendered: bool,
+    /// Whether a glyph frame was presented through the native surface backend.
+    pub glyph_frame_presented: bool,
+    /// Whether the surface was cleared without a glyph frame.
+    pub clear_presented: bool,
+    /// Presented frame width in pixels.
+    pub width: u32,
+    /// Presented frame height in pixels.
+    pub height: u32,
+    /// Textured glyph quads prepared for presentation.
+    pub glyph_quads: usize,
+    /// Solid background quads prepared for presentation.
+    pub background_quads: usize,
+    /// Solid text-decoration quads prepared for presentation.
+    pub decoration_quads: usize,
+    /// Solid cursor quads prepared for presentation.
+    pub cursor_quads: usize,
+    /// Packed glyph atlas byte length.
+    pub atlas_bytes: usize,
+    /// Occupied glyph atlas slots.
+    pub atlas_occupied_slots: usize,
+}
+
 /// Native window surface state owned by the app after a `wgpu` surface exists.
 #[derive(Debug)]
 pub struct NativeWindowSurface<B> {
@@ -115,21 +142,56 @@ pub fn render_and_present_terminal_glyph_frame<S, B>(
 where
     B: SurfaceFrameBackend,
 {
+    render_and_present_terminal_glyph_frame_report(runtime, renderer, glyph_cache, surface)
+        .map(|report| report.glyph_frame_presented)
+}
+
+/// Render dirty terminal state into a prepared glyph frame, present it, and return presentation metrics.
+pub fn render_and_present_terminal_glyph_frame_report<S, B>(
+    runtime: &mut NativeTerminalRuntime<S>,
+    renderer: &mut WgpuRenderer,
+    glyph_cache: &mut RasterizedGlyphCache,
+    surface: &mut NativeWindowSurface<B>,
+) -> Result<NativeGlyphFramePresentation, NativeGlyphFrameError>
+where
+    B: SurfaceFrameBackend,
+{
     if !runtime.render_terminal_frame(renderer)? {
-        return Ok(false);
+        return Ok(NativeGlyphFramePresentation::default());
     }
     let clear_color = renderer.config().clear_color;
     let Some(plan) = renderer.last_plan() else {
-        return Ok(false);
+        return Ok(NativeGlyphFramePresentation {
+            rendered: true,
+            ..NativeGlyphFramePresentation::default()
+        });
     };
     if plan.glyphs.is_empty() {
         surface.clear_and_present(clear_color)?;
-        return Ok(false);
+        return Ok(NativeGlyphFramePresentation {
+            rendered: true,
+            clear_presented: true,
+            ..NativeGlyphFramePresentation::default()
+        });
     }
     let glyphs = glyph_cache.rasterize_plan(plan)?;
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(plan, &glyphs.bitmaps, clear_color)?;
-    surface.present_glyph_frame(prepared.as_surface_glyph_frame())?;
-    Ok(true)
+    let frame = prepared.as_surface_glyph_frame();
+    let report = NativeGlyphFramePresentation {
+        rendered: true,
+        glyph_frame_presented: true,
+        clear_presented: false,
+        width: frame.width,
+        height: frame.height,
+        glyph_quads: frame.batch.quads.len(),
+        background_quads: frame.background_batch.quads.len(),
+        decoration_quads: frame.decoration_batch.quads.len(),
+        cursor_quads: frame.cursor_batch.quads.len(),
+        atlas_bytes: frame.atlas.rgba.len(),
+        atlas_occupied_slots: frame.atlas.occupied_slots,
+    };
+    surface.present_glyph_frame(frame)?;
+    Ok(report)
 }
 
 /// Build the default native glyph cache from a system monospace font.

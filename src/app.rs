@@ -38,7 +38,8 @@ pub use pty_bridge::{
 };
 pub use runtime::NativeTerminalRuntime;
 pub use surface::{
-    NativeWindowSurface, load_default_native_glyph_cache, render_and_present_terminal_glyph_frame,
+    NativeGlyphFramePresentation, NativeWindowSurface, load_default_native_glyph_cache,
+    render_and_present_terminal_glyph_frame, render_and_present_terminal_glyph_frame_report,
 };
 
 /// Native terminal application handler for the `winit` event loop.

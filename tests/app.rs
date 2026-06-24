@@ -15,7 +15,7 @@ use gromaq::app::{
     NativeRuntimeStateSnapshot, NativeTerminalApp, NativeTerminalRuntime,
     NativeTerminalRuntimeConfig, NativeWindowMouseInput, NativeWindowSurface, RealNativePtySpawner,
     is_native_copy_shortcut, is_native_paste_shortcut, load_default_native_glyph_cache,
-    render_and_present_terminal_glyph_frame,
+    render_and_present_terminal_glyph_frame_report,
 };
 use gromaq::dirty::DirtyRegion;
 use gromaq::font::RasterizedGlyphCache;
@@ -1042,15 +1042,13 @@ fn native_redraw_presents_dirty_runtime_frame_as_glyph_frame() {
     let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());
     surface.configure_initial(1280, 800).unwrap();
 
-    assert!(
-        render_and_present_terminal_glyph_frame(
-            &mut runtime,
-            &mut renderer,
-            &mut glyph_cache,
-            &mut surface,
-        )
-        .unwrap()
-    );
+    let report = render_and_present_terminal_glyph_frame_report(
+        &mut runtime,
+        &mut renderer,
+        &mut glyph_cache,
+        &mut surface,
+    )
+    .unwrap();
 
     assert!(surface.backend().presented_clear_colors.borrow().is_empty());
     let presented_frames = surface.backend().presented_glyph_frames.borrow();
@@ -1059,6 +1057,16 @@ fn native_redraw_presents_dirty_runtime_frame_as_glyph_frame() {
     assert!(presented_frames[0].width > 0);
     assert!(presented_frames[0].height > 0);
     assert!(presented_frames[0].atlas_pixels > 0);
+    assert!(report.rendered);
+    assert!(report.glyph_frame_presented);
+    assert!(!report.clear_presented);
+    assert_eq!(report.width, presented_frames[0].width);
+    assert_eq!(report.height, presented_frames[0].height);
+    assert_eq!(report.glyph_quads, presented_frames[0].quads);
+    assert_eq!(report.atlas_bytes / 4, presented_frames[0].atlas_pixels);
+    assert_eq!(report.background_quads, 0);
+    assert_eq!(report.decoration_quads, 0);
+    assert!(report.atlas_occupied_slots > 0);
 }
 
 #[test]
