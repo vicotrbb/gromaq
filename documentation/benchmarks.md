@@ -23,9 +23,11 @@ estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
 On 2026-06-24, `cargo run -- --window-perf-smoke` launched a bounded live native
 window run, presented 180 frames, measured 179 presented-frame intervals, reported
-monitor refresh 120000 mHz, surface present mode Fifo, effective frame interval target 120 fps (8333333 ns), average
-interval 8548332 ns, max interval 41723584 ns, p95 bucket 10000000 ns, 5
-dropped frames, 89 intervals over target, 2 intervals over double target, and
+monitor refresh 120000 mHz, surface present mode Fifo, physical window size
+2560x1600, scale milliscale 2000, effective frame interval target 120 fps
+(8333333 ns), average interval 8766920 ns, max interval 63496084 ns, p95
+bucket 16000000 ns, 6 dropped frames, 91 intervals over target, 1 interval over
+double target, and
 `frame pacing accepted: false`. This is live-window evidence, but it is still
 not a 144Hz acceptance pass.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
