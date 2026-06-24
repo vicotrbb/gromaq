@@ -4,9 +4,8 @@ use vte::{Params, Parser, Perform};
 use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
 use crate::cell::{Cell, CellSnapshot, Color, Style, UnderlineStyle};
-use crate::config::validate_terminal_dimensions;
 use crate::dirty::{DirtyRegion, DirtyTracker};
-use crate::error::{GromaqError, Result};
+use crate::error::Result;
 use crate::grid::{Grid, GridSnapshot};
 use crate::input::encode_winit_key_with_terminal_modes;
 use crate::mouse::{MouseEvent, MouseReportState};
@@ -18,6 +17,7 @@ mod params;
 mod reflow;
 mod selection_copy;
 mod snapshot;
+mod types;
 mod width;
 
 use osc::{
@@ -29,13 +29,13 @@ use params::{
     push_sgr_extended_color_parameter,
 };
 use snapshot::{cell_screenshot_color, push_snapshot_row};
+pub use types::{CursorShape, CursorSnapshot, PerfSnapshot, Screenshot, TerminalConfig};
 use width::{
     char_width, is_combining_enclosing_keycap, is_emoji_modifier, is_emoji_modifier_base_candidate,
     is_emoji_presentation_base_candidate, is_keycap_base_sequence, is_regional_indicator,
     is_variation_selector_16, map_dec_special_graphics, metadata_id_for_index,
 };
 
-const MAX_SCROLLBACK_LINES: usize = 1_000_000;
 const MAX_OSC_TITLE_BYTES: usize = 4096;
 const MAX_OSC52_CLIPBOARD_BYTES: usize = 1_048_576;
 const MAX_OSC8_HYPERLINK_BYTES: usize = 4096;
@@ -43,131 +43,6 @@ const MAX_METADATA_IDS: usize = 4096;
 const MAX_OSC8_HYPERLINKS: usize = MAX_METADATA_IDS;
 const MAX_UNDERLINE_COLORS: usize = MAX_METADATA_IDS;
 const MAX_DCS_PAYLOAD_BYTES: usize = 64;
-
-/// Core terminal dimensions and scrollback configuration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TerminalConfig {
-    cols: u16,
-    rows: u16,
-    pixel_width: u16,
-    pixel_height: u16,
-    scrollback_limit: usize,
-}
-
-impl TerminalConfig {
-    /// Build a terminal configuration with a default bounded scrollback.
-    pub fn new(cols: u16, rows: u16) -> Result<Self> {
-        Self {
-            cols,
-            rows,
-            pixel_width: 0,
-            pixel_height: 0,
-            scrollback_limit: 10_000,
-        }
-        .validate()
-    }
-
-    /// Set the current native pixel size, when known.
-    pub fn with_pixel_size(mut self, pixel_width: u16, pixel_height: u16) -> Result<Self> {
-        self.pixel_width = pixel_width;
-        self.pixel_height = pixel_height;
-        self.validate()
-    }
-
-    /// Set the scrollback line limit.
-    pub fn with_scrollback_limit(mut self, scrollback_limit: usize) -> Result<Self> {
-        self.scrollback_limit = scrollback_limit;
-        self.validate()
-    }
-
-    /// Number of columns.
-    pub fn cols(&self) -> u16 {
-        self.cols
-    }
-
-    /// Number of rows.
-    pub fn rows(&self) -> u16 {
-        self.rows
-    }
-
-    /// Native pixel width, or zero when unknown.
-    pub fn pixel_width(&self) -> u16 {
-        self.pixel_width
-    }
-
-    /// Native pixel height, or zero when unknown.
-    pub fn pixel_height(&self) -> u16 {
-        self.pixel_height
-    }
-
-    /// Maximum number of scrollback lines.
-    pub fn scrollback_limit(&self) -> usize {
-        self.scrollback_limit
-    }
-
-    fn validate(self) -> Result<Self> {
-        validate_terminal_dimensions(self.cols, self.rows)?;
-        if self.scrollback_limit > MAX_SCROLLBACK_LINES {
-            return Err(GromaqError::InvalidScrollback {
-                maximum: MAX_SCROLLBACK_LINES,
-                actual: self.scrollback_limit,
-            });
-        }
-        Ok(self)
-    }
-}
-
-/// Cursor position snapshot.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CursorSnapshot {
-    /// Zero-based row.
-    pub row: u16,
-    /// Zero-based column.
-    pub col: u16,
-    /// Cursor visibility.
-    pub visible: bool,
-    /// Cursor shape.
-    pub shape: CursorShape,
-    /// Whether cursor blinking is requested.
-    pub blinking: bool,
-}
-
-/// Cursor shape requested by terminal control sequences.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CursorShape {
-    /// Block cursor.
-    Block,
-    /// Underline cursor.
-    Underline,
-    /// Vertical bar cursor.
-    Bar,
-}
-
-/// Lightweight performance counters for deterministic tests.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct PerfSnapshot {
-    /// Bytes fed into the parser.
-    pub parsed_bytes: u64,
-    /// Number of cells dirtied by terminal operations.
-    pub dirty_cells: u64,
-    /// Number of scroll operations.
-    pub scrolls: u64,
-    /// Number of successful terminal resize operations.
-    pub resizes: u64,
-    /// Number of non-empty dirty-region batches drained for rendering.
-    pub dirty_region_batches: u64,
-}
-
-/// Deterministic in-memory cell screenshot used by the test API.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Screenshot {
-    /// Pixel width.
-    pub width: u32,
-    /// Pixel height.
-    pub height: u32,
-    /// RGBA8 pixels.
-    pub rgba: Vec<u8>,
-}
 
 #[derive(Debug, Clone, Copy)]
 struct Cursor {
