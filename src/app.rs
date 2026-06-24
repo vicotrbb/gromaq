@@ -48,7 +48,7 @@ pub struct NativeTerminalApp {
     lifecycle: NativeAppLifecycle,
     runtime: NativeTerminalRuntime<PtySession>,
     renderer: WgpuRenderer,
-    glyph_cache: Option<RasterizedGlyphCache>,
+    glyph_cache: RasterizedGlyphCache,
     pty_spawner: RealNativePtySpawner,
     gpu_context: Option<NativeGpuContext>,
     surface: Option<NativeWindowSurface<WgpuSurfaceBackend<'static>>>,
@@ -102,7 +102,7 @@ impl NativeTerminalApp {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
             renderer: WgpuRenderer::new(renderer_config)?,
-            glyph_cache: load_default_native_glyph_cache().ok(),
+            glyph_cache: load_default_native_glyph_cache()?,
             pty_spawner: RealNativePtySpawner::default(),
             gpu_context: None,
             surface: None,
@@ -216,5 +216,12 @@ mod tests {
             error.to_string(),
             "native runtime failed: native window and terminal reference dimensions must be non-zero"
         );
+    }
+
+    #[test]
+    fn native_terminal_app_new_loads_default_glyph_cache() {
+        let app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
+
+        assert!(app.glyph_cache.is_empty());
     }
 }

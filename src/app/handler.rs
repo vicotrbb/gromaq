@@ -299,17 +299,12 @@ impl NativeTerminalApp {
             self.runtime.render_terminal_frame(&mut self.renderer)?;
             return Ok(());
         };
-        if let Some(glyph_cache) = &mut self.glyph_cache {
-            super::render_and_present_terminal_glyph_frame(
-                &mut self.runtime,
-                &mut self.renderer,
-                glyph_cache,
-                surface,
-            )?;
-        } else {
-            self.runtime.render_terminal_frame(&mut self.renderer)?;
-            surface.clear_and_present(self.renderer.config().clear_color)?;
-        }
+        super::render_and_present_terminal_glyph_frame(
+            &mut self.runtime,
+            &mut self.renderer,
+            &mut self.glyph_cache,
+            surface,
+        )?;
         Ok(())
     }
 }
