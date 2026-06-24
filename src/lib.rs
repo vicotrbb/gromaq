@@ -24,7 +24,7 @@ pub mod test_api;
 pub use cell::{Cell, CellSnapshot, Color, Style, UnderlineStyle};
 pub use clipboard::{HostClipboard, MemoryClipboard, NativeClipboard};
 pub use config::{
-    ANSI_COLOR_COUNT, ConfigFileReloader, ConfigReload, DEFAULT_ANSI_COLORS,
+    ANSI_COLOR_COUNT, ConfigFileReloader, ConfigReload, CursorStyleSetting, DEFAULT_ANSI_COLORS,
     DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR,
     DEFAULT_CURSOR_RGB8, DEFAULT_FOREGROUND, DEFAULT_FOREGROUND_RGB8, DEFAULT_SURFACE_PADDING_PX,
     FontSettings, GromaqConfig, PerformanceSettings, ShellSettings, TerminalSettings,

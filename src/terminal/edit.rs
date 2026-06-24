@@ -8,7 +8,7 @@ use crate::scrollback::Scrollback;
 
 use super::params::default_tab_stops;
 use super::state::{CharacterSet, Cursor, SavedCursorState};
-use super::{CursorShape, Terminal};
+use super::{Terminal, initial_cursor};
 
 impl Terminal {
     pub(super) fn erase_line(&mut self, mode: u16) {
@@ -239,8 +239,8 @@ impl Terminal {
                 row: 0,
                 col: 0,
                 visible: true,
-                shape: CursorShape::Block,
-                blinking: true,
+                shape: self.config.cursor_shape,
+                blinking: self.config.cursor_blinking,
             },
             style: Style::default(),
             g0_dec_special_graphics: false,
@@ -255,13 +255,7 @@ impl Terminal {
         self.hard_breaks = vec![false; usize::from(self.config.rows)];
         self.tab_stops = default_tab_stops(self.config.cols);
         self.scrollback = Scrollback::new(self.config.scrollback_limit);
-        self.cursor = Cursor {
-            row: 0,
-            col: 0,
-            visible: true,
-            shape: CursorShape::Block,
-            blinking: true,
-        };
+        self.cursor = initial_cursor(&self.config);
         self.wrap_pending = false;
         self.auto_wrap = true;
         self.origin_mode = false;

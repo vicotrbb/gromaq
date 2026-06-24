@@ -14,6 +14,8 @@ fn native_terminal_runtime_encodes_mouse_input_to_pty_when_reporting_is_enabled(
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -58,6 +60,8 @@ fn native_terminal_runtime_encodes_default_mouse_protocol_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -102,6 +106,8 @@ fn native_terminal_runtime_encodes_window_mouse_modifiers_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -149,6 +155,8 @@ fn native_terminal_runtime_maps_window_mouse_input_to_pty_report() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -195,6 +203,8 @@ fn native_terminal_runtime_maps_window_mouse_drag_to_pty_report() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -241,6 +251,8 @@ fn native_terminal_runtime_maps_alternate_screen_window_mouse_drag_to_pty_report
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -288,6 +300,8 @@ fn native_terminal_runtime_maps_alternate_screen_window_mouse_press_to_pty_repor
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -335,6 +349,8 @@ fn native_terminal_runtime_maps_alternate_screen_window_mouse_release_to_pty_rep
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -382,6 +398,8 @@ fn native_terminal_runtime_maps_alternate_screen_window_mouse_wheel_to_pty_repor
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -429,6 +447,8 @@ fn native_terminal_runtime_scrolls_scrollback_on_unreported_wheel() {
         scrollback_lines: 8,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -497,6 +517,8 @@ fn native_terminal_runtime_scrolls_scrollback_on_shift_page_keys() {
         scrollback_lines: 8,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -552,6 +574,8 @@ fn native_terminal_runtime_sends_shift_page_keys_to_alternate_screen_apps() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -589,6 +613,8 @@ fn native_terminal_runtime_leaves_shift_page_keys_unhandled_when_primary_scrollb
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -616,6 +642,8 @@ fn native_terminal_runtime_maps_alternate_screen_window_mouse_motion_to_pty_repo
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -663,6 +691,8 @@ fn native_terminal_runtime_maps_window_mouse_motion_to_pty_report() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),

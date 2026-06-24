@@ -7,7 +7,7 @@ use crate::app::{
     NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig,
     run_native_app_with_runtime_renderer_and_config_file,
 };
-use crate::config::{GromaqConfig, ShellSettings};
+use crate::config::{CursorStyleSetting, GromaqConfig, ShellSettings};
 use crate::pty::ShellCommand;
 use crate::renderer::RendererConfig;
 
@@ -140,7 +140,7 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
         Ok(config) => CliExit {
             code: 0,
             stdout: format!(
-                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntheme surface padding px: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
+                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntheme cursor style: {}\ntheme cursor blinking: {}\ntheme surface padding px: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
                 path,
                 config.terminal.cols,
                 config.terminal.rows,
@@ -153,6 +153,8 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
                 config.theme.background,
                 config.theme.foreground,
                 config.theme.cursor,
+                format_cursor_style(config.theme.cursor_style),
+                config.theme.cursor_blinking,
                 config.theme.surface_padding_px,
                 config.performance.target_fps,
                 config.performance.dirty_region_rendering
@@ -172,7 +174,7 @@ pub(super) fn config_template_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n\n[theme]\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\nansi = {}\nsurface_padding_px = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
+            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n\n[theme]\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\ncursor_style = \"{}\"\ncursor_blinking = {}\nansi = {}\nsurface_padding_px = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
             config.terminal.cols,
             config.terminal.rows,
             config.terminal.scrollback_lines,
@@ -181,12 +183,22 @@ pub(super) fn config_template_exit() -> CliExit {
             config.theme.background,
             config.theme.foreground,
             config.theme.cursor,
+            format_cursor_style(config.theme.cursor_style),
+            config.theme.cursor_blinking,
             format_toml_string_array(&config.theme.ansi),
             config.theme.surface_padding_px,
             config.performance.target_fps,
             config.performance.dirty_region_rendering
         ),
         stderr: String::new(),
+    }
+}
+
+fn format_cursor_style(style: CursorStyleSetting) -> &'static str {
+    match style {
+        CursorStyleSetting::Block => "block",
+        CursorStyleSetting::Underline => "underline",
+        CursorStyleSetting::Bar => "bar",
     }
 }
 

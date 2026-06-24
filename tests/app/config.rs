@@ -5,7 +5,7 @@ use std::time::Duration;
 use gromaq::app::{NativeAppConfig, NativeTerminalApp, NativeTerminalRuntimeConfig};
 use gromaq::pty::ShellCommand;
 use gromaq::renderer::RendererConfig;
-use gromaq::{ConfigFileReloader, GromaqConfig};
+use gromaq::{ConfigFileReloader, CursorShape, CursorStyleSetting, GromaqConfig};
 use winit::dpi::Size;
 
 use crate::support::test_app_config_path;
@@ -59,6 +59,8 @@ fn native_runtime_config_uses_validated_gromaq_terminal_settings() {
     user_config.terminal.cols = 100;
     user_config.terminal.rows = 28;
     user_config.terminal.scrollback_lines = 2048;
+    user_config.theme.cursor_style = CursorStyleSetting::Underline;
+    user_config.theme.cursor_blinking = false;
     let shell = ShellCommand {
         program: "/bin/zsh".into(),
         args: vec!["-l".into()],
@@ -71,6 +73,8 @@ fn native_runtime_config_uses_validated_gromaq_terminal_settings() {
     assert_eq!(runtime_config.terminal_cols, 100);
     assert_eq!(runtime_config.terminal_rows, 28);
     assert_eq!(runtime_config.scrollback_lines, 2048);
+    assert_eq!(runtime_config.cursor_shape, CursorShape::Underline);
+    assert!(!runtime_config.cursor_blinking);
     assert_eq!(runtime_config.shell, shell);
 }
 
@@ -82,6 +86,8 @@ fn native_app_can_start_with_explicit_runtime_config() {
         scrollback_lines: 64,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: CursorShape::Bar,
+        cursor_blinking: false,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -96,6 +102,11 @@ fn native_app_can_start_with_explicit_runtime_config() {
     let grid = app.runtime().terminal().dump_grid();
     assert_eq!(grid.cols, 40);
     assert_eq!(grid.rows, 10);
+    assert_eq!(
+        app.runtime().terminal().dump_cursor().shape,
+        CursorShape::Bar
+    );
+    assert!(!app.runtime().terminal().dump_cursor().blinking);
 }
 
 #[test]
@@ -173,6 +184,8 @@ fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
             scrollback_lines: 100,
             pixel_width: 0,
             pixel_height: 0,
+            cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+            cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
             shell: ShellCommand {
                 program: "/bin/sh".into(),
                 args: Vec::new(),
@@ -187,6 +200,8 @@ fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
     config.terminal.rows = 3;
     config.terminal.scrollback_lines = 16;
     config.shell.program = Some("/bin/zsh".to_owned());
+    config.theme.cursor_style = CursorStyleSetting::Underline;
+    config.theme.cursor_blinking = false;
 
     app.apply_reloadable_gromaq_config(&config).unwrap();
 
@@ -199,6 +214,11 @@ fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
         app.runtime().config().shell.program,
         PathBuf::from("/bin/zsh")
     );
+    assert_eq!(
+        app.runtime().terminal().dump_cursor().shape,
+        CursorShape::Underline
+    );
+    assert!(!app.runtime().terminal().dump_cursor().blinking);
     assert_eq!(app.runtime().dump_runtime_perf_metrics().resize_events, 1);
     assert!(!app.runtime().has_shell_session());
 }

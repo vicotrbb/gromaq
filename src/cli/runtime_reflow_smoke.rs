@@ -64,6 +64,8 @@ pub(super) fn runtime_reflow_smoke_exit() -> CliExit {
         scrollback_lines: 10,
         pixel_width: 80,
         pixel_height: 32,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),

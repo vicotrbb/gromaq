@@ -486,6 +486,8 @@ fn native_input_echo_render_cycle(c: &mut Criterion) {
         scrollback_lines: 20_000,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -560,6 +562,8 @@ fn pty_runtime_pump_large_output(c: &mut Criterion) {
                 scrollback_lines: 20_000,
                 pixel_width: 0,
                 pixel_height: 0,
+                cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+                cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
                 shell: ShellCommand {
                     program: "/bin/sh".into(),
                     args: Vec::new(),
@@ -700,6 +704,8 @@ fn runtime_bounded_state_batches(c: &mut Criterion) {
                 scrollback_lines: BOUNDED_STATE_SCROLLBACK_LINES,
                 pixel_width: 0,
                 pixel_height: 0,
+                cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+                cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
                 shell: ShellCommand {
                     program: "/bin/sh".into(),
                     args: Vec::new(),
@@ -738,6 +744,8 @@ fn runtime_state_snapshot_bounded_session(c: &mut Criterion) {
         scrollback_lines: BOUNDED_STATE_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -773,6 +781,8 @@ fn runtime_continuous_output_batches(c: &mut Criterion) {
                 scrollback_lines: CONTINUOUS_OUTPUT_SCROLLBACK_LINES,
                 pixel_width: 0,
                 pixel_height: 0,
+                cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+                cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
                 shell: ShellCommand {
                     program: "/bin/sh".into(),
                     args: Vec::new(),
@@ -815,6 +825,8 @@ fn runtime_alternate_screen_stages(c: &mut Criterion) {
                 scrollback_lines: 16,
                 pixel_width: 0,
                 pixel_height: 0,
+                cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+                cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
                 shell: ShellCommand {
                     program: "/bin/sh".into(),
                     args: Vec::new(),
@@ -874,6 +886,8 @@ fn runtime_protocol_input_reports(c: &mut Criterion) {
                 scrollback_lines: 128,
                 pixel_width: 0,
                 pixel_height: 0,
+                cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+                cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
                 shell: ShellCommand {
                     program: "/bin/sh".into(),
                     args: Vec::new(),

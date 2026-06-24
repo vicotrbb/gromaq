@@ -66,7 +66,9 @@ impl NativeTerminalApp {
             || self.runtime.config().terminal_rows != runtime_config.terminal_rows
             || self.runtime.config().scrollback_lines != runtime_config.scrollback_lines
             || self.runtime.config().pixel_width != runtime_config.pixel_width
-            || self.runtime.config().pixel_height != runtime_config.pixel_height;
+            || self.runtime.config().pixel_height != runtime_config.pixel_height
+            || self.runtime.config().cursor_shape != runtime_config.cursor_shape
+            || self.runtime.config().cursor_blinking != runtime_config.cursor_blinking;
         if terminal_config_changed {
             self.runtime.reconfigure_terminal(runtime_config)?;
         }

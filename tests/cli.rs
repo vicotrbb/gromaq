@@ -245,6 +245,8 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
     assert!(exit.stdout.contains("[theme]"));
+    assert!(exit.stdout.contains("cursor_style = \"block\""));
+    assert!(exit.stdout.contains("cursor_blinking = true"));
     assert!(exit.stdout.contains("ansi = [\"#151922\", \"#ff6b7a\""));
     assert!(exit.stdout.contains("surface_padding_px = 14"));
     assert!(exit.stdout.contains("[performance]"));
@@ -275,6 +277,8 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
+        cursor_style = "underline"
+        cursor_blinking = false
         surface_padding_px = 18
 
         [performance]
@@ -303,6 +307,8 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme background: #1f2028"));
     assert!(exit.stdout.contains("theme foreground: #e8e2d6"));
     assert!(exit.stdout.contains("theme cursor: #f4c06a"));
+    assert!(exit.stdout.contains("theme cursor style: underline"));
+    assert!(exit.stdout.contains("theme cursor blinking: false"));
     assert!(exit.stdout.contains("theme surface padding px: 18"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: true"));

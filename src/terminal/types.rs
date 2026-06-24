@@ -13,6 +13,8 @@ pub struct TerminalConfig {
     pub(super) pixel_width: u16,
     pub(super) pixel_height: u16,
     pub(super) scrollback_limit: usize,
+    pub(super) cursor_shape: CursorShape,
+    pub(super) cursor_blinking: bool,
 }
 
 impl TerminalConfig {
@@ -24,6 +26,8 @@ impl TerminalConfig {
             pixel_width: 0,
             pixel_height: 0,
             scrollback_limit: 10_000,
+            cursor_shape: CursorShape::Block,
+            cursor_blinking: true,
         }
         .validate()
     }
@@ -38,6 +42,18 @@ impl TerminalConfig {
     /// Set the scrollback line limit.
     pub fn with_scrollback_limit(mut self, scrollback_limit: usize) -> Result<Self> {
         self.scrollback_limit = scrollback_limit;
+        self.validate()
+    }
+
+    /// Set the default cursor shape before escape sequences override it.
+    pub fn with_cursor_shape(mut self, cursor_shape: CursorShape) -> Result<Self> {
+        self.cursor_shape = cursor_shape;
+        self.validate()
+    }
+
+    /// Set whether the default cursor requests blinking.
+    pub fn with_cursor_blinking(mut self, cursor_blinking: bool) -> Result<Self> {
+        self.cursor_blinking = cursor_blinking;
         self.validate()
     }
 
@@ -64,6 +80,16 @@ impl TerminalConfig {
     /// Maximum number of scrollback lines.
     pub fn scrollback_limit(&self) -> usize {
         self.scrollback_limit
+    }
+
+    /// Default cursor shape before escape sequences override it.
+    pub fn cursor_shape(&self) -> CursorShape {
+        self.cursor_shape
+    }
+
+    /// Whether the default cursor requests blinking.
+    pub fn cursor_blinking(&self) -> bool {
+        self.cursor_blinking
     }
 
     pub(super) fn validate(self) -> Result<Self> {

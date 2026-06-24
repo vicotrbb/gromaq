@@ -98,13 +98,7 @@ impl Terminal {
             tab_stops: default_tab_stops(config.cols),
             scrollback: Scrollback::new(config.scrollback_limit),
             parser: Parser::new(),
-            cursor: Cursor {
-                row: 0,
-                col: 0,
-                visible: true,
-                shape: CursorShape::Block,
-                blinking: true,
-            },
+            cursor: initial_cursor(&config),
             wrap_pending: false,
             auto_wrap: true,
             origin_mode: false,
@@ -169,6 +163,8 @@ impl Terminal {
             pixel_width,
             pixel_height,
             scrollback_limit: self.config.scrollback_limit,
+            cursor_shape: self.config.cursor_shape,
+            cursor_blinking: self.config.cursor_blinking,
         }
         .validate()?;
         self.reconfigure(config)
@@ -200,6 +196,12 @@ impl Terminal {
         self.scroll_bottom = config.rows - 1;
         self.cursor.row = self.cursor.row.min(config.rows - 1);
         self.cursor.col = self.cursor.col.min(config.cols - 1);
+        if self.config.cursor_shape != config.cursor_shape
+            || self.config.cursor_blinking != config.cursor_blinking
+        {
+            self.cursor.shape = config.cursor_shape;
+            self.cursor.blinking = config.cursor_blinking;
+        }
         self.wrap_pending = false;
         self.scrollback_view_offset = 0;
         self.selection = None;
@@ -253,5 +255,15 @@ impl Terminal {
             height,
             rgba,
         }
+    }
+}
+
+fn initial_cursor(config: &TerminalConfig) -> Cursor {
+    Cursor {
+        row: 0,
+        col: 0,
+        visible: true,
+        shape: config.cursor_shape,
+        blinking: config.cursor_blinking,
     }
 }

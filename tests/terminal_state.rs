@@ -1,4 +1,21 @@
-use gromaq::{Color, MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig};
+use gromaq::{
+    Color, CursorShape, MouseButton, MouseEvent, MouseEventKind, Terminal, TerminalConfig,
+};
+
+#[test]
+fn terminal_config_sets_initial_cursor_style() {
+    let config = TerminalConfig::new(8, 3)
+        .unwrap()
+        .with_cursor_shape(CursorShape::Bar)
+        .unwrap()
+        .with_cursor_blinking(false)
+        .unwrap();
+    let terminal = Terminal::new(config);
+
+    let cursor = terminal.dump_cursor();
+    assert_eq!(cursor.shape, CursorShape::Bar);
+    assert!(!cursor.blinking);
+}
 
 #[test]
 fn printable_text_is_written_to_grid_and_advances_cursor() {

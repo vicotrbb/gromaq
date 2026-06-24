@@ -76,6 +76,8 @@ fn run_runtime_idle_probe() -> Result<RuntimeIdleProbe, String> {
         scrollback_lines: 128,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),

@@ -47,6 +47,19 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
 /// Built-in visual breathing room around terminal cells.
 pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 
+/// Configurable terminal cursor shape.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CursorStyleSetting {
+    /// Filled cell cursor.
+    #[default]
+    Block,
+    /// Underline cursor.
+    Underline,
+    /// Vertical bar cursor.
+    Bar,
+}
+
 /// Theme section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -57,6 +70,10 @@ pub struct ThemeSettings {
     pub foreground: String,
     /// Cursor color as `#RRGGBB`.
     pub cursor: String,
+    /// Default cursor shape before shell escape sequences override it.
+    pub cursor_style: CursorStyleSetting,
+    /// Whether the default cursor requests blinking.
+    pub cursor_blinking: bool,
     /// ANSI and bright ANSI colors as sixteen `#RRGGBB` entries.
     pub ansi: Vec<String>,
     /// Empty space around rendered terminal cells in physical pixels.
@@ -69,6 +86,8 @@ impl Default for ThemeSettings {
             background: DEFAULT_BACKGROUND.to_owned(),
             foreground: DEFAULT_FOREGROUND.to_owned(),
             cursor: DEFAULT_CURSOR.to_owned(),
+            cursor_style: CursorStyleSetting::default(),
+            cursor_blinking: true,
             ansi: DEFAULT_ANSI_COLORS
                 .iter()
                 .map(|color| (*color).to_owned())

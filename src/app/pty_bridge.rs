@@ -1,6 +1,6 @@
-use crate::TerminalConfig;
-use crate::config::GromaqConfig;
+use crate::config::{CursorStyleSetting, GromaqConfig};
 use crate::pty::{PtyConfig, PtyError, PtySession, ShellCommand};
+use crate::{CursorShape, TerminalConfig};
 
 use super::{NativeAppError, NativeAppEvent, NativeAppEventProxy, NativePtyResize};
 
@@ -17,6 +17,10 @@ pub struct NativeTerminalRuntimeConfig {
     pub pixel_width: u16,
     /// PTY pixel height, if known.
     pub pixel_height: u16,
+    /// Default cursor shape before shell escape sequences override it.
+    pub cursor_shape: CursorShape,
+    /// Whether the default cursor requests blinking.
+    pub cursor_blinking: bool,
     /// Shell command to spawn.
     pub shell: ShellCommand,
 }
@@ -30,6 +34,8 @@ impl Default for NativeTerminalRuntimeConfig {
             scrollback_lines: config.terminal.scrollback_lines,
             pixel_width: 0,
             pixel_height: 0,
+            cursor_shape: cursor_shape_from_setting(config.theme.cursor_style),
+            cursor_blinking: config.theme.cursor_blinking,
             shell: ShellCommand::default_shell(),
         }
     }
@@ -50,6 +56,8 @@ impl NativeTerminalRuntimeConfig {
             scrollback_lines: config.terminal.scrollback_lines,
             pixel_width: 0,
             pixel_height: 0,
+            cursor_shape: cursor_shape_from_setting(config.theme.cursor_style),
+            cursor_blinking: config.theme.cursor_blinking,
             shell,
         };
         runtime_config.terminal_config()?;
@@ -60,6 +68,8 @@ impl NativeTerminalRuntimeConfig {
         TerminalConfig::new(self.terminal_cols, self.terminal_rows)
             .and_then(|config| config.with_pixel_size(self.pixel_width, self.pixel_height))
             .and_then(|config| config.with_scrollback_limit(self.scrollback_lines))
+            .and_then(|config| config.with_cursor_shape(self.cursor_shape))
+            .and_then(|config| config.with_cursor_blinking(self.cursor_blinking))
             .map_err(|error| NativeAppError::Runtime(error.to_string()))
     }
 
@@ -71,6 +81,14 @@ impl NativeTerminalRuntimeConfig {
             pixel_height: self.pixel_height,
             shell: self.shell.clone(),
         }
+    }
+}
+
+fn cursor_shape_from_setting(setting: CursorStyleSetting) -> CursorShape {
+    match setting {
+        CursorStyleSetting::Block => CursorShape::Block,
+        CursorStyleSetting::Underline => CursorShape::Underline,
+        CursorStyleSetting::Bar => CursorShape::Bar,
     }
 }
 

@@ -1,6 +1,9 @@
 use std::fs;
 
-use gromaq::{ConfigFileReloader, GromaqConfig, GromaqError, ShellSettings, TerminalConfig};
+use gromaq::{
+    ConfigFileReloader, CursorStyleSetting, GromaqConfig, GromaqError, ShellSettings,
+    TerminalConfig,
+};
 
 #[test]
 fn default_config_is_valid() {
@@ -171,6 +174,8 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
+        cursor_style = "bar"
+        cursor_blinking = false
         ansi = [
             "#000001", "#000002", "#000003", "#000004",
             "#000005", "#000006", "#000007", "#000008",
@@ -185,6 +190,8 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.background_rgb8().unwrap(), [31, 32, 40]);
     assert_eq!(config.theme.foreground_rgb8().unwrap(), [232, 226, 214]);
     assert_eq!(config.theme.cursor_rgb8().unwrap(), [244, 192, 106]);
+    assert_eq!(config.theme.cursor_style, CursorStyleSetting::Bar);
+    assert!(!config.theme.cursor_blinking);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [0, 0, 1]);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [0, 0, 16]);
     assert_eq!(config.theme.surface_padding_px, 18);

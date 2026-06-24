@@ -20,6 +20,8 @@ fn native_redraw_presents_dirty_runtime_frame_as_glyph_frame() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -70,6 +72,8 @@ fn native_redraw_presents_blank_runtime_cursor_frame_without_clear_only_fallback
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -111,6 +115,8 @@ fn native_surface_redraw_repaints_full_visible_grid_after_partial_output() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),

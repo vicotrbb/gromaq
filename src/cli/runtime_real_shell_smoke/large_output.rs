@@ -61,6 +61,8 @@ fn run_runtime_real_shell_large_output_smoke() -> RuntimeRealShellLargeOutputRes
         scrollback_lines: REAL_SHELL_LARGE_OUTPUT_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: real_shell_large_output_command(),
     })
     .map_err(|error| error.to_string())?;

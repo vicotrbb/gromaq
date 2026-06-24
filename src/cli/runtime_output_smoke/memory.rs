@@ -49,6 +49,8 @@ fn runtime_memory_smoke_exit_with_sampler(
         scrollback_lines: RUNTIME_LARGE_OUTPUT_SCROLLBACK_LINES,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),

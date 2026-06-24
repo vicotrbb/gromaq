@@ -181,6 +181,8 @@ size_px = 16.5
 background = "#0b0f14"
 foreground = "#f2f4f8"
 cursor = "#f6c177"
+cursor_style = "block"
+cursor_blinking = true
 ansi = [
   "#151922", "#ff6b7a", "#7ee787", "#f6c177",
   "#82aaff", "#c792ea", "#7dcfff", "#d7dde8",

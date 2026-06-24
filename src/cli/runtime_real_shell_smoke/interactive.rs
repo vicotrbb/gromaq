@@ -59,6 +59,8 @@ fn run_runtime_real_shell_smoke() -> Result<RuntimeRealShellSmokeProbe, String> 
         scrollback_lines: 64,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: real_shell_command(),
     })
     .map_err(|error| error.to_string())?;

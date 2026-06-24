@@ -40,6 +40,8 @@ fn native_terminal_runtime_pumps_output_before_scheduling_redraw() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -74,6 +76,8 @@ fn native_terminal_runtime_renders_dirty_terminal_frame_once() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -104,6 +108,8 @@ fn native_terminal_runtime_starts_shell_pty_once_and_keeps_session() {
         scrollback_lines: 2_000,
         pixel_width: 900,
         pixel_height: 600,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: vec!["-l".into()],
@@ -138,6 +144,8 @@ fn native_terminal_runtime_restarts_shell_with_updated_command() {
         scrollback_lines: 1_000,
         pixel_width: 800,
         pixel_height: 480,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -180,6 +188,8 @@ fn native_terminal_runtime_pumps_pty_output_and_writes_input() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -207,6 +217,8 @@ fn native_runtime_perf_metrics_track_io_resize_and_render_boundaries() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -298,6 +310,8 @@ fn native_runtime_state_snapshot_reports_bounded_scrollback_footprint() {
         scrollback_lines: 3,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -367,6 +381,8 @@ fn native_terminal_runtime_writes_terminal_status_responses_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -402,6 +418,8 @@ fn native_terminal_runtime_writes_device_attribute_responses_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -434,6 +452,8 @@ fn native_terminal_runtime_writes_secondary_device_attribute_responses_to_pty() 
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -469,6 +489,8 @@ fn native_terminal_runtime_resizes_terminal_and_pty_session() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -513,6 +535,8 @@ fn native_terminal_runtime_updates_pixel_size_report_after_resize() {
         scrollback_lines: 100,
         pixel_width: 900,
         pixel_height: 600,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -556,6 +580,8 @@ fn native_terminal_runtime_encodes_winit_key_input_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -584,6 +610,8 @@ fn native_terminal_runtime_uses_application_cursor_key_mode_for_arrows() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -620,6 +648,8 @@ fn native_terminal_runtime_returns_to_normal_cursor_key_mode_for_arrows() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -656,6 +686,8 @@ fn native_terminal_runtime_uses_application_keypad_mode_for_numpad_keys() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -708,6 +740,8 @@ fn native_terminal_runtime_sends_focus_reports_when_enabled() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -744,6 +778,8 @@ fn native_terminal_runtime_suppresses_focus_reports_when_disabled() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -776,6 +812,8 @@ fn native_terminal_runtime_encodes_paste_text_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -811,6 +849,8 @@ fn native_terminal_runtime_copies_selection_to_clipboard() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -836,6 +876,8 @@ fn native_terminal_runtime_reads_clipboard_and_encodes_paste_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -871,6 +913,8 @@ fn native_terminal_runtime_does_not_count_clipboard_paste_without_session() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -897,6 +941,8 @@ fn native_terminal_runtime_syncs_osc52_clipboard_text_to_host_clipboard() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -929,6 +975,8 @@ fn native_terminal_runtime_writes_committed_text_to_pty() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
@@ -964,6 +1012,8 @@ fn native_terminal_runtime_ignores_empty_pty_input_writes() {
         scrollback_lines: 100,
         pixel_width: 0,
         pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
         shell: ShellCommand {
             program: "/bin/sh".into(),
             args: Vec::new(),
