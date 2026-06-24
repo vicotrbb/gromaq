@@ -15,21 +15,23 @@ textured-quad GPU draw/readback, offscreen terminal text GPU draw/readback, and
 repeated offscreen terminal text GPU draw/readback timing.
 
 They do not prove the full performance acceptance target by themselves. Hardware
-backed 144Hz frame pacing, p95 frame time, input latency, idle CPU, memory
-growth, and live window runtime proof still require separate live measurements.
+backed 144Hz frame pacing on a 144Hz-capable display, p95 frame time, input
+latency, idle CPU, memory growth, and broader live window runtime proof still
+require separate live measurements.
 The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
-On 2026-06-24, `cargo run -- --window-perf-smoke` launched a bounded live native
-window run, presented 180 frames, measured 179 presented-frame intervals, reported
+On 2026-06-24, `target/debug/gromaq --window-perf-smoke` launched a bounded live
+native window run on the active 120Hz monitor, presented 192 frames with 12
+warmup frames, measured 180 steady-state presented-frame intervals, reported
 monitor refresh 120000 mHz, surface present mode Fifo, physical window size
 2560x1600, scale milliscale 2000, effective frame interval target 120 fps
-(8333333 ns), average interval 8766920 ns, max interval 63496084 ns, p95
-bucket 16000000 ns, 6 dropped frames, 91 intervals over target, 1 interval over
-double target, and
-`frame pacing accepted: false`. This is live-window evidence, but it is still
-not a 144Hz acceptance pass.
+(8333333 ns), p95 budget 10000000 ns, average interval 8370921 ns, max interval
+12392750 ns at sample 129, p95 bucket 10000000 ns, exact p95 8932291 ns, zero
+dropped frames, zero intervals over double target, and `frame pacing accepted:
+true`. This is hardware-backed live-window pacing proof for the active 120Hz
+display mode; it is still not a 144Hz-display acceptance pass.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95
