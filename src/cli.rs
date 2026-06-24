@@ -1,5 +1,6 @@
 //! Command-line entry points for the native application.
 
+mod args;
 mod clipboard_smoke;
 mod config_commands;
 mod frame_scheduler_smoke;
@@ -12,6 +13,7 @@ mod runtime_input_smoke;
 mod runtime_output_smoke;
 mod runtime_reflow_smoke;
 mod runtime_scrollback_smoke;
+use args::{CliCommand, command_for, usage};
 use clipboard_smoke::{clipboard_smoke_exit, osc52_clipboard_smoke_exit};
 pub use config_commands::{
     NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,
@@ -125,45 +127,14 @@ where
         };
     };
     let arg = arg.as_ref();
-    if arg != "--gpu-info"
-        && arg != "--gpu-smoke"
-        && arg != "--gpu-upload-smoke"
-        && arg != "--gpu-glyph-atlas-smoke"
-        && arg != "--gpu-text-atlas-smoke"
-        && arg != "--gpu-textured-quad-smoke"
-        && arg != "--gpu-terminal-text-smoke"
-        && arg != "--gpu-terminal-text-perf-smoke"
-        && arg != "--clipboard-smoke"
-        && arg != "--config"
-        && arg != "--config-check"
-        && arg != "--config-template"
-        && arg != "--osc52-clipboard-smoke"
-        && arg != "--runtime-clipboard-paste-smoke"
-        && arg != "--runtime-glyph-frame-smoke"
-        && arg != "--runtime-scrollback-smoke"
-        && arg != "--runtime-perf-smoke"
-        && arg != "--runtime-perf-budget-smoke"
-        && arg != "--runtime-large-output-smoke"
-        && arg != "--runtime-bounded-state-smoke"
-        && arg != "--runtime-memory-smoke"
-        && arg != "--runtime-continuous-output-smoke"
-        && arg != "--runtime-alternate-screen-smoke"
-        && arg != "--runtime-reflow-smoke"
-        && arg != "--runtime-config-reload-smoke"
-        && arg != "--runtime-focus-smoke"
-        && arg != "--runtime-mouse-smoke"
-        && arg != "--runtime-response-smoke"
-        && arg != "--runtime-idle-smoke"
-        && arg != "--runtime-idle-cpu-smoke"
-        && arg != "--frame-scheduler-smoke"
-    {
+    let Some(command) = command_for(arg) else {
         return CliExit {
             code: 2,
             stdout: String::new(),
             stderr: format!("{}unknown argument: {arg}\n", usage()),
         };
-    }
-    if arg == "--config-check" {
+    };
+    if command == CliCommand::ConfigCheck {
         let Some(path) = args.next() else {
             return CliExit {
                 code: 2,
@@ -180,7 +151,7 @@ where
         }
         return config_check_exit(path.as_ref());
     }
-    if arg == "--config-template" {
+    if command == CliCommand::ConfigTemplate {
         if let Some(extra) = args.next() {
             return CliExit {
                 code: 2,
@@ -190,7 +161,7 @@ where
         }
         return config_template_exit();
     }
-    if arg == "--config" {
+    if command == CliCommand::Config {
         let Some(path) = args.next() else {
             return CliExit {
                 code: 2,
@@ -222,70 +193,28 @@ where
         };
     }
 
-    if arg == "--clipboard-smoke" {
-        return clipboard_smoke_exit(clipboard);
+    match command {
+        CliCommand::Gpu(arg) => gpu_command_exit(arg, backend),
+        CliCommand::ClipboardSmoke => clipboard_smoke_exit(clipboard),
+        CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
+        CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),
+        CliCommand::RuntimeGlyphFrameSmoke => runtime_glyph_frame_smoke_exit(),
+        CliCommand::RuntimeScrollbackSmoke => runtime_scrollback_smoke_exit(),
+        CliCommand::RuntimePerfSmoke => runtime_perf_smoke_exit(),
+        CliCommand::RuntimePerfBudgetSmoke => runtime_perf_budget_smoke_exit(),
+        CliCommand::RuntimeLargeOutputSmoke => runtime_large_output_smoke_exit(),
+        CliCommand::RuntimeBoundedStateSmoke => runtime_bounded_state_smoke_exit(),
+        CliCommand::RuntimeMemorySmoke => runtime_memory_smoke_exit(),
+        CliCommand::RuntimeContinuousOutputSmoke => runtime_continuous_output_smoke_exit(),
+        CliCommand::RuntimeAlternateScreenSmoke => runtime_alternate_screen_smoke_exit(),
+        CliCommand::RuntimeReflowSmoke => runtime_reflow_smoke_exit(),
+        CliCommand::RuntimeConfigReloadSmoke => runtime_config_reload_smoke_exit(),
+        CliCommand::RuntimeFocusSmoke => runtime_focus_smoke_exit(),
+        CliCommand::RuntimeMouseSmoke => runtime_mouse_smoke_exit(),
+        CliCommand::RuntimeResponseSmoke => runtime_response_smoke_exit(),
+        CliCommand::RuntimeIdleSmoke => runtime_idle_smoke_exit(),
+        CliCommand::RuntimeIdleCpuSmoke => runtime_idle_cpu_smoke_exit(),
+        CliCommand::FrameSchedulerSmoke => frame_scheduler_smoke_exit(),
+        CliCommand::Config | CliCommand::ConfigCheck | CliCommand::ConfigTemplate => unreachable!(),
     }
-    if arg == "--osc52-clipboard-smoke" {
-        return osc52_clipboard_smoke_exit(clipboard);
-    }
-    if arg == "--runtime-clipboard-paste-smoke" {
-        return runtime_clipboard_paste_smoke_exit(clipboard);
-    }
-    if arg == "--runtime-glyph-frame-smoke" {
-        return runtime_glyph_frame_smoke_exit();
-    }
-    if arg == "--runtime-scrollback-smoke" {
-        return runtime_scrollback_smoke_exit();
-    }
-    if arg == "--runtime-perf-smoke" {
-        return runtime_perf_smoke_exit();
-    }
-    if arg == "--runtime-perf-budget-smoke" {
-        return runtime_perf_budget_smoke_exit();
-    }
-    if arg == "--runtime-large-output-smoke" {
-        return runtime_large_output_smoke_exit();
-    }
-    if arg == "--runtime-bounded-state-smoke" {
-        return runtime_bounded_state_smoke_exit();
-    }
-    if arg == "--runtime-memory-smoke" {
-        return runtime_memory_smoke_exit();
-    }
-    if arg == "--runtime-continuous-output-smoke" {
-        return runtime_continuous_output_smoke_exit();
-    }
-    if arg == "--runtime-alternate-screen-smoke" {
-        return runtime_alternate_screen_smoke_exit();
-    }
-    if arg == "--runtime-reflow-smoke" {
-        return runtime_reflow_smoke_exit();
-    }
-    if arg == "--runtime-config-reload-smoke" {
-        return runtime_config_reload_smoke_exit();
-    }
-    if arg == "--runtime-focus-smoke" {
-        return runtime_focus_smoke_exit();
-    }
-    if arg == "--runtime-mouse-smoke" {
-        return runtime_mouse_smoke_exit();
-    }
-    if arg == "--runtime-response-smoke" {
-        return runtime_response_smoke_exit();
-    }
-    if arg == "--runtime-idle-smoke" {
-        return runtime_idle_smoke_exit();
-    }
-    if arg == "--runtime-idle-cpu-smoke" {
-        return runtime_idle_cpu_smoke_exit();
-    }
-    if arg == "--frame-scheduler-smoke" {
-        return frame_scheduler_smoke_exit();
-    }
-
-    gpu_command_exit(arg, backend)
-}
-
-fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
