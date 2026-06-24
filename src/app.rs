@@ -224,6 +224,18 @@ impl NativeTerminalApp {
         self.runtime.invalidate_terminal_frame();
         Ok(())
     }
+
+    pub(crate) fn resize_runtime_to_window_pixels(
+        &mut self,
+        width: u32,
+        height: u32,
+    ) -> Result<(), NativeAppError> {
+        if let Some(resize) = self.resize_mapper.resize_for_window(width, height) {
+            self.runtime.resize_terminal(resize)?;
+            self.runtime.invalidate_terminal_frame();
+        }
+        Ok(())
+    }
 }
 
 /// Run the native `winit` terminal application loop.
@@ -329,5 +341,17 @@ mod tests {
         let app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
 
         assert!(app.glyph_cache.is_empty());
+    }
+
+    #[test]
+    fn native_terminal_app_can_sync_runtime_to_actual_window_pixels() {
+        let mut app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
+
+        app.resize_runtime_to_window_pixels(2560, 1600).unwrap();
+
+        assert_eq!(app.runtime.config().pixel_width, 2560);
+        assert_eq!(app.runtime.config().pixel_height, 1600);
+        assert_eq!(app.runtime.terminal().dump_grid().cols, 211);
+        assert_eq!(app.runtime.terminal().dump_grid().rows, 54);
     }
 }

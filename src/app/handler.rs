@@ -32,6 +32,11 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     event_loop.exit();
                     return;
                 }
+                if let Err(error) = self.resize_runtime_to_window_pixels(size.width, size.height) {
+                    self.startup_error = Some(error.to_string());
+                    event_loop.exit();
+                    return;
+                }
                 let monitor_refresh_millihertz = window
                     .current_monitor()
                     .and_then(|monitor| monitor.refresh_rate_millihertz());
@@ -249,9 +254,7 @@ impl NativeTerminalApp {
             event_loop.exit();
             return;
         }
-        if let Some(resize) = self.resize_mapper.resize_for_window(width, height)
-            && let Err(error) = self.runtime.resize_terminal(resize)
-        {
+        if let Err(error) = self.resize_runtime_to_window_pixels(width, height) {
             self.startup_error = Some(error.to_string());
             event_loop.exit();
         }
