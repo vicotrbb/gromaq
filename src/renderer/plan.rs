@@ -1,10 +1,11 @@
 //! CPU-side render planning from terminal snapshots.
 
 use crate::cell::{Color, Style, UnderlineStyle};
-use crate::config::DEFAULT_ANSI_COLORS_RGB8;
+use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_SELECTION_RGB8};
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
 use crate::grid::GridSnapshot;
+use crate::selection::SelectionRange;
 use crate::terminal::CursorSnapshot;
 
 use super::atlas::{GlyphAtlas, GlyphKey};
@@ -23,6 +24,7 @@ pub struct RenderPlanner {
     font_size_px: u16,
     default_foreground_rgb8: [u8; 3],
     ansi_colors_rgb8: [[u8; 3]; 16],
+    selection_background_rgba8: [u8; 4],
 }
 
 impl RenderPlanner {
@@ -46,10 +48,31 @@ impl RenderPlanner {
         default_foreground_rgb8: [u8; 3],
         ansi_colors_rgb8: [[u8; 3]; 16],
     ) -> Self {
+        Self::with_visual_theme(
+            font_size_px,
+            default_foreground_rgb8,
+            ansi_colors_rgb8,
+            [
+                DEFAULT_SELECTION_RGB8[0],
+                DEFAULT_SELECTION_RGB8[1],
+                DEFAULT_SELECTION_RGB8[2],
+                255,
+            ],
+        )
+    }
+
+    /// Create a render planner for a fixed font size and full visual theme.
+    pub fn with_visual_theme(
+        font_size_px: u16,
+        default_foreground_rgb8: [u8; 3],
+        ansi_colors_rgb8: [[u8; 3]; 16],
+        selection_background_rgba8: [u8; 4],
+    ) -> Self {
         Self {
             font_size_px,
             default_foreground_rgb8,
             ansi_colors_rgb8,
+            selection_background_rgba8,
         }
     }
 
@@ -76,11 +99,16 @@ impl RenderPlanner {
             for row in region.row_start..region.row_end {
                 for col in region.col_start..region.col_end {
                     let cell = grid.cell(row, col);
-                    if let Some(color_rgba8) = style_background_rgba8(
-                        cell.style,
-                        self.default_foreground_rgb8,
-                        self.ansi_colors_rgb8,
-                    ) {
+                    let color_rgba8 = if is_selected(grid.selection, row, col) {
+                        Some(self.selection_background_rgba8)
+                    } else {
+                        style_background_rgba8(
+                            cell.style,
+                            self.default_foreground_rgb8,
+                            self.ansi_colors_rgb8,
+                        )
+                    };
+                    if let Some(color_rgba8) = color_rgba8 {
                         append_background_fill(&mut backgrounds, row, col, color_rgba8);
                     }
                     append_cell_decorations(
@@ -128,6 +156,32 @@ impl RenderPlanner {
             decorations,
             glyphs,
         })
+    }
+}
+
+fn is_selected(selection: Option<SelectionRange>, row: u16, col: u16) -> bool {
+    let Some(selection) = selection else {
+        return false;
+    };
+    row >= selection.start.row
+        && row <= selection.end.row
+        && col >= selection_start_col(selection, row)
+        && col <= selection_end_col(selection, row)
+}
+
+fn selection_start_col(selection: SelectionRange, row: u16) -> u16 {
+    if row == selection.start.row {
+        selection.start.col
+    } else {
+        0
+    }
+}
+
+fn selection_end_col(selection: SelectionRange, row: u16) -> u16 {
+    if row == selection.end.row {
+        selection.end.col
+    } else {
+        u16::MAX
     }
 }
 

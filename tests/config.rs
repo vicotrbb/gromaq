@@ -26,6 +26,21 @@ fn default_theme_has_high_foreground_background_contrast() {
 }
 
 #[test]
+fn default_theme_has_readable_selection_contrast() {
+    let theme = GromaqConfig::default().theme;
+
+    let contrast = contrast_ratio(
+        theme.foreground_rgb8().unwrap(),
+        theme.selection_rgb8().unwrap(),
+    );
+
+    assert!(
+        contrast >= 8.0,
+        "default selection contrast ratio {contrast:.2} should stay readable"
+    );
+}
+
+#[test]
 fn invalid_dimensions_are_rejected() {
     let mut config = GromaqConfig::default();
     config.terminal.cols = 0;
@@ -174,6 +189,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
+        selection = "#26364f"
         cursor_style = "bar"
         cursor_blinking = false
         ansi = [
@@ -190,6 +206,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.background_rgb8().unwrap(), [31, 32, 40]);
     assert_eq!(config.theme.foreground_rgb8().unwrap(), [232, 226, 214]);
     assert_eq!(config.theme.cursor_rgb8().unwrap(), [244, 192, 106]);
+    assert_eq!(config.theme.selection_rgb8().unwrap(), [38, 54, 79]);
     assert_eq!(config.theme.cursor_style, CursorStyleSetting::Bar);
     assert!(!config.theme.cursor_blinking);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [0, 0, 1]);
@@ -220,6 +237,13 @@ fn invalid_theme_colors_are_rejected() {
             cursor = "#12345"
             "##,
             "cursor",
+        ),
+        (
+            r##"
+            [theme]
+            selection = "#12345"
+            "##,
+            "selection",
         ),
     ];
 

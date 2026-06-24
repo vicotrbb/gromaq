@@ -1,4 +1,5 @@
 use crate::cell::{CellSnapshot, Color};
+use crate::selection::SelectionRange;
 
 /// Immutable grid snapshot used by tests and debug tooling.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -11,6 +12,8 @@ pub struct GridSnapshot {
     pub hyperlinks: Vec<String>,
     /// Underline color table indexed by non-zero style underline color identifiers.
     pub underline_colors: Vec<Color>,
+    /// Active visible-grid selection, when present.
+    pub selection: Option<SelectionRange>,
     /// Row-major cell snapshots.
     pub cells: Vec<CellSnapshot>,
 }

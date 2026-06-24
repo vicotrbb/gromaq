@@ -1,5 +1,5 @@
 use gromaq::renderer::{GlyphAtlas, GlyphAtlasConfig, RenderPlanner};
-use gromaq::{Color, Style, Terminal, TerminalConfig};
+use gromaq::{Color, SelectionRange, Style, Terminal, TerminalConfig};
 
 #[test]
 fn render_plan_contains_dirty_glyphs_with_atlas_entries() {
@@ -91,6 +91,37 @@ fn render_plan_collects_styled_background_fills_for_dirty_cells() {
     assert_eq!(plan.backgrounds[1].col, 4);
     assert_eq!(plan.backgrounds[1].cols, 1);
     assert_eq!(plan.backgrounds[1].color_rgba8, [255, 107, 122, 255]);
+}
+
+#[test]
+fn render_plan_collects_themed_selection_backgrounds_for_dirty_cells() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+    terminal.write_str("abcd\r\nefgh").unwrap();
+    terminal.take_dirty_regions();
+    terminal.set_selection(SelectionRange::new((0, 1), (1, 2)));
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner =
+        RenderPlanner::with_visual_theme(14, [240, 240, 240], [[0, 0, 0]; 16], [9, 8, 7, 255]);
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.backgrounds.len(), 2);
+    assert_eq!(plan.backgrounds[0].row, 0);
+    assert_eq!(plan.backgrounds[0].col, 1);
+    assert_eq!(plan.backgrounds[0].cols, 7);
+    assert_eq!(plan.backgrounds[0].color_rgba8, [9, 8, 7, 255]);
+    assert_eq!(plan.backgrounds[1].row, 1);
+    assert_eq!(plan.backgrounds[1].col, 0);
+    assert_eq!(plan.backgrounds[1].cols, 3);
+    assert_eq!(plan.backgrounds[1].color_rgba8, [9, 8, 7, 255]);
 }
 
 #[test]

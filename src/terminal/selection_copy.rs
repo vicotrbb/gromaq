@@ -10,10 +10,14 @@ impl Terminal {
     /// Set a visible-grid selection.
     pub fn set_selection(&mut self, selection: SelectionRange) {
         self.selection = Some(selection);
+        self.dirty.mark_viewport(self.config.rows, self.config.cols);
     }
 
     /// Clear the active selection.
     pub fn clear_selection(&mut self) {
+        if self.selection.is_some() {
+            self.dirty.mark_viewport(self.config.rows, self.config.cols);
+        }
         self.selection = None;
     }
 

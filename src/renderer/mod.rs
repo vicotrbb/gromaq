@@ -2,7 +2,7 @@
 
 use crate::config::{
     DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR_RGB8,
-    DEFAULT_FOREGROUND_RGB8, DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
+    DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION_RGB8, DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
 };
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
@@ -63,6 +63,8 @@ pub struct RendererConfig {
     pub ansi_colors_rgb8: [[u8; 3]; 16],
     /// Cursor color in RGBA8.
     pub cursor_color_rgba8: [u8; 4],
+    /// Selection background color in RGBA8.
+    pub selection_background_rgba8: [u8; 4],
     /// Empty space around rendered terminal cells in physical pixels.
     pub surface_padding_px: u16,
 }
@@ -77,6 +79,7 @@ impl Default for RendererConfig {
             default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
             ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
             cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8),
+            selection_background_rgba8: rgb8_to_rgba8(DEFAULT_SELECTION_RGB8),
             surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
         }
     }
@@ -94,6 +97,7 @@ impl RendererConfig {
             default_foreground_rgb8: config.theme.foreground_rgb8()?,
             ansi_colors_rgb8: config.theme.ansi_rgb8()?,
             cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),
+            selection_background_rgba8: rgb8_to_rgba8(config.theme.selection_rgb8()?),
             surface_padding_px: config.theme.surface_padding_px,
         })
     }
@@ -137,10 +141,11 @@ impl WgpuRenderer {
     pub fn new(config: RendererConfig) -> Result<Self> {
         let atlas_config = GlyphAtlasConfig::new(DEFAULT_GLYPH_ATLAS_CAPACITY)?;
         Ok(Self {
-            planner: RenderPlanner::with_theme(
+            planner: RenderPlanner::with_visual_theme(
                 config.font_size_px,
                 config.default_foreground_rgb8,
                 config.ansi_colors_rgb8,
+                config.selection_background_rgba8,
             ),
             config,
             glyph_atlas: GlyphAtlas::new(atlas_config),
@@ -155,10 +160,11 @@ impl WgpuRenderer {
 
     /// Replace renderer configuration for future frame planning.
     pub fn reconfigure(&mut self, config: RendererConfig) {
-        self.planner = RenderPlanner::with_theme(
+        self.planner = RenderPlanner::with_visual_theme(
             config.font_size_px,
             config.default_foreground_rgb8,
             config.ansi_colors_rgb8,
+            config.selection_background_rgba8,
         );
         self.config = config;
         self.last_plan = None;

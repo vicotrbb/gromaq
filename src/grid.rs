@@ -171,6 +171,7 @@ impl Grid {
             rows: self.rows,
             hyperlinks: Vec::new(),
             underline_colors: Vec::new(),
+            selection: None,
             cells: self.cells.iter().map(CellSnapshot::from).collect(),
         }
     }

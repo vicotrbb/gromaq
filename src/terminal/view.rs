@@ -17,6 +17,7 @@ impl Terminal {
             rows: self.config.rows,
             hyperlinks: self.hyperlinks.clone(),
             underline_colors: self.underline_colors.clone(),
+            selection: self.selection,
             cells: (0..self.config.rows)
                 .flat_map(|row| {
                     (0..self.config.cols)
@@ -53,6 +54,7 @@ impl Terminal {
             rows: self.config.rows,
             hyperlinks: self.hyperlinks.clone(),
             underline_colors: self.underline_colors.clone(),
+            selection: self.selection,
             cells,
         }
     }

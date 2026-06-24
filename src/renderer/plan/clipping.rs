@@ -50,6 +50,7 @@ mod tests {
             cols,
             hyperlinks: Vec::new(),
             underline_colors: Vec::new(),
+            selection: None,
             cells: Vec::new(),
         }
     }

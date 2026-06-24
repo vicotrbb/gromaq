@@ -18,6 +18,10 @@ pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [242, 244, 248];
 pub const DEFAULT_CURSOR: &str = "#f6c177";
 /// Built-in polished dark theme cursor as RGB8.
 pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [246, 193, 119];
+/// Built-in polished dark theme selection background.
+pub const DEFAULT_SELECTION: &str = "#26364f";
+/// Built-in polished dark theme selection background as RGB8.
+pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [38, 54, 79];
 /// Number of configurable ANSI palette entries.
 pub const ANSI_COLOR_COUNT: usize = 16;
 /// Built-in polished dark ANSI palette.
@@ -70,6 +74,8 @@ pub struct ThemeSettings {
     pub foreground: String,
     /// Cursor color as `#RRGGBB`.
     pub cursor: String,
+    /// Selection background color as `#RRGGBB`.
+    pub selection: String,
     /// Default cursor shape before shell escape sequences override it.
     pub cursor_style: CursorStyleSetting,
     /// Whether the default cursor requests blinking.
@@ -86,6 +92,7 @@ impl Default for ThemeSettings {
             background: DEFAULT_BACKGROUND.to_owned(),
             foreground: DEFAULT_FOREGROUND.to_owned(),
             cursor: DEFAULT_CURSOR.to_owned(),
+            selection: DEFAULT_SELECTION.to_owned(),
             cursor_style: CursorStyleSetting::default(),
             cursor_blinking: true,
             ansi: DEFAULT_ANSI_COLORS
@@ -103,6 +110,7 @@ impl ThemeSettings {
         self.background_rgb8()?;
         self.foreground_rgb8()?;
         self.cursor_rgb8()?;
+        self.selection_rgb8()?;
         self.ansi_rgb8()?;
         if self.surface_padding_px > MAX_SURFACE_PADDING_PX {
             return Err(GromaqError::InvalidThemePadding {
@@ -126,6 +134,11 @@ impl ThemeSettings {
     /// Parsed cursor color.
     pub fn cursor_rgb8(&self) -> Result<[u8; 3]> {
         parse_hex_rgb("cursor", &self.cursor)
+    }
+
+    /// Parsed selection background color.
+    pub fn selection_rgb8(&self) -> Result<[u8; 3]> {
+        parse_hex_rgb("selection", &self.selection)
     }
 
     /// Parsed ANSI color palette.

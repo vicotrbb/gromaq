@@ -178,6 +178,31 @@ fn clearing_selection_removes_copy_text() {
 }
 
 #[test]
+fn selection_changes_mark_viewport_dirty_for_repaint() {
+    let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
+    terminal.write_str("abcdef").unwrap();
+    terminal.take_dirty_regions();
+
+    terminal.set_selection(SelectionRange::new((0, 1), (0, 3)));
+    let selected_dirty = terminal.take_dirty_regions();
+
+    assert_eq!(selected_dirty.len(), 1);
+    assert_eq!(selected_dirty[0].row, 0);
+    assert_eq!(selected_dirty[0].col, 0);
+    assert_eq!(selected_dirty[0].rows, 2);
+    assert_eq!(selected_dirty[0].cols, 6);
+
+    terminal.clear_selection();
+    let cleared_dirty = terminal.take_dirty_regions();
+
+    assert_eq!(cleared_dirty.len(), 1);
+    assert_eq!(cleared_dirty[0].row, 0);
+    assert_eq!(cleared_dirty[0].col, 0);
+    assert_eq!(cleared_dirty[0].rows, 2);
+    assert_eq!(cleared_dirty[0].cols, 6);
+}
+
+#[test]
 fn resizing_visible_grid_clears_stale_selection() {
     let mut terminal = Terminal::new(TerminalConfig::new(6, 2).unwrap());
     terminal.write_str("abcdef").unwrap();
