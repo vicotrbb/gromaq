@@ -15,6 +15,15 @@ fn rgba(red: u8, green: u8, blue: u8, alpha: f32) -> [f32; 4] {
     ]
 }
 
+fn triangle_indices_for_quads(quad_count: usize) -> Vec<u32> {
+    let mut indices = Vec::with_capacity(quad_count * 6);
+    for quad_index in 0..quad_count {
+        let base = u32::try_from(quad_index * 4).unwrap();
+        indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
+    }
+    indices
+}
+
 #[test]
 fn glyph_quad_planner_builds_positioned_quads_with_atlas_uvs() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
@@ -231,15 +240,19 @@ fn background_quad_planner_rejects_invalid_dimensions() {
 }
 
 #[test]
-fn render_planner_extracts_straight_text_decorations() {
-    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+fn render_planner_extracts_text_decorations() {
+    let mut terminal = Terminal::new(TerminalConfig::new(18, 2).unwrap());
     terminal
         .write_str(
             "\x1b[4;58:2:17:34:51mAB\
              \x1b[0;21mCD\
              \x1b[0;53mE\
              \x1b[0;9mF\
-             \x1b[0;8;4mG",
+             \x1b[0;8;4mG\
+             \x1b[0m\x1b[4:3mHI\
+             \x1b[0m\x1b[4:4mJK\
+             \x1b[0m\x1b[4:5mLM\
+             \x1b[0m\x1b[8m\x1b[4:5mN",
         )
         .unwrap();
     let dirty = terminal.take_dirty_regions();
@@ -291,6 +304,27 @@ fn render_planner_extracts_straight_text_decorations() {
                 col: 5,
                 cols: 1,
                 kind: TextDecorationKind::Strikethrough,
+                color_rgba8: [229, 229, 229, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 7,
+                cols: 2,
+                kind: TextDecorationKind::CurlyUnderline,
+                color_rgba8: [229, 229, 229, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 9,
+                cols: 2,
+                kind: TextDecorationKind::DottedUnderline,
+                color_rgba8: [229, 229, 229, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 11,
+                cols: 2,
+                kind: TextDecorationKind::DashedUnderline,
                 color_rgba8: [229, 229, 229, 255],
             },
         ]
@@ -377,6 +411,70 @@ fn text_decoration_quad_planner_builds_line_geometry() {
     assert_eq!(batch.quads[3].vertices[2].position, [8.0, 22.0]);
     assert_eq!(batch.quads[4].vertices[0].position, [8.0, 29.0]);
     assert_eq!(batch.quads[4].vertices[2].position, [16.0, 31.0]);
+}
+
+#[test]
+fn text_decoration_quad_planner_builds_styled_underline_geometry() {
+    let plan = RenderPlan {
+        viewport_cols: 6,
+        viewport_rows: 1,
+        cursor: CursorSnapshot {
+            row: 0,
+            col: 0,
+            visible: true,
+            shape: CursorShape::Block,
+            blinking: true,
+        },
+        clear_regions: Vec::new(),
+        backgrounds: Vec::new(),
+        decorations: vec![
+            PlannedTextDecoration {
+                row: 0,
+                col: 0,
+                cols: 2,
+                kind: TextDecorationKind::DottedUnderline,
+                color_rgba8: [255, 0, 0, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 2,
+                cols: 2,
+                kind: TextDecorationKind::DashedUnderline,
+                color_rgba8: [0, 255, 0, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 4,
+                cols: 2,
+                kind: TextDecorationKind::CurlyUnderline,
+                color_rgba8: [0, 0, 255, 255],
+            },
+        ],
+        glyphs: Vec::new(),
+    };
+
+    let batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 20,
+    })
+    .plan(&plan)
+    .unwrap();
+
+    assert_eq!(batch.quads.len(), 10);
+    assert_eq!(batch.indices, triangle_indices_for_quads(10));
+    assert_eq!(batch.quads[0].vertices[0].position, [0.0, 18.0]);
+    assert_eq!(batch.quads[0].vertices[2].position, [2.0, 20.0]);
+    assert_eq!(batch.quads[1].vertices[0].position, [4.0, 18.0]);
+    assert_eq!(batch.quads[3].vertices[2].position, [14.0, 20.0]);
+    assert_eq!(batch.quads[4].vertices[0].position, [16.0, 18.0]);
+    assert_eq!(batch.quads[4].vertices[2].position, [22.0, 20.0]);
+    assert_eq!(batch.quads[5].vertices[0].position, [26.0, 18.0]);
+    assert_eq!(batch.quads[5].vertices[2].position, [32.0, 20.0]);
+    assert!(batch.quads[6].vertices[0].position[1] > batch.quads[6].vertices[1].position[1]);
+    assert!(batch.quads[7].vertices[0].position[1] < batch.quads[7].vertices[1].position[1]);
+    assert_eq!(batch.quads[0].vertices[0].color_rgba, rgba(255, 0, 0, 1.0));
+    assert_eq!(batch.quads[4].vertices[0].color_rgba, rgba(0, 255, 0, 1.0));
+    assert_eq!(batch.quads[6].vertices[0].color_rgba, rgba(0, 0, 255, 1.0));
 }
 
 #[test]

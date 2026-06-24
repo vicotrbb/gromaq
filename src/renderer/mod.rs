@@ -1432,7 +1432,27 @@ fn append_cell_decorations(
                     color_rgba8,
                 );
             }
-            UnderlineStyle::Curly | UnderlineStyle::Dotted | UnderlineStyle::Dashed => {}
+            UnderlineStyle::Curly => append_text_decoration(
+                decorations,
+                row,
+                col,
+                TextDecorationKind::CurlyUnderline,
+                decoration_color_rgba8(underline_color, style),
+            ),
+            UnderlineStyle::Dotted => append_text_decoration(
+                decorations,
+                row,
+                col,
+                TextDecorationKind::DottedUnderline,
+                decoration_color_rgba8(underline_color, style),
+            ),
+            UnderlineStyle::Dashed => append_text_decoration(
+                decorations,
+                row,
+                col,
+                TextDecorationKind::DashedUnderline,
+                decoration_color_rgba8(underline_color, style),
+            ),
         }
     }
     if style.overline {
@@ -1539,6 +1559,12 @@ pub enum TextDecorationKind {
     DoubleUnderlineTop,
     /// Lower line of a double straight underline.
     DoubleUnderlineBottom,
+    /// Curly underline.
+    CurlyUnderline,
+    /// Dotted underline.
+    DottedUnderline,
+    /// Dashed underline.
+    DashedUnderline,
     /// Straight overline.
     Overline,
     /// Straight strikethrough.
