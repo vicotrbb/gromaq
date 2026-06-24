@@ -970,6 +970,46 @@ fn csi_erase_display_mode_2_clears_screen_without_moving_cursor() {
 }
 
 #[test]
+fn zsh_style_prompt_repaint_preserves_command_output() {
+    let mut terminal = Terminal::new(TerminalConfig::new(80, 8).unwrap());
+
+    terminal
+        .write_str(
+            "\x1b]2;repo\x07\
+             \r\x1b[J\r\n\
+             \x1b[A~/Daedalus/gromaq loading ................................ rb 2.7.5 12:56\r\n\
+             > \x1b[K\x1b[?1h\x1b=\x1b[?2004h\
+             p\x08pwd\
+             \x1b[?1l\x1b>\x1b[?25l\x1b[?2004l\
+             \r\r\x1b[A\x1b[0m\x1b[27m\x1b[24m\x1b[J\
+             \x1b[38;5;76m>\x1b[39m pwd\x1b[K\x1b[?25h\r\r\n\
+             /Users/victorbona/Daedalus/gromaq\r\n\
+             \x1b]2;repo\x07\
+             \r\x1b[0m\x1b[J\r\n\
+             \x1b[A~/Daedalus/gromaq ........................................ 12:57\r\n\
+             > \x1b[K\x1b[?1h\x1b=\x1b[?2004h",
+        )
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    let visible = (0..grid.rows)
+        .map(|row| grid.line_text(row))
+        .collect::<Vec<_>>();
+
+    assert!(
+        visible.iter().any(|line| line.contains("> pwd")),
+        "visible grid did not retain command line after prompt repaint: {visible:?}"
+    );
+    assert!(
+        visible
+            .iter()
+            .any(|line| line.contains("/Users/victorbona/Daedalus/gromaq")),
+        "visible grid did not retain command output after prompt repaint: {visible:?}"
+    );
+    assert!(terminal.dump_cursor().visible);
+}
+
+#[test]
 fn resize_preserves_visible_text_and_clamps_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 2).unwrap());
     terminal.write_str("abc\r\ndef").unwrap();
