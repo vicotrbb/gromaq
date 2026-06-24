@@ -215,6 +215,9 @@ Menlo, and common Linux mono fonts. Explicit `.ttf`, `.ttc`, and `.otf` file
 paths are also supported. Supported named aliases currently include
 `JetBrains Mono`, `JetBrains Mono Nerd Font`, `Cascadia Mono`,
 `CaskaydiaCove Nerd Font`, `Iosevka Term`, `SF Mono`, and `Menlo`.
+`gromaq --config-check <path>` reports the resolved primary font file and
+fallback font files, or an unresolved-font diagnostic if a named family cannot
+be found.
 
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in
