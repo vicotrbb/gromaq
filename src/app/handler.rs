@@ -199,7 +199,9 @@ impl NativeTerminalApp {
                 }
             }
         }
-        self.lifecycle.on_redraw_requested();
+        if self.lifecycle.on_redraw_requested() == NativeAppAction::Exit {
+            event_loop.exit();
+        }
     }
 
     fn handle_window_resized(&mut self, event_loop: &ActiveEventLoop, width: u32, height: u32) {

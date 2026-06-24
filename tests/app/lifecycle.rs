@@ -38,6 +38,23 @@ fn native_app_lifecycle_requests_window_redraw_and_exit_in_order() {
 }
 
 #[test]
+fn native_app_lifecycle_exits_after_configured_presented_frame_limit() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
+        exit_after_presented_frames: Some(2),
+        ..NativeAppConfig::default()
+    });
+
+    assert_eq!(lifecycle.on_redraw_requested(), NativeAppAction::None);
+    assert!(!lifecycle.close_requested());
+    assert_eq!(lifecycle.frames_presented(), 1);
+
+    assert_eq!(lifecycle.on_redraw_requested(), NativeAppAction::Exit);
+    assert!(lifecycle.close_requested());
+    assert_eq!(lifecycle.frames_presented(), 2);
+    assert_eq!(lifecycle.on_about_to_wait(), NativeAppAction::Exit);
+}
+
+#[test]
 fn native_app_lifecycle_schedules_next_pty_pump_deadline() {
     let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
     let now = std::time::Instant::now();

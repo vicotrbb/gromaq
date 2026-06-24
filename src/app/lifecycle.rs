@@ -24,6 +24,8 @@ pub struct NativeAppConfig {
     pub height: u32,
     /// Target frames per second for redraw scheduling.
     pub target_fps: u32,
+    /// Optional presented-frame limit after which the native app exits.
+    pub exit_after_presented_frames: Option<u64>,
 }
 
 impl Default for NativeAppConfig {
@@ -33,6 +35,7 @@ impl Default for NativeAppConfig {
             width: 1280,
             height: 800,
             target_fps: 144,
+            exit_after_presented_frames: None,
         }
     }
 }
@@ -227,7 +230,16 @@ impl NativeAppLifecycle {
     /// Record that a redraw was presented by the native app boundary.
     pub fn on_redraw_requested(&mut self) -> NativeAppAction {
         self.frames_presented += 1;
-        NativeAppAction::None
+        if self
+            .config
+            .exit_after_presented_frames
+            .is_some_and(|limit| self.frames_presented >= limit)
+        {
+            self.close_requested = true;
+            NativeAppAction::Exit
+        } else {
+            NativeAppAction::None
+        }
     }
 
     /// Whether the lifecycle currently owns a native window.
