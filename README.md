@@ -226,6 +226,8 @@ mouse wheel.
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in
 [`documentation/benchmarks.md`](documentation/benchmarks.md).
+The current module boundaries and organization rules are documented in
+[`documentation/architecture.md`](documentation/architecture.md).
 Test fixture conventions and live-proof boundaries are documented in
 [`TESTING.md`](TESTING.md).
 
