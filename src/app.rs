@@ -16,6 +16,7 @@ use crate::renderer::{RendererConfig, WgpuRenderer, WgpuSurfaceBackend};
 
 mod config_reload;
 mod errors;
+mod fonts;
 mod handler;
 mod lifecycle;
 mod native_input;
@@ -26,6 +27,7 @@ mod runtime;
 mod surface;
 mod text_zoom;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
+pub use fonts::{load_default_native_glyph_cache, load_native_glyph_cache};
 pub use lifecycle::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
     NativeAppRunReport,
@@ -42,8 +44,7 @@ pub use pty_bridge::{
 };
 pub use runtime::NativeTerminalRuntime;
 pub use surface::{
-    NativeGlyphFramePresentation, NativeWindowSurface, load_default_native_glyph_cache,
-    load_native_glyph_cache, render_and_present_terminal_glyph_frame,
+    NativeGlyphFramePresentation, NativeWindowSurface, render_and_present_terminal_glyph_frame,
     render_and_present_terminal_glyph_frame_report,
 };
 use text_zoom::renderer_config_for_text_zoom;
