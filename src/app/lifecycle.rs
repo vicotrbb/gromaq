@@ -10,7 +10,12 @@ use winit::window::{Window, WindowAttributes};
 use crate::config::GromaqConfig;
 
 use super::NativeAppError;
-use super::perf::RuntimeDurationHistogram;
+
+mod report;
+
+pub use report::NativeAppRunReport;
+
+use report::PresentedFrameIntervals;
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 
@@ -29,27 +34,6 @@ pub struct NativeAppConfig {
     pub exit_after_presented_frames: Option<u64>,
     /// Request redraws after presented frames until the configured frame limit is reached.
     pub redraw_until_presented_frame_limit: bool,
-}
-
-/// Native app event-loop report captured after the app exits.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct NativeAppRunReport {
-    /// Count of native windows created during the run.
-    pub windows_created: u64,
-    /// Count of native redraw requests scheduled by app logic.
-    pub redraw_requests: u64,
-    /// Count of redraw events observed by the app boundary.
-    pub frames_presented: u64,
-    /// Count of measured intervals between presented frames.
-    pub frame_interval_samples: u64,
-    /// Total measured presented-frame interval duration in nanoseconds.
-    pub frame_interval_total_ns: u64,
-    /// Average measured presented-frame interval duration in nanoseconds.
-    pub frame_interval_avg_ns: u64,
-    /// Maximum measured presented-frame interval duration in nanoseconds.
-    pub frame_interval_max_ns: u64,
-    /// Approximate p95 presented-frame interval in nanoseconds, using fixed buckets.
-    pub frame_interval_p95_ns: u64,
 }
 
 impl Default for NativeAppConfig {
@@ -163,12 +147,7 @@ pub struct NativeAppLifecycle {
     windows_created: u64,
     redraw_requests: u64,
     frames_presented: u64,
-    last_frame_presented_at: Option<Instant>,
-    frame_interval_samples: u64,
-    frame_interval_total_ns: u64,
-    frame_interval_avg_ns: u64,
-    frame_interval_max_ns: u64,
-    frame_interval_histogram: RuntimeDurationHistogram,
+    frame_intervals: PresentedFrameIntervals,
 }
 
 impl NativeAppLifecycle {
@@ -181,12 +160,7 @@ impl NativeAppLifecycle {
             windows_created: 0,
             redraw_requests: 0,
             frames_presented: 0,
-            last_frame_presented_at: None,
-            frame_interval_samples: 0,
-            frame_interval_total_ns: 0,
-            frame_interval_avg_ns: 0,
-            frame_interval_max_ns: 0,
-            frame_interval_histogram: RuntimeDurationHistogram::default(),
+            frame_intervals: PresentedFrameIntervals::default(),
         }
     }
 
@@ -314,40 +288,14 @@ impl NativeAppLifecycle {
 
     /// Snapshot event-loop metrics after the native app exits.
     pub fn run_report(&self) -> NativeAppRunReport {
-        NativeAppRunReport {
-            windows_created: self.windows_created,
-            redraw_requests: self.redraw_requests,
-            frames_presented: self.frames_presented,
-            frame_interval_samples: self.frame_interval_samples,
-            frame_interval_total_ns: self.frame_interval_total_ns,
-            frame_interval_avg_ns: self.frame_interval_avg_ns,
-            frame_interval_max_ns: self.frame_interval_max_ns,
-            frame_interval_p95_ns: self
-                .frame_interval_histogram
-                .p95_upper_bound_ns(self.frame_interval_samples),
-        }
+        self.frame_intervals.run_report(
+            self.windows_created,
+            self.redraw_requests,
+            self.frames_presented,
+        )
     }
 
     fn record_frame_presented_at(&mut self, presented_at: Instant) {
-        if let Some(last_presented_at) = self.last_frame_presented_at {
-            let elapsed_ns = saturating_duration_nanos(
-                presented_at.saturating_duration_since(last_presented_at),
-            );
-            self.frame_interval_samples = self.frame_interval_samples.saturating_add(1);
-            self.frame_interval_total_ns = self.frame_interval_total_ns.saturating_add(elapsed_ns);
-            self.frame_interval_avg_ns =
-                average_duration_nanos(self.frame_interval_total_ns, self.frame_interval_samples);
-            self.frame_interval_max_ns = self.frame_interval_max_ns.max(elapsed_ns);
-            self.frame_interval_histogram.record(elapsed_ns);
-        }
-        self.last_frame_presented_at = Some(presented_at);
+        self.frame_intervals.record_presented_at(presented_at);
     }
-}
-
-fn average_duration_nanos(total_ns: u64, samples: u64) -> u64 {
-    total_ns.checked_div(samples).unwrap_or(0)
-}
-
-fn saturating_duration_nanos(duration: Duration) -> u64 {
-    u64::try_from(duration.as_nanos()).unwrap_or(u64::MAX)
 }
