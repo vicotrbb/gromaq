@@ -1,6 +1,5 @@
 //! CPU-side render planning from terminal snapshots.
 
-use crate::cell::{Color, Style, UnderlineStyle};
 use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_SELECTION_RGB8};
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
@@ -9,13 +8,15 @@ use crate::selection::SelectionRange;
 use crate::terminal::CursorSnapshot;
 
 use super::atlas::{GlyphAtlas, GlyphKey};
-use super::color::{decoration_color_rgba8, style_background_rgba8};
+use super::color::style_background_rgba8;
 use clipping::clipped_dirty_region;
+use decorations::append_cell_decorations;
 pub use types::{
     PlannedBackground, PlannedGlyph, PlannedTextDecoration, RenderPlan, TextDecorationKind,
 };
 
 mod clipping;
+mod decorations;
 mod types;
 
 /// CPU-side render planner for deterministic renderer tests.
@@ -203,147 +204,6 @@ fn append_background_fill(
         row,
         col,
         cols: 1,
-        color_rgba8,
-    });
-}
-
-fn append_cell_decorations(
-    decorations: &mut Vec<PlannedTextDecoration>,
-    row: u16,
-    col: u16,
-    style: Style,
-    underline_color: Color,
-    default_foreground_rgb8: [u8; 3],
-    ansi_colors_rgb8: [[u8; 3]; 16],
-) {
-    if style.hidden {
-        return;
-    }
-    if style.underline {
-        match style.underline_style {
-            UnderlineStyle::Single => append_text_decoration(
-                decorations,
-                row,
-                col,
-                TextDecorationKind::Underline,
-                decoration_color_rgba8(
-                    underline_color,
-                    style,
-                    default_foreground_rgb8,
-                    ansi_colors_rgb8,
-                ),
-            ),
-            UnderlineStyle::Double => {
-                let color_rgba8 = decoration_color_rgba8(
-                    underline_color,
-                    style,
-                    default_foreground_rgb8,
-                    ansi_colors_rgb8,
-                );
-                append_text_decoration(
-                    decorations,
-                    row,
-                    col,
-                    TextDecorationKind::DoubleUnderlineTop,
-                    color_rgba8,
-                );
-                append_text_decoration(
-                    decorations,
-                    row,
-                    col,
-                    TextDecorationKind::DoubleUnderlineBottom,
-                    color_rgba8,
-                );
-            }
-            UnderlineStyle::Curly => append_text_decoration(
-                decorations,
-                row,
-                col,
-                TextDecorationKind::CurlyUnderline,
-                decoration_color_rgba8(
-                    underline_color,
-                    style,
-                    default_foreground_rgb8,
-                    ansi_colors_rgb8,
-                ),
-            ),
-            UnderlineStyle::Dotted => append_text_decoration(
-                decorations,
-                row,
-                col,
-                TextDecorationKind::DottedUnderline,
-                decoration_color_rgba8(
-                    underline_color,
-                    style,
-                    default_foreground_rgb8,
-                    ansi_colors_rgb8,
-                ),
-            ),
-            UnderlineStyle::Dashed => append_text_decoration(
-                decorations,
-                row,
-                col,
-                TextDecorationKind::DashedUnderline,
-                decoration_color_rgba8(
-                    underline_color,
-                    style,
-                    default_foreground_rgb8,
-                    ansi_colors_rgb8,
-                ),
-            ),
-        }
-    }
-    if style.overline {
-        append_text_decoration(
-            decorations,
-            row,
-            col,
-            TextDecorationKind::Overline,
-            decoration_color_rgba8(
-                Color::Default,
-                style,
-                default_foreground_rgb8,
-                ansi_colors_rgb8,
-            ),
-        );
-    }
-    if style.strikethrough {
-        append_text_decoration(
-            decorations,
-            row,
-            col,
-            TextDecorationKind::Strikethrough,
-            decoration_color_rgba8(
-                Color::Default,
-                style,
-                default_foreground_rgb8,
-                ansi_colors_rgb8,
-            ),
-        );
-    }
-}
-
-fn append_text_decoration(
-    decorations: &mut Vec<PlannedTextDecoration>,
-    row: u16,
-    col: u16,
-    kind: TextDecorationKind,
-    color_rgba8: [u8; 4],
-) {
-    if let Some(last) = decorations.iter_mut().rev().take(4).find(|last| {
-        last.row == row
-            && last.col.saturating_add(last.cols) == col
-            && last.kind == kind
-            && last.color_rgba8 == color_rgba8
-    }) {
-        last.cols = last.cols.saturating_add(1);
-        return;
-    }
-    decorations.push(PlannedTextDecoration {
-        row,
-        col,
-        cols: 1,
-        kind,
         color_rgba8,
     });
 }
