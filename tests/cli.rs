@@ -480,9 +480,9 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 16\nframes presented: 16\ntarget fps: 144\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 180\nframes presented: 180\ntarget fps: 144\nelapsed ns: "
     ));
-    assert!(exit.stdout.contains("frame interval samples: 15\n"));
+    assert!(exit.stdout.contains("frame interval samples: 179\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
     assert!(exit.stdout.contains("frame interval max ns: 8000000\n"));
     assert!(exit.stdout.contains("frame interval p95 ns: 8000000\n"));
@@ -497,7 +497,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
-    assert_eq!(launch.app.exit_after_presented_frames, Some(16));
+    assert_eq!(launch.app.exit_after_presented_frames, Some(180));
     assert!(launch.app.redraw_until_presented_frame_limit);
     assert_eq!(launch.app.target_fps, 144);
     assert_eq!(launch.runtime.shell.program, "/bin/sh");

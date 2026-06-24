@@ -22,9 +22,9 @@ counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
 On 2026-06-24, `cargo run -- --window-perf-smoke` launched a bounded live native
-window run, presented 16 frames, measured 15 presented-frame intervals, reported
-average interval 12169944 ns, max interval 41177208 ns, p95 bucket 50000000 ns,
-6 dropped frames, and `frame pacing accepted: false`. This is live-window
+window run, presented 180 frames, measured 179 presented-frame intervals, reported
+average interval 8727324 ns, max interval 29968416 ns, p95 bucket 16000000 ns,
+8 dropped frames, and `frame pacing accepted: false`. This is live-window
 evidence, but it is still not a 144Hz acceptance pass.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,

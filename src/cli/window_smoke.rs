@@ -4,7 +4,7 @@ use super::args::{CliCommand, usage};
 use super::{CliExit, NativeAppLaunchConfig, NativeAppLauncher};
 use crate::pty::ShellCommand;
 
-const WINDOW_PERF_SMOKE_FRAME_LIMIT: u64 = 16;
+const WINDOW_PERF_SMOKE_FRAME_LIMIT: u64 = 180;
 
 pub(super) fn window_smoke_exit<A>(command: CliCommand<'_>, app_launcher: Option<&A>) -> CliExit
 where
