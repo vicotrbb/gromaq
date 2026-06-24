@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::ffi::OsString;
 use std::fs;
 
-use gromaq::app::{NativeAppConfig, NativeTerminalRuntimeConfig};
+use gromaq::app::{NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig};
 use gromaq::cli::{
     AdapterReport, CliExit, NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher,
     run_with_backend, run_with_backend_and_app, run_with_backend_and_clipboard,
@@ -67,9 +67,20 @@ impl AdapterReport for MockContext {
 }
 
 impl NativeAppLauncher for MockAppLauncher {
-    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
+        let frames_presented = config.app.exit_after_presented_frames.unwrap_or_default();
         self.launches.borrow_mut().push(config);
-        Ok(())
+        Ok(NativeAppRunReport {
+            frames_presented,
+            frame_interval_samples: frames_presented.saturating_sub(1),
+            frame_interval_avg_ns: 6_940_000,
+            frame_interval_max_ns: 8_000_000,
+            frame_interval_p95_ns: 8_000_000,
+            ..NativeAppRunReport::default()
+        })
     }
 }
 
@@ -873,8 +884,12 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 16\ntarget fps: 144\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 16\nframes presented: 16\ntarget fps: 144\nelapsed ns: "
     ));
+    assert!(exit.stdout.contains("frame interval samples: 15\n"));
+    assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
+    assert!(exit.stdout.contains("frame interval max ns: 8000000\n"));
+    assert!(exit.stdout.contains("frame interval p95 ns: 8000000\n"));
     let _elapsed_ns = exit
         .stdout
         .lines()

@@ -215,13 +215,18 @@ where
         let target_fps = launch_config.app.target_fps;
         let started_at = Instant::now();
         return match app_launcher.launch(launch_config) {
-            Ok(()) => {
+            Ok(report) => {
                 if command == CliCommand::WindowPerfSmoke {
                     CliExit {
                         code: 0,
                         stdout: format!(
-                            "window perf smoke: ok\npresented frame limit: {frame_limit}\ntarget fps: {target_fps}\nelapsed ns: {}\n",
-                            started_at.elapsed().as_nanos()
+                            "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\n",
+                            report.frames_presented,
+                            started_at.elapsed().as_nanos(),
+                            report.frame_interval_samples,
+                            report.frame_interval_avg_ns,
+                            report.frame_interval_max_ns,
+                            report.frame_interval_p95_ns
                         ),
                         stderr: String::new(),
                     }

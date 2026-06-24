@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use super::CliExit;
 use crate::app::{
-    NativeAppConfig, NativeTerminalRuntimeConfig,
+    NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig,
     run_native_app_with_runtime_renderer_and_config_file,
 };
 use crate::config::{GromaqConfig, ShellSettings};
@@ -62,7 +62,10 @@ impl NativeAppLaunchConfig {
 /// Launches the native terminal app for the no-argument CLI path.
 pub trait NativeAppLauncher {
     /// Launch the native app using `config`.
-    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError>;
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError>;
 }
 
 /// Production native app launcher.
@@ -70,7 +73,10 @@ pub trait NativeAppLauncher {
 pub struct RealNativeAppLauncher;
 
 impl NativeAppLauncher for RealNativeAppLauncher {
-    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
         run_native_app_with_runtime_renderer_and_config_file(
             config.app,
             config.runtime,
@@ -116,7 +122,7 @@ where
     A: NativeAppLauncher,
 {
     match app_launcher.launch(config) {
-        Ok(()) => CliExit {
+        Ok(_) => CliExit {
             code: 0,
             stdout: String::new(),
             stderr: String::new(),

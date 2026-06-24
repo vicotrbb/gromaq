@@ -26,6 +26,7 @@ mod surface;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
 pub use lifecycle::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
+    NativeAppRunReport,
 };
 pub use native_input::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
@@ -138,7 +139,7 @@ impl NativeTerminalApp {
 }
 
 /// Run the native `winit` terminal application loop.
-pub fn run_native_app(config: NativeAppConfig) -> Result<(), NativeAppError> {
+pub fn run_native_app(config: NativeAppConfig) -> Result<NativeAppRunReport, NativeAppError> {
     run_native_app_with_runtime_config(config, NativeTerminalRuntimeConfig::default())
 }
 
@@ -146,7 +147,7 @@ pub fn run_native_app(config: NativeAppConfig) -> Result<(), NativeAppError> {
 pub fn run_native_app_with_runtime_config(
     config: NativeAppConfig,
     runtime_config: NativeTerminalRuntimeConfig,
-) -> Result<(), NativeAppError> {
+) -> Result<NativeAppRunReport, NativeAppError> {
     run_native_app_with_runtime_and_renderer_config(
         config,
         runtime_config,
@@ -159,7 +160,7 @@ pub fn run_native_app_with_runtime_and_renderer_config(
     config: NativeAppConfig,
     runtime_config: NativeTerminalRuntimeConfig,
     renderer_config: RendererConfig,
-) -> Result<(), NativeAppError> {
+) -> Result<NativeAppRunReport, NativeAppError> {
     run_native_app_with_runtime_renderer_and_config_file(
         config,
         runtime_config,
@@ -174,7 +175,7 @@ pub fn run_native_app_with_runtime_renderer_and_config_file(
     runtime_config: NativeTerminalRuntimeConfig,
     renderer_config: RendererConfig,
     config_path: Option<&Path>,
-) -> Result<(), NativeAppError> {
+) -> Result<NativeAppRunReport, NativeAppError> {
     let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
     let event_proxy = event_loop.create_proxy();
     let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
@@ -193,7 +194,7 @@ pub fn run_native_app_with_runtime_renderer_and_config_file(
     if let Some(error) = app.take_startup_error() {
         return Err(NativeAppError::WindowCreation(error));
     }
-    Ok(())
+    Ok(app.lifecycle().run_report())
 }
 
 #[cfg(test)]
