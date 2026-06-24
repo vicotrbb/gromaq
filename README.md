@@ -114,7 +114,7 @@ Not yet complete:
 - Live desktop screenshot proof of windowed terminal glyph drawing
 - Broader alternate-screen mouse workflows beyond scripted Vim and tmux proof paths
 - Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
-- Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows
+- Expanded compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows across more hosts
 - Live performance acceptance proof for 144Hz, frame time, input latency, idle CPU, and real-session memory growth
 
 ## Development
@@ -228,6 +228,8 @@ Criterion regression handling are documented in
 [`documentation/benchmarks.md`](documentation/benchmarks.md).
 The current module boundaries and organization rules are documented in
 [`documentation/architecture.md`](documentation/architecture.md).
+Current compatibility proof boundaries are tracked in
+[`documentation/compatibility.md`](documentation/compatibility.md).
 Test fixture conventions and live-proof boundaries are documented in
 [`TESTING.md`](TESTING.md).
 
