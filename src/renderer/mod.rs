@@ -54,6 +54,10 @@ pub struct RendererConfig {
     pub font_size_px: u16,
     /// Clear color in RGBA linear space.
     pub clear_color: [f64; 4],
+    /// Default foreground color for terminal cells with default SGR foreground.
+    pub default_foreground_rgb8: [u8; 3],
+    /// Cursor color in RGBA8.
+    pub cursor_color_rgba8: [u8; 4],
 }
 
 impl Default for RendererConfig {
@@ -62,7 +66,9 @@ impl Default for RendererConfig {
             target_fps: 144,
             dirty_regions: true,
             font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
-            clear_color: [0.02, 0.02, 0.025, 1.0],
+            clear_color: rgb8_to_clear_color([32, 33, 39]),
+            default_foreground_rgb8: [232, 226, 214],
+            cursor_color_rgba8: [244, 192, 106, 255],
         }
     }
 }
@@ -75,9 +81,24 @@ impl RendererConfig {
             target_fps: config.performance.target_fps,
             dirty_regions: config.performance.dirty_region_rendering,
             font_size_px: config.font.renderer_font_size_px(),
-            ..Self::default()
+            clear_color: rgb8_to_clear_color(config.theme.background_rgb8()?),
+            default_foreground_rgb8: config.theme.foreground_rgb8()?,
+            cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),
         })
     }
+}
+
+fn rgb8_to_clear_color([red, green, blue]: [u8; 3]) -> [f64; 4] {
+    [
+        f64::from(red) / 255.0,
+        f64::from(green) / 255.0,
+        f64::from(blue) / 255.0,
+        1.0,
+    ]
+}
+
+fn rgb8_to_rgba8([red, green, blue]: [u8; 3]) -> [u8; 4] {
+    [red, green, blue, 255]
 }
 
 /// Narrow GPU rendering interface.
@@ -105,7 +126,10 @@ impl WgpuRenderer {
     pub fn new(config: RendererConfig) -> Result<Self> {
         let atlas_config = GlyphAtlasConfig::new(DEFAULT_GLYPH_ATLAS_CAPACITY)?;
         Ok(Self {
-            planner: RenderPlanner::new(config.font_size_px),
+            planner: RenderPlanner::with_default_foreground(
+                config.font_size_px,
+                config.default_foreground_rgb8,
+            ),
             config,
             glyph_atlas: GlyphAtlas::new(atlas_config),
             last_plan: None,
@@ -119,7 +143,10 @@ impl WgpuRenderer {
 
     /// Replace renderer configuration for future frame planning.
     pub fn reconfigure(&mut self, config: RendererConfig) {
-        self.planner = RenderPlanner::new(config.font_size_px);
+        self.planner = RenderPlanner::with_default_foreground(
+            config.font_size_px,
+            config.default_foreground_rgb8,
+        );
         self.config = config;
         self.last_plan = None;
     }

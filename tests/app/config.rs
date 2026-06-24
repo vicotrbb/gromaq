@@ -131,6 +131,9 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     config.performance.target_fps = 120;
     config.performance.dirty_region_rendering = false;
     config.font.size_px = 18.0;
+    config.theme.background = "#1f2028".to_owned();
+    config.theme.foreground = "#e8e2d6".to_owned();
+    config.theme.cursor = "#f4c06a".to_owned();
 
     app.apply_reloadable_gromaq_config(&config).unwrap();
 
@@ -138,7 +141,23 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     assert_eq!(app.renderer().config().target_fps, 120);
     assert!(!app.renderer().config().dirty_regions);
     assert_eq!(app.renderer().config().font_size_px, 18);
-    assert_eq!(app.renderer().config().clear_color, [0.1, 0.2, 0.3, 1.0]);
+    assert_eq!(
+        app.renderer().config().clear_color,
+        [
+            f64::from(31) / 255.0,
+            f64::from(32) / 255.0,
+            f64::from(40) / 255.0,
+            1.0
+        ]
+    );
+    assert_eq!(
+        app.renderer().config().default_foreground_rgb8,
+        [232, 226, 214]
+    );
+    assert_eq!(
+        app.renderer().config().cursor_color_rgba8,
+        [244, 192, 106, 255]
+    );
     assert!(!app.runtime().has_shell_session());
 }
 

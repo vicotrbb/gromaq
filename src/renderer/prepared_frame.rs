@@ -47,6 +47,7 @@ impl PreparedSurfaceGlyphFrame {
         plan: &RenderPlan,
         glyphs: &[GlyphBitmap],
         clear_color: [f64; 4],
+        cursor_color_rgba8: [u8; 4],
     ) -> std::result::Result<Self, SurfaceFrameError> {
         if plan.glyphs.is_empty() {
             return Err(SurfaceFrameError::InvalidFrame(
@@ -124,7 +125,7 @@ impl PreparedSurfaceGlyphFrame {
         let cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
-            color_rgba8: [229, 229, 229, 255],
+            color_rgba8: cursor_color_rgba8,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
@@ -268,6 +269,7 @@ mod tests {
                 shape: CursorShape::Block,
                 blinking: true,
             },
+            default_foreground_rgb8: [229, 229, 229],
             clear_regions: Vec::new(),
             backgrounds: Vec::new(),
             decorations: Vec::new(),
@@ -289,9 +291,13 @@ mod tests {
             rgba: Vec::new(),
         }];
 
-        let error =
-            PreparedSurfaceGlyphFrame::from_render_plan(&plan, &glyphs, [0.0, 0.0, 0.0, 1.0])
-                .unwrap_err();
+        let error = PreparedSurfaceGlyphFrame::from_render_plan(
+            &plan,
+            &glyphs,
+            [0.0, 0.0, 0.0, 1.0],
+            [244, 192, 106, 255],
+        )
+        .unwrap_err();
 
         assert_eq!(
             error,

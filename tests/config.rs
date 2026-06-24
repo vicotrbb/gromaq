@@ -74,6 +74,7 @@ fn partial_toml_config_uses_defaults_and_validates() {
         config.performance.target_fps,
         GromaqConfig::default().performance.target_fps
     );
+    assert_eq!(config.theme, GromaqConfig::default().theme);
 }
 
 #[test]
@@ -144,6 +145,61 @@ fn invalid_shell_settings_are_rejected() {
             error.to_string().contains(expected_message),
             "{error} did not contain {expected_message}"
         );
+    }
+}
+
+#[test]
+fn theme_toml_config_accepts_hex_rgb_colors() {
+    let config = GromaqConfig::from_toml_str(
+        r##"
+        [theme]
+        background = "#1f2028"
+        foreground = "#e8e2d6"
+        cursor = "#f4c06a"
+        "##,
+    )
+    .unwrap();
+
+    assert_eq!(config.theme.background_rgb8().unwrap(), [31, 32, 40]);
+    assert_eq!(config.theme.foreground_rgb8().unwrap(), [232, 226, 214]);
+    assert_eq!(config.theme.cursor_rgb8().unwrap(), [244, 192, 106]);
+}
+
+#[test]
+fn invalid_theme_colors_are_rejected() {
+    let invalid_cases = [
+        (
+            r##"
+            [theme]
+            background = "1f2028"
+            "##,
+            "background",
+        ),
+        (
+            r##"
+            [theme]
+            foreground = "#zzzzzz"
+            "##,
+            "foreground",
+        ),
+        (
+            r##"
+            [theme]
+            cursor = "#12345"
+            "##,
+            "cursor",
+        ),
+    ];
+
+    for (toml, field) in invalid_cases {
+        let error = GromaqConfig::from_toml_str(toml).unwrap_err();
+        assert!(matches!(
+            error,
+            GromaqError::InvalidThemeColor {
+                field: actual_field,
+                ..
+            } if actual_field == field
+        ));
     }
 }
 
@@ -288,6 +344,7 @@ fn config_serializes_to_valid_pretty_toml() {
 
     assert!(toml.contains("[terminal]"));
     assert!(toml.contains("[shell]"));
+    assert!(toml.contains("[theme]"));
     assert_eq!(parsed, config);
 }
 

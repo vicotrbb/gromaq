@@ -61,7 +61,6 @@ impl NativeTerminalApp {
         })?;
         let renderer_config = RendererConfig::from_gromaq_config(config)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
-        let clear_color = self.renderer.config().clear_color;
         let terminal_config_changed = self.runtime.config().terminal_cols
             != runtime_config.terminal_cols
             || self.runtime.config().terminal_rows != runtime_config.terminal_rows
@@ -81,10 +80,7 @@ impl NativeTerminalApp {
         }
         self.resize_mapper = resize_mapper;
         self.lifecycle.apply_config(app_config);
-        self.renderer.reconfigure(RendererConfig {
-            clear_color,
-            ..renderer_config
-        });
+        self.renderer.reconfigure(renderer_config);
         self.runtime.invalidate_terminal_frame();
         Ok(())
     }

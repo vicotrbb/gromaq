@@ -15,6 +15,8 @@ pub struct RenderPlan {
     pub viewport_rows: u16,
     /// Cursor state to draw for this frame.
     pub cursor: CursorSnapshot,
+    /// Default foreground color used for cells with terminal default color.
+    pub default_foreground_rgb8: [u8; 3],
     /// Dirty rectangles to clear before drawing glyphs.
     pub clear_regions: Vec<DirtyRegion>,
     /// Styled cell background fills in row-major order.

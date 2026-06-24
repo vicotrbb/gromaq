@@ -177,6 +177,11 @@ cwd = "/tmp"
 family = "monospace"
 size_px = 16.5
 
+[theme]
+background = "#202127"
+foreground = "#e8e2d6"
+cursor = "#f4c06a"
+
 [performance]
 target_fps = 144
 dirty_region_rendering = true

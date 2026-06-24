@@ -59,6 +59,15 @@ pub enum GromaqError {
         actual: u32,
     },
 
+    /// Theme colors must use a supported hex RGB format.
+    #[error("theme color {field} must use #RRGGBB, got {actual}")]
+    InvalidThemeColor {
+        /// Name of the invalid theme color field.
+        field: &'static str,
+        /// Actual invalid value.
+        actual: String,
+    },
+
     /// Configured shell program must contain a usable command.
     #[error("shell program must not be empty")]
     InvalidShellProgram,

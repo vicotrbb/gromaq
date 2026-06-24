@@ -1,6 +1,6 @@
 use crate::cell::{Color, Style};
 
-pub(super) fn style_foreground_rgba(style: Style) -> [f32; 4] {
+pub(super) fn style_foreground_rgba(style: Style, default_foreground_rgb8: [u8; 3]) -> [f32; 4] {
     if style.hidden {
         return [0.0, 0.0, 0.0, 0.0];
     }
@@ -9,7 +9,7 @@ pub(super) fn style_foreground_rgba(style: Style) -> [f32; 4] {
     } else {
         style.foreground
     };
-    let [red, green, blue] = color_rgb8(color);
+    let [red, green, blue] = color_rgb8(color, default_foreground_rgb8);
     let alpha = if style.dim { 0.66 } else { 1.0 };
     [
         f32::from(red) / 255.0,
@@ -19,7 +19,10 @@ pub(super) fn style_foreground_rgba(style: Style) -> [f32; 4] {
     ]
 }
 
-pub(super) fn style_background_rgba8(style: Style) -> Option<[u8; 4]> {
+pub(super) fn style_background_rgba8(
+    style: Style,
+    default_foreground_rgb8: [u8; 3],
+) -> Option<[u8; 4]> {
     let color = if style.inverse {
         style.foreground
     } else {
@@ -28,11 +31,15 @@ pub(super) fn style_background_rgba8(style: Style) -> Option<[u8; 4]> {
     if color == Color::Default && !style.inverse {
         return None;
     }
-    let [red, green, blue] = color_rgb8(color);
+    let [red, green, blue] = color_rgb8(color, default_foreground_rgb8);
     Some([red, green, blue, 255])
 }
 
-pub(super) fn decoration_color_rgba8(decoration_color: Color, style: Style) -> [u8; 4] {
+pub(super) fn decoration_color_rgba8(
+    decoration_color: Color,
+    style: Style,
+    default_foreground_rgb8: [u8; 3],
+) -> [u8; 4] {
     let color = if decoration_color == Color::Default {
         if style.inverse {
             style.background
@@ -42,7 +49,7 @@ pub(super) fn decoration_color_rgba8(decoration_color: Color, style: Style) -> [
     } else {
         decoration_color
     };
-    let [red, green, blue] = color_rgb8(color);
+    let [red, green, blue] = color_rgb8(color, default_foreground_rgb8);
     [red, green, blue, 255]
 }
 
@@ -55,9 +62,9 @@ pub(super) fn rgba8_to_normalized([red, green, blue, alpha]: [u8; 4]) -> [f32; 4
     ]
 }
 
-fn color_rgb8(color: Color) -> [u8; 3] {
+fn color_rgb8(color: Color, default_foreground_rgb8: [u8; 3]) -> [u8; 3] {
     match color {
-        Color::Default => [229, 229, 229],
+        Color::Default => default_foreground_rgb8,
         Color::Ansi(index) => ansi_color_rgb8(index),
         Color::Indexed(index) => indexed_color_rgb8(index),
         Color::Rgb(red, green, blue) => [red, green, blue],

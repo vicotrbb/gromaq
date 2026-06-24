@@ -73,12 +73,26 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.performance.target_fps = 120;
     config.performance.dirty_region_rendering = false;
     config.font.size_px = 16.5;
+    config.theme.background = "#1f2028".to_owned();
+    config.theme.foreground = "#e8e2d6".to_owned();
+    config.theme.cursor = "#f4c06a".to_owned();
 
     let renderer_config = RendererConfig::from_gromaq_config(&config).unwrap();
 
     assert_eq!(renderer_config.target_fps, 120);
     assert!(!renderer_config.dirty_regions);
     assert_eq!(renderer_config.font_size_px, 17);
+    assert_eq!(
+        renderer_config.clear_color,
+        [
+            f64::from(31) / 255.0,
+            f64::from(32) / 255.0,
+            f64::from(40) / 255.0,
+            1.0
+        ]
+    );
+    assert_eq!(renderer_config.default_foreground_rgb8, [232, 226, 214]);
+    assert_eq!(renderer_config.cursor_color_rgba8, [244, 192, 106, 255]);
 }
 
 #[test]
@@ -162,9 +176,13 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     let mut glyph_cache = RasterizedGlyphCache::from_bytes(font_bytes).unwrap();
     let glyphs = glyph_cache.rasterize_plan(plan).unwrap();
 
-    let prepared =
-        PreparedSurfaceGlyphFrame::from_render_plan(plan, &glyphs.bitmaps, [0.0, 0.0, 0.0, 1.0])
-            .unwrap();
+    let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+        plan,
+        &glyphs.bitmaps,
+        [0.0, 0.0, 0.0, 1.0],
+        [244, 192, 106, 255],
+    )
+    .unwrap();
     let frame = prepared.as_surface_glyph_frame();
 
     assert_eq!(frame.batch.quads.len(), plan.glyphs.len());
@@ -175,6 +193,15 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     assert_eq!(frame.decoration_batch.indices.len(), 6);
     assert_eq!(frame.cursor_batch.quads.len(), 1);
     assert_eq!(frame.cursor_batch.indices.len(), 6);
+    assert_eq!(
+        frame.cursor_batch.quads[0].vertices[0].color_rgba,
+        [
+            f32::from(244_u8) / 255.0,
+            f32::from(192_u8) / 255.0,
+            f32::from(106_u8) / 255.0,
+            1.0
+        ]
+    );
     assert_eq!(frame.atlas.occupied_slots, 2);
     assert!(frame.width > 0);
     assert!(frame.height > 0);

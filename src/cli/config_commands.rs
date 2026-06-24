@@ -140,7 +140,7 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
         Ok(config) => CliExit {
             code: 0,
             stdout: format!(
-                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ntarget fps: {}\ndirty-region rendering: {}\n",
+                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
                 path,
                 config.terminal.cols,
                 config.terminal.rows,
@@ -150,6 +150,9 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
                 config.shell.cwd.as_deref().unwrap_or("<default>"),
                 config.font.family,
                 config.font.size_px,
+                config.theme.background,
+                config.theme.foreground,
+                config.theme.cursor,
                 config.performance.target_fps,
                 config.performance.dirty_region_rendering
             ),
@@ -168,12 +171,15 @@ pub(super) fn config_template_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
+            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n\n[theme]\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
             config.terminal.cols,
             config.terminal.rows,
             config.terminal.scrollback_lines,
             config.font.family,
             config.font.size_px,
+            config.theme.background,
+            config.theme.foreground,
+            config.theme.cursor,
             config.performance.target_fps,
             config.performance.dirty_region_rendering
         ),

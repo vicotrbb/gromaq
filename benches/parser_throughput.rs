@@ -463,6 +463,7 @@ fn prepared_surface_glyph_frame_large_plan(c: &mut Criterion) {
                 black_box(&plan),
                 black_box(&glyphs.bitmaps),
                 black_box([0.0, 0.0, 0.0, 1.0]),
+                black_box([244, 192, 106, 255]),
             )
             .unwrap();
             let frame = prepared.as_surface_glyph_frame();

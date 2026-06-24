@@ -165,6 +165,40 @@ fn glyph_quad_planner_maps_terminal_style_to_foreground_rgba() {
 }
 
 #[test]
+fn glyph_quad_planner_uses_configured_default_foreground_rgba() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+    terminal.write_str("A").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut render_planner = RenderPlanner::with_default_foreground(14, [232, 226, 214]);
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+    let quad_config = GlyphQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 16,
+        atlas_slot_width_px: 10,
+        atlas_slot_height_px: 20,
+        atlas_columns: 1,
+        atlas_width_px: 10,
+        atlas_height_px: 20,
+    };
+
+    let batch = GlyphQuadPlanner::new(quad_config).plan(&plan).unwrap();
+
+    assert_eq!(batch.quads.len(), 1);
+    assert_eq!(
+        batch.quads[0].vertices[0].foreground_rgba,
+        rgba(232, 226, 214, 1.0)
+    );
+}
+
+#[test]
 fn background_quad_planner_builds_solid_cell_spans() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal
@@ -222,6 +256,7 @@ fn background_quad_planner_rejects_invalid_dimensions() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -343,6 +378,7 @@ fn text_decoration_quad_planner_builds_line_geometry() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: vec![
@@ -425,6 +461,7 @@ fn text_decoration_quad_planner_builds_styled_underline_geometry() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: vec![
@@ -489,6 +526,7 @@ fn text_decoration_quad_planner_rejects_invalid_dimensions() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -523,6 +561,7 @@ fn cursor_quad_planner_builds_cursor_shapes() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -567,6 +606,7 @@ fn cursor_quad_planner_skips_invisible_or_out_of_bounds_cursor() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -605,6 +645,7 @@ fn glyph_quad_planner_rejects_invalid_atlas_dimensions() {
                     shape: CursorShape::Block,
                     blinking: true,
                 },
+                default_foreground_rgb8: [229, 229, 229],
                 clear_regions: Vec::new(),
                 backgrounds: Vec::new(),
                 decorations: Vec::new(),
@@ -635,6 +676,7 @@ fn glyph_quad_planner_rejects_slots_outside_the_atlas_image() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -680,6 +722,7 @@ fn glyph_quad_planner_rejects_overflowing_atlas_coordinates() {
             shape: CursorShape::Block,
             blinking: true,
         },
+        default_foreground_rgb8: [229, 229, 229],
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),

@@ -178,7 +178,12 @@ where
         });
     }
     let glyphs = glyph_cache.rasterize_plan(plan)?;
-    let prepared = PreparedSurfaceGlyphFrame::from_render_plan(plan, &glyphs.bitmaps, clear_color)?;
+    let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+        plan,
+        &glyphs.bitmaps,
+        clear_color,
+        renderer.config().cursor_color_rgba8,
+    )?;
     let frame = prepared.as_surface_glyph_frame();
     let report = NativeGlyphFramePresentation {
         rendered: true,

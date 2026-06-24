@@ -25,7 +25,7 @@ pub use cell::{Cell, CellSnapshot, Color, Style, UnderlineStyle};
 pub use clipboard::{HostClipboard, MemoryClipboard, NativeClipboard};
 pub use config::{
     ConfigFileReloader, ConfigReload, FontSettings, GromaqConfig, PerformanceSettings,
-    ShellSettings, TerminalSettings,
+    ShellSettings, TerminalSettings, ThemeSettings,
 };
 pub use dirty::{DirtyRegion, DirtyTracker};
 pub use error::{GromaqError, Result};
