@@ -1,4 +1,5 @@
 use super::GpuBootstrapError;
+use std::path::Path;
 
 /// Result of a live GPU smoke render/readback.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -162,6 +163,38 @@ pub trait GpuTerminalTextRunner {
     fn run_terminal_text_smoke(
         &self,
     ) -> std::result::Result<GpuTerminalTextReport, GpuBootstrapError>;
+}
+
+/// Result of exporting a live GPU terminal-text draw/readback to an image artifact.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GpuTerminalTextSnapshotReport {
+    /// Render target width in pixels.
+    pub width: u32,
+    /// Render target height in pixels.
+    pub height: u32,
+    /// Number of bytes written to the snapshot artifact.
+    pub bytes_written: usize,
+    /// Number of terminal glyph draw commands in the render plan.
+    pub glyphs: usize,
+    /// Sampled terminal background pixel from the themed text surface.
+    pub background_pixel: [u8; 4],
+    /// Sampled foreground glyph pixel distinct from background and cursor pixels.
+    pub glyph_pixel: [u8; 4],
+    /// WCAG contrast ratio between sampled foreground glyph and background, multiplied by 100.
+    pub glyph_background_contrast_x100: u32,
+    /// First sampled RGBA8 pixel from the cursor quad after drawing.
+    pub cursor_pixel: [u8; 4],
+    /// Number of output pixels with non-zero alpha after drawing.
+    pub drawn_pixels: usize,
+}
+
+/// Interface for contexts that can export terminal text through the GPU pipeline.
+pub trait GpuTerminalTextSnapshotRunner {
+    /// Run a GPU terminal-text draw/readback and write an inspectable image artifact.
+    fn run_terminal_text_snapshot(
+        &self,
+        path: &Path,
+    ) -> std::result::Result<GpuTerminalTextSnapshotReport, GpuBootstrapError>;
 }
 
 /// Repeated live GPU terminal-text draw/readback timing summary.

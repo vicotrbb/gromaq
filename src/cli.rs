@@ -24,8 +24,8 @@ use config_commands::{
     config_check_exit, config_template_exit, launch_config_file_exit, launch_native_app_exit,
 };
 use frame_scheduler_smoke::frame_scheduler_smoke_exit;
-use gpu::gpu_command_exit;
 pub use gpu::{AdapterReport, GpuCommandContext};
+use gpu::{gpu_command_exit, gpu_terminal_text_snapshot_exit};
 use runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
 use runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
@@ -168,6 +168,26 @@ where
         }
         return config_template_exit();
     }
+    if command == CliCommand::GpuTerminalTextSnapshot {
+        let Some(path) = args.next() else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!(
+                    "{}missing snapshot path for --gpu-terminal-text-snapshot\n",
+                    usage()
+                ),
+            };
+        };
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        return gpu_terminal_text_snapshot_exit(path.as_ref(), backend);
+    }
     if matches!(
         command,
         CliCommand::WindowSmoke | CliCommand::WindowPerfSmoke
@@ -215,6 +235,7 @@ where
 
     match command {
         CliCommand::Gpu(arg) => gpu_command_exit(arg, backend),
+        CliCommand::GpuTerminalTextSnapshot => unreachable!(),
         CliCommand::ClipboardSmoke => clipboard_smoke_exit(clipboard),
         CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),

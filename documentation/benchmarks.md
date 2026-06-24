@@ -92,7 +92,13 @@ pixels on the final frame, and reported min/avg/max/p95 draw/readback timings of
 6093125/6624872/9264000/9264000 ns. After the contrast-gated default-theme
 fixture update, a targeted rerun reported 1476 drawn pixels and
 min/avg/max/p95 draw/readback timings of 6312709/7511208/12016584/12016584 ns.
-These are deterministic smoke results and
+On the same date,
+`cargo run -- --gpu-terminal-text-snapshot target/gromaq-terminal-text-smoke.ppm`
+wrote a 144x36 binary PPM artifact of the same contrast-gated terminal-text
+smoke frame, reported 15566 bytes written, 4 glyphs, 1476 drawn pixels, sampled
+background `[1, 1, 2, 255]`, sampled glyph `[254, 253, 214, 254]`, cursor
+`[200, 200, 200, 255]`, and the same 2010 x100 contrast ratio. These are
+deterministic smoke results, an inspectable offscreen snapshot artifact, and
 offscreen GPU draw/readback timing results, not live hardware acceptance
 measurements.
 

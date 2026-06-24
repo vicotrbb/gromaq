@@ -21,8 +21,9 @@ pub use readback::ReadbackLayout;
 pub use reports::{
     GpuGlyphAtlasUploadReport, GpuGlyphAtlasUploadRunner, GpuSmokeReport, GpuSmokeRunner,
     GpuTerminalTextPerfReport, GpuTerminalTextPerfRunner, GpuTerminalTextReport,
-    GpuTerminalTextRunner, GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner,
-    GpuTextureUploadReport, GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
+    GpuTerminalTextRunner, GpuTerminalTextSnapshotReport, GpuTerminalTextSnapshotRunner,
+    GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner, GpuTextureUploadReport,
+    GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
 pub use surface::{GpuSurfaceError, NativeGpuWindowSurface};
 pub use upload::{UploadPattern, UploadPatternLayout};

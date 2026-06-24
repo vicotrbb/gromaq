@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fs;
 
 use gromaq::cli::run_with_backend;
 
@@ -88,6 +89,46 @@ fn gpu_terminal_text_perf_smoke_cli_reports_timing_result() {
     assert!(exit.stdout.contains("p95 ns: 3000"));
     assert!(exit.stderr.is_empty());
     assert_eq!(backend.requests.borrow().len(), 1);
+}
+
+#[test]
+fn gpu_terminal_text_snapshot_cli_writes_ppm_artifact() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = std::env::temp_dir().join(format!(
+        "gromaq-cli-{}-terminal-text.ppm",
+        std::process::id()
+    ));
+    let _ = fs::remove_file(&path);
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--gpu-terminal-text-snapshot",
+            path.to_str().unwrap(),
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("GPU terminal text snapshot: ok"));
+    assert!(exit.stdout.contains("size: 2x1"));
+    assert!(exit.stdout.contains("bytes written: 17"));
+    assert!(exit.stdout.contains("glyphs: 2"));
+    assert!(exit.stdout.contains("background pixel: [9, 13, 18, 255]"));
+    assert!(exit.stdout.contains("glyph pixel: [244, 247, 251, 255]"));
+    assert!(exit.stdout.contains("glyph/background contrast x100: 1842"));
+    assert!(exit.stdout.contains("cursor pixel: [229, 229, 229, 255]"));
+    assert!(exit.stdout.contains("drawn pixels: 2"));
+    assert!(exit.stderr.is_empty());
+    assert_eq!(backend.requests.borrow().len(), 1);
+    assert_eq!(
+        fs::read(&path).unwrap(),
+        b"P6\n2 1\n255\n\x09\x0d\x12\xf4\xf7\xfb"
+    );
+
+    fs::remove_file(path).unwrap();
 }
 
 #[test]

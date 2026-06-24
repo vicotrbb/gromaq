@@ -71,6 +71,7 @@ Implemented and tested:
 - Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
 - Offscreen terminal text GPU draw/readback smoke test with a contrast-gated default-theme glyph sample, solid background, text-decoration, and cursor output via `--gpu-terminal-text-smoke`
 - Repeated offscreen terminal text GPU draw/readback timing smoke with `--gpu-terminal-text-perf-smoke`
+- Offscreen terminal text GPU snapshot export with `--gpu-terminal-text-snapshot <path>` for visual inspection of the default-theme smoke frame
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
 - Deterministic runtime local scrollback navigation smoke with `--runtime-scrollback-smoke`
@@ -129,6 +130,7 @@ cargo run -- --gpu-text-atlas-smoke
 cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
 cargo run -- --gpu-terminal-text-perf-smoke
+cargo run -- --gpu-terminal-text-snapshot target/gromaq-terminal-text.ppm
 cargo run -- --clipboard-smoke
 cargo run -- --config path/to/gromaq.toml
 cargo run -- --config-check path/to/gromaq.toml

@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::fs;
+use std::path::Path;
 
 use gromaq::app::{NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig};
 use gromaq::cli::{
@@ -11,8 +12,9 @@ use gromaq::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrapBackend, GpuBootstrapError, GpuBootstrapRequest,
     GpuGlyphAtlasUploadReport, GpuGlyphAtlasUploadRunner, GpuSmokeReport, GpuSmokeRunner,
     GpuTerminalTextPerfReport, GpuTerminalTextPerfRunner, GpuTerminalTextReport,
-    GpuTerminalTextRunner, GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner,
-    GpuTextureUploadReport, GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
+    GpuTerminalTextRunner, GpuTerminalTextSnapshotReport, GpuTerminalTextSnapshotRunner,
+    GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner, GpuTextureUploadReport,
+    GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
 use gromaq::renderer::RendererConfig;
 use gromaq::{GromaqConfig, HostClipboard};
@@ -199,6 +201,29 @@ impl GpuTerminalTextPerfRunner for MockContext {
     }
 }
 
+impl GpuTerminalTextSnapshotRunner for MockContext {
+    fn run_terminal_text_snapshot(
+        &self,
+        path: &Path,
+    ) -> Result<GpuTerminalTextSnapshotReport, GpuBootstrapError> {
+        let snapshot = b"P6\n2 1\n255\n\x09\x0d\x12\xf4\xf7\xfb";
+        fs::write(path, snapshot).map_err(|error| {
+            GpuBootstrapError::SmokeReadback(format!("failed to write mock snapshot: {error}"))
+        })?;
+        Ok(GpuTerminalTextSnapshotReport {
+            width: 2,
+            height: 1,
+            bytes_written: snapshot.len(),
+            glyphs: 2,
+            background_pixel: [9, 13, 18, 255],
+            glyph_pixel: [244, 247, 251, 255],
+            glyph_background_contrast_x100: 1842,
+            cursor_pixel: [229, 229, 229, 255],
+            drawn_pixels: 2,
+        })
+    }
+}
+
 #[test]
 fn gpu_info_cli_reports_adapter_metadata() {
     let backend = MockBackend {
@@ -227,7 +252,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());

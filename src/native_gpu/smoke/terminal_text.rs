@@ -1,9 +1,10 @@
+use std::path::Path;
 use std::time::Instant;
 
 use super::super::readback::rgba_pixel_at;
 use super::super::reports::{
     GpuTerminalTextPerfReport, GpuTerminalTextPerfRunner, GpuTerminalTextReport,
-    GpuTerminalTextRunner,
+    GpuTerminalTextRunner, GpuTerminalTextSnapshotReport, GpuTerminalTextSnapshotRunner,
 };
 use super::super::text_smoke::build_text_atlas_smoke_frame;
 use super::super::{GlyphDrawInput, GpuBootstrapError, NativeGpuContext, draw_glyph_quads_rgba8};
@@ -32,31 +33,35 @@ impl GpuTerminalTextRunner for NativeGpuContext {
     ) -> std::result::Result<GpuTerminalTextReport, GpuBootstrapError> {
         let draw = build_terminal_text_smoke_draw()?;
         let pixels = self.draw_terminal_text_smoke_frame(&draw)?;
-        let background_pixel = first_nontransparent_pixel(&pixels);
-        let cursor_pixel = first_cursor_pixel(&draw.cursor_batch, &pixels, draw.target_width)?;
-        let glyph_pixel = first_glyph_pixel(&pixels, background_pixel, cursor_pixel);
-        let glyph_background_contrast_x100 = contrast_ratio_x100(glyph_pixel, background_pixel);
-        if glyph_background_contrast_x100 < MIN_TERMINAL_TEXT_CONTRAST_X100 {
-            return Err(GpuBootstrapError::SmokeReadback(format!(
-                "terminal text contrast {glyph_background_contrast_x100} is below required {MIN_TERMINAL_TEXT_CONTRAST_X100}"
-            )));
-        }
-        Ok(GpuTerminalTextReport {
-            width: draw.target_width,
-            height: draw.target_height,
-            glyphs: draw.frame.plan.glyphs.len(),
-            background_quads: draw.background_batch.quads.len(),
-            quads: draw.quad_batch.quads.len(),
-            decoration_quads: draw.decoration_batch.quads.len(),
-            cursor_quads: draw.cursor_batch.quads.len(),
-            rasterized_glyphs: draw.frame.batch.rasterized,
-            reused_glyphs: draw.frame.batch.reused,
-            first_drawn_pixel: background_pixel,
-            background_pixel,
-            glyph_pixel,
-            glyph_background_contrast_x100,
-            cursor_pixel,
-            drawn_pixels: pixels.chunks_exact(4).filter(|pixel| pixel[3] != 0).count(),
+        terminal_text_report_from_pixels(&draw, &pixels)
+    }
+}
+
+impl GpuTerminalTextSnapshotRunner for NativeGpuContext {
+    fn run_terminal_text_snapshot(
+        &self,
+        path: &Path,
+    ) -> std::result::Result<GpuTerminalTextSnapshotReport, GpuBootstrapError> {
+        let draw = build_terminal_text_smoke_draw()?;
+        let pixels = self.draw_terminal_text_smoke_frame(&draw)?;
+        let report = terminal_text_report_from_pixels(&draw, &pixels)?;
+        let snapshot = terminal_text_ppm_bytes(report.width, report.height, &pixels)?;
+        std::fs::write(path, &snapshot).map_err(|error| {
+            GpuBootstrapError::SmokeReadback(format!(
+                "failed to write terminal text snapshot to {}: {error}",
+                path.display()
+            ))
+        })?;
+        Ok(GpuTerminalTextSnapshotReport {
+            width: report.width,
+            height: report.height,
+            bytes_written: snapshot.len(),
+            glyphs: report.glyphs,
+            background_pixel: report.background_pixel,
+            glyph_pixel: report.glyph_pixel,
+            glyph_background_contrast_x100: report.glyph_background_contrast_x100,
+            cursor_pixel: report.cursor_pixel,
+            drawn_pixels: report.drawn_pixels,
         })
     }
 }
@@ -183,6 +188,70 @@ fn checked_terminal_text_target_dimensions(
         )
     })?;
     Ok((width, height))
+}
+
+fn terminal_text_report_from_pixels(
+    draw: &TerminalTextSmokeDraw,
+    pixels: &[u8],
+) -> std::result::Result<GpuTerminalTextReport, GpuBootstrapError> {
+    let background_pixel = first_nontransparent_pixel(pixels);
+    let cursor_pixel = first_cursor_pixel(&draw.cursor_batch, pixels, draw.target_width)?;
+    let glyph_pixel = first_glyph_pixel(pixels, background_pixel, cursor_pixel);
+    let glyph_background_contrast_x100 = contrast_ratio_x100(glyph_pixel, background_pixel);
+    if glyph_background_contrast_x100 < MIN_TERMINAL_TEXT_CONTRAST_X100 {
+        return Err(GpuBootstrapError::SmokeReadback(format!(
+            "terminal text contrast {glyph_background_contrast_x100} is below required {MIN_TERMINAL_TEXT_CONTRAST_X100}"
+        )));
+    }
+    Ok(GpuTerminalTextReport {
+        width: draw.target_width,
+        height: draw.target_height,
+        glyphs: draw.frame.plan.glyphs.len(),
+        background_quads: draw.background_batch.quads.len(),
+        quads: draw.quad_batch.quads.len(),
+        decoration_quads: draw.decoration_batch.quads.len(),
+        cursor_quads: draw.cursor_batch.quads.len(),
+        rasterized_glyphs: draw.frame.batch.rasterized,
+        reused_glyphs: draw.frame.batch.reused,
+        first_drawn_pixel: background_pixel,
+        background_pixel,
+        glyph_pixel,
+        glyph_background_contrast_x100,
+        cursor_pixel,
+        drawn_pixels: pixels.chunks_exact(4).filter(|pixel| pixel[3] != 0).count(),
+    })
+}
+
+fn terminal_text_ppm_bytes(
+    width: u32,
+    height: u32,
+    pixels: &[u8],
+) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
+    let expected_rgba_len =
+        usize::try_from(u64::from(width) * u64::from(height) * 4).map_err(|_| {
+            GpuBootstrapError::SmokeReadback("terminal text snapshot is too large".to_owned())
+        })?;
+    if pixels.len() != expected_rgba_len {
+        return Err(GpuBootstrapError::SmokeReadback(format!(
+            "terminal text snapshot expected {expected_rgba_len} RGBA bytes, got {}",
+            pixels.len()
+        )));
+    }
+    let header = format!("P6\n{width} {height}\n255\n");
+    let rgb_len = usize::try_from(u64::from(width) * u64::from(height) * 3).map_err(|_| {
+        GpuBootstrapError::SmokeReadback(
+            "terminal text snapshot RGB buffer is too large".to_owned(),
+        )
+    })?;
+    let mut snapshot = Vec::new();
+    snapshot
+        .try_reserve_exact(header.len() + rgb_len)
+        .map_err(|_| GpuBootstrapError::SmokeReadback("snapshot allocation failed".to_owned()))?;
+    snapshot.extend_from_slice(header.as_bytes());
+    for pixel in pixels.chunks_exact(4) {
+        snapshot.extend_from_slice(&pixel[..3]);
+    }
+    Ok(snapshot)
 }
 
 fn average_duration_ns(durations: &[u128]) -> u128 {
@@ -328,6 +397,25 @@ mod tests {
         assert!(
             contrast_ratio_x100([80, 80, 80, 255], [70, 70, 70, 255])
                 < MIN_TERMINAL_TEXT_CONTRAST_X100
+        );
+    }
+
+    #[test]
+    fn terminal_text_ppm_bytes_writes_binary_rgb_snapshot() {
+        let snapshot = terminal_text_ppm_bytes(2, 1, &[255, 0, 0, 255, 4, 5, 6, 128]).unwrap();
+
+        assert_eq!(snapshot, b"P6\n2 1\n255\n\xff\x00\x00\x04\x05\x06");
+    }
+
+    #[test]
+    fn terminal_text_ppm_bytes_rejects_mismatched_rgba_len() {
+        let error = terminal_text_ppm_bytes(2, 1, &[255, 0, 0, 255]).unwrap_err();
+
+        assert_eq!(
+            error,
+            GpuBootstrapError::SmokeReadback(
+                "terminal text snapshot expected 8 RGBA bytes, got 4".to_owned()
+            )
         );
     }
 }
