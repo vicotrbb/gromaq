@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 use thiserror::Error;
 
-use crate::cell::Style;
+use crate::cell::{Color, Style, UnderlineStyle};
 use crate::config::GromaqConfig;
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
@@ -21,11 +21,12 @@ pub use atlas::{
     GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphAtlasMetrics, GlyphBitmap, GlyphEntry,
     GlyphImageError, GlyphKey, GlyphKeyText,
 };
-use color::style_background_rgba8;
+use color::{decoration_color_rgba8, style_background_rgba8};
 pub use quads::{
     BackgroundQuad, BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadError,
     BackgroundQuadPlanner, BackgroundVertex, CursorQuadConfig, CursorQuadPlanner, GlyphQuad,
     GlyphQuadBatch, GlyphQuadConfig, GlyphQuadError, GlyphQuadPlanner, GlyphVertex,
+    TextDecorationQuadConfig, TextDecorationQuadPlanner,
 };
 pub use scheduler::{FrameDecision, FrameScheduler, FrameSchedulerMetrics, RenderReason};
 pub use surface::{
@@ -96,6 +97,8 @@ pub struct SurfaceGlyphFrame<'a> {
     pub background_batch: &'a BackgroundQuadBatch,
     /// Textured glyph quads and indices to draw.
     pub batch: &'a GlyphQuadBatch,
+    /// Solid text-decoration quads drawn after textured glyphs.
+    pub decoration_batch: &'a BackgroundQuadBatch,
     /// Solid cursor quads drawn after textured glyphs.
     pub cursor_batch: &'a BackgroundQuadBatch,
     /// Surface frame width in pixels.
@@ -112,6 +115,7 @@ pub struct PreparedSurfaceGlyphFrame {
     atlas: GlyphAtlasImage,
     background_batch: BackgroundQuadBatch,
     batch: GlyphQuadBatch,
+    decoration_batch: BackgroundQuadBatch,
     cursor_batch: BackgroundQuadBatch,
     width: u32,
     height: u32,
@@ -192,6 +196,12 @@ impl PreparedSurfaceGlyphFrame {
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
+        let decoration_batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
+            cell_width_px: slot_width,
+            cell_height_px: slot_height,
+        })
+        .plan(plan)
+        .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
         let cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
@@ -203,6 +213,7 @@ impl PreparedSurfaceGlyphFrame {
             atlas,
             background_batch,
             batch,
+            decoration_batch,
             cursor_batch,
             width,
             height,
@@ -216,6 +227,7 @@ impl PreparedSurfaceGlyphFrame {
             atlas: &self.atlas,
             background_batch: &self.background_batch,
             batch: &self.batch,
+            decoration_batch: &self.decoration_batch,
             cursor_batch: &self.cursor_batch,
             width: self.width,
             height: self.height,
@@ -236,6 +248,11 @@ impl PreparedSurfaceGlyphFrame {
     /// Solid background quad batch for this frame.
     pub fn background_batch(&self) -> &BackgroundQuadBatch {
         &self.background_batch
+    }
+
+    /// Solid text-decoration quad batch for this frame.
+    pub fn decoration_batch(&self) -> &BackgroundQuadBatch {
+        &self.decoration_batch
     }
 
     /// Solid cursor quad batch for this frame.
@@ -616,6 +633,91 @@ fn render_glyph_frame_to_view(
         queue.write_buffer(&index_buffer, 0, &index_bytes);
         Some((vertex_buffer, index_buffer, buffer_layout.index_count))
     };
+    let decoration_draw = if frame.decoration_batch.quads.is_empty() {
+        None
+    } else {
+        let decoration_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("gromaq-surface-decoration-shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(SURFACE_BACKGROUND_WGSL)),
+        });
+        let decoration_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("gromaq-surface-decoration-pipeline-layout"),
+                bind_group_layouts: &[],
+                immediate_size: 0,
+            });
+        let decoration_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("gromaq-surface-decoration-pipeline"),
+            layout: Some(&decoration_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &decoration_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: 24,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x2,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 8,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &decoration_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let decoration_vertex_bytes =
+            surface_background_vertex_bytes(frame.decoration_batch, frame.width, frame.height)?;
+        let decoration_index_bytes = surface_background_index_bytes(frame.decoration_batch);
+        let decoration_layout = validate_surface_background_buffers(
+            &decoration_vertex_bytes,
+            &decoration_index_bytes,
+            frame.decoration_batch.indices.len(),
+        )?;
+        let decoration_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-decoration-vertices"),
+            size: decoration_layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let decoration_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-surface-decoration-indices"),
+            size: decoration_layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&decoration_vertex_buffer, 0, &decoration_vertex_bytes);
+        queue.write_buffer(&decoration_index_buffer, 0, &decoration_index_bytes);
+        Some((
+            decoration_pipeline,
+            decoration_vertex_buffer,
+            decoration_index_buffer,
+            decoration_layout.index_count,
+        ))
+    };
     let cursor_draw = if frame.cursor_batch.quads.is_empty() {
         None
     } else {
@@ -741,6 +843,14 @@ fn render_glyph_frame_to_view(
             pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             pass.draw_indexed(0..*index_count, 0, 0..1);
         }
+        if let Some((decoration_pipeline, vertex_buffer, index_buffer, index_count)) =
+            &decoration_draw
+        {
+            pass.set_pipeline(decoration_pipeline);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
         if let Some((cursor_pipeline, vertex_buffer, index_buffer, index_count)) = &cursor_draw {
             pass.set_pipeline(cursor_pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
@@ -807,6 +917,11 @@ fn validate_surface_glyph_frame(
             "surface background quads and indices must both be present or both be empty".to_owned(),
         ));
     }
+    if frame.decoration_batch.quads.is_empty() != frame.decoration_batch.indices.is_empty() {
+        return Err(SurfaceFrameError::InvalidFrame(
+            "surface decoration quads and indices must both be present or both be empty".to_owned(),
+        ));
+    }
     if frame.cursor_batch.quads.is_empty() != frame.cursor_batch.indices.is_empty() {
         return Err(SurfaceFrameError::InvalidFrame(
             "surface cursor quads and indices must both be present or both be empty".to_owned(),
@@ -814,10 +929,12 @@ fn validate_surface_glyph_frame(
     }
     if frame.batch.quads.is_empty()
         && frame.background_batch.quads.is_empty()
+        && frame.decoration_batch.quads.is_empty()
         && frame.cursor_batch.quads.is_empty()
     {
         return Err(SurfaceFrameError::InvalidFrame(
-            "surface glyph frame requires non-empty glyph, background, or cursor quads".to_owned(),
+            "surface glyph frame requires non-empty glyph, background, decoration, or cursor quads"
+                .to_owned(),
         ));
     }
     Ok(SurfaceGlyphAtlasLayout {
@@ -1202,6 +1319,7 @@ impl RenderPlanner {
             .sum();
         let mut glyphs = Vec::with_capacity(estimated_dirty_cells);
         let mut backgrounds = Vec::new();
+        let mut decorations = Vec::new();
         for region in dirty_regions {
             let Some(region) = clipped_dirty_region(region, grid) else {
                 continue;
@@ -1212,6 +1330,13 @@ impl RenderPlanner {
                     if let Some(color_rgba8) = style_background_rgba8(cell.style) {
                         append_background_fill(&mut backgrounds, row, col, color_rgba8);
                     }
+                    append_cell_decorations(
+                        &mut decorations,
+                        row,
+                        col,
+                        cell.style,
+                        grid.cell_underline_color(row, col),
+                    );
                     if cell.text.is_empty() || cell.is_wide_trailing {
                         continue;
                     }
@@ -1243,6 +1368,7 @@ impl RenderPlanner {
             cursor,
             clear_regions: dirty_regions.to_vec(),
             backgrounds,
+            decorations,
             glyphs,
         })
     }
@@ -1266,6 +1392,90 @@ fn append_background_fill(
         row,
         col,
         cols: 1,
+        color_rgba8,
+    });
+}
+
+fn append_cell_decorations(
+    decorations: &mut Vec<PlannedTextDecoration>,
+    row: u16,
+    col: u16,
+    style: Style,
+    underline_color: Color,
+) {
+    if style.hidden {
+        return;
+    }
+    if style.underline {
+        match style.underline_style {
+            UnderlineStyle::Single => append_text_decoration(
+                decorations,
+                row,
+                col,
+                TextDecorationKind::Underline,
+                decoration_color_rgba8(underline_color, style),
+            ),
+            UnderlineStyle::Double => {
+                let color_rgba8 = decoration_color_rgba8(underline_color, style);
+                append_text_decoration(
+                    decorations,
+                    row,
+                    col,
+                    TextDecorationKind::DoubleUnderlineTop,
+                    color_rgba8,
+                );
+                append_text_decoration(
+                    decorations,
+                    row,
+                    col,
+                    TextDecorationKind::DoubleUnderlineBottom,
+                    color_rgba8,
+                );
+            }
+            UnderlineStyle::Curly | UnderlineStyle::Dotted | UnderlineStyle::Dashed => {}
+        }
+    }
+    if style.overline {
+        append_text_decoration(
+            decorations,
+            row,
+            col,
+            TextDecorationKind::Overline,
+            decoration_color_rgba8(Color::Default, style),
+        );
+    }
+    if style.strikethrough {
+        append_text_decoration(
+            decorations,
+            row,
+            col,
+            TextDecorationKind::Strikethrough,
+            decoration_color_rgba8(Color::Default, style),
+        );
+    }
+}
+
+fn append_text_decoration(
+    decorations: &mut Vec<PlannedTextDecoration>,
+    row: u16,
+    col: u16,
+    kind: TextDecorationKind,
+    color_rgba8: [u8; 4],
+) {
+    if let Some(last) = decorations.iter_mut().rev().take(4).find(|last| {
+        last.row == row
+            && last.col.saturating_add(last.cols) == col
+            && last.kind == kind
+            && last.color_rgba8 == color_rgba8
+    }) {
+        last.cols = last.cols.saturating_add(1);
+        return;
+    }
+    decorations.push(PlannedTextDecoration {
+        row,
+        col,
+        cols: 1,
+        kind,
         color_rgba8,
     });
 }
@@ -1301,6 +1511,8 @@ pub struct RenderPlan {
     pub clear_regions: Vec<DirtyRegion>,
     /// Styled cell background fills in row-major order.
     pub backgrounds: Vec<PlannedBackground>,
+    /// Styled text-decoration fills in row-major order.
+    pub decorations: Vec<PlannedTextDecoration>,
     /// Glyph draw commands in row-major order.
     pub glyphs: Vec<PlannedGlyph>,
 }
@@ -1315,6 +1527,36 @@ pub struct PlannedBackground {
     /// Number of adjacent cells covered by this fill.
     pub cols: u16,
     /// Background color in RGBA8.
+    pub color_rgba8: [u8; 4],
+}
+
+/// Text-decoration line kind inside a render plan.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TextDecorationKind {
+    /// Single straight underline.
+    Underline,
+    /// Upper line of a double straight underline.
+    DoubleUnderlineTop,
+    /// Lower line of a double straight underline.
+    DoubleUnderlineBottom,
+    /// Straight overline.
+    Overline,
+    /// Straight strikethrough.
+    Strikethrough,
+}
+
+/// One solid text-decoration fill command inside a render plan.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlannedTextDecoration {
+    /// Grid row.
+    pub row: u16,
+    /// Starting grid column.
+    pub col: u16,
+    /// Number of adjacent cells covered by this decoration fill.
+    pub cols: u16,
+    /// Decoration line kind.
+    pub kind: TextDecorationKind,
+    /// Decoration color in RGBA8.
     pub color_rgba8: [u8; 4],
 }
 
@@ -1512,6 +1754,7 @@ mod tests {
             },
             clear_regions: Vec::new(),
             backgrounds: Vec::new(),
+            decorations: Vec::new(),
             glyphs: vec![PlannedGlyph {
                 row: 0,
                 col: 0,
@@ -1578,6 +1821,7 @@ mod tests {
             atlas: &atlas,
             background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
+            decoration_batch: &BackgroundQuadBatch::default(),
             cursor_batch: &BackgroundQuadBatch::default(),
             width: 16,
             height: 16,
@@ -1608,6 +1852,7 @@ mod tests {
             atlas: &atlas,
             background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
+            decoration_batch: &BackgroundQuadBatch::default(),
             cursor_batch: &BackgroundQuadBatch::default(),
             width: 16,
             height: 16,
@@ -1660,6 +1905,7 @@ mod tests {
             atlas: &atlas,
             background_batch: &background_batch,
             batch: &GlyphQuadBatch::default(),
+            decoration_batch: &BackgroundQuadBatch::default(),
             cursor_batch: &BackgroundQuadBatch::default(),
             width: 1,
             height: 1,
@@ -1715,6 +1961,7 @@ mod tests {
             atlas: &atlas,
             background_batch: &BackgroundQuadBatch::default(),
             batch: &GlyphQuadBatch::default(),
+            decoration_batch: &BackgroundQuadBatch::default(),
             cursor_batch: &cursor_batch,
             width: 1,
             height: 1,

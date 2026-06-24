@@ -10,7 +10,8 @@ use crate::font::{RasterizedGlyphBatch, RasterizedGlyphCache};
 use crate::renderer::{
     BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, CursorQuadConfig,
     CursorQuadPlanner, GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, GlyphQuadBatch,
-    GlyphQuadConfig, GlyphQuadPlanner, RenderPlan, RenderPlanner, WgpuSurfaceBackend,
+    GlyphQuadConfig, GlyphQuadPlanner, RenderPlan, RenderPlanner, TextDecorationQuadConfig,
+    TextDecorationQuadPlanner, WgpuSurfaceBackend,
 };
 use crate::{Terminal, TerminalConfig};
 
@@ -475,6 +476,12 @@ impl GpuTerminalTextRunner for NativeGpuContext {
         })
         .plan(&frame.plan)
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
+        let decoration_batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
+            cell_width_px: frame.slot_width,
+            cell_height_px: frame.slot_height,
+        })
+        .plan(&frame.plan)
+        .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
         let cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
             cell_width_px: frame.slot_width,
             cell_height_px: frame.slot_height,
@@ -495,6 +502,7 @@ impl GpuTerminalTextRunner for NativeGpuContext {
                 image: &frame.image,
                 background_batch: &background_batch,
                 batch: &quad_batch,
+                decoration_batch: &decoration_batch,
                 cursor_batch: &cursor_batch,
                 width: target_width,
                 height: target_height,
@@ -506,6 +514,7 @@ impl GpuTerminalTextRunner for NativeGpuContext {
             glyphs: frame.plan.glyphs.len(),
             background_quads: background_batch.quads.len(),
             quads: quad_batch.quads.len(),
+            decoration_quads: decoration_batch.quads.len(),
             cursor_quads: cursor_batch.quads.len(),
             rasterized_glyphs: frame.batch.rasterized,
             reused_glyphs: frame.batch.reused,
@@ -777,6 +786,8 @@ pub struct GpuTerminalTextReport {
     pub background_quads: usize,
     /// Number of textured glyph quads drawn.
     pub quads: usize,
+    /// Number of solid text-decoration quads drawn after glyph quads.
+    pub decoration_quads: usize,
     /// Number of solid cursor quads drawn after glyph quads.
     pub cursor_quads: usize,
     /// Count of distinct glyphs rasterized from the font.
@@ -821,7 +832,7 @@ fn build_text_atlas_smoke_frame() -> std::result::Result<TextAtlasSmokeFrame, Gp
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
     terminal
-        .write_str("\x1b[42m \x1b[0;31mA😀A")
+        .write_str("\x1b[42m \x1b[0;4;31mA😀A")
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(
@@ -1116,6 +1127,7 @@ fn draw_textured_quad_rgba8(
             pattern,
             source_layout,
             background: None,
+            decoration: None,
             cursor: None,
             vertex_bytes: &textured_quad_vertex_bytes(),
             index_bytes: &textured_quad_index_bytes(),
@@ -1155,6 +1167,19 @@ fn draw_glyph_quads_rgba8(
             index_count: checked_textured_index_count(input.background_batch.indices.len())?,
         })
     };
+    let decoration = if input.decoration_batch.quads.is_empty() {
+        None
+    } else {
+        Some(BackgroundDrawInput {
+            vertex_bytes: background_quad_vertex_bytes(
+                input.decoration_batch,
+                input.width,
+                input.height,
+            )?,
+            index_bytes: background_quad_index_bytes(input.decoration_batch),
+            index_count: checked_textured_index_count(input.decoration_batch.indices.len())?,
+        })
+    };
     let cursor = if input.cursor_batch.quads.is_empty() {
         None
     } else {
@@ -1175,6 +1200,7 @@ fn draw_glyph_quads_rgba8(
             pattern: &pattern,
             source_layout,
             background,
+            decoration,
             cursor,
             vertex_bytes: &vertices,
             index_bytes: &indices,
@@ -1190,6 +1216,7 @@ struct GlyphDrawInput<'a> {
     image: &'a GlyphAtlasImage,
     background_batch: &'a BackgroundQuadBatch,
     batch: &'a GlyphQuadBatch,
+    decoration_batch: &'a BackgroundQuadBatch,
     cursor_batch: &'a BackgroundQuadBatch,
     width: u32,
     height: u32,
@@ -1199,6 +1226,7 @@ struct TexturedDrawInput<'a> {
     pattern: &'a UploadPattern,
     source_layout: UploadPatternLayout,
     background: Option<BackgroundDrawInput>,
+    decoration: Option<BackgroundDrawInput>,
     cursor: Option<BackgroundDrawInput>,
     vertex_bytes: &'a [u8],
     index_bytes: &'a [u8],
@@ -1277,6 +1305,11 @@ fn draw_textured_vertices_rgba8(
     let buffer_layout = validate_textured_draw_buffers(&input)?;
     let background_layout = input
         .background
+        .as_ref()
+        .map(validate_background_draw_buffers)
+        .transpose()?;
+    let decoration_layout = input
+        .decoration
         .as_ref()
         .map(validate_background_draw_buffers)
         .transpose()?;
@@ -1509,6 +1542,85 @@ fn draw_textured_vertices_rgba8(
     } else {
         None
     };
+    let decoration_draw = if let (Some(decoration), Some(layout)) =
+        (&input.decoration, decoration_layout)
+    {
+        let decoration_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("gromaq-decoration-quad-shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(BACKGROUND_QUAD_WGSL)),
+        });
+        let decoration_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("gromaq-decoration-quad-pipeline-layout"),
+                bind_group_layouts: &[],
+                immediate_size: 0,
+            });
+        let decoration_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("gromaq-decoration-quad-pipeline"),
+            layout: Some(&decoration_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &decoration_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: 24,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x2,
+                            offset: 0,
+                            shader_location: 0,
+                        },
+                        wgpu::VertexAttribute {
+                            format: wgpu::VertexFormat::Float32x4,
+                            offset: 8,
+                            shader_location: 1,
+                        },
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &decoration_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let decoration_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-decoration-quad-vertices"),
+            size: layout.vertex_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let decoration_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("gromaq-decoration-quad-indices"),
+            size: layout.index_buffer_size,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&decoration_vertex_buffer, 0, &decoration.vertex_bytes);
+        queue.write_buffer(&decoration_index_buffer, 0, &decoration.index_bytes);
+        Some((
+            decoration_pipeline,
+            decoration_vertex_buffer,
+            decoration_index_buffer,
+            layout.index_count,
+        ))
+    } else {
+        None
+    };
     let cursor_draw = if let (Some(cursor), Some(layout)) = (&input.cursor, cursor_layout) {
         let cursor_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("gromaq-cursor-quad-shader"),
@@ -1634,6 +1746,14 @@ fn draw_textured_vertices_rgba8(
         pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_index_buffer(index_buffer.slice(..), input.index_format);
         pass.draw_indexed(0..buffer_layout.index_count, 0, 0..1);
+        if let Some((decoration_pipeline, vertex_buffer, index_buffer, index_count)) =
+            &decoration_draw
+        {
+            pass.set_pipeline(decoration_pipeline);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..*index_count, 0, 0..1);
+        }
         if let Some((cursor_pipeline, vertex_buffer, index_buffer, index_count)) = &cursor_draw {
             pass.set_pipeline(cursor_pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
@@ -1947,6 +2067,7 @@ mod tests {
             pattern,
             source_layout,
             background: None,
+            decoration: None,
             cursor: None,
             vertex_bytes,
             index_bytes,

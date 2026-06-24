@@ -1,7 +1,8 @@
 use gromaq::renderer::{
     BackgroundQuadConfig, BackgroundQuadError, BackgroundQuadPlanner, CursorQuadConfig,
     CursorQuadPlanner, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadError,
-    GlyphQuadPlanner, PlannedGlyph, RenderPlan, RenderPlanner,
+    GlyphQuadPlanner, PlannedGlyph, PlannedTextDecoration, RenderPlan, RenderPlanner,
+    TextDecorationKind, TextDecorationQuadConfig, TextDecorationQuadPlanner,
 };
 use gromaq::{CursorShape, CursorSnapshot, Style, Terminal, TerminalConfig};
 
@@ -214,6 +215,7 @@ fn background_quad_planner_rejects_invalid_dimensions() {
         },
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
+        decorations: Vec::new(),
         glyphs: Vec::new(),
     };
 
@@ -221,6 +223,184 @@ fn background_quad_planner_rejects_invalid_dimensions() {
         BackgroundQuadPlanner::new(BackgroundQuadConfig {
             cell_width_px: 0,
             cell_height_px: 16,
+        })
+        .plan(&plan)
+        .unwrap_err(),
+        BackgroundQuadError::ZeroDimension
+    );
+}
+
+#[test]
+fn render_planner_extracts_straight_text_decorations() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+    terminal
+        .write_str(
+            "\x1b[4;58:2:17:34:51mAB\
+             \x1b[0;21mCD\
+             \x1b[0;53mE\
+             \x1b[0;9mF\
+             \x1b[0;8;4mG",
+        )
+        .unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(12).unwrap());
+    let mut render_planner = RenderPlanner::new(14);
+
+    let plan = render_planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(
+        plan.decorations,
+        vec![
+            PlannedTextDecoration {
+                row: 0,
+                col: 0,
+                cols: 2,
+                kind: TextDecorationKind::Underline,
+                color_rgba8: [17, 34, 51, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 2,
+                cols: 2,
+                kind: TextDecorationKind::DoubleUnderlineTop,
+                color_rgba8: [229, 229, 229, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 2,
+                cols: 2,
+                kind: TextDecorationKind::DoubleUnderlineBottom,
+                color_rgba8: [229, 229, 229, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 4,
+                cols: 1,
+                kind: TextDecorationKind::Overline,
+                color_rgba8: [229, 229, 229, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 5,
+                cols: 1,
+                kind: TextDecorationKind::Strikethrough,
+                color_rgba8: [229, 229, 229, 255],
+            },
+        ]
+    );
+}
+
+#[test]
+fn text_decoration_quad_planner_builds_line_geometry() {
+    let plan = RenderPlan {
+        viewport_cols: 4,
+        viewport_rows: 2,
+        cursor: CursorSnapshot {
+            row: 0,
+            col: 0,
+            visible: true,
+            shape: CursorShape::Block,
+            blinking: true,
+        },
+        clear_regions: Vec::new(),
+        backgrounds: Vec::new(),
+        decorations: vec![
+            PlannedTextDecoration {
+                row: 0,
+                col: 0,
+                cols: 2,
+                kind: TextDecorationKind::Underline,
+                color_rgba8: [255, 0, 0, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 2,
+                cols: 1,
+                kind: TextDecorationKind::DoubleUnderlineTop,
+                color_rgba8: [0, 255, 0, 255],
+            },
+            PlannedTextDecoration {
+                row: 0,
+                col: 3,
+                cols: 1,
+                kind: TextDecorationKind::DoubleUnderlineBottom,
+                color_rgba8: [0, 0, 255, 255],
+            },
+            PlannedTextDecoration {
+                row: 1,
+                col: 0,
+                cols: 1,
+                kind: TextDecorationKind::Overline,
+                color_rgba8: [255, 255, 0, 255],
+            },
+            PlannedTextDecoration {
+                row: 1,
+                col: 1,
+                cols: 1,
+                kind: TextDecorationKind::Strikethrough,
+                color_rgba8: [255, 0, 255, 255],
+            },
+        ],
+        glyphs: Vec::new(),
+    };
+
+    let batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
+        cell_width_px: 8,
+        cell_height_px: 20,
+    })
+    .plan(&plan)
+    .unwrap();
+
+    assert_eq!(batch.quads.len(), 5);
+    assert_eq!(
+        batch.indices,
+        vec![
+            0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16,
+            17, 18, 16, 18, 19,
+        ]
+    );
+    assert_eq!(batch.quads[0].vertices[0].position, [0.0, 18.0]);
+    assert_eq!(batch.quads[0].vertices[2].position, [16.0, 20.0]);
+    assert_eq!(batch.quads[0].vertices[0].color_rgba, rgba(255, 0, 0, 1.0));
+    assert_eq!(batch.quads[1].vertices[0].position, [16.0, 14.0]);
+    assert_eq!(batch.quads[1].vertices[2].position, [24.0, 16.0]);
+    assert_eq!(batch.quads[2].vertices[0].position, [24.0, 18.0]);
+    assert_eq!(batch.quads[2].vertices[2].position, [32.0, 20.0]);
+    assert_eq!(batch.quads[3].vertices[0].position, [0.0, 20.0]);
+    assert_eq!(batch.quads[3].vertices[2].position, [8.0, 22.0]);
+    assert_eq!(batch.quads[4].vertices[0].position, [8.0, 29.0]);
+    assert_eq!(batch.quads[4].vertices[2].position, [16.0, 31.0]);
+}
+
+#[test]
+fn text_decoration_quad_planner_rejects_invalid_dimensions() {
+    let plan = RenderPlan {
+        viewport_cols: 1,
+        viewport_rows: 1,
+        cursor: CursorSnapshot {
+            row: 0,
+            col: 0,
+            visible: true,
+            shape: CursorShape::Block,
+            blinking: true,
+        },
+        clear_regions: Vec::new(),
+        backgrounds: Vec::new(),
+        decorations: Vec::new(),
+        glyphs: Vec::new(),
+    };
+
+    assert_eq!(
+        TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
+            cell_width_px: 8,
+            cell_height_px: 0,
         })
         .plan(&plan)
         .unwrap_err(),
@@ -247,6 +427,7 @@ fn cursor_quad_planner_builds_cursor_shapes() {
         },
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
+        decorations: Vec::new(),
         glyphs: Vec::new(),
     };
 
@@ -290,6 +471,7 @@ fn cursor_quad_planner_skips_invisible_or_out_of_bounds_cursor() {
         },
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
+        decorations: Vec::new(),
         glyphs: Vec::new(),
     };
 
@@ -327,6 +509,7 @@ fn glyph_quad_planner_rejects_invalid_atlas_dimensions() {
                 },
                 clear_regions: Vec::new(),
                 backgrounds: Vec::new(),
+                decorations: Vec::new(),
                 glyphs: Vec::new(),
             })
             .is_err()
@@ -356,6 +539,7 @@ fn glyph_quad_planner_rejects_slots_outside_the_atlas_image() {
         },
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
+        decorations: Vec::new(),
         glyphs: vec![PlannedGlyph {
             row: 0,
             col: 0,
@@ -400,6 +584,7 @@ fn glyph_quad_planner_rejects_overflowing_atlas_coordinates() {
         },
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
+        decorations: Vec::new(),
         glyphs: vec![PlannedGlyph {
             row: 0,
             col: 0,

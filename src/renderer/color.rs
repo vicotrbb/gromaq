@@ -32,6 +32,20 @@ pub(super) fn style_background_rgba8(style: Style) -> Option<[u8; 4]> {
     Some([red, green, blue, 255])
 }
 
+pub(super) fn decoration_color_rgba8(decoration_color: Color, style: Style) -> [u8; 4] {
+    let color = if decoration_color == Color::Default {
+        if style.inverse {
+            style.background
+        } else {
+            style.foreground
+        }
+    } else {
+        decoration_color
+    };
+    let [red, green, blue] = color_rgb8(color);
+    [red, green, blue, 255]
+}
+
 pub(super) fn rgba8_to_normalized([red, green, blue, alpha]: [u8; 4]) -> [f32; 4] {
     [
         f32::from(red) / 255.0,

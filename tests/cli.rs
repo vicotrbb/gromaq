@@ -149,6 +149,7 @@ impl GpuTerminalTextRunner for MockContext {
             glyphs: 3,
             background_quads: 1,
             quads: 3,
+            decoration_quads: 1,
             cursor_quads: 1,
             rasterized_glyphs: 2,
             reused_glyphs: 1,
@@ -947,6 +948,7 @@ fn gpu_terminal_text_smoke_cli_reports_draw_result() {
     assert!(exit.stdout.contains("glyphs: 3"));
     assert!(exit.stdout.contains("background quads: 1"));
     assert!(exit.stdout.contains("quads: 3"));
+    assert!(exit.stdout.contains("decoration quads: 1"));
     assert!(exit.stdout.contains("cursor quads: 1"));
     assert!(
         exit.stdout

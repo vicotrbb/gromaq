@@ -151,7 +151,7 @@ fn wgpu_renderer_can_plan_full_viewport_when_dirty_regions_are_disabled() {
 #[test]
 fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
-    terminal.write_str("\x1b[48:2:1:2:3mABA").unwrap();
+    terminal.write_str("\x1b[48:2:1:2:3;4mABA").unwrap();
     let dirty = terminal.take_dirty_regions();
     let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
     renderer
@@ -171,6 +171,8 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     assert_eq!(frame.batch.indices.len(), plan.glyphs.len() * 6);
     assert_eq!(frame.background_batch.quads.len(), 1);
     assert_eq!(frame.background_batch.indices.len(), 6);
+    assert_eq!(frame.decoration_batch.quads.len(), 1);
+    assert_eq!(frame.decoration_batch.indices.len(), 6);
     assert_eq!(frame.cursor_batch.quads.len(), 1);
     assert_eq!(frame.cursor_batch.indices.len(), 6);
     assert_eq!(frame.atlas.occupied_slots, 2);

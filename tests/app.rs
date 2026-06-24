@@ -916,6 +916,7 @@ fn native_window_surface_presents_terminal_glyph_frame_through_backend() {
             atlas: &atlas,
             background_batch: &BackgroundQuadBatch::default(),
             batch: &batch,
+            decoration_batch: &BackgroundQuadBatch::default(),
             cursor_batch: &BackgroundQuadBatch::default(),
             width: 2,
             height: 2,

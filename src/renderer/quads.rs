@@ -4,7 +4,9 @@ use crate::terminal::{CursorShape, CursorSnapshot};
 
 use super::atlas::GlyphEntry;
 use super::color::{rgba8_to_normalized, style_foreground_rgba};
-use super::{PlannedBackground, PlannedGlyph, RenderPlan};
+use super::{
+    PlannedBackground, PlannedGlyph, PlannedTextDecoration, RenderPlan, TextDecorationKind,
+};
 
 /// Pixel layout used to build solid background quads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -136,6 +138,115 @@ impl BackgroundQuadPlanner {
             ],
         }
     }
+}
+
+/// Pixel layout used to build solid text-decoration quads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextDecorationQuadConfig {
+    /// Terminal cell width in pixels.
+    pub cell_width_px: u32,
+    /// Terminal cell height in pixels.
+    pub cell_height_px: u32,
+}
+
+/// Deterministic CPU-side planner for straight terminal text-decoration quads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextDecorationQuadPlanner {
+    config: TextDecorationQuadConfig,
+}
+
+impl TextDecorationQuadPlanner {
+    /// Create a text-decoration quad planner.
+    pub fn new(config: TextDecorationQuadConfig) -> Self {
+        Self { config }
+    }
+
+    /// Build solid decoration quads and triangle indices from a render plan.
+    pub fn plan(
+        &self,
+        plan: &RenderPlan,
+    ) -> std::result::Result<BackgroundQuadBatch, BackgroundQuadError> {
+        self.validate_config()?;
+        let mut quads = Vec::new();
+        quads
+            .try_reserve_exact(plan.decorations.len())
+            .map_err(|_| BackgroundQuadError::IndexCountTooLarge)?;
+        let mut indices = Vec::new();
+        indices
+            .try_reserve_exact(checked_background_quad_index_capacity(
+                plan.decorations.len(),
+            )?)
+            .map_err(|_| BackgroundQuadError::IndexCountTooLarge)?;
+
+        for decoration in &plan.decorations {
+            let quad = self.plan_decoration(*decoration);
+            let base = checked_background_quad_base_index(quads.len())?;
+            indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
+            quads.push(quad);
+        }
+
+        Ok(BackgroundQuadBatch { quads, indices })
+    }
+
+    fn validate_config(&self) -> std::result::Result<(), BackgroundQuadError> {
+        if self.config.cell_width_px == 0 || self.config.cell_height_px == 0 {
+            return Err(BackgroundQuadError::ZeroDimension);
+        }
+        Ok(())
+    }
+
+    fn plan_decoration(&self, decoration: PlannedTextDecoration) -> BackgroundQuad {
+        let cell_width = self.config.cell_width_px as f32;
+        let cell_height = self.config.cell_height_px as f32;
+        let x0 = f32::from(decoration.col) * cell_width;
+        let x1 = x0 + (cell_width * f32::from(decoration.cols));
+        let row_y0 = f32::from(decoration.row) * cell_height;
+        let row_y1 = row_y0 + cell_height;
+        let thickness = text_decoration_stroke_px(cell_height);
+        let gap = thickness;
+        let (y0, y1) = match decoration.kind {
+            TextDecorationKind::Underline => (row_y1 - thickness, row_y1),
+            TextDecorationKind::DoubleUnderlineTop => {
+                (row_y1 - (thickness * 2.0) - gap, row_y1 - thickness - gap)
+            }
+            TextDecorationKind::DoubleUnderlineBottom => (row_y1 - thickness, row_y1),
+            TextDecorationKind::Overline => (row_y0, row_y0 + thickness),
+            TextDecorationKind::Strikethrough => {
+                let center = row_y0 + (cell_height / 2.0);
+                let y0 = center - (thickness / 2.0);
+                (y0, y0 + thickness)
+            }
+        };
+        let color_rgba = rgba8_to_normalized(decoration.color_rgba8);
+
+        BackgroundQuad {
+            row: decoration.row,
+            col: decoration.col,
+            cols: decoration.cols,
+            vertices: [
+                BackgroundVertex {
+                    position: [x0, y0],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x1, y0],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x1, y1],
+                    color_rgba,
+                },
+                BackgroundVertex {
+                    position: [x0, y1],
+                    color_rgba,
+                },
+            ],
+        }
+    }
+}
+
+fn text_decoration_stroke_px(cell_height: f32) -> f32 {
+    (cell_height / 10.0).ceil().clamp(1.0, cell_height)
 }
 
 /// Pixel layout used to build solid cursor quads.
