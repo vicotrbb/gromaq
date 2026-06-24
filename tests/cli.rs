@@ -487,6 +487,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert!(exit.stdout.contains("frame interval max ns: 8000000\n"));
     assert!(exit.stdout.contains("frame interval p95 ns: 8000000\n"));
     assert!(exit.stdout.contains("dropped frames: 1\n"));
+    assert!(exit.stdout.contains("frame pacing accepted: false\n"));
     let _elapsed_ns = exit
         .stdout
         .lines()
