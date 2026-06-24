@@ -181,6 +181,7 @@ size_px = 16.5
 background = "#202127"
 foreground = "#e8e2d6"
 cursor = "#f4c06a"
+surface_padding_px = 12
 
 [performance]
 target_fps = 144

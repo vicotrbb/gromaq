@@ -1,10 +1,10 @@
 //! Owned terminal glyph-frame preparation before native surface presentation.
 
 use super::{
-    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, CursorQuadConfig,
-    CursorQuadPlanner, GlyphAtlasImage, GlyphBitmap, GlyphQuadBatch, GlyphQuadConfig,
-    GlyphQuadPlanner, RenderPlan, SurfaceFrameError, TextDecorationQuadConfig,
-    TextDecorationQuadPlanner,
+    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, BackgroundVertex,
+    CursorQuadConfig, CursorQuadPlanner, GlyphAtlasImage, GlyphBitmap, GlyphQuadBatch,
+    GlyphQuadConfig, GlyphQuadPlanner, GlyphVertex, RenderPlan, SurfaceFrameError,
+    TextDecorationQuadConfig, TextDecorationQuadPlanner,
 };
 
 /// Glyph frame data ready for presentation to a native surface.
@@ -48,6 +48,7 @@ impl PreparedSurfaceGlyphFrame {
         glyphs: &[GlyphBitmap],
         clear_color: [f64; 4],
         cursor_color_rgba8: [u8; 4],
+        surface_padding_px: u16,
     ) -> std::result::Result<Self, SurfaceFrameError> {
         if plan.glyphs.is_empty() {
             return Err(SurfaceFrameError::InvalidFrame(
@@ -82,11 +83,13 @@ impl PreparedSurfaceGlyphFrame {
             "surface glyph frame width",
             plan.viewport_cols,
             slot_width,
+            surface_padding_px,
         )?;
         let height = checked_surface_frame_pixel_dimension(
             "surface glyph frame height",
             plan.viewport_rows,
             slot_height,
+            surface_padding_px,
         )?;
         let padded = glyphs
             .iter()
@@ -99,7 +102,7 @@ impl PreparedSurfaceGlyphFrame {
         let columns = atlas_columns_for_glyphs(&padded);
         let atlas = GlyphAtlasImage::pack_rgba8(slot_width, slot_height, columns, &padded)
             .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
-        let batch = GlyphQuadPlanner::new(GlyphQuadConfig {
+        let mut batch = GlyphQuadPlanner::new(GlyphQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
             atlas_slot_width_px: slot_width,
@@ -110,25 +113,29 @@ impl PreparedSurfaceGlyphFrame {
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
-        let background_batch = BackgroundQuadPlanner::new(BackgroundQuadConfig {
+        let mut background_batch = BackgroundQuadPlanner::new(BackgroundQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
-        let decoration_batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
+        let mut decoration_batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
-        let cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
+        let mut cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
             color_rgba8: cursor_color_rgba8,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
+        translate_glyph_batch(&mut batch, surface_padding_px);
+        translate_background_batch(&mut background_batch, surface_padding_px);
+        translate_background_batch(&mut decoration_batch, surface_padding_px);
+        translate_background_batch(&mut cursor_batch, surface_padding_px);
         Ok(Self {
             atlas,
             background_batch,
@@ -185,10 +192,52 @@ fn checked_surface_frame_pixel_dimension(
     label: &'static str,
     cells: u16,
     cell_size_px: u32,
+    surface_padding_px: u16,
 ) -> std::result::Result<u32, SurfaceFrameError> {
-    u32::from(cells).checked_mul(cell_size_px).ok_or_else(|| {
-        SurfaceFrameError::InvalidFrame(format!("{label} is too large to represent"))
-    })
+    u32::from(cells)
+        .checked_mul(cell_size_px)
+        .and_then(|cell_pixels| {
+            u32::from(surface_padding_px)
+                .checked_mul(2)
+                .and_then(|padding_pixels| cell_pixels.checked_add(padding_pixels))
+        })
+        .ok_or_else(|| {
+            SurfaceFrameError::InvalidFrame(format!("{label} is too large to represent"))
+        })
+}
+
+fn translate_glyph_batch(batch: &mut GlyphQuadBatch, surface_padding_px: u16) {
+    if surface_padding_px == 0 {
+        return;
+    }
+    let offset = f32::from(surface_padding_px);
+    for quad in &mut batch.quads {
+        for vertex in &mut quad.vertices {
+            translate_glyph_vertex(vertex, offset);
+        }
+    }
+}
+
+fn translate_glyph_vertex(vertex: &mut GlyphVertex, offset: f32) {
+    vertex.position[0] += offset;
+    vertex.position[1] += offset;
+}
+
+fn translate_background_batch(batch: &mut BackgroundQuadBatch, surface_padding_px: u16) {
+    if surface_padding_px == 0 {
+        return;
+    }
+    let offset = f32::from(surface_padding_px);
+    for quad in &mut batch.quads {
+        for vertex in &mut quad.vertices {
+            translate_background_vertex(vertex, offset);
+        }
+    }
+}
+
+fn translate_background_vertex(vertex: &mut BackgroundVertex, offset: f32) {
+    vertex.position[0] += offset;
+    vertex.position[1] += offset;
 }
 
 fn atlas_columns_for_glyphs(glyphs: &[GlyphBitmap]) -> u32 {
@@ -296,6 +345,7 @@ mod tests {
             &glyphs,
             [0.0, 0.0, 0.0, 1.0],
             [244, 192, 106, 255],
+            0,
         )
         .unwrap_err();
 

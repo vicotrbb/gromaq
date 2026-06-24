@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{GromaqError, Result};
 
+/// Maximum supported visual surface padding in physical pixels.
+pub const MAX_SURFACE_PADDING_PX: u16 = 512;
+
 /// Theme section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -14,6 +17,8 @@ pub struct ThemeSettings {
     pub foreground: String,
     /// Cursor color as `#RRGGBB`.
     pub cursor: String,
+    /// Empty space around rendered terminal cells in physical pixels.
+    pub surface_padding_px: u16,
 }
 
 impl Default for ThemeSettings {
@@ -22,6 +27,7 @@ impl Default for ThemeSettings {
             background: "#202127".to_owned(),
             foreground: "#e8e2d6".to_owned(),
             cursor: "#f4c06a".to_owned(),
+            surface_padding_px: 12,
         }
     }
 }
@@ -32,6 +38,12 @@ impl ThemeSettings {
         self.background_rgb8()?;
         self.foreground_rgb8()?;
         self.cursor_rgb8()?;
+        if self.surface_padding_px > MAX_SURFACE_PADDING_PX {
+            return Err(GromaqError::InvalidThemePadding {
+                maximum: MAX_SURFACE_PADDING_PX,
+                actual: self.surface_padding_px,
+            });
+        }
         Ok(())
     }
 

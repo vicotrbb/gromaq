@@ -239,6 +239,7 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
     assert!(exit.stdout.contains("[theme]"));
+    assert!(exit.stdout.contains("surface_padding_px = 12"));
     assert!(exit.stdout.contains("[performance]"));
     let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
     assert_eq!(parsed, GromaqConfig::default());
@@ -267,6 +268,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
+        surface_padding_px = 18
 
         [performance]
         target_fps = 120
@@ -294,6 +296,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme background: #1f2028"));
     assert!(exit.stdout.contains("theme foreground: #e8e2d6"));
     assert!(exit.stdout.contains("theme cursor: #f4c06a"));
+    assert!(exit.stdout.contains("theme surface padding px: 18"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: true"));
     assert!(exit.stderr.is_empty());

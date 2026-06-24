@@ -98,6 +98,7 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
         &glyphs.bitmaps,
         renderer.config().clear_color,
         renderer.config().cursor_color_rgba8,
+        renderer.config().surface_padding_px,
     ) {
         Ok(prepared) => prepared,
         Err(error) => return runtime_glyph_frame_smoke_error(error),

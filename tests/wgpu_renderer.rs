@@ -76,6 +76,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.theme.background = "#1f2028".to_owned();
     config.theme.foreground = "#e8e2d6".to_owned();
     config.theme.cursor = "#f4c06a".to_owned();
+    config.theme.surface_padding_px = 18;
 
     let renderer_config = RendererConfig::from_gromaq_config(&config).unwrap();
 
@@ -93,6 +94,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     );
     assert_eq!(renderer_config.default_foreground_rgb8, [232, 226, 214]);
     assert_eq!(renderer_config.cursor_color_rgba8, [244, 192, 106, 255]);
+    assert_eq!(renderer_config.surface_padding_px, 18);
 }
 
 #[test]
@@ -181,6 +183,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
         &glyphs.bitmaps,
         [0.0, 0.0, 0.0, 1.0],
         [244, 192, 106, 255],
+        12,
     )
     .unwrap();
     let frame = prepared.as_surface_glyph_frame();
@@ -193,6 +196,16 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     assert_eq!(frame.decoration_batch.indices.len(), 6);
     assert_eq!(frame.cursor_batch.quads.len(), 1);
     assert_eq!(frame.cursor_batch.indices.len(), 6);
+    assert_eq!(frame.batch.quads[0].vertices[0].position, [12.0, 12.0]);
+    assert_eq!(
+        frame.background_batch.quads[0].vertices[0].position,
+        [12.0, 12.0]
+    );
+    let planned_cell_width = (frame.width - 24) as f32 / f32::from(plan.viewport_cols);
+    assert_eq!(
+        frame.cursor_batch.quads[0].vertices[0].position,
+        [12.0 + f32::from(plan.cursor.col) * planned_cell_width, 12.0]
+    );
     assert_eq!(
         frame.cursor_batch.quads[0].vertices[0].color_rgba,
         [
@@ -203,7 +216,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
         ]
     );
     assert_eq!(frame.atlas.occupied_slots, 2);
-    assert!(frame.width > 0);
-    assert!(frame.height > 0);
+    assert!(frame.width >= 24);
+    assert!(frame.height >= 24);
     assert!(frame.atlas.rgba.chunks_exact(4).any(|pixel| pixel[3] > 0));
 }

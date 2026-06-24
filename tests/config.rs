@@ -156,6 +156,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
+        surface_padding_px = 18
         "##,
     )
     .unwrap();
@@ -163,6 +164,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.background_rgb8().unwrap(), [31, 32, 40]);
     assert_eq!(config.theme.foreground_rgb8().unwrap(), [232, 226, 214]);
     assert_eq!(config.theme.cursor_rgb8().unwrap(), [244, 192, 106]);
+    assert_eq!(config.theme.surface_padding_px, 18);
 }
 
 #[test]
@@ -201,6 +203,25 @@ fn invalid_theme_colors_are_rejected() {
             } if actual_field == field
         ));
     }
+}
+
+#[test]
+fn invalid_theme_surface_padding_is_rejected() {
+    let error = GromaqConfig::from_toml_str(
+        r#"
+        [theme]
+        surface_padding_px = 513
+        "#,
+    )
+    .unwrap_err();
+
+    assert!(matches!(
+        error,
+        GromaqError::InvalidThemePadding {
+            maximum: 512,
+            actual: 513,
+        }
+    ));
 }
 
 #[test]

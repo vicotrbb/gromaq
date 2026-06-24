@@ -58,6 +58,8 @@ pub struct RendererConfig {
     pub default_foreground_rgb8: [u8; 3],
     /// Cursor color in RGBA8.
     pub cursor_color_rgba8: [u8; 4],
+    /// Empty space around rendered terminal cells in physical pixels.
+    pub surface_padding_px: u16,
 }
 
 impl Default for RendererConfig {
@@ -69,6 +71,7 @@ impl Default for RendererConfig {
             clear_color: rgb8_to_clear_color([32, 33, 39]),
             default_foreground_rgb8: [232, 226, 214],
             cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 12,
         }
     }
 }
@@ -84,6 +87,7 @@ impl RendererConfig {
             clear_color: rgb8_to_clear_color(config.theme.background_rgb8()?),
             default_foreground_rgb8: config.theme.foreground_rgb8()?,
             cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),
+            surface_padding_px: config.theme.surface_padding_px,
         })
     }
 }

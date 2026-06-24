@@ -183,6 +183,7 @@ where
         &glyphs.bitmaps,
         clear_color,
         renderer.config().cursor_color_rgba8,
+        renderer.config().surface_padding_px,
     )?;
     let frame = prepared.as_surface_glyph_frame();
     let report = NativeGlyphFramePresentation {

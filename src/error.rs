@@ -68,6 +68,15 @@ pub enum GromaqError {
         actual: String,
     },
 
+    /// Theme surface padding must stay bounded.
+    #[error("theme surface padding must be at most {maximum}px, got {actual}px")]
+    InvalidThemePadding {
+        /// Inclusive upper bound in physical pixels.
+        maximum: u16,
+        /// Actual invalid value in physical pixels.
+        actual: u16,
+    },
+
     /// Configured shell program must contain a usable command.
     #[error("shell program must not be empty")]
     InvalidShellProgram,

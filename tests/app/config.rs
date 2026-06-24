@@ -134,6 +134,7 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     config.theme.background = "#1f2028".to_owned();
     config.theme.foreground = "#e8e2d6".to_owned();
     config.theme.cursor = "#f4c06a".to_owned();
+    config.theme.surface_padding_px = 18;
 
     app.apply_reloadable_gromaq_config(&config).unwrap();
 
@@ -158,6 +159,7 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
         app.renderer().config().cursor_color_rgba8,
         [244, 192, 106, 255]
     );
+    assert_eq!(app.renderer().config().surface_padding_px, 18);
     assert!(!app.runtime().has_shell_session());
 }
 
