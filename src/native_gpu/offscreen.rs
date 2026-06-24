@@ -1,17 +1,20 @@
 use std::borrow::Cow;
 
-use super::draw_buffers::{
-    DrawBufferLayout, checked_textured_index_count, validate_background_draw_buffers,
-    validate_textured_draw_buffers,
-};
+use super::draw_buffers::{checked_textured_index_count, validate_textured_draw_buffers};
 use super::quad_bytes::{
     background_quad_index_bytes, background_quad_vertex_bytes, glyph_quad_index_bytes,
     glyph_quad_vertex_bytes, textured_quad_index_bytes, textured_quad_vertex_bytes,
 };
 use super::readback::read_texture_rgba8;
-use super::shaders::{BACKGROUND_QUAD_WGSL, TEXTURED_QUAD_WGSL};
+use super::shaders::TEXTURED_QUAD_WGSL;
 use super::{GpuBootstrapError, UploadPattern, UploadPatternLayout};
 use crate::renderer::{BackgroundQuadBatch, GlyphAtlasImage, GlyphQuadBatch};
+use solid_quads::{
+    BackgroundDrawInput, SolidQuadDrawLabels, prepare_solid_quad_draw,
+    validate_background_draw_input,
+};
+
+mod solid_quads;
 
 pub(super) fn clear_offscreen_rgba8(
     device: &wgpu::Device,
@@ -255,18 +258,6 @@ struct TexturedDrawInput<'a> {
     height: u32,
 }
 
-struct BackgroundDrawInput {
-    vertex_bytes: Vec<u8>,
-    index_bytes: Vec<u8>,
-    index_count: u32,
-}
-
-fn validate_background_draw_input(
-    input: &BackgroundDrawInput,
-) -> std::result::Result<DrawBufferLayout, GpuBootstrapError> {
-    validate_background_draw_buffers(&input.vertex_bytes, &input.index_bytes, input.index_count)
-}
-
 fn draw_textured_vertices_rgba8(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
@@ -434,241 +425,45 @@ fn draw_textured_vertices_rgba8(
         multiview_mask: None,
         cache: None,
     });
-    let background_draw = if let (Some(background), Some(layout)) =
-        (&input.background, background_layout)
-    {
-        let background_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("gromaq-background-quad-shader"),
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(BACKGROUND_QUAD_WGSL)),
-        });
-        let background_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("gromaq-background-quad-pipeline-layout"),
-                bind_group_layouts: &[],
-                immediate_size: 0,
-            });
-        let background_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("gromaq-background-quad-pipeline"),
-            layout: Some(&background_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &background_shader,
-                entry_point: Some("vs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: 24,
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &[
-                        wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x2,
-                            offset: 0,
-                            shader_location: 0,
-                        },
-                        wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x4,
-                            offset: 8,
-                            shader_location: 1,
-                        },
-                    ],
-                }],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &background_shader,
-                entry_point: Some("fs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Rgba8Unorm,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                ..Default::default()
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview_mask: None,
-            cache: None,
-        });
-        let background_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("gromaq-background-quad-vertices"),
-            size: layout.vertex_buffer_size,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        let background_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("gromaq-background-quad-indices"),
-            size: layout.index_buffer_size,
-            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        queue.write_buffer(&background_vertex_buffer, 0, &background.vertex_bytes);
-        queue.write_buffer(&background_index_buffer, 0, &background.index_bytes);
-        Some((
-            background_pipeline,
-            background_vertex_buffer,
-            background_index_buffer,
-            layout.index_count,
-        ))
-    } else {
-        None
-    };
-    let decoration_draw = if let (Some(decoration), Some(layout)) =
-        (&input.decoration, decoration_layout)
-    {
-        let decoration_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("gromaq-decoration-quad-shader"),
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(BACKGROUND_QUAD_WGSL)),
-        });
-        let decoration_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("gromaq-decoration-quad-pipeline-layout"),
-                bind_group_layouts: &[],
-                immediate_size: 0,
-            });
-        let decoration_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("gromaq-decoration-quad-pipeline"),
-            layout: Some(&decoration_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &decoration_shader,
-                entry_point: Some("vs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: 24,
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &[
-                        wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x2,
-                            offset: 0,
-                            shader_location: 0,
-                        },
-                        wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x4,
-                            offset: 8,
-                            shader_location: 1,
-                        },
-                    ],
-                }],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &decoration_shader,
-                entry_point: Some("fs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Rgba8Unorm,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                ..Default::default()
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview_mask: None,
-            cache: None,
-        });
-        let decoration_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("gromaq-decoration-quad-vertices"),
-            size: layout.vertex_buffer_size,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        let decoration_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("gromaq-decoration-quad-indices"),
-            size: layout.index_buffer_size,
-            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        queue.write_buffer(&decoration_vertex_buffer, 0, &decoration.vertex_bytes);
-        queue.write_buffer(&decoration_index_buffer, 0, &decoration.index_bytes);
-        Some((
-            decoration_pipeline,
-            decoration_vertex_buffer,
-            decoration_index_buffer,
-            layout.index_count,
-        ))
-    } else {
-        None
-    };
-    let cursor_draw = if let (Some(cursor), Some(layout)) = (&input.cursor, cursor_layout) {
-        let cursor_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("gromaq-cursor-quad-shader"),
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(BACKGROUND_QUAD_WGSL)),
-        });
-        let cursor_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("gromaq-cursor-quad-pipeline-layout"),
-                bind_group_layouts: &[],
-                immediate_size: 0,
-            });
-        let cursor_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("gromaq-cursor-quad-pipeline"),
-            layout: Some(&cursor_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &cursor_shader,
-                entry_point: Some("vs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: 24,
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &[
-                        wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x2,
-                            offset: 0,
-                            shader_location: 0,
-                        },
-                        wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x4,
-                            offset: 8,
-                            shader_location: 1,
-                        },
-                    ],
-                }],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &cursor_shader,
-                entry_point: Some("fs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Rgba8Unorm,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                ..Default::default()
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview_mask: None,
-            cache: None,
-        });
-        let cursor_vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("gromaq-cursor-quad-vertices"),
-            size: layout.vertex_buffer_size,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        let cursor_index_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("gromaq-cursor-quad-indices"),
-            size: layout.index_buffer_size,
-            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        queue.write_buffer(&cursor_vertex_buffer, 0, &cursor.vertex_bytes);
-        queue.write_buffer(&cursor_index_buffer, 0, &cursor.index_bytes);
-        Some((
-            cursor_pipeline,
-            cursor_vertex_buffer,
-            cursor_index_buffer,
-            layout.index_count,
-        ))
-    } else {
-        None
-    };
+    let background_draw = prepare_solid_quad_draw(
+        device,
+        queue,
+        input.background.as_ref(),
+        background_layout,
+        SolidQuadDrawLabels {
+            shader: "gromaq-background-quad-shader",
+            pipeline_layout: "gromaq-background-quad-pipeline-layout",
+            pipeline: "gromaq-background-quad-pipeline",
+            vertices: "gromaq-background-quad-vertices",
+            indices: "gromaq-background-quad-indices",
+        },
+    );
+    let decoration_draw = prepare_solid_quad_draw(
+        device,
+        queue,
+        input.decoration.as_ref(),
+        decoration_layout,
+        SolidQuadDrawLabels {
+            shader: "gromaq-decoration-quad-shader",
+            pipeline_layout: "gromaq-decoration-quad-pipeline-layout",
+            pipeline: "gromaq-decoration-quad-pipeline",
+            vertices: "gromaq-decoration-quad-vertices",
+            indices: "gromaq-decoration-quad-indices",
+        },
+    );
+    let cursor_draw = prepare_solid_quad_draw(
+        device,
+        queue,
+        input.cursor.as_ref(),
+        cursor_layout,
+        SolidQuadDrawLabels {
+            shader: "gromaq-cursor-quad-shader",
+            pipeline_layout: "gromaq-cursor-quad-pipeline-layout",
+            pipeline: "gromaq-cursor-quad-pipeline",
+            vertices: "gromaq-cursor-quad-vertices",
+            indices: "gromaq-cursor-quad-indices",
+        },
+    );
     let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("gromaq-textured-quad-vertices"),
         size: buffer_layout.vertex_buffer_size,
@@ -704,32 +499,19 @@ fn draw_textured_vertices_rgba8(
             occlusion_query_set: None,
             multiview_mask: None,
         });
-        if let Some((background_pipeline, vertex_buffer, index_buffer, index_count)) =
-            &background_draw
-        {
-            pass.set_pipeline(background_pipeline);
-            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..*index_count, 0, 0..1);
+        if let Some(background_draw) = &background_draw {
+            background_draw.draw(&mut pass);
         }
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bind_group, &[]);
         pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_index_buffer(index_buffer.slice(..), input.index_format);
         pass.draw_indexed(0..buffer_layout.index_count, 0, 0..1);
-        if let Some((decoration_pipeline, vertex_buffer, index_buffer, index_count)) =
-            &decoration_draw
-        {
-            pass.set_pipeline(decoration_pipeline);
-            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..*index_count, 0, 0..1);
+        if let Some(decoration_draw) = &decoration_draw {
+            decoration_draw.draw(&mut pass);
         }
-        if let Some((cursor_pipeline, vertex_buffer, index_buffer, index_count)) = &cursor_draw {
-            pass.set_pipeline(cursor_pipeline);
-            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..*index_count, 0, 0..1);
+        if let Some(cursor_draw) = &cursor_draw {
+            cursor_draw.draw(&mut pass);
         }
     }
     queue.submit([encoder.finish()]);
