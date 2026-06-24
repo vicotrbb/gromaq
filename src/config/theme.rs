@@ -50,6 +50,17 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
 ];
 /// Built-in visual breathing room around terminal cells.
 pub const DEFAULT_SURFACE_PADDING_PX: u16 = 16;
+/// Name of the built-in default dark theme.
+pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
+
+/// Named built-in terminal theme preset.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ThemePresetSetting {
+    /// Polished dark theme tuned for legibility and native terminal screenshots.
+    #[default]
+    GromaqDark,
+}
 
 /// Configurable terminal cursor shape.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -68,6 +79,8 @@ pub enum CursorStyleSetting {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ThemeSettings {
+    /// Named built-in theme preset used as the baseline for explicit overrides.
+    pub preset: ThemePresetSetting,
     /// Terminal background color as `#RRGGBB`.
     pub background: String,
     /// Default foreground color as `#RRGGBB`.
@@ -89,6 +102,7 @@ pub struct ThemeSettings {
 impl Default for ThemeSettings {
     fn default() -> Self {
         Self {
+            preset: ThemePresetSetting::default(),
             background: DEFAULT_BACKGROUND.to_owned(),
             foreground: DEFAULT_FOREGROUND.to_owned(),
             cursor: DEFAULT_CURSOR.to_owned(),
@@ -154,6 +168,13 @@ impl ThemeSettings {
             colors[index] = parse_hex_rgb("ansi", value)?;
         }
         Ok(colors)
+    }
+}
+
+/// Serialize a theme preset as user-facing TOML text.
+pub fn format_theme_preset(preset: ThemePresetSetting) -> &'static str {
+    match preset {
+        ThemePresetSetting::GromaqDark => DEFAULT_THEME_PRESET,
     }
 }
 

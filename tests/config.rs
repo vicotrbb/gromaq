@@ -1,8 +1,8 @@
 use std::fs;
 
 use gromaq::{
-    ConfigFileReloader, CursorStyleSetting, GromaqConfig, GromaqError, ShellSettings,
-    TerminalConfig,
+    ConfigFileReloader, CursorStyleSetting, DEFAULT_BACKGROUND_RGB8, GromaqConfig, GromaqError,
+    ShellSettings, TerminalConfig, ThemePresetSetting,
 };
 
 #[test]
@@ -208,6 +208,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     let config = GromaqConfig::from_toml_str(
         r##"
         [theme]
+        preset = "gromaq-dark"
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
@@ -225,6 +226,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     )
     .unwrap();
 
+    assert_eq!(config.theme.preset, ThemePresetSetting::GromaqDark);
     assert_eq!(config.theme.background_rgb8().unwrap(), [31, 32, 40]);
     assert_eq!(config.theme.foreground_rgb8().unwrap(), [232, 226, 214]);
     assert_eq!(config.theme.cursor_rgb8().unwrap(), [244, 192, 106]);
@@ -234,6 +236,24 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [0, 0, 1]);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [0, 0, 16]);
     assert_eq!(config.theme.surface_padding_px, 18);
+}
+
+#[test]
+fn theme_toml_config_accepts_named_default_preset() {
+    let config = GromaqConfig::from_toml_str(
+        r#"
+        [theme]
+        preset = "gromaq-dark"
+        "#,
+    )
+    .unwrap();
+
+    assert_eq!(config.theme.preset, ThemePresetSetting::GromaqDark);
+    assert_eq!(
+        config.theme.background_rgb8().unwrap(),
+        DEFAULT_BACKGROUND_RGB8
+    );
+    assert_eq!(config.theme, GromaqConfig::default().theme);
 }
 
 #[test]
@@ -487,6 +507,7 @@ fn config_serializes_to_valid_pretty_toml() {
     assert!(toml.contains("[terminal]"));
     assert!(toml.contains("[shell]"));
     assert!(toml.contains("[theme]"));
+    assert!(toml.contains("preset = \"gromaq-dark\""));
     assert_eq!(parsed, config);
 }
 

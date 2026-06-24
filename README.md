@@ -179,6 +179,7 @@ size_px = 16.5
 line_height_px = 21
 
 [theme]
+preset = "gromaq-dark"
 background = "#0b0f14"
 foreground = "#f2f4f8"
 cursor = "#f6c177"
@@ -191,12 +192,18 @@ ansi = [
   "#6b7280", "#ff8fa3", "#a6e3a1", "#f9e2af",
   "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
 ]
-surface_padding_px = 14
+surface_padding_px = 16
 
 [performance]
 target_fps = 144
 dirty_region_rendering = true
 ```
+
+`gromaq-dark` is the built-in default theme preset. It provides the baseline
+background, foreground, cursor, selection, ANSI palette, cursor style, cursor
+blinking, and surface padding; every field in `[theme]` can still be overridden
+directly in TOML. The theme fields are documented in
+[`documentation/theme.md`](documentation/theme.md).
 
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in
