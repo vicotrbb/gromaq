@@ -1,13 +1,18 @@
-use std::borrow::Cow;
-
 use super::solid_quads::{
     BackgroundDrawInput, SolidQuadDrawLabels, prepare_solid_quad_draw,
     validate_background_draw_input,
 };
 use crate::native_gpu::draw_buffers::validate_textured_draw_buffers;
 use crate::native_gpu::readback::read_texture_rgba8;
-use crate::native_gpu::shaders::TEXTURED_QUAD_WGSL;
 use crate::native_gpu::{GpuBootstrapError, UploadPattern, UploadPatternLayout};
+
+mod pipeline;
+mod textures;
+
+use pipeline::{
+    textured_bind_group, textured_bind_group_layout, textured_pipeline, textured_sampler,
+};
+use textures::{create_source_texture, create_target_texture};
 
 pub(super) struct TexturedDrawInput<'a> {
     pub(super) pattern: &'a UploadPattern,
@@ -50,20 +55,10 @@ pub(super) fn draw_textured_vertices_rgba8(
     let target = create_target_texture(device, input.width, input.height);
     let source_view = source.create_view(&wgpu::TextureViewDescriptor::default());
     let target_view = target.create_view(&wgpu::TextureViewDescriptor::default());
-    let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-        label: Some("gromaq-textured-quad-sampler"),
-        mag_filter: wgpu::FilterMode::Nearest,
-        min_filter: wgpu::FilterMode::Nearest,
-        mipmap_filter: wgpu::MipmapFilterMode::Nearest,
-        ..Default::default()
-    });
+    let sampler = textured_sampler(device);
     let bind_group_layout = textured_bind_group_layout(device);
     let bind_group = textured_bind_group(device, &bind_group_layout, &source_view, &sampler);
-    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-        label: Some("gromaq-textured-quad-shader"),
-        source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(TEXTURED_QUAD_WGSL)),
-    });
-    let pipeline = textured_pipeline(device, &bind_group_layout, &shader);
+    let pipeline = textured_pipeline(device, &bind_group_layout);
     let background_draw = prepare_solid_quad_draw(
         device,
         queue,
@@ -155,163 +150,4 @@ pub(super) fn draw_textured_vertices_rgba8(
     }
     queue.submit([encoder.finish()]);
     read_texture_rgba8(device, queue, &target, input.width, input.height)
-}
-
-fn create_source_texture(
-    device: &wgpu::Device,
-    queue: &wgpu::Queue,
-    input: &TexturedDrawInput<'_>,
-) -> wgpu::Texture {
-    let source = device.create_texture(&wgpu::TextureDescriptor {
-        label: Some("gromaq-textured-quad-source"),
-        size: wgpu::Extent3d {
-            width: input.pattern.width,
-            height: input.pattern.height,
-            depth_or_array_layers: 1,
-        },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
-        view_formats: &[],
-    });
-    queue.write_texture(
-        source.as_image_copy(),
-        &input.pattern.rgba,
-        wgpu::TexelCopyBufferLayout {
-            offset: 0,
-            bytes_per_row: Some(input.source_layout.row_bytes),
-            rows_per_image: Some(input.pattern.height),
-        },
-        wgpu::Extent3d {
-            width: input.pattern.width,
-            height: input.pattern.height,
-            depth_or_array_layers: 1,
-        },
-    );
-    source
-}
-
-fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu::Texture {
-    device.create_texture(&wgpu::TextureDescriptor {
-        label: Some("gromaq-textured-quad-target"),
-        size: wgpu::Extent3d {
-            width,
-            height,
-            depth_or_array_layers: 1,
-        },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    })
-}
-
-fn textured_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
-    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-        label: Some("gromaq-textured-quad-bind-group-layout"),
-        entries: &[
-            wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::FRAGMENT,
-                ty: wgpu::BindingType::Texture {
-                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                    view_dimension: wgpu::TextureViewDimension::D2,
-                    multisampled: false,
-                },
-                count: None,
-            },
-            wgpu::BindGroupLayoutEntry {
-                binding: 1,
-                visibility: wgpu::ShaderStages::FRAGMENT,
-                ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                count: None,
-            },
-        ],
-    })
-}
-
-fn textured_bind_group(
-    device: &wgpu::Device,
-    layout: &wgpu::BindGroupLayout,
-    source_view: &wgpu::TextureView,
-    sampler: &wgpu::Sampler,
-) -> wgpu::BindGroup {
-    device.create_bind_group(&wgpu::BindGroupDescriptor {
-        label: Some("gromaq-textured-quad-bind-group"),
-        layout,
-        entries: &[
-            wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::TextureView(source_view),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: wgpu::BindingResource::Sampler(sampler),
-            },
-        ],
-    })
-}
-
-fn textured_pipeline(
-    device: &wgpu::Device,
-    bind_group_layout: &wgpu::BindGroupLayout,
-    shader: &wgpu::ShaderModule,
-) -> wgpu::RenderPipeline {
-    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-        label: Some("gromaq-textured-quad-pipeline-layout"),
-        bind_group_layouts: &[Some(bind_group_layout)],
-        immediate_size: 0,
-    });
-    device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-        label: Some("gromaq-textured-quad-pipeline"),
-        layout: Some(&pipeline_layout),
-        vertex: wgpu::VertexState {
-            module: shader,
-            entry_point: Some("vs_main"),
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
-            buffers: &[wgpu::VertexBufferLayout {
-                array_stride: 32,
-                step_mode: wgpu::VertexStepMode::Vertex,
-                attributes: &[
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Float32x2,
-                        offset: 0,
-                        shader_location: 0,
-                    },
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Float32x2,
-                        offset: 8,
-                        shader_location: 1,
-                    },
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Float32x4,
-                        offset: 16,
-                        shader_location: 2,
-                    },
-                ],
-            }],
-        },
-        fragment: Some(wgpu::FragmentState {
-            module: shader,
-            entry_point: Some("fs_main"),
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
-            targets: &[Some(wgpu::ColorTargetState {
-                format: wgpu::TextureFormat::Rgba8Unorm,
-                blend: Some(wgpu::BlendState::REPLACE),
-                write_mask: wgpu::ColorWrites::ALL,
-            })],
-        }),
-        primitive: wgpu::PrimitiveState {
-            topology: wgpu::PrimitiveTopology::TriangleList,
-            ..Default::default()
-        },
-        depth_stencil: None,
-        multisample: wgpu::MultisampleState::default(),
-        multiview_mask: None,
-        cache: None,
-    })
 }
