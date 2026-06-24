@@ -165,7 +165,16 @@ fn normalized_color_matches_rgba8(actual: [f32; 4], expected: [u8; 4]) -> bool {
     actual
         .into_iter()
         .zip(expected)
-        .all(|(actual, expected)| (actual - (f32::from(expected) / 255.0)).abs() <= 0.001)
+        .all(|(actual, expected)| (actual - srgb8_to_linear_f32(expected)).abs() <= 0.001)
+}
+
+fn srgb8_to_linear_f32(value: u8) -> f32 {
+    let srgb = f32::from(value) / 255.0;
+    if srgb <= 0.04045 {
+        srgb / 12.92
+    } else {
+        ((srgb + 0.055) / 1.055).powf(2.4)
+    }
 }
 
 fn runtime_glyph_frame_smoke_error(error: impl std::fmt::Display) -> CliExit {

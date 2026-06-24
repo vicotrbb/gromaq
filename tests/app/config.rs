@@ -25,6 +25,24 @@ fn expected_grid_for_window(
     )
 }
 
+fn linear_clear_color(red: u8, green: u8, blue: u8) -> [f64; 4] {
+    [
+        f64::from(srgb8_to_linear_f32(red)),
+        f64::from(srgb8_to_linear_f32(green)),
+        f64::from(srgb8_to_linear_f32(blue)),
+        1.0,
+    ]
+}
+
+fn srgb8_to_linear_f32(value: u8) -> f32 {
+    let srgb = f32::from(value) / 255.0;
+    if srgb <= 0.04045 {
+        srgb / 12.92
+    } else {
+        ((srgb + 0.055) / 1.055).powf(2.4)
+    }
+}
+
 #[test]
 fn native_app_config_builds_terminal_window_attributes() {
     let config = NativeAppConfig::default();
@@ -178,12 +196,7 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     assert_eq!(app.renderer().config().line_height_px, 22);
     assert_eq!(
         app.renderer().config().clear_color,
-        [
-            f64::from(31) / 255.0,
-            f64::from(32) / 255.0,
-            f64::from(40) / 255.0,
-            1.0
-        ]
+        linear_clear_color(31, 32, 40)
     );
     assert_eq!(
         app.renderer().config().default_foreground_rgb8,

@@ -10,11 +10,20 @@ use gromaq::{
 
 fn rgba(red: u8, green: u8, blue: u8, alpha: f32) -> [f32; 4] {
     [
-        f32::from(red) / 255.0,
-        f32::from(green) / 255.0,
-        f32::from(blue) / 255.0,
+        srgb8_to_linear_f32(red),
+        srgb8_to_linear_f32(green),
+        srgb8_to_linear_f32(blue),
         alpha,
     ]
+}
+
+fn srgb8_to_linear_f32(value: u8) -> f32 {
+    let srgb = f32::from(value) / 255.0;
+    if srgb <= 0.04045 {
+        srgb / 12.92
+    } else {
+        ((srgb + 0.055) / 1.055).powf(2.4)
+    }
 }
 
 fn triangle_indices_for_quads(quad_count: usize) -> Vec<u32> {

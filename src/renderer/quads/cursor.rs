@@ -2,7 +2,7 @@ use crate::terminal::{CursorShape, CursorSnapshot};
 
 use super::{BackgroundQuad, BackgroundQuadBatch, BackgroundQuadError, BackgroundVertex};
 use crate::renderer::RenderPlan;
-use crate::renderer::color::rgba8_to_normalized;
+use crate::renderer::color::rgba8_to_linear_normalized;
 
 /// Pixel layout used to build solid cursor quads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,7 +71,7 @@ impl CursorQuadPlanner {
                 (cell_x0, cell_y0, cell_x0 + thickness, cell_y1)
             }
         };
-        let color_rgba = rgba8_to_normalized(self.config.color_rgba8);
+        let color_rgba = rgba8_to_linear_normalized(self.config.color_rgba8);
 
         BackgroundQuad {
             row: cursor.row,

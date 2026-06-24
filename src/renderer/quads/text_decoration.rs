@@ -2,7 +2,7 @@ use super::{
     BackgroundQuad, BackgroundQuadBatch, BackgroundQuadError, BackgroundVertex,
     checked_background_quad_base_index, checked_background_quad_index_capacity,
 };
-use crate::renderer::color::rgba8_to_normalized;
+use crate::renderer::color::rgba8_to_linear_normalized;
 use crate::renderer::{PlannedTextDecoration, RenderPlan, TextDecorationKind};
 
 use geometry::{
@@ -77,7 +77,7 @@ impl TextDecorationQuadPlanner {
         let row_y1 = row_y0 + cell_height;
         let thickness = text_decoration_stroke_px(cell_height);
         let gap = thickness;
-        let color_rgba = rgba8_to_normalized(decoration.color_rgba8);
+        let color_rgba = rgba8_to_linear_normalized(decoration.color_rgba8);
         let geometry = DecorationGeometry {
             decoration,
             x0,

@@ -47,6 +47,33 @@ fn wgpu_renderer_records_last_planned_frame() {
     assert_eq!(renderer.glyph_atlas_metrics().entries, 4);
 }
 
+fn linear_clear_color(red: u8, green: u8, blue: u8) -> [f64; 4] {
+    [
+        f64::from(srgb8_to_linear_f32(red)),
+        f64::from(srgb8_to_linear_f32(green)),
+        f64::from(srgb8_to_linear_f32(blue)),
+        1.0,
+    ]
+}
+
+fn linear_rgba(red: u8, green: u8, blue: u8, alpha: f32) -> [f32; 4] {
+    [
+        srgb8_to_linear_f32(red),
+        srgb8_to_linear_f32(green),
+        srgb8_to_linear_f32(blue),
+        alpha,
+    ]
+}
+
+fn srgb8_to_linear_f32(value: u8) -> f32 {
+    let srgb = f32::from(value) / 255.0;
+    if srgb <= 0.04045 {
+        srgb / 12.92
+    } else {
+        ((srgb + 0.055) / 1.055).powf(2.4)
+    }
+}
+
 #[test]
 fn wgpu_renderer_uses_configured_font_size_for_render_plan() {
     let config = RendererConfig {
@@ -89,15 +116,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     assert_eq!(renderer_config.font_size_px, 17);
     assert_eq!(renderer_config.cell_width_px, 10);
     assert_eq!(renderer_config.line_height_px, 21);
-    assert_eq!(
-        renderer_config.clear_color,
-        [
-            f64::from(31) / 255.0,
-            f64::from(32) / 255.0,
-            f64::from(40) / 255.0,
-            1.0
-        ]
-    );
+    assert_eq!(renderer_config.clear_color, linear_clear_color(31, 32, 40));
     assert_eq!(renderer_config.default_foreground_rgb8, [232, 226, 214]);
     assert_eq!(renderer_config.ansi_colors_rgb8[1], [1, 2, 3]);
     assert_eq!(renderer_config.cursor_color_rgba8, [244, 192, 106, 255]);
@@ -262,12 +281,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     );
     assert_eq!(
         frame.cursor_batch.quads[0].vertices[0].color_rgba,
-        [
-            f32::from(244_u8) / 255.0,
-            f32::from(192_u8) / 255.0,
-            f32::from(106_u8) / 255.0,
-            1.0
-        ]
+        linear_rgba(244, 192, 106, 1.0)
     );
     assert_eq!(frame.atlas.occupied_slots, 2);
     assert!(frame.width >= 24);

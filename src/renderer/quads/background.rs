@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::renderer::color::rgba8_to_normalized;
+use crate::renderer::color::rgba8_to_linear_normalized;
 use crate::renderer::{PlannedBackground, RenderPlan};
 
 /// Pixel layout used to build solid background quads.
@@ -107,7 +107,7 @@ impl BackgroundQuadPlanner {
         let y0 = f32::from(background.row) * cell_height;
         let x1 = x0 + (cell_width * f32::from(background.cols));
         let y1 = y0 + cell_height;
-        let color_rgba = rgba8_to_normalized(background.color_rgba8);
+        let color_rgba = rgba8_to_linear_normalized(background.color_rgba8);
 
         BackgroundQuad {
             row: background.row,
