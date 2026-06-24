@@ -27,6 +27,24 @@ pub struct NativeAppRunReport {
     pub window_height_px: Option<u32>,
     /// Native window scale factor multiplied by 1000, if a window was created.
     pub window_scale_milliscale: Option<u32>,
+    /// Whether the last recorded presentation included a terminal glyph frame.
+    pub glyph_frame_presented: bool,
+    /// Width of the last presented terminal glyph frame in pixels.
+    pub glyph_frame_width: u32,
+    /// Height of the last presented terminal glyph frame in pixels.
+    pub glyph_frame_height: u32,
+    /// Textured glyph quads in the last presented terminal glyph frame.
+    pub glyph_frame_glyph_quads: usize,
+    /// Solid background quads in the last presented terminal glyph frame.
+    pub glyph_frame_background_quads: usize,
+    /// Solid text-decoration quads in the last presented terminal glyph frame.
+    pub glyph_frame_decoration_quads: usize,
+    /// Solid cursor quads in the last presented terminal glyph frame.
+    pub glyph_frame_cursor_quads: usize,
+    /// Packed glyph atlas bytes in the last presented terminal glyph frame.
+    pub glyph_frame_atlas_bytes: usize,
+    /// Occupied glyph atlas slots in the last presented terminal glyph frame.
+    pub glyph_frame_atlas_occupied_slots: usize,
     /// Effective FPS target used for presented-frame interval accounting.
     pub frame_interval_target_fps: u32,
     /// Count of measured intervals between presented frames.
@@ -70,6 +88,15 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) window_width_px: Option<u32>,
     pub(super) window_height_px: Option<u32>,
     pub(super) window_scale_milliscale: Option<u32>,
+    pub(super) glyph_frame_presented: bool,
+    pub(super) glyph_frame_width: u32,
+    pub(super) glyph_frame_height: u32,
+    pub(super) glyph_frame_glyph_quads: usize,
+    pub(super) glyph_frame_background_quads: usize,
+    pub(super) glyph_frame_decoration_quads: usize,
+    pub(super) glyph_frame_cursor_quads: usize,
+    pub(super) glyph_frame_atlas_bytes: usize,
+    pub(super) glyph_frame_atlas_occupied_slots: usize,
     pub(super) frame_interval_target_fps: u32,
 }
 
@@ -109,6 +136,15 @@ impl PresentedFrameIntervals {
             window_width_px: input.window_width_px,
             window_height_px: input.window_height_px,
             window_scale_milliscale: input.window_scale_milliscale,
+            glyph_frame_presented: input.glyph_frame_presented,
+            glyph_frame_width: input.glyph_frame_width,
+            glyph_frame_height: input.glyph_frame_height,
+            glyph_frame_glyph_quads: input.glyph_frame_glyph_quads,
+            glyph_frame_background_quads: input.glyph_frame_background_quads,
+            glyph_frame_decoration_quads: input.glyph_frame_decoration_quads,
+            glyph_frame_cursor_quads: input.glyph_frame_cursor_quads,
+            glyph_frame_atlas_bytes: input.glyph_frame_atlas_bytes,
+            glyph_frame_atlas_occupied_slots: input.glyph_frame_atlas_occupied_slots,
             frame_interval_target_fps: input.frame_interval_target_fps,
             frame_interval_samples: self.samples,
             frame_interval_total_ns: self.total_ns,

@@ -88,6 +88,15 @@ impl NativeAppLauncher for MockAppLauncher {
             window_width_px: Some(2560),
             window_height_px: Some(1600),
             window_scale_milliscale: Some(2000),
+            glyph_frame_presented: true,
+            glyph_frame_width: 2560,
+            glyph_frame_height: 1600,
+            glyph_frame_glyph_quads: 12,
+            glyph_frame_background_quads: 1,
+            glyph_frame_decoration_quads: 0,
+            glyph_frame_cursor_quads: 1,
+            glyph_frame_atlas_bytes: 4096,
+            glyph_frame_atlas_occupied_slots: 8,
             frame_interval_target_fps: 60,
             frame_interval_samples: frames_presented.saturating_sub(1),
             frame_interval_avg_ns: 6_940_000,
@@ -493,7 +502,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 180\nframes presented: 180\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nframe interval target fps: 60\nframe interval target ns: 16666666\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 180\nframes presented: 180\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nelapsed ns: "
     ));
     assert!(exit.stdout.contains("frame interval samples: 179\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));

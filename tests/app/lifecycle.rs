@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
-    NativePtySpawner, RealNativePtySpawner,
+    NativeGlyphFramePresentation, NativePtySpawner, RealNativePtySpawner,
 };
 use gromaq::pty::{PtyConfig, ShellCommand};
 
@@ -180,6 +180,37 @@ fn native_app_lifecycle_reports_window_surface_size_and_scale() {
     assert_eq!(report.window_width_px, Some(2560));
     assert_eq!(report.window_height_px, Some(1600));
     assert_eq!(report.window_scale_milliscale, Some(2000));
+}
+
+#[test]
+fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
+
+    lifecycle.record_glyph_frame_presentation(NativeGlyphFramePresentation {
+        rendered: true,
+        glyph_frame_presented: true,
+        clear_presented: false,
+        width: 2560,
+        height: 1600,
+        glyph_quads: 12,
+        background_quads: 1,
+        decoration_quads: 0,
+        cursor_quads: 1,
+        atlas_bytes: 4096,
+        atlas_occupied_slots: 8,
+    });
+
+    let report = lifecycle.run_report();
+
+    assert!(report.glyph_frame_presented);
+    assert_eq!(report.glyph_frame_width, 2560);
+    assert_eq!(report.glyph_frame_height, 1600);
+    assert_eq!(report.glyph_frame_glyph_quads, 12);
+    assert_eq!(report.glyph_frame_background_quads, 1);
+    assert_eq!(report.glyph_frame_decoration_quads, 0);
+    assert_eq!(report.glyph_frame_cursor_quads, 1);
+    assert_eq!(report.glyph_frame_atlas_bytes, 4096);
+    assert_eq!(report.glyph_frame_atlas_occupied_slots, 8);
 }
 
 #[test]

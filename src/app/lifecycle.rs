@@ -9,7 +9,7 @@ use winit::window::{Window, WindowAttributes};
 
 use crate::config::GromaqConfig;
 
-use super::NativeAppError;
+use super::{NativeAppError, NativeGlyphFramePresentation};
 
 mod report;
 
@@ -152,6 +152,7 @@ pub struct NativeAppLifecycle {
     window_width_px: Option<u32>,
     window_height_px: Option<u32>,
     window_scale_milliscale: Option<u32>,
+    last_glyph_frame_presentation: NativeGlyphFramePresentation,
     frame_intervals: PresentedFrameIntervals,
 }
 
@@ -170,6 +171,7 @@ impl NativeAppLifecycle {
             window_width_px: None,
             window_height_px: None,
             window_scale_milliscale: None,
+            last_glyph_frame_presentation: NativeGlyphFramePresentation::default(),
             frame_intervals: PresentedFrameIntervals::default(),
         }
     }
@@ -272,6 +274,13 @@ impl NativeAppLifecycle {
         }
     }
 
+    /// Record the latest native terminal glyph-frame presentation metrics.
+    pub fn record_glyph_frame_presentation(&mut self, report: NativeGlyphFramePresentation) {
+        if report.glyph_frame_presented {
+            self.last_glyph_frame_presentation = report;
+        }
+    }
+
     /// Next timer deadline for polling PTY output without forcing a redraw.
     pub fn next_pty_pump_deadline(&self, now: Instant) -> Option<Instant> {
         if self.has_window && !self.close_requested {
@@ -352,6 +361,17 @@ impl NativeAppLifecycle {
             window_width_px: self.window_width_px,
             window_height_px: self.window_height_px,
             window_scale_milliscale: self.window_scale_milliscale,
+            glyph_frame_presented: self.last_glyph_frame_presentation.glyph_frame_presented,
+            glyph_frame_width: self.last_glyph_frame_presentation.width,
+            glyph_frame_height: self.last_glyph_frame_presentation.height,
+            glyph_frame_glyph_quads: self.last_glyph_frame_presentation.glyph_quads,
+            glyph_frame_background_quads: self.last_glyph_frame_presentation.background_quads,
+            glyph_frame_decoration_quads: self.last_glyph_frame_presentation.decoration_quads,
+            glyph_frame_cursor_quads: self.last_glyph_frame_presentation.cursor_quads,
+            glyph_frame_atlas_bytes: self.last_glyph_frame_presentation.atlas_bytes,
+            glyph_frame_atlas_occupied_slots: self
+                .last_glyph_frame_presentation
+                .atlas_occupied_slots,
             frame_interval_target_fps: self.frame_interval_target_fps(),
         })
     }

@@ -231,8 +231,9 @@ impl NativeTerminalApp {
         if let Some(window) = &self.window {
             window.pre_present_notify();
         }
-        if let Err(error) = self.present_redraw_frame() {
-            match error {
+        match self.present_redraw_frame() {
+            Ok(report) => self.lifecycle.record_glyph_frame_presentation(report),
+            Err(error) => match error {
                 NativeGlyphFrameError::Surface(
                     SurfaceFrameError::Timeout | SurfaceFrameError::Occluded,
                 ) => {}
@@ -247,7 +248,7 @@ impl NativeTerminalApp {
                     self.startup_error = Some(error.to_string());
                     event_loop.exit();
                 }
-            }
+            },
         }
         match self.lifecycle.on_redraw_requested() {
             NativeAppAction::RequestRedraw => {
