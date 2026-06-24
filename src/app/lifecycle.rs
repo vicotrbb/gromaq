@@ -1,86 +1,20 @@
-//! Native app configuration, user events, and lifecycle state.
+//! Native app lifecycle state.
 
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use winit::dpi::LogicalSize;
-use winit::event_loop::EventLoopProxy;
-use winit::window::{Window, WindowAttributes};
+use super::NativeGlyphFramePresentation;
 
-use crate::config::GromaqConfig;
-
-use super::{NativeAppError, NativeGlyphFramePresentation};
-
+mod config;
+mod event;
 mod report;
 
+pub use config::NativeAppConfig;
+pub use event::{NativeAppEvent, NativeAppEventProxy};
 pub use report::NativeAppRunReport;
 
 use report::{NativeAppRunReportInput, PresentedFrameIntervals};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
-
-/// Native window and frame-loop configuration.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NativeAppConfig {
-    /// Native window title.
-    pub title: String,
-    /// Initial window width in logical pixels.
-    pub width: u32,
-    /// Initial window height in logical pixels.
-    pub height: u32,
-    /// Target frames per second for redraw scheduling.
-    pub target_fps: u32,
-    /// Optional presented-frame limit after which the native app exits.
-    pub exit_after_presented_frames: Option<u64>,
-    /// Request redraws after presented frames until the configured frame limit is reached.
-    pub redraw_until_presented_frame_limit: bool,
-    /// Number of initial presented frames excluded from frame-interval performance metrics.
-    pub frame_interval_warmup_frames: u64,
-}
-
-impl Default for NativeAppConfig {
-    fn default() -> Self {
-        Self {
-            title: "Gromaq".to_owned(),
-            width: 1280,
-            height: 800,
-            target_fps: 144,
-            exit_after_presented_frames: None,
-            redraw_until_presented_frame_limit: false,
-            frame_interval_warmup_frames: 0,
-        }
-    }
-}
-
-impl NativeAppConfig {
-    /// Build native app configuration from validated user configuration.
-    pub fn from_gromaq_config(config: &GromaqConfig) -> Result<Self, NativeAppError> {
-        config
-            .validate()
-            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
-        Ok(Self {
-            target_fps: config.performance.target_fps,
-            ..Self::default()
-        })
-    }
-
-    /// Build `winit` window attributes for the terminal window.
-    pub fn window_attributes(&self) -> WindowAttributes {
-        Window::default_attributes()
-            .with_title(self.title.clone())
-            .with_inner_size(LogicalSize::new(
-                f64::from(self.width),
-                f64::from(self.height),
-            ))
-            .with_visible(true)
-            .with_resizable(true)
-    }
-
-    /// Target frame interval derived from `target_fps`.
-    pub fn target_frame_interval(&self) -> Duration {
-        Duration::from_nanos(NANOS_PER_SECOND / u64::from(self.target_fps.max(1)))
-    }
-}
 
 /// Deterministic action requested by the native app lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -93,52 +27,6 @@ pub enum NativeAppAction {
     RequestRedraw,
     /// Exit the event loop.
     Exit,
-}
-
-/// User events sent into the native app event loop from background workers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NativeAppEvent {
-    /// The PTY background reader observed output and the app should pump it promptly.
-    PtyOutputReady,
-}
-
-/// Clonable sender for native app user events.
-#[derive(Clone)]
-pub struct NativeAppEventProxy {
-    sender: Arc<dyn Fn(NativeAppEvent) + Send + Sync>,
-}
-
-impl NativeAppEventProxy {
-    /// Build a proxy from a custom sender.
-    pub fn from_sender<F>(sender: F) -> Self
-    where
-        F: Fn(NativeAppEvent) + Send + Sync + 'static,
-    {
-        Self {
-            sender: Arc::new(sender),
-        }
-    }
-
-    /// Send one user event into the native app loop.
-    pub fn send(&self, event: NativeAppEvent) {
-        (self.sender)(event);
-    }
-}
-
-impl std::fmt::Debug for NativeAppEventProxy {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter
-            .debug_struct("NativeAppEventProxy")
-            .finish_non_exhaustive()
-    }
-}
-
-impl From<EventLoopProxy<NativeAppEvent>> for NativeAppEventProxy {
-    fn from(proxy: EventLoopProxy<NativeAppEvent>) -> Self {
-        Self::from_sender(move |event| {
-            let _ = proxy.send_event(event);
-        })
-    }
 }
 
 /// Testable native app lifecycle state.
