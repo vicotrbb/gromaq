@@ -39,6 +39,8 @@ fn glyph_atlas_image_rejects_wrong_bitmap_size() {
             slot: 0,
             generation: 0,
         },
+        origin_x: 0,
+        origin_y: 0,
         width: 2,
         height: 2,
         rgba: vec![255; 4],
@@ -80,6 +82,31 @@ fn glyph_bitmap_padding_centers_smaller_glyph_in_target_slot() {
 }
 
 #[test]
+fn glyph_bitmap_terminal_slot_padding_preserves_shaped_baseline_placement() {
+    let glyph = GlyphBitmap {
+        entry: GlyphEntry {
+            slot: 0,
+            generation: 0,
+        },
+        origin_x: 1,
+        origin_y: -3,
+        width: 2,
+        height: 5,
+        rgba: [12, 34, 56, 255].repeat(10),
+    };
+
+    let padded = glyph.padded_to_terminal_slot(6, 10).unwrap();
+
+    assert_eq!(padded.origin_x, 0);
+    assert_eq!(padded.origin_y, 0);
+    assert_eq!(padded.width, 6);
+    assert_eq!(padded.height, 10);
+    assert_eq!(&padded.rgba[56..60], &[12, 34, 56, 255]);
+    assert_eq!(&padded.rgba[60..64], &[12, 34, 56, 255]);
+    assert!(padded.rgba[0..56].iter().all(|byte| *byte == 0));
+}
+
+#[test]
 fn solid_glyph_bitmap_rejects_overflowing_dimensions_before_allocation() {
     let error = GlyphBitmap::try_solid_rgba8(
         GlyphEntry {
@@ -105,6 +132,8 @@ fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
             slot: 1,
             generation: 0,
         },
+        origin_x: 0,
+        origin_y: 0,
         width: 1,
         height: u32::MAX,
         rgba: Vec::new(),
@@ -117,6 +146,8 @@ fn glyph_atlas_image_rejects_overflowing_dimensions_before_allocation() {
             slot: u32::MAX - 1,
             generation: 0,
         },
+        origin_x: 0,
+        origin_y: 0,
         width: u32::MAX,
         height: 1,
         rgba: Vec::new(),

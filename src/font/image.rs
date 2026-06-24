@@ -43,6 +43,8 @@ pub(super) fn compose_rendered_glyphs(
 
     Some(GlyphBitmap {
         entry,
+        origin_x: min_x,
+        origin_y: min_y,
         width,
         height,
         rgba,

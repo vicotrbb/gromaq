@@ -39,6 +39,8 @@ fn prepared_surface_glyph_frame_rejects_oversized_glyph_bitmap_before_padding() 
     };
     let glyphs = [GlyphBitmap {
         entry,
+        origin_x: 0,
+        origin_y: 0,
         width: u32::MAX,
         height: 1,
         rgba: Vec::new(),
@@ -140,6 +142,8 @@ fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
     };
     let glyphs = [GlyphBitmap {
         entry,
+        origin_x: 0,
+        origin_y: 0,
         width: 5,
         height: 7,
         rgba: vec![255; 5 * 7 * 4],
@@ -164,4 +168,71 @@ fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
     assert_eq!(frame.atlas.height, 22);
     assert_eq!(glyph_quad.vertices[0].position, [22.0, 4.0]);
     assert_eq!(glyph_quad.vertices[2].position, [40.0, 26.0]);
+}
+
+#[test]
+fn prepared_surface_glyph_frame_preserves_shaped_glyph_placement_in_atlas() {
+    let entry = GlyphEntry {
+        slot: 0,
+        generation: 0,
+    };
+    let plan = RenderPlan {
+        viewport_cols: 1,
+        viewport_rows: 1,
+        cursor: CursorSnapshot {
+            row: 0,
+            col: 0,
+            visible: false,
+            shape: CursorShape::Block,
+            blinking: true,
+        },
+        default_foreground_rgb8: [232, 226, 214],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        clear_regions: Vec::new(),
+        backgrounds: Vec::new(),
+        decorations: Vec::new(),
+        glyphs: vec![PlannedGlyph {
+            row: 0,
+            col: 0,
+            text: "A".to_owned(),
+            ch: 'A',
+            style: Style::default(),
+            font_size_px: 18,
+            is_wide: false,
+            atlas_entry: entry,
+        }],
+    };
+    let glyphs = [GlyphBitmap {
+        entry,
+        origin_x: 1,
+        origin_y: -2,
+        width: 2,
+        height: 2,
+        rgba: [24, 48, 96, 255].repeat(4),
+    }];
+
+    let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+        &plan,
+        &glyphs,
+        8,
+        8,
+        [0.0, 0.0, 0.0, 1.0],
+        [244, 192, 106, 255],
+        0,
+    )
+    .unwrap();
+    let frame = prepared.as_surface_glyph_frame();
+    let placed_pixel_offset = ((3 * frame.atlas.width) + 3) as usize * 4;
+
+    assert_eq!(frame.atlas.width, 8);
+    assert_eq!(frame.atlas.height, 8);
+    assert_eq!(
+        &frame.atlas.rgba[placed_pixel_offset..placed_pixel_offset + 4],
+        &[24, 48, 96, 255]
+    );
+    assert!(
+        frame.atlas.rgba[0..placed_pixel_offset]
+            .iter()
+            .all(|byte| *byte == 0)
+    );
 }

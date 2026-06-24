@@ -77,13 +77,13 @@ impl PreparedSurfaceGlyphFrame {
         let cell_height_px = u32::from(line_height_px);
         let slot_width = glyphs
             .iter()
-            .map(|glyph| glyph.width)
+            .map(|glyph| glyph.terminal_slot_width(cell_width_px))
             .max()
             .unwrap_or(cell_width_px)
             .max(cell_width_px);
         let slot_height = glyphs
             .iter()
-            .map(|glyph| glyph.height)
+            .map(|glyph| glyph.terminal_slot_height(cell_height_px))
             .max()
             .unwrap_or(cell_height_px)
             .max(cell_height_px);
@@ -108,7 +108,7 @@ impl PreparedSurfaceGlyphFrame {
             .iter()
             .map(|glyph| {
                 glyph
-                    .padded_to(slot_width, slot_height)
+                    .padded_to_terminal_slot(slot_width, slot_height)
                     .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))
             })
             .collect::<std::result::Result<Vec<_>, _>>()?;
