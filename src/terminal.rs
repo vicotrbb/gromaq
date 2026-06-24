@@ -13,6 +13,7 @@ use crate::scrollback::Scrollback;
 use crate::selection::SelectionRange;
 
 mod cursor;
+mod damage;
 mod edit;
 mod modes;
 mod osc;
