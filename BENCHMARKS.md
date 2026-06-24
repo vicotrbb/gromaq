@@ -44,6 +44,28 @@ Glyph-atlas cache behavior is unit-tested for identity, LRU eviction, and metric
 Font rasterization, renderer-plan glyph bitmap population, texture upload/readback, glyph-atlas upload/readback, and text-atlas GPU upload/readback are integration-tested with deterministic fixtures or a real local font. Font-dependent benchmarks register their names and emit a clear skip message when no supported local monospace font is available, so a skipped run does not prove rasterization throughput on that machine. Direct shaped-cell font rasterization, cached render-plan glyph bitmap population, and prepared terminal glyph-frame construction are benchmarked for CPU-side paths, while `gpu_texture_upload_readback`, `gpu_glyph_atlas_upload_readback`, and `gpu_text_atlas_upload_readback` measure live GPU upload/readback paths when a compatible adapter is available; those still do not prove full windowed terminal frame time.
 Render-plan generation is unit-tested against dirty-region and full-viewport modes and benchmarked for CPU-side command generation. Glyph-quad generation is integration-tested for pixel positions, wide-cell geometry, atlas UVs, and triangle indices, and benchmarked both directly and through prepared terminal glyph-frame construction. The offscreen textured-quad and terminal-text smoke tests prove sampled draw pipelines and readback, and the Criterion harness includes `gpu_textured_quad_draw_readback` plus `gpu_terminal_text_draw_readback` for live offscreen GPU draw/readback measurement when a compatible adapter is available; they still do not prove windowed terminal frame time.
 
+## Current Full Local Run
+
+On 2026-06-24, `cargo bench` completed on macOS Darwin 23.5.0 arm64 with an
+Apple M1 Pro and reported no Criterion regression lines. The measured ranges are
+recorded in [`documentation/benchmarks.md`](documentation/benchmarks.md).
+
+Key evidence from that run:
+
+- `native_input_echo_render_cycle`: 111.12-113.73 us
+- `runtime_bounded_state_batches`: 6.0650-6.1365 ms
+- `runtime_continuous_output_batches`: 1.6107-1.7109 ms
+- `gpu_textured_quad_draw_readback`: 1.5650-1.5952 ms
+- `gpu_terminal_text_draw_readback`: 32.000-32.464 ms
+- `gpu_text_atlas_upload_readback`: 31.170-31.839 ms
+- `scrollback_view_navigation`: 4.6589-4.7105 s
+
+`scrollback_view_navigation` is materially slower than the other CPU-side
+foundation benchmarks and Criterion estimated 461.1 seconds for its 100-sample
+collection. This is now documented evidence for a future scrolling/navigation
+optimization pass; it is not a substitute for live-window smooth-scrolling
+acceptance proof.
+
 ## Acceptance Targets
 
 The full terminal goal is not complete until benchmarks and runtime validation prove:

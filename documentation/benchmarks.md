@@ -125,6 +125,52 @@ The benchmark list should include:
 - `gpu_texture_upload_readback`
 - `gpu_glyph_atlas_upload_readback`
 
+## Current Full Local Run
+
+On 2026-06-24, a full `cargo bench` run completed on macOS Darwin 23.5.0
+arm64 with an Apple M1 Pro. Criterion reported no `Performance has regressed`
+lines in the captured output. Gnuplot was not available, so Criterion used the
+plotters backend.
+
+| Benchmark | Measured time range |
+| --- | ---: |
+| `parser_large_output` | 8.8378-8.8944 ms |
+| `unicode_emoji_cluster_output` | 6.0104-6.0441 ms |
+| `scrollback_large_output` | 6.3080-6.3475 ms |
+| `scrollback_view_navigation` | 4.6589-4.7105 s |
+| `dirty_region_coalescing` | 623.27-628.25 ns |
+| `glyph_atlas_cache_churn` | 2.1612-2.1782 ms |
+| `frame_scheduler_144hz_timeline` | 9.0973-9.1711 us |
+| `render_plan_large_dirty_region` | 155.03-157.72 us |
+| `glyph_quad_generation_large_plan` | 22.870-23.136 us |
+| `rasterized_glyph_cache_hot_plan` | 18.869-19.117 us |
+| `prepared_surface_glyph_frame_large_plan` | 40.286-40.701 us |
+| `native_input_echo_render_cycle` | 111.12-113.73 us |
+| `font_rasterizer_combining_cell` | 3.6378-3.6865 us |
+| `pty_runtime_pump_large_output` | 8.9816-9.2103 ms |
+| `real_pty_shell_large_output_burst` | 82.405-84.192 ms |
+| `real_pty_shell_input_echo_roundtrip` | 15.422-15.873 ms |
+| `runtime_bounded_state_batches` | 6.0650-6.1365 ms |
+| `runtime_state_snapshot_bounded_session` | 65.269-66.154 us |
+| `runtime_continuous_output_batches` | 1.6107-1.7109 ms |
+| `runtime_alternate_screen_stages` | 23.159-24.282 us |
+| `runtime_protocol_input_reports` | 1.2273-1.2448 us |
+| `gpu_textured_quad_draw_readback` | 1.5650-1.5952 ms |
+| `gpu_terminal_text_draw_readback` | 32.000-32.464 ms |
+| `gpu_text_atlas_upload_readback` | 31.170-31.839 ms |
+| `gpu_texture_upload_readback` | 1.5644-1.6099 ms |
+| `gpu_glyph_atlas_upload_readback` | 1.5498-1.5586 ms |
+
+Criterion warned that these benchmarks could not complete 100 samples inside
+the default 5-second target: `scrollback_view_navigation`,
+`real_pty_shell_large_output_burst`, `runtime_continuous_output_batches`,
+`gpu_textured_quad_draw_readback`, `gpu_texture_upload_readback`, and
+`gpu_glyph_atlas_upload_readback`. The slowest path was
+`scrollback_view_navigation`, which required an estimated 461.1 seconds for 100
+samples and measured multi-second viewport navigation iterations. Treat that as
+a real performance finding for future optimization, not as a release blocker by
+itself until the live scrolling acceptance path is measured.
+
 Some benchmarks load a local monospace font for real glyph rasterization. The
 benchmark harness checks common macOS and Linux font paths. If no candidate is
 available, the font-dependent benchmark name is still registered and emits a
