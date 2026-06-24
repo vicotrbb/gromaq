@@ -15,6 +15,10 @@ use crate::mouse::{MouseButton, MouseEventKind};
 use crate::native_gpu::{GpuBootstrap, GpuBootstrapConfig};
 use crate::renderer::SurfaceFrameError;
 
+mod window_metadata;
+
+use window_metadata::{scale_factor_milliscale, surface_present_mode_name};
+
 impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.lifecycle.on_resumed() != NativeAppAction::CreateWindow {
@@ -182,27 +186,6 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
             }
             _ => {}
         }
-    }
-}
-
-fn surface_present_mode_name(present_mode: wgpu::PresentMode) -> &'static str {
-    match present_mode {
-        wgpu::PresentMode::AutoVsync => "AutoVsync",
-        wgpu::PresentMode::AutoNoVsync => "AutoNoVsync",
-        wgpu::PresentMode::Fifo => "Fifo",
-        wgpu::PresentMode::FifoRelaxed => "FifoRelaxed",
-        wgpu::PresentMode::Immediate => "Immediate",
-        wgpu::PresentMode::Mailbox => "Mailbox",
-    }
-}
-
-fn scale_factor_milliscale(scale_factor: f64) -> u32 {
-    if scale_factor.is_finite() && scale_factor > 0.0 {
-        (scale_factor * 1000.0)
-            .round()
-            .clamp(1.0, f64::from(u32::MAX)) as u32
-    } else {
-        1000
     }
 }
 
