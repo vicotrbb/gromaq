@@ -23,6 +23,8 @@ The core library owns deterministic terminal state:
 
 The core is headless and tested without a window or GPU. This keeps terminal behavior reproducible. Test API performance counters expose parser bytes, dirty cells, dirty-region batches, scrolls, and resizes for deterministic validation. Test API screenshots are deterministic one-pixel-per-cell RGBA captures of terminal state; live GPU/window screenshot proof remains part of the native rendering validation gap.
 
+Configuration code is organized as a public `config::GromaqConfig` entry point plus focused private modules. `config::settings` owns terminal, shell, font, and performance sections plus bounded dimension and shell validation; `config::theme` owns theme color parsing; `config::reload` owns deterministic config-file polling while preserving the last valid configuration on invalid edits.
+
 Terminal code is organized as a state-machine parent plus focused helper modules. `terminal.rs` owns `Terminal`, parser callbacks, grid mutation, scrollback, selection metadata, and public snapshots. `terminal::width` owns Unicode width, emoji clustering predicates, metadata IDs, and DEC special graphics mapping; `terminal::snapshot` owns deterministic screenshot colors and row padding; `terminal::params` owns CSI/SGR parameter helpers and default tab stops; `terminal::osc` owns bounded OSC title, OSC 52 clipboard, and OSC 8 hyperlink decoding.
 
 ## PTY Boundary
