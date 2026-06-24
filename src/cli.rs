@@ -11,6 +11,7 @@ mod gpu;
 mod runtime_alternate_screen_smoke;
 mod runtime_clipboard_smoke;
 mod runtime_config_reload_smoke;
+mod runtime_glyph_frame_smoke;
 mod runtime_input_smoke;
 mod runtime_output_smoke;
 mod runtime_reflow_smoke;
@@ -27,6 +28,7 @@ pub use gpu::{AdapterReport, GpuCommandContext};
 use runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
 use runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
+use runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
 use runtime_input_smoke::{
     runtime_focus_smoke_exit, runtime_idle_smoke_exit, runtime_mouse_smoke_exit,
     runtime_perf_smoke_exit, runtime_response_smoke_exit,
@@ -39,14 +41,12 @@ use runtime_reflow_smoke::runtime_reflow_smoke_exit;
 
 use crate::app::{
     NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime, NativeTerminalRuntimeConfig,
-    load_default_native_glyph_cache,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::native_gpu::GpuBootstrapBackend;
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
-use crate::renderer::{PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
+use crate::renderer::{RendererConfig, WgpuRenderer};
 
-const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
 const RUNTIME_SCROLLBACK_SMOKE_TEXT: &str = "one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix";
 
 /// Captured CLI result for tests and the binary wrapper.
@@ -283,148 +283,6 @@ where
 
 fn usage() -> String {
     "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-struct RuntimeGlyphFrameSmokePtySpawner;
-
-#[derive(Debug)]
-struct RuntimeGlyphFrameSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-}
-
-impl NativePtySpawner for RuntimeGlyphFrameSmokePtySpawner {
-    type Session = RuntimeGlyphFrameSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeGlyphFrameSmokePtySession {
-            output: VecDeque::from([format!("{RUNTIME_GLYPH_FRAME_SMOKE_TEXT}\n").into_bytes()]),
-        })
-    }
-}
-
-impl NativePtySessionIo for RuntimeGlyphFrameSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: crate::app::NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
-
-fn runtime_glyph_frame_smoke_exit() -> CliExit {
-    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 32,
-        terminal_rows: 4,
-        scrollback_lines: 128,
-        pixel_width: 0,
-        pixel_height: 0,
-        shell: ShellCommand {
-            program: "/bin/sh".into(),
-            args: Vec::new(),
-            cwd: None,
-        },
-    }) {
-        Ok(runtime) => runtime,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    if let Err(error) = runtime.start_shell(&RuntimeGlyphFrameSmokePtySpawner) {
-        return runtime_glyph_frame_smoke_error(error);
-    }
-    let pumped_bytes = match runtime.pump_pty_output() {
-        Ok(bytes) => bytes,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
-        Ok(renderer) => renderer,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    let rendered = match runtime.render_terminal_frame(&mut renderer) {
-        Ok(rendered) => rendered,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    if !rendered {
-        return runtime_glyph_frame_smoke_failure("runtime output did not produce a dirty frame");
-    }
-    let atlas_metrics = renderer.glyph_atlas_metrics();
-    let Some(plan) = renderer.last_plan() else {
-        return runtime_glyph_frame_smoke_failure("renderer did not retain a frame plan");
-    };
-    if plan.glyphs.is_empty() {
-        return runtime_glyph_frame_smoke_failure("render plan contained no glyphs");
-    }
-    let mut glyph_cache = match load_default_native_glyph_cache() {
-        Ok(glyph_cache) => glyph_cache,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    let glyphs = match glyph_cache.rasterize_plan(plan) {
-        Ok(glyphs) => glyphs,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    let prepared = match PreparedSurfaceGlyphFrame::from_render_plan(
-        plan,
-        &glyphs.bitmaps,
-        renderer.config().clear_color,
-    ) {
-        Ok(prepared) => prepared,
-        Err(error) => return runtime_glyph_frame_smoke_error(error),
-    };
-    let surface_frame = prepared.as_surface_glyph_frame();
-
-    if pumped_bytes == 0
-        || surface_frame.batch.quads.is_empty()
-        || surface_frame.batch.indices.is_empty()
-        || surface_frame.atlas.occupied_slots == 0
-        || surface_frame.atlas.rgba.is_empty()
-        || atlas_metrics.misses == 0
-        || atlas_metrics.hits == 0
-        || atlas_metrics.entries == 0
-        || atlas_metrics.evictions != 0
-    {
-        return runtime_glyph_frame_smoke_failure(
-            "prepared glyph frame did not contain presentable glyph data",
-        );
-    }
-
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nrenderer atlas hits: {}\nrenderer atlas misses: {}\nrenderer atlas entries: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\natlas bytes: {}\nframe size: {}x{}\n",
-            pumped_bytes,
-            plan.glyphs.len(),
-            atlas_metrics.hits,
-            atlas_metrics.misses,
-            atlas_metrics.entries,
-            glyphs.rasterized,
-            glyphs.reused,
-            surface_frame.batch.quads.len(),
-            surface_frame.atlas.rgba.len(),
-            surface_frame.width,
-            surface_frame.height
-        ),
-        stderr: String::new(),
-    }
-}
-
-fn runtime_glyph_frame_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime glyph frame smoke failed: {error}\n"),
-    }
-}
-
-fn runtime_glyph_frame_smoke_failure(reason: &str) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime glyph frame smoke failed: {reason}\n"),
-    }
 }
 
 #[derive(Debug, Clone, Copy, Default)]
