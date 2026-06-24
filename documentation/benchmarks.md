@@ -137,7 +137,7 @@ plotters backend.
 | `parser_large_output` | 8.8378-8.8944 ms |
 | `unicode_emoji_cluster_output` | 6.0104-6.0441 ms |
 | `scrollback_large_output` | 6.3080-6.3475 ms |
-| `scrollback_view_navigation` | 4.6589-4.7105 s |
+| `scrollback_view_navigation` | 4.6589-4.7105 s before hot-path fix; 19.365-20.240 ms after |
 | `dirty_region_coalescing` | 623.27-628.25 ns |
 | `glyph_atlas_cache_churn` | 2.1612-2.1782 ms |
 | `frame_scheduler_144hz_timeline` | 9.0973-9.1711 us |
@@ -167,9 +167,13 @@ the default 5-second target: `scrollback_view_navigation`,
 `gpu_textured_quad_draw_readback`, `gpu_texture_upload_readback`, and
 `gpu_glyph_atlas_upload_readback`. The slowest path was
 `scrollback_view_navigation`, which required an estimated 461.1 seconds for 100
-samples and measured multi-second viewport navigation iterations. Treat that as
-a real performance finding for future optimization, not as a release blocker by
-itself until the live scrolling acceptance path is measured.
+samples and measured multi-second viewport navigation iterations. A follow-up
+hot-path fix removed full scrollback snapshot cloning from visible history-grid
+dumps; targeted `scrollback_view_navigation` reruns on 2026-06-24 measured
+19.365-20.240 ms. Criterion reported a 99.578%-99.587% improvement for the
+first post-fix rerun, then reported the second post-fix rerun as within the
+noise threshold. This is deterministic CPU-side scrollback-view evidence, not
+live-window smooth-scrolling acceptance proof.
 
 Some benchmarks load a local monospace font for real glyph rasterization. The
 benchmark harness checks common macOS and Linux font paths. If no candidate is

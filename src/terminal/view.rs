@@ -27,8 +27,7 @@ impl Terminal {
     }
 
     fn dump_scrollback_view_grid(&self) -> GridSnapshot {
-        let scrollback = self.scrollback.snapshot();
-        let history_rows = scrollback.cells.len();
+        let history_rows = self.scrollback.len();
         let visible_rows = usize::from(self.config.rows);
         let offset = self.scrollback_view_offset.min(history_rows);
         let start = (history_rows + visible_rows).saturating_sub(visible_rows + offset);
@@ -39,7 +38,7 @@ impl Terminal {
             if source_row < history_rows {
                 push_snapshot_row(
                     &mut cells,
-                    scrollback.cells.get(source_row).map(Vec::as_slice),
+                    self.scrollback.row_cells(source_row),
                     self.config.cols,
                 );
             } else {

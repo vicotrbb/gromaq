@@ -58,13 +58,16 @@ Key evidence from that run:
 - `gpu_textured_quad_draw_readback`: 1.5650-1.5952 ms
 - `gpu_terminal_text_draw_readback`: 32.000-32.464 ms
 - `gpu_text_atlas_upload_readback`: 31.170-31.839 ms
-- `scrollback_view_navigation`: 4.6589-4.7105 s
+- `scrollback_view_navigation`: 4.6589-4.7105 s before hot-path fix; 19.365-20.240 ms after
 
-`scrollback_view_navigation` is materially slower than the other CPU-side
-foundation benchmarks and Criterion estimated 461.1 seconds for its 100-sample
-collection. This is now documented evidence for a future scrolling/navigation
-optimization pass; it is not a substitute for live-window smooth-scrolling
-acceptance proof.
+`scrollback_view_navigation` was materially slower than the other CPU-side
+foundation benchmarks before the scrollback-view hot-path fix, and Criterion
+estimated 461.1 seconds for its 100-sample collection. After removing full
+scrollback snapshot cloning from visible history-grid dumps, targeted reruns
+measured 19.365-20.240 ms; Criterion reported a 99.578%-99.587% improvement
+for the first post-fix rerun and then reported the second post-fix rerun as
+within the noise threshold. This is not a substitute for live-window
+smooth-scrolling acceptance proof.
 
 ## Acceptance Targets
 

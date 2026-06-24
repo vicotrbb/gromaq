@@ -35,6 +35,16 @@ impl Scrollback {
         self.lines.len()
     }
 
+    /// Styled cells for a retained scrollback row.
+    pub(crate) fn row_cells(&self, index: usize) -> Option<&[CellSnapshot]> {
+        self.lines.get(index).map(|line| line.cells.as_slice())
+    }
+
+    /// Whether a retained scrollback row ended in a hard line break.
+    pub(crate) fn hard_break_at(&self, index: usize) -> bool {
+        self.lines.get(index).is_some_and(|line| line.hard_break)
+    }
+
     /// Push one hard-break line, evicting the oldest line when capacity is reached.
     pub fn push(&mut self, line: String) {
         let cells = line

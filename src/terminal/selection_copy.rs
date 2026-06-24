@@ -138,8 +138,7 @@ impl Terminal {
             return self.hard_breaks.clone();
         }
 
-        let scrollback = self.scrollback.snapshot();
-        let history_rows = scrollback.hard_breaks.len();
+        let history_rows = self.scrollback.len();
         let visible_rows = usize::from(self.config.rows);
         let offset = self.scrollback_view_offset.min(history_rows);
         let start = (history_rows + visible_rows).saturating_sub(visible_rows + offset);
@@ -148,11 +147,7 @@ impl Terminal {
             .map(|row| {
                 let source_row = start + row;
                 if source_row < history_rows {
-                    scrollback
-                        .hard_breaks
-                        .get(source_row)
-                        .copied()
-                        .unwrap_or(false)
+                    self.scrollback.hard_break_at(source_row)
                 } else {
                     self.hard_breaks
                         .get(source_row - history_rows)
