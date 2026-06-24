@@ -12,8 +12,9 @@ mod theme;
 
 pub use reload::{ConfigFileReloader, ConfigReload};
 pub use settings::{
-    FontSettings, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX, MAX_TARGET_FPS, MAX_TERMINAL_CELLS,
-    MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX, PerformanceSettings, ShellSettings, TerminalSettings,
+    FontSettings, MAX_CELL_WIDTH_PX, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX, MAX_TARGET_FPS,
+    MAX_TERMINAL_CELLS, MIN_CELL_WIDTH_PX, MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX,
+    PerformanceSettings, ShellSettings, TerminalSettings,
 };
 pub use theme::{
     ANSI_COLOR_COUNT, CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_ANSI_COLORS_RGB8,
@@ -83,6 +84,16 @@ impl GromaqConfig {
                 minimum: MIN_FONT_SIZE_PX,
                 maximum: MAX_FONT_SIZE_PX,
                 actual: self.font.size_px,
+            });
+        }
+        if let Some(cell_width_px) = self.font.cell_width_px
+            && (!cell_width_px.is_finite()
+                || !(MIN_CELL_WIDTH_PX..=MAX_CELL_WIDTH_PX).contains(&cell_width_px))
+        {
+            return Err(GromaqError::InvalidCellWidth {
+                minimum: MIN_CELL_WIDTH_PX,
+                maximum: MAX_CELL_WIDTH_PX,
+                actual: cell_width_px,
             });
         }
         if !self.font.line_height_px.is_finite()

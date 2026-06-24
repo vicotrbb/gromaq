@@ -287,7 +287,7 @@ impl NativeTerminalApp {
                 y: position.y,
                 window_width_px: size.width,
                 window_height_px: size.height,
-                cell_width_px: self.renderer.config().font_size_px,
+                cell_width_px: self.renderer.config().cell_width_px,
                 line_height_px: self.renderer.config().line_height_px,
                 surface_padding_px: self.renderer.config().surface_padding_px,
                 kind,

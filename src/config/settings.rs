@@ -10,6 +10,10 @@ pub const MAX_TERMINAL_CELLS: u64 = 1_000_000;
 pub const MIN_FONT_SIZE_PX: f32 = 6.0;
 /// Maximum renderable configured font size in pixels.
 pub const MAX_FONT_SIZE_PX: f32 = 512.0;
+/// Minimum useful terminal cell width in pixels.
+pub const MIN_CELL_WIDTH_PX: f32 = 4.0;
+/// Maximum useful terminal cell width in pixels.
+pub const MAX_CELL_WIDTH_PX: f32 = 512.0;
 /// Minimum renderable configured line height in pixels.
 pub const MIN_LINE_HEIGHT_PX: f32 = 6.0;
 /// Maximum renderable configured line height in pixels.
@@ -62,6 +66,9 @@ pub struct FontSettings {
     pub family: String,
     /// Font size in pixels.
     pub size_px: f32,
+    /// Optional terminal column width in pixels. Defaults to a compact monospace ratio.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cell_width_px: Option<f32>,
     /// Terminal row height in pixels.
     pub line_height_px: f32,
 }
@@ -71,6 +78,7 @@ impl Default for FontSettings {
         Self {
             family: "monospace".to_owned(),
             size_px: 16.0,
+            cell_width_px: None,
             line_height_px: 22.0,
         }
     }
@@ -80,6 +88,14 @@ impl FontSettings {
     /// Deterministic renderer font size used for glyph cache keys and render planning.
     pub fn renderer_font_size_px(&self) -> u16 {
         self.size_px.round() as u16
+    }
+
+    /// Deterministic renderer cell width used for terminal column geometry.
+    pub fn renderer_cell_width_px(&self) -> u16 {
+        self.cell_width_px
+            .unwrap_or(self.size_px * 0.625)
+            .round()
+            .max(1.0) as u16
     }
 
     /// Deterministic renderer row height used for quad planning.

@@ -103,7 +103,7 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
     let prepared = match PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
-        renderer.config().font_size_px,
+        renderer.config().cell_width_px,
         renderer.config().line_height_px,
         renderer.config().clear_color,
         renderer.config().cursor_color_rgba8,

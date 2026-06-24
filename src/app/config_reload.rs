@@ -51,7 +51,7 @@ impl NativeTerminalApp {
         let renderer_config = RendererConfig::from_gromaq_config(config)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         let resize_mapper = NativeResizeGridMapper::new(
-            renderer_config.font_size_px,
+            renderer_config.cell_width_px,
             renderer_config.line_height_px,
             renderer_config.surface_padding_px,
         )

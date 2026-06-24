@@ -176,6 +176,7 @@ cwd = "/tmp"
 [font]
 family = "monospace"
 size_px = 16.5
+# cell_width_px = 10
 line_height_px = 21
 
 [theme]

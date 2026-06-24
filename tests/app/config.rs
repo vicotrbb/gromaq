@@ -16,7 +16,7 @@ fn expected_grid_for_window(
     renderer_config: &RendererConfig,
 ) -> (u16, u16) {
     let cols = width_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2)
-        / u32::from(renderer_config.font_size_px);
+        / u32::from(renderer_config.cell_width_px);
     let rows = height_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2)
         / u32::from(renderer_config.line_height_px);
     (
@@ -174,6 +174,7 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     assert_eq!(app.renderer().config().target_fps, 120);
     assert!(!app.renderer().config().dirty_regions);
     assert_eq!(app.renderer().config().font_size_px, 18);
+    assert_eq!(app.renderer().config().cell_width_px, 11);
     assert_eq!(app.renderer().config().line_height_px, 22);
     assert_eq!(
         app.renderer().config().clear_color,

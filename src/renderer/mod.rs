@@ -46,6 +46,7 @@ pub use surface::{
 pub use surface_frame::{SurfaceFrameBackend, SurfaceFrameError, WgpuSurfaceBackend};
 
 const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 16;
+const DEFAULT_RENDERER_CELL_WIDTH_PX: u16 = 10;
 const DEFAULT_GLYPH_ATLAS_CAPACITY: usize = 4096;
 
 /// Renderer configuration for the GPU backend.
@@ -57,6 +58,8 @@ pub struct RendererConfig {
     pub dirty_regions: bool,
     /// Font size in pixels used for glyph planning and cache keys.
     pub font_size_px: u16,
+    /// Terminal column width in pixels used for glyph, cursor, and input geometry.
+    pub cell_width_px: u16,
     /// Terminal row height in pixels used for quad planning.
     pub line_height_px: u16,
     /// Clear color in RGBA linear space.
@@ -79,6 +82,7 @@ impl Default for RendererConfig {
             target_fps: 144,
             dirty_regions: true,
             font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
+            cell_width_px: DEFAULT_RENDERER_CELL_WIDTH_PX,
             line_height_px: 22,
             clear_color: rgb8_to_clear_color(DEFAULT_BACKGROUND_RGB8),
             default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
@@ -98,6 +102,7 @@ impl RendererConfig {
             target_fps: config.performance.target_fps,
             dirty_regions: config.performance.dirty_region_rendering,
             font_size_px: config.font.renderer_font_size_px(),
+            cell_width_px: config.font.renderer_cell_width_px(),
             line_height_px: config.font.renderer_line_height_px(),
             clear_color: rgb8_to_clear_color(config.theme.background_rgb8()?),
             default_foreground_rgb8: config.theme.foreground_rgb8()?,

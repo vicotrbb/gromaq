@@ -48,6 +48,17 @@ pub enum GromaqError {
         actual: f32,
     },
 
+    /// Font cell width must be useful for terminal column geometry.
+    #[error("font cell width must be finite and between {minimum} and {maximum}, got {actual}")]
+    InvalidCellWidth {
+        /// Inclusive lower bound.
+        minimum: f32,
+        /// Inclusive upper bound.
+        maximum: f32,
+        /// Actual invalid value.
+        actual: f32,
+    },
+
     /// Font line height must be useful for rendering.
     #[error("font line height must be finite and between {minimum} and {maximum}, got {actual}")]
     InvalidLineHeight {

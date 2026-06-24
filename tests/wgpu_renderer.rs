@@ -73,6 +73,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.performance.target_fps = 120;
     config.performance.dirty_region_rendering = false;
     config.font.size_px = 16.5;
+    config.font.cell_width_px = Some(9.5);
     config.font.line_height_px = 21.0;
     config.theme.background = "#1f2028".to_owned();
     config.theme.foreground = "#e8e2d6".to_owned();
@@ -86,6 +87,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     assert_eq!(renderer_config.target_fps, 120);
     assert!(!renderer_config.dirty_regions);
     assert_eq!(renderer_config.font_size_px, 17);
+    assert_eq!(renderer_config.cell_width_px, 10);
     assert_eq!(renderer_config.line_height_px, 21);
     assert_eq!(
         renderer_config.clear_color,
@@ -104,6 +106,15 @@ fn renderer_config_maps_validated_gromaq_settings() {
         [38, 54, 79, 255]
     );
     assert_eq!(renderer_config.surface_padding_px, 18);
+}
+
+#[test]
+fn renderer_default_cell_width_is_compact_for_monospace_text() {
+    let config = RendererConfig::default();
+
+    assert_eq!(config.font_size_px, 16);
+    assert_eq!(config.cell_width_px, 10);
+    assert!(config.cell_width_px < config.font_size_px);
 }
 
 #[test]
@@ -131,6 +142,10 @@ fn renderer_default_theme_matches_default_gromaq_config() {
     assert_eq!(
         default_renderer.surface_padding_px,
         mapped_renderer.surface_padding_px
+    );
+    assert_eq!(
+        default_renderer.cell_width_px,
+        mapped_renderer.cell_width_px
     );
 }
 
@@ -218,7 +233,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
-        renderer.config().font_size_px,
+        renderer.config().cell_width_px,
         renderer.config().line_height_px,
         [0.0, 0.0, 0.0, 1.0],
         [244, 192, 106, 255],

@@ -224,11 +224,12 @@ fn runtime_config_reload_smoke_cli_reports_reload_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("runtime config reload smoke: ok"));
     assert!(exit.stdout.contains("unchanged poll changed: false"));
     assert!(exit.stdout.contains("changed poll changed: true"));
-    assert!(exit.stdout.contains("terminal: 69x34"));
+    assert!(exit.stdout.contains("terminal: 113x34"));
     assert!(exit.stdout.contains("scrollback lines: 96"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: false"));
     assert!(exit.stdout.contains("font size px: 18"));
+    assert!(exit.stdout.contains("cell width px: 11"));
     assert!(exit.stdout.contains("line height px: 22"));
     assert!(exit.stdout.contains("shell: /bin/sh"));
     assert!(exit.stderr.is_empty());
