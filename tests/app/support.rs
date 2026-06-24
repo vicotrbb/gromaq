@@ -61,6 +61,7 @@ pub(crate) struct MockFrameRenderer {
 #[derive(Debug)]
 pub(crate) struct RenderedFrame {
     pub(crate) first_line: String,
+    pub(crate) lines: Vec<String>,
     pub(crate) cursor: CursorSnapshot,
     pub(crate) dirty_regions: Vec<DirtyRegion>,
 }
@@ -80,6 +81,7 @@ impl GpuRenderer for MockFrameRenderer {
         }
         self.frames.push(RenderedFrame {
             first_line: grid.line_text(0),
+            lines: (0..grid.rows).map(|row| grid.line_text(row)).collect(),
             cursor,
             dirty_regions: dirty_regions.to_vec(),
         });

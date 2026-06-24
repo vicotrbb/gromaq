@@ -92,11 +92,66 @@ fn native_terminal_runtime_renders_dirty_terminal_frame_once() {
     assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
     assert_eq!(renderer.frames.len(), 1);
     assert_eq!(renderer.frames[0].first_line, "hello");
+    assert_eq!(renderer.frames[0].lines[0], "hello");
     assert_eq!(renderer.frames[0].cursor.row, 1);
     assert!(!renderer.frames[0].dirty_regions.is_empty());
 
     assert!(!runtime.render_terminal_frame(&mut renderer).unwrap());
     assert_eq!(renderer.frames.len(), 1);
+}
+
+#[test]
+fn native_terminal_runtime_rendered_frames_preserve_output_after_prompt_repaint() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 80,
+        terminal_rows: 8,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime.pump_pty_output().unwrap();
+    let mut renderer = MockFrameRenderer::default();
+    runtime.render_terminal_frame(&mut renderer).unwrap();
+
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(
+            b"\r\x1b[J> pwd\x1b[K\r\n/Users/victorbona/Daedalus/gromaq\r\n\r\x1b[J> ".to_vec(),
+        );
+    runtime.pump_pty_output().unwrap();
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let rendered = renderer
+        .frames
+        .last()
+        .expect("prompt repaint output should render a frame");
+
+    assert!(
+        rendered.lines.iter().any(|line| line.contains("> pwd")),
+        "rendered frame did not retain command line: {:?}",
+        rendered.lines
+    );
+    assert!(
+        rendered
+            .lines
+            .iter()
+            .any(|line| line.contains("/Users/victorbona/Daedalus/gromaq")),
+        "rendered frame did not retain command output: {:?}",
+        rendered.lines
+    );
 }
 
 #[test]
