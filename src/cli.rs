@@ -8,11 +8,17 @@ use std::{
 };
 
 use base64::{Engine as _, engine::general_purpose};
-use thiserror::Error;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
+mod config_commands;
 mod gpu;
 mod runtime_input_smoke;
+pub use config_commands::{
+    NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,
+};
+use config_commands::{
+    config_check_exit, config_template_exit, launch_config_file_exit, launch_native_app_exit,
+};
 use gpu::gpu_command_exit;
 pub use gpu::{AdapterReport, GpuCommandContext};
 use runtime_input_smoke::{
@@ -23,10 +29,10 @@ use runtime_input_smoke::{
 use crate::app::{
     NativeAppConfig, NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalApp,
     NativeTerminalRuntime, NativeTerminalRuntimeConfig, is_native_paste_shortcut,
-    load_default_native_glyph_cache, run_native_app_with_runtime_renderer_and_config_file,
+    load_default_native_glyph_cache,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
-use crate::config::{ConfigFileReloader, GromaqConfig, ShellSettings};
+use crate::config::ConfigFileReloader;
 use crate::native_gpu::GpuBootstrapBackend;
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
 use crate::renderer::{
@@ -60,91 +66,6 @@ pub struct CliExit {
     pub stdout: String,
     /// Standard error text.
     pub stderr: String,
-}
-
-/// Error returned by the native app launcher boundary.
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
-#[error("native app launch failed: {message}")]
-pub struct NativeAppLaunchError {
-    message: String,
-}
-
-impl NativeAppLaunchError {
-    /// Create a native app launch error from a displayable message.
-    pub fn new(message: impl Into<String>) -> Self {
-        Self {
-            message: message.into(),
-        }
-    }
-}
-
-/// Native launch configuration derived from defaults or a user config file.
-#[derive(Debug, Clone, Default, PartialEq)]
-pub struct NativeAppLaunchConfig {
-    /// Window and frame-pacing configuration.
-    pub app: NativeAppConfig,
-    /// Terminal, scrollback, and shell runtime configuration.
-    pub runtime: NativeTerminalRuntimeConfig,
-    /// Renderer configuration for glyph planning and frame presentation.
-    pub renderer: RendererConfig,
-    /// Optional TOML config path to poll for reloadable changes after launch.
-    pub config_path: Option<PathBuf>,
-}
-
-impl NativeAppLaunchConfig {
-    /// Build a launch configuration from a validated user configuration.
-    pub fn from_gromaq_config(config: &GromaqConfig) -> Result<Self, NativeAppLaunchError> {
-        let app = NativeAppConfig::from_gromaq_config(config)
-            .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
-        let shell = shell_command_from_settings(&config.shell);
-        let runtime = NativeTerminalRuntimeConfig::from_gromaq_config(config, shell)
-            .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
-        let renderer = RendererConfig::from_gromaq_config(config)
-            .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
-        Ok(Self {
-            app,
-            runtime,
-            renderer,
-            config_path: None,
-        })
-    }
-}
-
-fn shell_command_from_settings(settings: &ShellSettings) -> ShellCommand {
-    let mut shell = settings
-        .program
-        .as_ref()
-        .map(|program| ShellCommand {
-            program: program.into(),
-            args: Vec::new(),
-            cwd: None,
-        })
-        .unwrap_or_else(ShellCommand::default_shell);
-    shell.args = settings.args.iter().map(Into::into).collect();
-    shell.cwd = settings.cwd.as_ref().map(PathBuf::from);
-    shell
-}
-
-/// Launches the native terminal app for the no-argument CLI path.
-pub trait NativeAppLauncher {
-    /// Launch the native app using `config`.
-    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError>;
-}
-
-/// Production native app launcher.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct RealNativeAppLauncher;
-
-impl NativeAppLauncher for RealNativeAppLauncher {
-    fn launch(&self, config: NativeAppLaunchConfig) -> Result<(), NativeAppLaunchError> {
-        run_native_app_with_runtime_renderer_and_config_file(
-            config.app,
-            config.runtime,
-            config.renderer,
-            config.config_path.as_deref(),
-        )
-        .map_err(|error| NativeAppLaunchError::new(error.to_string()))
-    }
 }
 
 /// Run the CLI with an injected GPU backend.
@@ -370,108 +291,6 @@ where
 
 fn usage() -> String {
     "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
-}
-
-fn launch_config_file_exit<A>(path: &str, app_launcher: &A) -> CliExit
-where
-    A: NativeAppLauncher,
-{
-    let config = match GromaqConfig::from_toml_file(path) {
-        Ok(config) => config,
-        Err(error) => {
-            return CliExit {
-                code: 1,
-                stdout: String::new(),
-                stderr: format!("config launch failed: {error}\n"),
-            };
-        }
-    };
-    let launch_config = match NativeAppLaunchConfig::from_gromaq_config(&config) {
-        Ok(mut launch_config) => {
-            launch_config.config_path = Some(PathBuf::from(path));
-            launch_config
-        }
-        Err(error) => {
-            return CliExit {
-                code: 1,
-                stdout: String::new(),
-                stderr: format!("{error}\n"),
-            };
-        }
-    };
-    launch_native_app_exit(app_launcher, launch_config)
-}
-
-fn launch_native_app_exit<A>(app_launcher: &A, config: NativeAppLaunchConfig) -> CliExit
-where
-    A: NativeAppLauncher,
-{
-    match app_launcher.launch(config) {
-        Ok(()) => CliExit {
-            code: 0,
-            stdout: String::new(),
-            stderr: String::new(),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("{error}\n"),
-        },
-    }
-}
-
-fn config_check_exit(path: &str) -> CliExit {
-    match GromaqConfig::from_toml_file(path) {
-        Ok(config) => CliExit {
-            code: 0,
-            stdout: format!(
-                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ntarget fps: {}\ndirty-region rendering: {}\n",
-                path,
-                config.terminal.cols,
-                config.terminal.rows,
-                config.terminal.scrollback_lines,
-                config.shell.program.as_deref().unwrap_or("<default>"),
-                format_config_list(&config.shell.args),
-                config.shell.cwd.as_deref().unwrap_or("<default>"),
-                config.font.family,
-                config.font.size_px,
-                config.performance.target_fps,
-                config.performance.dirty_region_rendering
-            ),
-            stderr: String::new(),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("config check failed: {error}\n"),
-        },
-    }
-}
-
-fn config_template_exit() -> CliExit {
-    let config = GromaqConfig::default();
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
-            config.terminal.cols,
-            config.terminal.rows,
-            config.terminal.scrollback_lines,
-            config.font.family,
-            config.font.size_px,
-            config.performance.target_fps,
-            config.performance.dirty_region_rendering
-        ),
-        stderr: String::new(),
-    }
-}
-
-fn format_config_list(values: &[String]) -> String {
-    if values.is_empty() {
-        "<none>".to_owned()
-    } else {
-        values.join(" ")
-    }
 }
 
 fn frame_scheduler_smoke_exit() -> CliExit {
