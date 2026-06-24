@@ -1,102 +1,20 @@
 //! Runtime input and performance CLI smoke commands.
 
-use std::collections::VecDeque;
-
 use winit::keyboard::{Key, ModifiersState};
 
 use super::CliExit;
-use crate::app::{
-    NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
-};
+use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
-use crate::pty::{PtyConfig, PtyError, ShellCommand};
+use crate::pty::ShellCommand;
 use crate::renderer::{RendererConfig, WgpuRenderer};
+use pty_smoke::{RuntimeInputCaptureSmokePtySpawner, RuntimePerfSmokePtySpawner};
+
+mod pty_smoke;
 
 const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";
 const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1006h";
 const RUNTIME_RESPONSE_SMOKE_QUERIES: &str = "\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 const RUNTIME_IDLE_SMOKE_RENDER_ATTEMPTS: u64 = 16;
-
-#[derive(Debug, Clone, Copy, Default)]
-struct RuntimePerfSmokePtySpawner;
-
-#[derive(Debug, Default)]
-struct RuntimePerfSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-}
-
-impl NativePtySpawner for RuntimePerfSmokePtySpawner {
-    type Session = RuntimePerfSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimePerfSmokePtySession::default())
-    }
-}
-
-impl NativePtySessionIo for RuntimePerfSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
-        self.output.push_back(bytes.to_vec());
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: crate::app::NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct RuntimeInputCaptureSmokePtySpawner {
-    output: &'static [u8],
-}
-
-#[derive(Debug, Default)]
-struct RuntimeInputCaptureSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-    input: Vec<Vec<u8>>,
-}
-
-impl RuntimeInputCaptureSmokePtySpawner {
-    const fn new(output: &'static [u8]) -> Self {
-        Self { output }
-    }
-}
-
-impl RuntimeInputCaptureSmokePtySession {
-    fn new(output: &'static [u8]) -> Self {
-        Self {
-            output: VecDeque::from([output.to_vec()]),
-            input: Vec::new(),
-        }
-    }
-}
-
-impl NativePtySpawner for RuntimeInputCaptureSmokePtySpawner {
-    type Session = RuntimeInputCaptureSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeInputCaptureSmokePtySession::new(self.output))
-    }
-}
-
-impl NativePtySessionIo for RuntimeInputCaptureSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
-        self.input.push(bytes.to_vec());
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
 
 pub(super) fn runtime_perf_smoke_exit() -> CliExit {
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
