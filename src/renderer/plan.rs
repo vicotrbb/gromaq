@@ -8,34 +8,18 @@ use crate::terminal::CursorSnapshot;
 
 use super::atlas::{GlyphAtlas, GlyphKey};
 use super::color::{decoration_color_rgba8, style_background_rgba8};
+use clipping::clipped_dirty_region;
 pub use types::{
     PlannedBackground, PlannedGlyph, PlannedTextDecoration, RenderPlan, TextDecorationKind,
 };
 
+mod clipping;
 mod types;
 
 /// CPU-side render planner for deterministic renderer tests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderPlanner {
     font_size_px: u16,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct ClippedDirtyRegion {
-    row_start: u16,
-    row_end: u16,
-    col_start: u16,
-    col_end: u16,
-}
-
-impl ClippedDirtyRegion {
-    fn rows(self) -> u16 {
-        self.row_end - self.row_start
-    }
-
-    fn cols(self) -> u16 {
-        self.col_end - self.col_start
-    }
 }
 
 impl RenderPlanner {
@@ -240,73 +224,11 @@ fn append_text_decoration(
     });
 }
 
-fn clipped_dirty_region(region: &DirtyRegion, grid: &GridSnapshot) -> Option<ClippedDirtyRegion> {
-    let row_start = region.row.min(grid.rows);
-    let col_start = region.col.min(grid.cols);
-    let row_end = (u32::from(region.row) + u32::from(region.rows)).min(u32::from(grid.rows));
-    let col_end = (u32::from(region.col) + u32::from(region.cols)).min(u32::from(grid.cols));
-    let row_end = u16::try_from(row_end).ok()?;
-    let col_end = u16::try_from(col_end).ok()?;
-    if row_start >= row_end || col_start >= col_end {
-        return None;
-    }
-    Some(ClippedDirtyRegion {
-        row_start,
-        row_end,
-        col_start,
-        col_end,
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     use crate::terminal::{Terminal, TerminalConfig};
-
-    fn empty_grid_snapshot(rows: u16, cols: u16) -> GridSnapshot {
-        GridSnapshot {
-            rows,
-            cols,
-            hyperlinks: Vec::new(),
-            underline_colors: Vec::new(),
-            cells: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn clipped_dirty_region_uses_widened_bounds_at_u16_edges() {
-        let grid = empty_grid_snapshot(u16::MAX, u16::MAX);
-        let region = DirtyRegion {
-            row: u16::MAX - 1,
-            col: u16::MAX - 2,
-            rows: 8,
-            cols: 9,
-        };
-
-        assert_eq!(
-            clipped_dirty_region(&region, &grid),
-            Some(ClippedDirtyRegion {
-                row_start: u16::MAX - 1,
-                row_end: u16::MAX,
-                col_start: u16::MAX - 2,
-                col_end: u16::MAX,
-            })
-        );
-    }
-
-    #[test]
-    fn clipped_dirty_region_rejects_regions_outside_grid() {
-        let grid = empty_grid_snapshot(10, 10);
-        let region = DirtyRegion {
-            row: 12,
-            col: 0,
-            rows: 1,
-            cols: 1,
-        };
-
-        assert_eq!(clipped_dirty_region(&region, &grid), None);
-    }
 
     #[test]
     fn render_planner_ignores_dirty_regions_outside_grid() {
