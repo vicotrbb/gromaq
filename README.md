@@ -86,6 +86,7 @@ Implemented and tested:
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
 - Deterministic runtime clean-frame idle smoke with `--runtime-idle-smoke`
+- Deterministic runtime idle CPU smoke with `--runtime-idle-cpu-smoke`, sampling process CPU while clean frames are suppressed
 - Deterministic 144Hz frame-scheduler smoke with `--frame-scheduler-smoke`
 - GPU renderer boundary with deterministic render-plan and glyph-quad generation
 - Owned surface glyph-frame preparation from render plans and rasterized glyph bitmaps
@@ -145,6 +146,7 @@ cargo run -- --runtime-focus-smoke
 cargo run -- --runtime-mouse-smoke
 cargo run -- --runtime-response-smoke
 cargo run -- --runtime-idle-smoke
+cargo run -- --runtime-idle-cpu-smoke
 cargo run -- --frame-scheduler-smoke
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings

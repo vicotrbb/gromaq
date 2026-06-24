@@ -62,9 +62,12 @@ bytes, reported 1 resize event, preserved 2 reflowed scrollback lines with
 styled metadata, rendered visible lines `klmno|pqrst`, and rendered 1 CPU-side
 dirty frame. On the same date, `cargo run -- --runtime-idle-smoke` pumped 0
 bytes, reported 16 render attempts, 16 clean-frame skips, and 0 rendered frames
-through the deterministic CPU-side path. On the same date,
-`cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz target
-interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
+through the deterministic CPU-side path. On 2026-06-24,
+`cargo run -- --runtime-idle-cpu-smoke` sampled the same clean-frame idle path 5
+times at 50 ms intervals, reported max process CPU of 1.8% against the 5.0%
+budget, and preserved the 16 clean-frame skips with 0 rendered frames. On
+2026-06-23, `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz
+target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
 frames. These are deterministic smoke results, not live hardware acceptance
 measurements.
 
@@ -145,7 +148,7 @@ foundation components named above. They do not prove:
 - sustained 144Hz live rendering
 - p95 frame time below 6.94ms
 - p95 input latency below 10ms
-- near-zero idle CPU
+- near-zero live-window idle CPU
 - live window process memory stability during real interactive long sessions
 - smooth interactive scrolling with a live window surface
 

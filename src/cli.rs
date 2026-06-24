@@ -27,8 +27,9 @@ use runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
 use runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
 use runtime_input_smoke::{
-    runtime_focus_smoke_exit, runtime_idle_smoke_exit, runtime_mouse_smoke_exit,
-    runtime_perf_budget_smoke_exit, runtime_perf_smoke_exit, runtime_response_smoke_exit,
+    runtime_focus_smoke_exit, runtime_idle_cpu_smoke_exit, runtime_idle_smoke_exit,
+    runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit, runtime_perf_smoke_exit,
+    runtime_response_smoke_exit,
 };
 use runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
@@ -152,6 +153,7 @@ where
         && arg != "--runtime-mouse-smoke"
         && arg != "--runtime-response-smoke"
         && arg != "--runtime-idle-smoke"
+        && arg != "--runtime-idle-cpu-smoke"
         && arg != "--frame-scheduler-smoke"
     {
         return CliExit {
@@ -273,6 +275,9 @@ where
     if arg == "--runtime-idle-smoke" {
         return runtime_idle_smoke_exit();
     }
+    if arg == "--runtime-idle-cpu-smoke" {
+        return runtime_idle_cpu_smoke_exit();
+    }
     if arg == "--frame-scheduler-smoke" {
         return frame_scheduler_smoke_exit();
     }
@@ -281,5 +286,5 @@ where
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
