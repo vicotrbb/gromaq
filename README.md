@@ -112,7 +112,6 @@ Not yet complete:
 - Live desktop OS paste menu smoke
 - Hardware-backed 144Hz frame pacing proof
 - Live desktop screenshot proof of windowed terminal glyph drawing
-- Live desktop OS clipboard paste smoke
 - Broader alternate-screen mouse workflows beyond scripted Vim and tmux proof paths
 - Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
 - Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows
