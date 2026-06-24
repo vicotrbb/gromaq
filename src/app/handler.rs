@@ -45,10 +45,14 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     .as_ref()
                     .and_then(|surface| surface.present_mode())
                     .map(surface_present_mode_name);
+                let scale_milliscale = scale_factor_milliscale(window.scale_factor());
                 self.window = Some(window);
-                self.lifecycle.on_window_created_with_surface_report(
+                self.lifecycle.on_window_created_with_full_report(
                     monitor_refresh_millihertz,
                     surface_present_mode,
+                    Some(size.width),
+                    Some(size.height),
+                    Some(scale_milliscale),
                 );
                 if let Err(error) = self.runtime.start_shell(&self.pty_spawner) {
                     self.startup_error = Some(error.to_string());
@@ -189,6 +193,16 @@ fn surface_present_mode_name(present_mode: wgpu::PresentMode) -> &'static str {
         wgpu::PresentMode::FifoRelaxed => "FifoRelaxed",
         wgpu::PresentMode::Immediate => "Immediate",
         wgpu::PresentMode::Mailbox => "Mailbox",
+    }
+}
+
+fn scale_factor_milliscale(scale_factor: f64) -> u32 {
+    if scale_factor.is_finite() && scale_factor > 0.0 {
+        (scale_factor * 1000.0)
+            .round()
+            .clamp(1.0, f64::from(u32::MAX)) as u32
+    } else {
+        1000
     }
 }
 

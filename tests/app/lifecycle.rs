@@ -162,6 +162,27 @@ fn native_app_lifecycle_accounts_frame_intervals_against_monitor_refresh() {
 }
 
 #[test]
+fn native_app_lifecycle_reports_window_surface_size_and_scale() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
+
+    lifecycle.on_window_created_with_full_report(
+        Some(120_000),
+        Some("Fifo"),
+        Some(2560),
+        Some(1600),
+        Some(2000),
+    );
+
+    let report = lifecycle.run_report();
+
+    assert_eq!(report.monitor_refresh_millihertz, Some(120_000));
+    assert_eq!(report.surface_present_mode, Some("Fifo"));
+    assert_eq!(report.window_width_px, Some(2560));
+    assert_eq!(report.window_height_px, Some(1600));
+    assert_eq!(report.window_scale_milliscale, Some(2000));
+}
+
+#[test]
 fn native_app_lifecycle_schedules_pty_wake_against_monitor_refresh() {
     let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
         target_fps: 144,

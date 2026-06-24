@@ -21,6 +21,12 @@ pub struct NativeAppRunReport {
     pub monitor_refresh_millihertz: Option<u32>,
     /// Configured native surface presentation mode, if a surface was configured.
     pub surface_present_mode: Option<&'static str>,
+    /// Actual native window width in physical pixels, if a window was created.
+    pub window_width_px: Option<u32>,
+    /// Actual native window height in physical pixels, if a window was created.
+    pub window_height_px: Option<u32>,
+    /// Native window scale factor multiplied by 1000, if a window was created.
+    pub window_scale_milliscale: Option<u32>,
     /// Effective FPS target used for presented-frame interval accounting.
     pub frame_interval_target_fps: u32,
     /// Count of measured intervals between presented frames.
@@ -54,6 +60,19 @@ pub(super) struct PresentedFrameIntervals {
     histogram: RuntimeDurationHistogram,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(super) struct NativeAppRunReportInput {
+    pub(super) windows_created: u64,
+    pub(super) redraw_requests: u64,
+    pub(super) frames_presented: u64,
+    pub(super) monitor_refresh_millihertz: Option<u32>,
+    pub(super) surface_present_mode: Option<&'static str>,
+    pub(super) window_width_px: Option<u32>,
+    pub(super) window_height_px: Option<u32>,
+    pub(super) window_scale_milliscale: Option<u32>,
+    pub(super) frame_interval_target_fps: u32,
+}
+
 impl PresentedFrameIntervals {
     pub(super) fn record_presented_at(&mut self, presented_at: Instant, target_fps: u32) {
         if let Some(last_presented_at) = self.last_presented_at {
@@ -80,22 +99,17 @@ impl PresentedFrameIntervals {
         self.last_presented_at = Some(presented_at);
     }
 
-    pub(super) fn run_report(
-        self,
-        windows_created: u64,
-        redraw_requests: u64,
-        frames_presented: u64,
-        monitor_refresh_millihertz: Option<u32>,
-        surface_present_mode: Option<&'static str>,
-        frame_interval_target_fps: u32,
-    ) -> NativeAppRunReport {
+    pub(super) fn run_report(self, input: NativeAppRunReportInput) -> NativeAppRunReport {
         NativeAppRunReport {
-            windows_created,
-            redraw_requests,
-            frames_presented,
-            monitor_refresh_millihertz,
-            surface_present_mode,
-            frame_interval_target_fps,
+            windows_created: input.windows_created,
+            redraw_requests: input.redraw_requests,
+            frames_presented: input.frames_presented,
+            monitor_refresh_millihertz: input.monitor_refresh_millihertz,
+            surface_present_mode: input.surface_present_mode,
+            window_width_px: input.window_width_px,
+            window_height_px: input.window_height_px,
+            window_scale_milliscale: input.window_scale_milliscale,
+            frame_interval_target_fps: input.frame_interval_target_fps,
             frame_interval_samples: self.samples,
             frame_interval_total_ns: self.total_ns,
             frame_interval_avg_ns: self.avg_ns,
@@ -141,11 +155,20 @@ mod tests {
             144,
         );
 
-        let report = intervals.run_report(1, 2, 3, None, None, 144);
+        let report = intervals.run_report(NativeAppRunReportInput {
+            windows_created: 1,
+            redraw_requests: 2,
+            frames_presented: 3,
+            frame_interval_target_fps: 144,
+            ..NativeAppRunReportInput::default()
+        });
 
         assert_eq!(report.frame_interval_samples, 2);
         assert_eq!(report.monitor_refresh_millihertz, None);
         assert_eq!(report.surface_present_mode, None);
+        assert_eq!(report.window_width_px, None);
+        assert_eq!(report.window_height_px, None);
+        assert_eq!(report.window_scale_milliscale, None);
         assert_eq!(report.frame_interval_target_fps, 144);
         assert_eq!(report.frame_intervals_over_target, 1);
         assert_eq!(report.frame_intervals_over_double_target, 1);

@@ -15,7 +15,7 @@ mod report;
 
 pub use report::NativeAppRunReport;
 
-use report::PresentedFrameIntervals;
+use report::{NativeAppRunReportInput, PresentedFrameIntervals};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 
@@ -149,6 +149,9 @@ pub struct NativeAppLifecycle {
     frames_presented: u64,
     monitor_refresh_millihertz: Option<u32>,
     surface_present_mode: Option<&'static str>,
+    window_width_px: Option<u32>,
+    window_height_px: Option<u32>,
+    window_scale_milliscale: Option<u32>,
     frame_intervals: PresentedFrameIntervals,
 }
 
@@ -164,6 +167,9 @@ impl NativeAppLifecycle {
             frames_presented: 0,
             monitor_refresh_millihertz: None,
             surface_present_mode: None,
+            window_width_px: None,
+            window_height_px: None,
+            window_scale_milliscale: None,
             frame_intervals: PresentedFrameIntervals::default(),
         }
     }
@@ -206,10 +212,31 @@ impl NativeAppLifecycle {
         monitor_refresh_millihertz: Option<u32>,
         surface_present_mode: Option<&'static str>,
     ) {
+        self.on_window_created_with_full_report(
+            monitor_refresh_millihertz,
+            surface_present_mode,
+            None,
+            None,
+            None,
+        );
+    }
+
+    /// Record that the native window was created with known monitor, surface, and window metadata.
+    pub fn on_window_created_with_full_report(
+        &mut self,
+        monitor_refresh_millihertz: Option<u32>,
+        surface_present_mode: Option<&'static str>,
+        window_width_px: Option<u32>,
+        window_height_px: Option<u32>,
+        window_scale_milliscale: Option<u32>,
+    ) {
         self.has_window = true;
         self.windows_created += 1;
         self.monitor_refresh_millihertz = monitor_refresh_millihertz;
         self.surface_present_mode = surface_present_mode;
+        self.window_width_px = window_width_px;
+        self.window_height_px = window_height_px;
+        self.window_scale_milliscale = window_scale_milliscale;
     }
 
     /// Handle the event-loop idle boundary before waiting for more events.
@@ -316,14 +343,17 @@ impl NativeAppLifecycle {
 
     /// Snapshot event-loop metrics after the native app exits.
     pub fn run_report(&self) -> NativeAppRunReport {
-        self.frame_intervals.run_report(
-            self.windows_created,
-            self.redraw_requests,
-            self.frames_presented,
-            self.monitor_refresh_millihertz,
-            self.surface_present_mode,
-            self.frame_interval_target_fps(),
-        )
+        self.frame_intervals.run_report(NativeAppRunReportInput {
+            windows_created: self.windows_created,
+            redraw_requests: self.redraw_requests,
+            frames_presented: self.frames_presented,
+            monitor_refresh_millihertz: self.monitor_refresh_millihertz,
+            surface_present_mode: self.surface_present_mode,
+            window_width_px: self.window_width_px,
+            window_height_px: self.window_height_px,
+            window_scale_milliscale: self.window_scale_milliscale,
+            frame_interval_target_fps: self.frame_interval_target_fps(),
+        })
     }
 
     fn record_frame_presented_at(&mut self, presented_at: Instant) {
