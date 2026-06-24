@@ -246,9 +246,9 @@ pub(super) fn native_mouse_button(button: WinitMouseButton) -> Option<MouseButto
     }
 }
 
-pub(super) fn wheel_mouse_button(delta: MouseScrollDelta) -> Option<MouseButton> {
+pub(super) fn wheel_mouse_button(delta: &MouseScrollDelta) -> Option<MouseButton> {
     let y = match delta {
-        MouseScrollDelta::LineDelta(_, y) => y,
+        MouseScrollDelta::LineDelta(_, y) => *y,
         MouseScrollDelta::PixelDelta(position) => position.y as f32,
     };
     if y > 0.0 {
@@ -257,6 +257,22 @@ pub(super) fn wheel_mouse_button(delta: MouseScrollDelta) -> Option<MouseButton>
         Some(MouseButton::WheelDown)
     } else {
         None
+    }
+}
+
+/// Browser-style terminal text zoom action requested by a modified mouse wheel event.
+pub fn native_wheel_text_zoom_action(
+    delta: &MouseScrollDelta,
+    modifiers: ModifiersState,
+) -> Option<NativeTextZoomAction> {
+    let uses_zoom_modifier = modifiers.control_key() ^ modifiers.super_key();
+    if !uses_zoom_modifier || modifiers.alt_key() || modifiers.shift_key() {
+        return None;
+    }
+    match wheel_mouse_button(delta)? {
+        MouseButton::WheelUp => Some(NativeTextZoomAction::Increase),
+        MouseButton::WheelDown => Some(NativeTextZoomAction::Decrease),
+        _ => None,
     }
 }
 

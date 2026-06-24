@@ -1,9 +1,11 @@
 use gromaq::app::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
     NativeTextZoomAction, is_native_copy_shortcut, is_native_paste_shortcut,
-    native_text_zoom_action,
+    native_text_zoom_action, native_wheel_text_zoom_action,
 };
 use gromaq::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+use winit::dpi::PhysicalPosition;
+use winit::event::MouseScrollDelta;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 #[test]
@@ -329,6 +331,52 @@ fn native_text_zoom_shortcuts_match_browser_controls() {
         native_text_zoom_action(
             &Key::Character("+".into()),
             ModifiersState::CONTROL | ModifiersState::ALT
+        ),
+        None
+    );
+}
+
+#[test]
+fn native_wheel_text_zoom_shortcuts_match_browser_controls() {
+    assert_eq!(
+        native_wheel_text_zoom_action(
+            &MouseScrollDelta::LineDelta(0.0, 1.0),
+            ModifiersState::CONTROL
+        ),
+        Some(NativeTextZoomAction::Increase)
+    );
+    assert_eq!(
+        native_wheel_text_zoom_action(
+            &MouseScrollDelta::PixelDelta(PhysicalPosition::new(0.0, -10.0)),
+            ModifiersState::SUPER
+        ),
+        Some(NativeTextZoomAction::Decrease)
+    );
+    assert_eq!(
+        native_wheel_text_zoom_action(
+            &MouseScrollDelta::LineDelta(0.0, 0.0),
+            ModifiersState::CONTROL
+        ),
+        None
+    );
+    assert_eq!(
+        native_wheel_text_zoom_action(
+            &MouseScrollDelta::LineDelta(0.0, 1.0),
+            ModifiersState::empty()
+        ),
+        None
+    );
+    assert_eq!(
+        native_wheel_text_zoom_action(
+            &MouseScrollDelta::LineDelta(0.0, 1.0),
+            ModifiersState::CONTROL | ModifiersState::SUPER
+        ),
+        None
+    );
+    assert_eq!(
+        native_wheel_text_zoom_action(
+            &MouseScrollDelta::LineDelta(0.0, 1.0),
+            ModifiersState::CONTROL | ModifiersState::SHIFT
         ),
         None
     );

@@ -155,7 +155,16 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                 }
             }
             WindowEvent::MouseWheel { delta, .. } => {
-                if let Some(button) = wheel_mouse_button(delta)
+                if let Some(action) = super::native_wheel_text_zoom_action(&delta, self.modifiers) {
+                    if let Err(error) = self.apply_text_zoom_action(action).map(|changed| {
+                        if changed && let Some(window) = &self.window {
+                            window.request_redraw();
+                        }
+                    }) {
+                        self.startup_error = Some(error.to_string());
+                        event_loop.exit();
+                    }
+                } else if let Some(button) = wheel_mouse_button(&delta)
                     && let Err(error) = self.send_current_mouse_input(MouseEventKind::Press, button)
                 {
                     self.startup_error = Some(error.to_string());
