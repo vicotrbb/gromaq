@@ -49,7 +49,7 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
     [255, 255, 255],
 ];
 /// Built-in visual breathing room around terminal cells.
-pub const DEFAULT_SURFACE_PADDING_PX: u16 = 18;
+pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
 

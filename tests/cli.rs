@@ -272,16 +272,16 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("[shell]"));
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
-    assert!(exit.stdout.contains("size_px = 17"));
-    assert!(exit.stdout.contains("line_height_px = 24"));
-    assert!(exit.stdout.contains("# cell_width_px = 11"));
+    assert!(exit.stdout.contains("size_px = 18"));
+    assert!(exit.stdout.contains("line_height_px = 25"));
+    assert!(exit.stdout.contains("# cell_width_px = 10"));
     assert!(exit.stdout.contains("[theme]"));
     assert!(exit.stdout.contains("preset = \"gromaq-dark\""));
     assert!(exit.stdout.contains("selection = \"#2b4162\""));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
     assert!(exit.stdout.contains("cursor_blinking = true"));
     assert!(exit.stdout.contains("ansi = [\"#151922\", \"#ff6b7a\""));
-    assert!(exit.stdout.contains("surface_padding_px = 18"));
+    assert!(exit.stdout.contains("surface_padding_px = 14"));
     assert!(exit.stdout.contains("[performance]"));
     let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
     assert_eq!(parsed, GromaqConfig::default());
@@ -618,8 +618,8 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             target_fps: 120,
             dirty_regions: false,
             font_size_px: 17,
-            cell_width_px: 10,
-            line_height_px: 24,
+            cell_width_px: 9,
+            line_height_px: 25,
             ..RendererConfig::default()
         }
     );

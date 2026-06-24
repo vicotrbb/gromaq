@@ -47,8 +47,8 @@ pub use surface::{
 };
 pub use surface_frame::{SurfaceFrameBackend, SurfaceFrameError, WgpuSurfaceBackend};
 
-const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 17;
-const DEFAULT_RENDERER_CELL_WIDTH_PX: u16 = 11;
+const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 18;
+const DEFAULT_RENDERER_CELL_WIDTH_PX: u16 = 10;
 const DEFAULT_GLYPH_ATLAS_CAPACITY: usize = 4096;
 
 /// Renderer configuration for the GPU backend.
@@ -85,7 +85,7 @@ impl Default for RendererConfig {
             dirty_regions: true,
             font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
             cell_width_px: DEFAULT_RENDERER_CELL_WIDTH_PX,
-            line_height_px: 24,
+            line_height_px: 25,
             clear_color: rgb8_to_linear_clear_color(DEFAULT_BACKGROUND_RGB8),
             default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
             ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,

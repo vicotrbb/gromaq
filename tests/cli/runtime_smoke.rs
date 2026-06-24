@@ -51,8 +51,8 @@ fn runtime_glyph_frame_smoke_cli_reports_prepared_frame_without_gpu_bootstrap() 
     assert!(exit.stdout.contains("cursor quads:"));
     assert!(exit.stdout.contains("atlas bytes:"));
     assert!(exit.stdout.contains("frame size:"));
-    assert!(exit.stdout.contains("line height px: 24"));
-    assert!(exit.stdout.contains("surface padding px: 18"));
+    assert!(exit.stdout.contains("line height px: 25"));
+    assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
@@ -224,13 +224,13 @@ fn runtime_config_reload_smoke_cli_reports_reload_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("runtime config reload smoke: ok"));
     assert!(exit.stdout.contains("unchanged poll changed: false"));
     assert!(exit.stdout.contains("changed poll changed: true"));
-    assert!(exit.stdout.contains("terminal: 113x31"));
+    assert!(exit.stdout.contains("terminal: 125x30"));
     assert!(exit.stdout.contains("scrollback lines: 96"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: false"));
     assert!(exit.stdout.contains("font size px: 18"));
-    assert!(exit.stdout.contains("cell width px: 11"));
-    assert!(exit.stdout.contains("line height px: 24"));
+    assert!(exit.stdout.contains("cell width px: 10"));
+    assert!(exit.stdout.contains("line height px: 25"));
     assert!(exit.stdout.contains("shell: /bin/sh"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());

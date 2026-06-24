@@ -77,9 +77,9 @@ impl Default for FontSettings {
     fn default() -> Self {
         Self {
             family: "monospace".to_owned(),
-            size_px: 17.0,
+            size_px: 18.0,
             cell_width_px: None,
-            line_height_px: 24.0,
+            line_height_px: 25.0,
         }
     }
 }
@@ -93,7 +93,7 @@ impl FontSettings {
     /// Deterministic renderer cell width used for terminal column geometry.
     pub fn renderer_cell_width_px(&self) -> u16 {
         self.cell_width_px
-            .unwrap_or(self.size_px * 0.625)
+            .unwrap_or(self.size_px * 0.56)
             .round()
             .max(1.0) as u16
     }

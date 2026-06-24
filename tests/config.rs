@@ -14,20 +14,20 @@ fn default_config_is_valid() {
 fn default_font_metrics_are_readable_for_native_terminal_windows() {
     let font = GromaqConfig::default().font;
 
-    assert_eq!(font.size_px, 17.0);
-    assert_eq!(font.renderer_font_size_px(), 17);
-    assert_eq!(font.renderer_cell_width_px(), 11);
-    assert_eq!(font.renderer_line_height_px(), 24);
+    assert_eq!(font.size_px, 18.0);
+    assert_eq!(font.renderer_font_size_px(), 18);
+    assert_eq!(font.renderer_cell_width_px(), 10);
+    assert_eq!(font.renderer_line_height_px(), 25);
 
     let width_ratio = f32::from(font.renderer_cell_width_px()) / font.size_px;
     let line_height_ratio = f32::from(font.renderer_line_height_px()) / font.size_px;
 
     assert!(
-        (0.62..=0.68).contains(&width_ratio),
+        (0.54..=0.58).contains(&width_ratio),
         "default terminal cell width ratio {width_ratio:.2} should stay readable without excessive letter spacing"
     );
     assert!(
-        (1.35..=1.45).contains(&line_height_ratio),
+        (1.35..=1.42).contains(&line_height_ratio),
         "default terminal line height ratio {line_height_ratio:.2} should keep dark-theme text legible"
     );
 }

@@ -22,7 +22,7 @@ ansi = [
   "#6b7280", "#ff8fa3", "#a6e3a1", "#f9e2af",
   "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
 ]
-surface_padding_px = 18
+surface_padding_px = 14
 ```
 
 ## Fields

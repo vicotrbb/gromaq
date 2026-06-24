@@ -112,7 +112,7 @@ fn run_runtime_config_reload_smoke_with_path(
     let runtime_config = app.runtime().config();
     let app_config = app.lifecycle().config();
     let renderer_config = app.renderer().config();
-    if grid.cols != 113 || grid.rows != 31 {
+    if grid.cols != 125 || grid.rows != 30 {
         return Err(format!(
             "terminal dimensions did not fit reloaded renderer metrics, got {}x{}",
             grid.cols, grid.rows
@@ -139,7 +139,7 @@ fn run_runtime_config_reload_smoke_with_path(
             renderer_config.font_size_px
         ));
     }
-    if renderer_config.cell_width_px != 11 {
+    if renderer_config.cell_width_px != 10 {
         return Err(format!(
             "renderer cell width did not reload, got {}",
             renderer_config.cell_width_px

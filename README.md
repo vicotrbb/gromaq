@@ -177,9 +177,9 @@ cwd = "/tmp"
 
 [font]
 family = "monospace"
-size_px = 17.0
-# cell_width_px = 11
-line_height_px = 24.0
+size_px = 18.0
+# cell_width_px = 10
+line_height_px = 25.0
 
 [theme]
 preset = "gromaq-dark"
@@ -195,7 +195,7 @@ ansi = [
   "#6b7280", "#ff8fa3", "#a6e3a1", "#f9e2af",
   "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
 ]
-surface_padding_px = 18
+surface_padding_px = 14
 
 [performance]
 target_fps = 144

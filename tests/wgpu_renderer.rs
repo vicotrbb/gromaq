@@ -131,9 +131,9 @@ fn renderer_config_maps_validated_gromaq_settings() {
 fn renderer_default_cell_width_is_compact_for_monospace_text() {
     let config = RendererConfig::default();
 
-    assert_eq!(config.font_size_px, 17);
-    assert_eq!(config.cell_width_px, 11);
-    assert_eq!(config.line_height_px, 24);
+    assert_eq!(config.font_size_px, 18);
+    assert_eq!(config.cell_width_px, 10);
+    assert_eq!(config.line_height_px, 25);
     assert!(config.cell_width_px < config.font_size_px);
 }
 

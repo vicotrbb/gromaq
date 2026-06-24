@@ -37,8 +37,8 @@ bytes, rendered 16 CPU-side frames, reported render p95 2000000 ns against the
 windowed GPU frame pacing acceptance proof. On 2026-06-24,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
-selection background, one cursor quad, a 388x132 frame, a 12672-byte atlas, 24 px
-line height, and 18 px surface padding through the native glyph-frame path. On
+selection background, one cursor quad, a 348x128 frame, a 13200-byte atlas, 25 px
+line height, and 14 px surface padding through the native glyph-frame path. On
 2026-06-23,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
