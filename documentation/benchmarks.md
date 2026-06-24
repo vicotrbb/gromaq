@@ -30,11 +30,16 @@ if render p95 exceeds 6940000 ns or input-to-render p95 exceeds 10000000 ns; it
 pumped 1 byte, rendered 1 CPU-side frame, reported render p95 500000 ns, and
 reported input-to-render p95 1000000 ns. On 2026-06-24,
 `cargo run -- --runtime-perf-p95-smoke` repeated that deterministic input-echo
-render path for 16 samples, pumped 16 bytes, rendered 16 CPU-side frames,
-reported render p95 500000 ns against the 6940000 ns budget, and reported
-input-to-render p95 500000 ns against the 10000000 ns budget. This is
-deterministic runtime counter evidence, not live windowed GPU frame pacing
-acceptance proof. On 2026-06-23,
+render path for 16 samples after the shaped-glyph placement fix, pumped 16
+bytes, rendered 16 CPU-side frames, reported render p95 2000000 ns against the
+6940000 ns budget, and reported input-to-render p95 4000000 ns against the
+10000000 ns budget. This is deterministic runtime counter evidence, not live
+windowed GPU frame pacing acceptance proof. On 2026-06-24,
+`cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
+rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
+selection background, one cursor quad, a 388x132 frame, a 12672-byte atlas, 24 px
+line height, and 18 px surface padding through the native glyph-frame path. On
+2026-06-23,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 reported viewport-capped rendered dirty-region work, verified
@@ -75,12 +80,16 @@ times at 50 ms intervals, reported max process CPU of 1.8% against the 5.0%
 budget, and preserved the 16 clean-frame skips with 0 rendered frames. On
 2026-06-23, `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz
 target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
-frames. On 2026-06-24, `cargo run -- --gpu-terminal-text-perf-smoke` measured
-16 repeated offscreen terminal text GPU draw/readback frames at 144x36 pixels,
-reported 1452 drawn pixels on the final frame, and reported min/avg/max/p95
-draw/readback timings of 6093125/6624872/9264000/9264000 ns. These are
-deterministic smoke results and offscreen GPU draw/readback timing results, not
-live hardware acceptance measurements.
+frames. On 2026-06-24, `cargo run -- --gpu-terminal-text-smoke` drew a 144x36
+offscreen terminal frame with 3 glyphs, 3 glyph quads, 1 background quad, 1
+decoration quad, 1 cursor quad, 2 rasterized glyphs, 1 reused glyph, 1452 drawn
+pixels, and a nonblank first drawn pixel. On the same date,
+`cargo run -- --gpu-terminal-text-perf-smoke` measured 16 repeated offscreen
+terminal text GPU draw/readback frames at 144x36 pixels, reported 1452 drawn
+pixels on the final frame, and reported min/avg/max/p95 draw/readback timings of
+6093125/6624872/9264000/9264000 ns. These are deterministic smoke results and
+offscreen GPU draw/readback timing results, not live hardware acceptance
+measurements.
 
 ## Reproducible Local Run
 
