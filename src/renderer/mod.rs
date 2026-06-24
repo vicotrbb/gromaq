@@ -45,7 +45,7 @@ pub use surface::{
 };
 pub use surface_frame::{SurfaceFrameBackend, SurfaceFrameError, WgpuSurfaceBackend};
 
-const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 14;
+const DEFAULT_RENDERER_FONT_SIZE_PX: u16 = 16;
 const DEFAULT_GLYPH_ATLAS_CAPACITY: usize = 4096;
 
 /// Renderer configuration for the GPU backend.
@@ -79,7 +79,7 @@ impl Default for RendererConfig {
             target_fps: 144,
             dirty_regions: true,
             font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
-            line_height_px: 18,
+            line_height_px: 22,
             clear_color: rgb8_to_clear_color(DEFAULT_BACKGROUND_RGB8),
             default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
             ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,

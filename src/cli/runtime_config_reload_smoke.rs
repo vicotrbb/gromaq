@@ -15,6 +15,7 @@ struct RuntimeConfigReloadSmokeReport {
     target_fps: u32,
     dirty_regions: bool,
     font_size_px: u16,
+    line_height_px: u16,
     shell_program: String,
 }
 
@@ -23,7 +24,7 @@ pub(super) fn runtime_config_reload_smoke_exit() -> CliExit {
         Ok(report) => CliExit {
             code: 0,
             stdout: format!(
-                "runtime config reload smoke: ok\nunchanged poll changed: {}\nchanged poll changed: {}\nterminal: {}x{}\nscrollback lines: {}\ntarget fps: {}\ndirty-region rendering: {}\nfont size px: {}\nshell: {}\n",
+                "runtime config reload smoke: ok\nunchanged poll changed: {}\nchanged poll changed: {}\nterminal: {}x{}\nscrollback lines: {}\ntarget fps: {}\ndirty-region rendering: {}\nfont size px: {}\nline height px: {}\nshell: {}\n",
                 report.unchanged_poll_changed,
                 report.changed_poll_changed,
                 report.cols,
@@ -32,6 +33,7 @@ pub(super) fn runtime_config_reload_smoke_exit() -> CliExit {
                 report.target_fps,
                 report.dirty_regions,
                 report.font_size_px,
+                report.line_height_px,
                 report.shell_program,
             ),
             stderr: String::new(),
@@ -108,9 +110,9 @@ fn run_runtime_config_reload_smoke_with_path(
     let runtime_config = app.runtime().config();
     let app_config = app.lifecycle().config();
     let renderer_config = app.renderer().config();
-    if grid.cols != 28 || grid.rows != 6 {
+    if grid.cols != 69 || grid.rows != 34 {
         return Err(format!(
-            "terminal dimensions did not reload, got {}x{}",
+            "terminal dimensions did not fit reloaded renderer metrics, got {}x{}",
             grid.cols, grid.rows
         ));
     }
@@ -151,6 +153,7 @@ fn run_runtime_config_reload_smoke_with_path(
         target_fps: app_config.target_fps,
         dirty_regions: renderer_config.dirty_regions,
         font_size_px: renderer_config.font_size_px,
+        line_height_px: renderer_config.line_height_px,
         shell_program: runtime_config.shell.program.display().to_string(),
     })
 }

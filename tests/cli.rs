@@ -244,13 +244,13 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("[shell]"));
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
-    assert!(exit.stdout.contains("line_height_px = 18"));
+    assert!(exit.stdout.contains("line_height_px = 22"));
     assert!(exit.stdout.contains("[theme]"));
     assert!(exit.stdout.contains("selection = \"#26364f\""));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
     assert!(exit.stdout.contains("cursor_blinking = true"));
     assert!(exit.stdout.contains("ansi = [\"#151922\", \"#ff6b7a\""));
-    assert!(exit.stdout.contains("surface_padding_px = 14"));
+    assert!(exit.stdout.contains("surface_padding_px = 16"));
     assert!(exit.stdout.contains("[performance]"));
     let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
     assert_eq!(parsed, GromaqConfig::default());
@@ -578,7 +578,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             target_fps: 120,
             dirty_regions: false,
             font_size_px: 17,
-            line_height_px: 18,
+            line_height_px: 22,
             ..RendererConfig::default()
         }
     );

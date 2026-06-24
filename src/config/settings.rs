@@ -70,8 +70,8 @@ impl Default for FontSettings {
     fn default() -> Self {
         Self {
             family: "monospace".to_owned(),
-            size_px: 14.0,
-            line_height_px: 18.0,
+            size_px: 16.0,
+            line_height_px: 22.0,
         }
     }
 }
