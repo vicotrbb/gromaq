@@ -54,7 +54,7 @@ where
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nframe interval target fps: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\ndropped frames: {}\nframe pacing accepted: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nframe interval target fps: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nframe pacing accepted: {}\n",
                         report.frames_presented,
                         report.frame_interval_target_fps,
                         started_at.elapsed().as_nanos(),
@@ -62,6 +62,8 @@ where
                         report.frame_interval_avg_ns,
                         report.frame_interval_max_ns,
                         report.frame_interval_p95_ns,
+                        report.frame_intervals_over_target,
+                        report.frame_intervals_over_double_target,
                         report.dropped_frames,
                         frame_pacing_accepted
                     ),

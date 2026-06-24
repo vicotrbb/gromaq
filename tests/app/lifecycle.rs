@@ -146,6 +146,8 @@ fn native_app_lifecycle_reports_dropped_presented_frame_intervals() {
 
     assert_eq!(report.frames_presented, 3);
     assert_eq!(report.frame_interval_samples, 2);
+    assert_eq!(report.frame_intervals_over_target, 1);
+    assert_eq!(report.frame_intervals_over_double_target, 1);
     assert_eq!(report.dropped_frames, 2);
 }
 
@@ -170,6 +172,8 @@ fn native_app_lifecycle_accounts_frame_intervals_against_monitor_refresh() {
     assert_eq!(report.monitor_refresh_millihertz, Some(60_000));
     assert_eq!(report.frame_interval_target_fps, 60);
     assert_eq!(report.frame_interval_samples, 2);
+    assert_eq!(report.frame_intervals_over_target, 0);
+    assert_eq!(report.frame_intervals_over_double_target, 0);
     assert_eq!(report.dropped_frames, 0);
 }
 

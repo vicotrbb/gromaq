@@ -89,6 +89,8 @@ impl NativeAppLauncher for MockAppLauncher {
             frame_interval_avg_ns: 6_940_000,
             frame_interval_max_ns: 8_000_000,
             frame_interval_p95_ns: 8_000_000,
+            frame_intervals_over_target: 2,
+            frame_intervals_over_double_target: 0,
             dropped_frames: 1,
             ..NativeAppRunReport::default()
         })
@@ -488,6 +490,11 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
     assert!(exit.stdout.contains("frame interval max ns: 8000000\n"));
     assert!(exit.stdout.contains("frame interval p95 ns: 8000000\n"));
+    assert!(exit.stdout.contains("frame intervals over target: 2\n"));
+    assert!(
+        exit.stdout
+            .contains("frame intervals over double target: 0\n")
+    );
     assert!(exit.stdout.contains("dropped frames: 1\n"));
     assert!(exit.stdout.contains("frame pacing accepted: false\n"));
     let _elapsed_ns = exit
