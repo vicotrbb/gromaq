@@ -58,6 +58,28 @@ fn glyph_atlas_image_rejects_wrong_bitmap_size() {
 }
 
 #[test]
+fn glyph_bitmap_padding_centers_smaller_glyph_in_target_slot() {
+    let glyph = GlyphBitmap::try_solid_rgba8(
+        GlyphEntry {
+            slot: 0,
+            generation: 0,
+        },
+        1,
+        1,
+        [12, 34, 56, 255],
+    )
+    .unwrap();
+
+    let padded = glyph.padded_to(3, 3).unwrap();
+
+    assert_eq!(padded.width, 3);
+    assert_eq!(padded.height, 3);
+    assert_eq!(&padded.rgba[16..20], &[12, 34, 56, 255]);
+    assert!(padded.rgba[0..16].iter().all(|byte| *byte == 0));
+    assert!(padded.rgba[20..].iter().all(|byte| *byte == 0));
+}
+
+#[test]
 fn solid_glyph_bitmap_rejects_overflowing_dimensions_before_allocation() {
     let error = GlyphBitmap::try_solid_rgba8(
         GlyphEntry {

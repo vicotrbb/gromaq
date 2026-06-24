@@ -117,7 +117,7 @@ impl GlyphBitmap {
         })
     }
 
-    /// Return this glyph copied into the top-left of a larger transparent bitmap.
+    /// Return this glyph copied into the optical center of a larger transparent bitmap.
     pub fn padded_to(
         &self,
         target_width: u32,
@@ -137,6 +137,9 @@ impl GlyphBitmap {
 
         let source_row_bytes = rgba_row_byte_len(self.width)?;
         let target_row_bytes = rgba_row_byte_len(target_width)?;
+        let target_x = (target_width - self.width) / 2;
+        let target_y = (target_height - self.height) / 2;
+        let target_x_bytes = rgba_row_byte_len(target_x)?;
         let expected_source_len = rgba_byte_len(self.width, self.height)?;
         if self.rgba.len() != expected_source_len {
             return Err(GlyphImageError::InvalidPaddingSourceLength {
@@ -150,7 +153,15 @@ impl GlyphBitmap {
         let mut rgba = zeroed_rgba_buffer(target_width, target_height)?;
         for row in 0..source_height {
             let source_start = checked_rgba_row_offset(row, source_row_bytes)?;
-            let target_start = checked_rgba_row_offset(row, target_row_bytes)?;
+            let target_row = row
+                .checked_add(
+                    usize::try_from(target_y)
+                        .map_err(|_| GlyphImageError::RgbaImageDimensionsTooLarge)?,
+                )
+                .ok_or(GlyphImageError::RgbaRowOffsetTooLarge)?;
+            let target_start = checked_rgba_row_offset(target_row, target_row_bytes)?
+                .checked_add(target_x_bytes)
+                .ok_or(GlyphImageError::RgbaRowOffsetTooLarge)?;
             rgba[target_start..target_start + source_row_bytes]
                 .copy_from_slice(&self.rgba[source_start..source_start + source_row_bytes]);
         }
