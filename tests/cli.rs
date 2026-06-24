@@ -206,7 +206,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -828,6 +828,51 @@ fn no_arguments_launches_native_terminal_app() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
     assert_eq!(app.launches.borrow()[0], NativeAppLaunchConfig::default());
+}
+
+#[test]
+fn window_smoke_launches_bounded_native_terminal_app() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-smoke"], &backend, &app);
+
+    assert_eq!(
+        exit,
+        CliExit {
+            code: 0,
+            stdout: "window smoke: ok\npresented frame limit: 1\n".to_owned(),
+            stderr: String::new(),
+        }
+    );
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(app.launches.borrow().len(), 1);
+    let launch = &app.launches.borrow()[0];
+    assert_eq!(launch.app.exit_after_presented_frames, Some(1));
+    assert_eq!(launch.runtime, NativeAppLaunchConfig::default().runtime);
+    assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
+    assert_eq!(launch.config_path, None);
+}
+
+#[test]
+fn window_smoke_reports_unavailable_native_app_launcher() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--window-smoke"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(
+        exit.stderr
+            .contains("native app launch unavailable for --window-smoke")
+    );
+    assert!(backend.requests.borrow().is_empty());
 }
 
 #[test]

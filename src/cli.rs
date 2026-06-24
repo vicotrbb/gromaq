@@ -166,6 +166,39 @@ where
         }
         return config_template_exit();
     }
+    if command == CliCommand::WindowSmoke {
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        let Some(app_launcher) = app_launcher else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!(
+                    "{}native app launch unavailable for --window-smoke\n",
+                    usage()
+                ),
+            };
+        };
+        let mut launch_config = NativeAppLaunchConfig::default();
+        launch_config.app.exit_after_presented_frames = Some(1);
+        return match app_launcher.launch(launch_config) {
+            Ok(()) => CliExit {
+                code: 0,
+                stdout: "window smoke: ok\npresented frame limit: 1\n".to_owned(),
+                stderr: String::new(),
+            },
+            Err(error) => CliExit {
+                code: 1,
+                stdout: String::new(),
+                stderr: format!("{error}\n"),
+            },
+        };
+    }
     if command == CliCommand::Config {
         let Some(path) = args.next() else {
             return CliExit {
@@ -226,6 +259,9 @@ where
         CliCommand::RuntimeIdleSmoke => runtime_idle_smoke_exit(),
         CliCommand::RuntimeIdleCpuSmoke => runtime_idle_cpu_smoke_exit(),
         CliCommand::FrameSchedulerSmoke => frame_scheduler_smoke_exit(),
-        CliCommand::Config | CliCommand::ConfigCheck | CliCommand::ConfigTemplate => unreachable!(),
+        CliCommand::Config
+        | CliCommand::ConfigCheck
+        | CliCommand::ConfigTemplate
+        | CliCommand::WindowSmoke => unreachable!(),
     }
 }
