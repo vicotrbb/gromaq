@@ -199,8 +199,14 @@ impl NativeTerminalApp {
                 }
             }
         }
-        if self.lifecycle.on_redraw_requested() == NativeAppAction::Exit {
-            event_loop.exit();
+        match self.lifecycle.on_redraw_requested() {
+            NativeAppAction::RequestRedraw => {
+                if let Some(window) = &self.window {
+                    window.request_redraw();
+                }
+            }
+            NativeAppAction::Exit => event_loop.exit(),
+            NativeAppAction::None | NativeAppAction::CreateWindow => {}
         }
     }
 

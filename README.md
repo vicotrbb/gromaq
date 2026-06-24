@@ -100,6 +100,7 @@ Implemented and tested:
 - Presentable `wgpu` surface backend path for clear-pass frame acquisition, queue submission, and present
 - Presentable `wgpu` surface backend path for supplied terminal background, glyph atlas, glyph, and cursor batches
 - Native app wiring that creates, configures, resizes, and presents prepared terminal glyph frames to the window surface
+- Bounded live native-window smoke paths for one-frame startup and multi-frame presentation timing
 - Default native monospace font discovery for app-owned glyph rasterization cache
 - Deterministic 144Hz frame scheduler foundation
 - Deterministic glyph atlas cache with hit/miss/eviction metrics
@@ -109,7 +110,7 @@ Not yet complete:
 
 - Live desktop OS paste menu smoke
 - Hardware-backed 144Hz frame pacing proof
-- Live desktop screenshot/runtime proof of windowed terminal glyph drawing
+- Live desktop screenshot proof of windowed terminal glyph drawing
 - Live desktop OS clipboard paste smoke
 - Broader alternate-screen mouse workflows beyond scripted Vim and tmux proof paths
 - Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows

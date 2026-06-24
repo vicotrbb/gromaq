@@ -55,6 +55,36 @@ fn native_app_lifecycle_exits_after_configured_presented_frame_limit() {
 }
 
 #[test]
+fn native_app_lifecycle_requests_bounded_continuous_redraw_until_frame_limit() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
+        exit_after_presented_frames: Some(3),
+        redraw_until_presented_frame_limit: true,
+        ..NativeAppConfig::default()
+    });
+
+    lifecycle.on_window_created();
+
+    assert_eq!(
+        lifecycle.on_redraw_requested(),
+        NativeAppAction::RequestRedraw
+    );
+    assert_eq!(lifecycle.frames_presented(), 1);
+    assert_eq!(lifecycle.redraw_requests(), 1);
+
+    assert_eq!(
+        lifecycle.on_redraw_requested(),
+        NativeAppAction::RequestRedraw
+    );
+    assert_eq!(lifecycle.frames_presented(), 2);
+    assert_eq!(lifecycle.redraw_requests(), 2);
+
+    assert_eq!(lifecycle.on_redraw_requested(), NativeAppAction::Exit);
+    assert_eq!(lifecycle.frames_presented(), 3);
+    assert_eq!(lifecycle.redraw_requests(), 2);
+    assert!(lifecycle.close_requested());
+}
+
+#[test]
 fn native_app_lifecycle_schedules_next_pty_pump_deadline() {
     let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
     let now = std::time::Instant::now();

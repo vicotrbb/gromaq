@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::ffi::OsString;
 use std::fs;
 
 use gromaq::app::{NativeAppConfig, NativeTerminalRuntimeConfig};
@@ -206,7 +207,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -859,6 +860,46 @@ fn window_smoke_launches_bounded_native_terminal_app() {
 }
 
 #[test]
+fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-perf-smoke"], &backend, &app);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stderr.is_empty());
+    assert!(exit.stdout.starts_with(
+        "window perf smoke: ok\npresented frame limit: 16\ntarget fps: 144\nelapsed ns: "
+    ));
+    let _elapsed_ns = exit
+        .stdout
+        .lines()
+        .find_map(|line| line.strip_prefix("elapsed ns: "))
+        .and_then(|elapsed| elapsed.parse::<u128>().ok())
+        .expect("window perf smoke should report elapsed nanoseconds");
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(app.launches.borrow().len(), 1);
+    let launch = &app.launches.borrow()[0];
+    assert_eq!(launch.app.exit_after_presented_frames, Some(16));
+    assert!(launch.app.redraw_until_presented_frame_limit);
+    assert_eq!(launch.app.target_fps, 144);
+    assert_eq!(launch.runtime.shell.program, "/bin/sh");
+    assert_eq!(
+        launch.runtime.shell.args,
+        vec![
+            OsString::from("-lc"),
+            OsString::from("printf 'gromaq window perf smoke\\nframe pacing probe\\n'")
+        ]
+    );
+    assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
+    assert_eq!(launch.config_path, None);
+}
+
+#[test]
 fn window_smoke_reports_unavailable_native_app_launcher() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
@@ -871,6 +912,23 @@ fn window_smoke_reports_unavailable_native_app_launcher() {
     assert!(
         exit.stderr
             .contains("native app launch unavailable for --window-smoke")
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn window_perf_smoke_reports_unavailable_native_app_launcher() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--window-perf-smoke"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(
+        exit.stderr
+            .contains("native app launch unavailable for --window-perf-smoke")
     );
     assert!(backend.requests.borrow().is_empty());
 }
