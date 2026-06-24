@@ -13,15 +13,17 @@ mod idle;
 
 const RUNTIME_RENDER_P95_BUDGET_NS: u64 = 6_940_000;
 const RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS: u64 = 10_000_000;
+const RUNTIME_PERF_P95_SMOKE_SAMPLES: usize = 16;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct RuntimePerfProbe {
     pumped_bytes: usize,
+    expected_samples: usize,
     metrics: crate::app::NativeRuntimePerfSnapshot,
 }
 
 pub(in crate::cli) fn runtime_perf_smoke_exit() -> CliExit {
-    let probe = match run_runtime_perf_probe() {
+    let probe = match run_runtime_perf_probe(1) {
         Ok(probe) => probe,
         Err(error) => return runtime_perf_smoke_error(error),
     };
@@ -29,7 +31,7 @@ pub(in crate::cli) fn runtime_perf_smoke_exit() -> CliExit {
 }
 
 pub(in crate::cli) fn runtime_perf_budget_smoke_exit() -> CliExit {
-    let probe = match run_runtime_perf_probe() {
+    let probe = match run_runtime_perf_probe(1) {
         Ok(probe) => probe,
         Err(error) => return runtime_perf_budget_smoke_error(error),
     };
@@ -56,7 +58,41 @@ pub(in crate::cli) fn runtime_perf_budget_smoke_exit() -> CliExit {
     }
 }
 
-fn run_runtime_perf_probe() -> Result<RuntimePerfProbe, String> {
+pub(in crate::cli) fn runtime_perf_p95_smoke_exit() -> CliExit {
+    let probe = match run_runtime_perf_probe(RUNTIME_PERF_P95_SMOKE_SAMPLES) {
+        Ok(probe) => probe,
+        Err(error) => return runtime_perf_p95_smoke_error(error),
+    };
+    let Some(failure) = runtime_perf_budget_failure(&probe) else {
+        return CliExit {
+            code: 0,
+            stdout: format!(
+                "runtime perf p95 smoke: ok\nsamples: {}\npumped bytes: {}\nrendered frames: {}\nrender p95 ns: {}\nrender p95 budget ns: {}\ninput-to-render p95 ns: {}\ninput-to-render p95 budget ns: {}\nrender max ns: {}\ninput-to-render max ns: {}\n",
+                probe.expected_samples,
+                probe.pumped_bytes,
+                probe.metrics.rendered_frames,
+                probe.metrics.render_time_p95_ns,
+                RUNTIME_RENDER_P95_BUDGET_NS,
+                probe.metrics.input_to_render_p95_ns,
+                RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS,
+                probe.metrics.render_time_max_ns,
+                probe.metrics.input_to_render_max_ns
+            ),
+            stderr: String::new(),
+        };
+    };
+
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime perf p95 smoke failed: {failure}\n"),
+    }
+}
+
+fn run_runtime_perf_probe(samples: usize) -> Result<RuntimePerfProbe, String> {
+    if samples == 0 {
+        return Err("runtime perf probe requires at least one sample".to_owned());
+    }
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 24,
         terminal_rows: 4,
@@ -76,38 +112,46 @@ fn run_runtime_perf_probe() -> Result<RuntimePerfProbe, String> {
         return Err(error.to_string());
     }
 
-    let key = Key::Character("x".into());
-    let sent = match runtime.send_winit_key_input(&key, ModifiersState::empty()) {
-        Ok(sent) => sent,
-        Err(error) => return Err(error.to_string()),
-    };
-    let pumped_bytes = match runtime.pump_pty_output() {
-        Ok(bytes) => bytes,
-        Err(error) => return Err(error.to_string()),
-    };
     let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
         Ok(renderer) => renderer,
         Err(error) => return Err(error.to_string()),
     };
-    let rendered = match runtime.render_terminal_frame(&mut renderer) {
-        Ok(rendered) => rendered,
-        Err(error) => return Err(error.to_string()),
-    };
+    let mut pumped_bytes = 0;
+    for sample in 0..samples {
+        let key = Key::Character(sample_key(sample).to_string().into());
+        let sent = match runtime.send_winit_key_input(&key, ModifiersState::empty()) {
+            Ok(sent) => sent,
+            Err(error) => return Err(error.to_string()),
+        };
+        let pumped = match runtime.pump_pty_output() {
+            Ok(bytes) => bytes,
+            Err(error) => return Err(error.to_string()),
+        };
+        let rendered = match runtime.render_terminal_frame(&mut renderer) {
+            Ok(rendered) => rendered,
+            Err(error) => return Err(error.to_string()),
+        };
+        if !sent || pumped == 0 || !rendered {
+            return Err(format!(
+                "input echo sample {} did not reach a rendered frame",
+                sample + 1
+            ));
+        }
+        pumped_bytes += pumped;
+    }
     let metrics = runtime.dump_runtime_perf_metrics();
 
-    if !sent
-        || pumped_bytes == 0
-        || !rendered
-        || metrics.rendered_dirty_regions == 0
+    if metrics.rendered_dirty_regions == 0
         || metrics.rendered_dirty_cells == 0
-        || metrics.render_time_samples == 0
-        || metrics.input_to_render_samples == 0
+        || metrics.render_time_samples != samples as u64
+        || metrics.input_to_render_samples != samples as u64
     {
-        return Err("input echo did not reach a rendered frame".to_owned());
+        return Err("input echo did not produce the expected performance samples".to_owned());
     }
 
     Ok(RuntimePerfProbe {
         pumped_bytes,
+        expected_samples: samples,
         metrics,
     })
 }
@@ -133,6 +177,10 @@ fn runtime_perf_smoke_success(probe: RuntimePerfProbe) -> CliExit {
         ),
         stderr: String::new(),
     }
+}
+
+fn sample_key(sample: usize) -> char {
+    char::from(b'a' + u8::try_from(sample % 26).unwrap_or(0))
 }
 
 fn runtime_perf_budget_failure(probe: &RuntimePerfProbe) -> Option<&'static str> {
@@ -161,6 +209,14 @@ fn runtime_perf_budget_smoke_error(error: impl std::fmt::Display) -> CliExit {
     }
 }
 
+fn runtime_perf_p95_smoke_error(error: impl std::fmt::Display) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!("runtime perf p95 smoke failed: {error}\n"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -169,6 +225,7 @@ mod tests {
     fn runtime_perf_budget_accepts_p95_values_within_limits() {
         let probe = RuntimePerfProbe {
             pumped_bytes: 1,
+            expected_samples: 1,
             metrics: crate::app::NativeRuntimePerfSnapshot {
                 render_time_p95_ns: RUNTIME_RENDER_P95_BUDGET_NS,
                 input_to_render_p95_ns: RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS,
@@ -183,6 +240,7 @@ mod tests {
     fn runtime_perf_budget_rejects_render_p95_over_144hz_budget() {
         let probe = RuntimePerfProbe {
             pumped_bytes: 1,
+            expected_samples: 1,
             metrics: crate::app::NativeRuntimePerfSnapshot {
                 render_time_p95_ns: RUNTIME_RENDER_P95_BUDGET_NS + 1,
                 input_to_render_p95_ns: RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS,
@@ -200,6 +258,7 @@ mod tests {
     fn runtime_perf_budget_rejects_input_to_render_p95_over_latency_budget() {
         let probe = RuntimePerfProbe {
             pumped_bytes: 1,
+            expected_samples: 1,
             metrics: crate::app::NativeRuntimePerfSnapshot {
                 render_time_p95_ns: RUNTIME_RENDER_P95_BUDGET_NS,
                 input_to_render_p95_ns: RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS + 1,
@@ -211,5 +270,16 @@ mod tests {
             runtime_perf_budget_failure(&probe),
             Some("input-to-render p95 exceeded latency budget")
         );
+    }
+
+    #[test]
+    fn runtime_perf_probe_collects_repeated_samples() {
+        let probe = run_runtime_perf_probe(4).unwrap();
+
+        assert_eq!(probe.expected_samples, 4);
+        assert_eq!(probe.pumped_bytes, 4);
+        assert_eq!(probe.metrics.rendered_frames, 4);
+        assert_eq!(probe.metrics.render_time_samples, 4);
+        assert_eq!(probe.metrics.input_to_render_samples, 4);
     }
 }

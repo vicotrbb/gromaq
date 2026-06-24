@@ -25,6 +25,8 @@ pub(super) enum CliCommand<'a> {
     RuntimePerfSmoke,
     /// Runtime performance budget smoke command.
     RuntimePerfBudgetSmoke,
+    /// Repeated runtime p95 performance smoke command.
+    RuntimePerfP95Smoke,
     /// Runtime large-output smoke command.
     RuntimeLargeOutputSmoke,
     /// Runtime bounded-state smoke command.
@@ -74,6 +76,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-scrollback-smoke" => Some(CliCommand::RuntimeScrollbackSmoke),
         "--runtime-perf-smoke" => Some(CliCommand::RuntimePerfSmoke),
         "--runtime-perf-budget-smoke" => Some(CliCommand::RuntimePerfBudgetSmoke),
+        "--runtime-perf-p95-smoke" => Some(CliCommand::RuntimePerfP95Smoke),
         "--runtime-large-output-smoke" => Some(CliCommand::RuntimeLargeOutputSmoke),
         "--runtime-bounded-state-smoke" => Some(CliCommand::RuntimeBoundedStateSmoke),
         "--runtime-memory-smoke" => Some(CliCommand::RuntimeMemorySmoke),
@@ -93,5 +96,5 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
 
 /// User-facing usage text.
 pub(super) fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\n".to_owned()
 }

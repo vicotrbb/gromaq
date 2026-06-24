@@ -30,8 +30,8 @@ use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
 use runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
 use runtime_input_smoke::{
     runtime_focus_smoke_exit, runtime_idle_cpu_smoke_exit, runtime_idle_smoke_exit,
-    runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit, runtime_perf_smoke_exit,
-    runtime_response_smoke_exit,
+    runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit, runtime_perf_p95_smoke_exit,
+    runtime_perf_smoke_exit, runtime_response_smoke_exit,
 };
 use runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
@@ -202,6 +202,7 @@ where
         CliCommand::RuntimeScrollbackSmoke => runtime_scrollback_smoke_exit(),
         CliCommand::RuntimePerfSmoke => runtime_perf_smoke_exit(),
         CliCommand::RuntimePerfBudgetSmoke => runtime_perf_budget_smoke_exit(),
+        CliCommand::RuntimePerfP95Smoke => runtime_perf_p95_smoke_exit(),
         CliCommand::RuntimeLargeOutputSmoke => runtime_large_output_smoke_exit(),
         CliCommand::RuntimeBoundedStateSmoke => runtime_bounded_state_smoke_exit(),
         CliCommand::RuntimeMemorySmoke => runtime_memory_smoke_exit(),
