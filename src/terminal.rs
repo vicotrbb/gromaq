@@ -12,6 +12,7 @@ use crate::mouse::{MouseEvent, MouseReportState};
 use crate::scrollback::Scrollback;
 use crate::selection::SelectionRange;
 
+mod cursor;
 mod edit;
 mod modes;
 mod osc;
