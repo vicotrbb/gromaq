@@ -245,6 +245,7 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
     assert!(exit.stdout.contains("[theme]"));
+    assert!(exit.stdout.contains("ansi = [\"#151922\", \"#ff6b7a\""));
     assert!(exit.stdout.contains("surface_padding_px = 14"));
     assert!(exit.stdout.contains("[performance]"));
     let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
