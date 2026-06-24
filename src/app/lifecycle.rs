@@ -296,6 +296,7 @@ impl NativeAppLifecycle {
     }
 
     fn record_frame_presented_at(&mut self, presented_at: Instant) {
-        self.frame_intervals.record_presented_at(presented_at);
+        self.frame_intervals
+            .record_presented_at(presented_at, self.config.target_fps);
     }
 }

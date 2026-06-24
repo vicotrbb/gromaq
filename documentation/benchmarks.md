@@ -21,6 +21,11 @@ The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
+On 2026-06-24, `cargo run -- --window-perf-smoke` launched a bounded live native
+window run, presented 16 frames, measured 15 presented-frame intervals, reported
+average interval 12101047 ns, max interval 47056042 ns, p95 bucket 50000000 ns,
+and 7 dropped frames. This is live-window evidence, but it is still not a 144Hz
+acceptance pass.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95

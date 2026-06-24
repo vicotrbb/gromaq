@@ -49,13 +49,14 @@ where
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\ndropped frames: {}\n",
                         report.frames_presented,
                         started_at.elapsed().as_nanos(),
                         report.frame_interval_samples,
                         report.frame_interval_avg_ns,
                         report.frame_interval_max_ns,
-                        report.frame_interval_p95_ns
+                        report.frame_interval_p95_ns,
+                        report.dropped_frames
                     ),
                     stderr: String::new(),
                 }

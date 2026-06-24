@@ -94,6 +94,28 @@ fn native_app_lifecycle_requests_bounded_continuous_redraw_until_frame_limit() {
     assert_eq!(report.frame_interval_avg_ns, 8_000_000);
     assert_eq!(report.frame_interval_max_ns, 9_000_000);
     assert_eq!(report.frame_interval_p95_ns, 10_000_000);
+    assert_eq!(report.dropped_frames, 0);
+}
+
+#[test]
+fn native_app_lifecycle_reports_dropped_presented_frame_intervals() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
+        exit_after_presented_frames: Some(3),
+        redraw_until_presented_frame_limit: true,
+        ..NativeAppConfig::default()
+    });
+    let first_presented_at = Instant::now();
+
+    lifecycle.on_window_created();
+    lifecycle.on_redraw_requested_at(first_presented_at);
+    lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_nanos(6_944_444));
+    lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_nanos(27_777_776));
+
+    let report = lifecycle.run_report();
+
+    assert_eq!(report.frames_presented, 3);
+    assert_eq!(report.frame_interval_samples, 2);
+    assert_eq!(report.dropped_frames, 2);
 }
 
 #[test]
