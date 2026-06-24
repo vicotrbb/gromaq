@@ -1,6 +1,6 @@
 //! Native `winit` application loop boundary.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -12,13 +12,14 @@ use winit::keyboard::ModifiersState;
 use winit::window::{Window, WindowId};
 
 use crate::clipboard::NativeClipboard;
-use crate::config::{ConfigFileReloader, GromaqConfig};
+use crate::config::ConfigFileReloader;
 use crate::font::RasterizedGlyphCache;
 use crate::mouse::{MouseButton, MouseEventKind};
 use crate::native_gpu::{GpuBootstrap, GpuBootstrapConfig, NativeGpuContext};
-use crate::pty::{PtySession, ShellCommand};
+use crate::pty::PtySession;
 use crate::renderer::{RendererConfig, SurfaceFrameError, WgpuRenderer, WgpuSurfaceBackend};
 
+mod config_reload;
 mod errors;
 mod lifecycle;
 mod native_input;
@@ -34,7 +35,7 @@ pub use native_input::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
     NativeWindowMouseInput, is_native_copy_shortcut, is_native_paste_shortcut,
 };
-use native_input::{clamp_u32_to_u16, native_mouse_button, wheel_mouse_button};
+use native_input::{native_mouse_button, wheel_mouse_button};
 pub use perf::{NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot};
 pub use pty_bridge::{
     NativePtySessionIo, NativePtySpawner, NativeTerminalRuntimeConfig, RealNativePtySpawner,
@@ -133,129 +134,10 @@ impl NativeTerminalApp {
         &self.renderer
     }
 
-    /// Install a config-file reloader for live reloadable settings.
-    pub fn set_config_reloader(&mut self, config_reloader: ConfigFileReloader) {
-        self.config_reloader = Some(config_reloader);
-    }
-
-    /// Poll the installed config file and apply reloadable settings when it changed.
-    pub fn reload_config_if_changed(&mut self) -> Result<bool, NativeAppError> {
-        let Some(reload) = self
-            .config_reloader
-            .as_mut()
-            .map(ConfigFileReloader::reload_if_changed)
-            .transpose()
-            .map_err(|error| NativeAppError::Runtime(error.to_string()))?
-        else {
-            return Ok(false);
-        };
-        if !reload.changed {
-            return Ok(false);
-        }
-        self.apply_reloadable_gromaq_config(&reload.config)?;
-        Ok(true)
-    }
-
-    /// Apply validated user configuration fields that are reloadable without restarting the PTY.
-    pub fn apply_reloadable_gromaq_config(
-        &mut self,
-        config: &GromaqConfig,
-    ) -> Result<(), NativeAppError> {
-        let app_config = NativeAppConfig::from_gromaq_config(config)?;
-        let reloaded_shell = shell_command_from_gromaq_config(config);
-        let shell_changed = self.runtime.config().shell != reloaded_shell;
-        let mut runtime_config =
-            NativeTerminalRuntimeConfig::from_gromaq_config(config, reloaded_shell.clone())?;
-        let (reference_width_px, reference_height_px, pixel_width, pixel_height) =
-            self.reload_reference_size(&app_config);
-        runtime_config.pixel_width = pixel_width;
-        runtime_config.pixel_height = pixel_height;
-        let resize_mapper = NativeResizeGridMapper::new(
-            reference_width_px,
-            reference_height_px,
-            runtime_config.terminal_cols,
-            runtime_config.terminal_rows,
-        )
-        .ok_or_else(|| {
-            NativeAppError::Runtime(
-                "native window and terminal reference dimensions must be non-zero".to_owned(),
-            )
-        })?;
-        let renderer_config = RendererConfig::from_gromaq_config(config)
-            .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
-        let clear_color = self.renderer.config().clear_color;
-        let terminal_config_changed = self.runtime.config().terminal_cols
-            != runtime_config.terminal_cols
-            || self.runtime.config().terminal_rows != runtime_config.terminal_rows
-            || self.runtime.config().scrollback_lines != runtime_config.scrollback_lines
-            || self.runtime.config().pixel_width != runtime_config.pixel_width
-            || self.runtime.config().pixel_height != runtime_config.pixel_height;
-        if terminal_config_changed {
-            self.runtime.reconfigure_terminal(runtime_config)?;
-        }
-        if shell_changed {
-            if self.runtime.has_shell_session() {
-                self.runtime
-                    .restart_shell(reloaded_shell, &self.pty_spawner)?;
-            } else {
-                self.runtime.set_shell_command(reloaded_shell);
-            }
-        }
-        self.resize_mapper = resize_mapper;
-        self.lifecycle.apply_config(app_config);
-        self.renderer.reconfigure(RendererConfig {
-            clear_color,
-            ..renderer_config
-        });
-        self.runtime.invalidate_terminal_frame();
-        Ok(())
-    }
-
-    fn reload_reference_size(&self, app_config: &NativeAppConfig) -> (u32, u32, u16, u16) {
-        if let Some(window) = &self.window {
-            let size = window.inner_size();
-            if size.width > 0 && size.height > 0 {
-                return (
-                    size.width,
-                    size.height,
-                    clamp_u32_to_u16(size.width),
-                    clamp_u32_to_u16(size.height),
-                );
-            }
-        }
-        (
-            app_config.width,
-            app_config.height,
-            self.runtime.config().pixel_width,
-            self.runtime.config().pixel_height,
-        )
-    }
-
     /// Take a startup error captured from the event handler.
     pub fn take_startup_error(&mut self) -> Option<String> {
         self.startup_error.take()
     }
-
-    /// Configure the user-event proxy used by the PTY background reader.
-    pub fn set_event_proxy(&mut self, event_proxy: NativeAppEventProxy) {
-        self.pty_spawner = RealNativePtySpawner::with_event_proxy(event_proxy);
-    }
-}
-
-fn shell_command_from_gromaq_config(config: &GromaqConfig) -> ShellCommand {
-    let mut shell = config
-        .shell
-        .program
-        .as_ref()
-        .map(|program| ShellCommand {
-            program: program.into(),
-            args: Vec::new(),
-            cwd: None,
-        })
-        .unwrap_or_else(ShellCommand::default_shell);
-    shell.args = config.shell.args.iter().map(Into::into).collect();
-    shell.cwd = config.shell.cwd.as_ref().map(PathBuf::from);
-    shell
 }
 
 impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
