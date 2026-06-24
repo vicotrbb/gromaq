@@ -48,13 +48,7 @@ pub(super) fn render_glyph_frame_to_view(
         },
     );
     let atlas_view = atlas.create_view(&wgpu::TextureViewDescriptor::default());
-    let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-        label: Some("gromaq-surface-glyph-sampler"),
-        mag_filter: wgpu::FilterMode::Nearest,
-        min_filter: wgpu::FilterMode::Nearest,
-        mipmap_filter: wgpu::MipmapFilterMode::Nearest,
-        ..Default::default()
-    });
+    let sampler = device.create_sampler(&surface_glyph_sampler_descriptor());
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("gromaq-surface-glyph-bind-group-layout"),
         entries: &[
@@ -268,4 +262,28 @@ pub(super) fn render_glyph_frame_to_view(
     }
     queue.submit([encoder.finish()]);
     Ok(())
+}
+
+fn surface_glyph_sampler_descriptor() -> wgpu::SamplerDescriptor<'static> {
+    wgpu::SamplerDescriptor {
+        label: Some("gromaq-surface-glyph-sampler"),
+        mag_filter: wgpu::FilterMode::Linear,
+        min_filter: wgpu::FilterMode::Linear,
+        mipmap_filter: wgpu::MipmapFilterMode::Nearest,
+        ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn surface_glyph_sampler_uses_linear_filtering_for_text() {
+        let descriptor = surface_glyph_sampler_descriptor();
+
+        assert_eq!(descriptor.mag_filter, wgpu::FilterMode::Linear);
+        assert_eq!(descriptor.min_filter, wgpu::FilterMode::Linear);
+        assert_eq!(descriptor.mipmap_filter, wgpu::MipmapFilterMode::Nearest);
+    }
 }
