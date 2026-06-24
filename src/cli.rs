@@ -9,13 +9,12 @@ mod config_commands;
 mod frame_scheduler_smoke;
 mod gpu;
 mod runtime_alternate_screen_smoke;
+mod runtime_clipboard_smoke;
 mod runtime_config_reload_smoke;
 mod runtime_input_smoke;
 mod runtime_output_smoke;
 mod runtime_reflow_smoke;
-use clipboard_smoke::{
-    clipboard_smoke_exit, osc52_clipboard_smoke_exit, restore_clipboard_after_smoke,
-};
+use clipboard_smoke::{clipboard_smoke_exit, osc52_clipboard_smoke_exit};
 pub use config_commands::{
     NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,
 };
@@ -26,6 +25,7 @@ use frame_scheduler_smoke::frame_scheduler_smoke_exit;
 use gpu::gpu_command_exit;
 pub use gpu::{AdapterReport, GpuCommandContext};
 use runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
+use runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
 use runtime_input_smoke::{
     runtime_focus_smoke_exit, runtime_idle_smoke_exit, runtime_mouse_smoke_exit,
@@ -39,14 +39,13 @@ use runtime_reflow_smoke::runtime_reflow_smoke_exit;
 
 use crate::app::{
     NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime, NativeTerminalRuntimeConfig,
-    is_native_paste_shortcut, load_default_native_glyph_cache,
+    load_default_native_glyph_cache,
 };
 use crate::clipboard::{HostClipboard, NativeClipboard};
 use crate::native_gpu::GpuBootstrapBackend;
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
 use crate::renderer::{PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
 
-const RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT: &str = "gromaq runtime clipboard paste";
 const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
 const RUNTIME_SCROLLBACK_SMOKE_TEXT: &str = "one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix";
 
@@ -284,118 +283,6 @@ where
 
 fn usage() -> String {
     "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-struct RuntimeClipboardPasteSmokePtySpawner;
-
-#[derive(Debug, Default)]
-struct RuntimeClipboardPasteSmokePtySession {
-    input: Vec<Vec<u8>>,
-}
-
-impl NativePtySpawner for RuntimeClipboardPasteSmokePtySpawner {
-    type Session = RuntimeClipboardPasteSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeClipboardPasteSmokePtySession::default())
-    }
-}
-
-impl NativePtySessionIo for RuntimeClipboardPasteSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(Vec::new())
-    }
-
-    fn write_input(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
-        self.input.push(bytes.to_vec());
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: crate::app::NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
-
-fn runtime_clipboard_paste_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> CliExit {
-    let paste_key_recognized =
-        is_native_paste_shortcut(&Key::Named(NamedKey::Paste), ModifiersState::empty());
-    if !paste_key_recognized {
-        return CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: "runtime clipboard paste smoke failed: OS Paste key was not recognized\n"
-                .to_owned(),
-        };
-    }
-    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 24,
-        terminal_rows: 4,
-        scrollback_lines: 128,
-        pixel_width: 0,
-        pixel_height: 0,
-        shell: ShellCommand {
-            program: "/bin/sh".into(),
-            args: Vec::new(),
-            cwd: None,
-        },
-    }) {
-        Ok(runtime) => runtime,
-        Err(error) => return runtime_clipboard_paste_smoke_error(error),
-    };
-    if let Err(error) = runtime.start_shell(&RuntimeClipboardPasteSmokePtySpawner) {
-        return runtime_clipboard_paste_smoke_error(error);
-    }
-
-    let previous_text = clipboard.read_text();
-    clipboard.write_text(RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT);
-    let paste_result = runtime.send_clipboard_paste(clipboard);
-    let restored_previous_text =
-        restore_clipboard_after_smoke(clipboard, previous_text, RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT);
-    let pasted = match paste_result {
-        Ok(pasted) => pasted,
-        Err(error) => return runtime_clipboard_paste_smoke_error(error),
-    };
-    let metrics = runtime.dump_runtime_perf_metrics();
-    let pasted_bytes = runtime
-        .shell_session()
-        .and_then(|session| session.input.last())
-        .map(Vec::as_slice);
-
-    if !pasted
-        || pasted_bytes != Some(RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT.as_bytes())
-        || metrics.clipboard_pastes != 1
-        || metrics.paste_bytes != RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT.len() as u64
-        || metrics.pty_input_writes != 1
-        || metrics.pty_input_bytes != RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT.len() as u64
-    {
-        return CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: "runtime clipboard paste smoke failed: clipboard text did not reach the PTY\n"
-                .to_owned(),
-        };
-    }
-
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime clipboard paste smoke: ok\npaste key recognized: {}\npasted bytes: {}\nclipboard pastes: {}\nprevious text restored: {}\n",
-            paste_key_recognized,
-            RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT.len(),
-            metrics.clipboard_pastes,
-            restored_previous_text
-        ),
-        stderr: String::new(),
-    }
-}
-
-fn runtime_clipboard_paste_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime clipboard paste smoke failed: {error}\n"),
-    }
 }
 
 #[derive(Debug, Clone, Copy, Default)]
