@@ -9,6 +9,7 @@ use crate::app::{
 };
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
 use crate::renderer::{PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
+use crate::selection::SelectionRange;
 
 const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
 
@@ -69,6 +70,7 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
         Ok(bytes) => bytes,
         Err(error) => return runtime_glyph_frame_smoke_error(error),
     };
+    runtime.set_selection(SelectionRange::new((0, 0), (0, 5)));
     let mut renderer = match WgpuRenderer::new(RendererConfig::default()) {
         Ok(renderer) => renderer,
         Err(error) => return runtime_glyph_frame_smoke_error(error),
@@ -86,6 +88,9 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
     };
     if plan.glyphs.is_empty() {
         return runtime_glyph_frame_smoke_failure("render plan contained no glyphs");
+    }
+    if plan.backgrounds.is_empty() {
+        return runtime_glyph_frame_smoke_failure("render plan contained no selection background");
     }
     let mut glyph_cache = match load_default_native_glyph_cache() {
         Ok(glyph_cache) => glyph_cache,
@@ -112,6 +117,8 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
     if pumped_bytes == 0
         || surface_frame.batch.quads.is_empty()
         || surface_frame.batch.indices.is_empty()
+        || surface_frame.background_batch.quads.is_empty()
+        || surface_frame.cursor_batch.quads.is_empty()
         || surface_frame.atlas.occupied_slots == 0
         || surface_frame.atlas.rgba.is_empty()
         || atlas_metrics.misses == 0
@@ -123,25 +130,42 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
             "prepared glyph frame did not contain presentable glyph data",
         );
     }
+    let selection_color = surface_frame.background_batch.quads[0].vertices[0].color_rgba;
+    let expected_selection = renderer.config().selection_background_rgba8;
+    if !normalized_color_matches_rgba8(selection_color, expected_selection) {
+        return runtime_glyph_frame_smoke_failure("selection background did not use theme color");
+    }
 
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nrenderer atlas hits: {}\nrenderer atlas misses: {}\nrenderer atlas entries: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\natlas bytes: {}\nframe size: {}x{}\n",
+            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nselection backgrounds: {}\nrenderer atlas hits: {}\nrenderer atlas misses: {}\nrenderer atlas entries: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\nframe size: {}x{}\nline height px: {}\nsurface padding px: {}\n",
             pumped_bytes,
             plan.glyphs.len(),
+            plan.backgrounds.len(),
             atlas_metrics.hits,
             atlas_metrics.misses,
             atlas_metrics.entries,
             glyphs.rasterized,
             glyphs.reused,
             surface_frame.batch.quads.len(),
+            surface_frame.background_batch.quads.len(),
+            surface_frame.cursor_batch.quads.len(),
             surface_frame.atlas.rgba.len(),
             surface_frame.width,
-            surface_frame.height
+            surface_frame.height,
+            renderer.config().line_height_px,
+            renderer.config().surface_padding_px
         ),
         stderr: String::new(),
     }
+}
+
+fn normalized_color_matches_rgba8(actual: [f32; 4], expected: [u8; 4]) -> bool {
+    actual
+        .into_iter()
+        .zip(expected)
+        .all(|(actual, expected)| (actual - (f32::from(expected) / 255.0)).abs() <= 0.001)
 }
 
 fn runtime_glyph_frame_smoke_error(error: impl std::fmt::Display) -> CliExit {

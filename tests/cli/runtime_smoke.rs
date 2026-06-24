@@ -41,13 +41,18 @@ fn runtime_glyph_frame_smoke_cli_reports_prepared_frame_without_gpu_bootstrap() 
     assert!(exit.stdout.contains("runtime glyph frame smoke: ok"));
     assert!(exit.stdout.contains("pumped bytes: 19"));
     assert!(exit.stdout.contains("planned glyphs:"));
+    assert!(exit.stdout.contains("selection backgrounds:"));
     assert!(exit.stdout.contains("renderer atlas hits:"));
     assert!(exit.stdout.contains("renderer atlas misses:"));
     assert!(exit.stdout.contains("renderer atlas entries:"));
     assert!(exit.stdout.contains("rasterized glyphs:"));
     assert!(exit.stdout.contains("prepared quads:"));
+    assert!(exit.stdout.contains("background quads:"));
+    assert!(exit.stdout.contains("cursor quads:"));
     assert!(exit.stdout.contains("atlas bytes:"));
     assert!(exit.stdout.contains("frame size:"));
+    assert!(exit.stdout.contains("line height px: 18"));
+    assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
