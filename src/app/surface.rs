@@ -174,6 +174,7 @@ where
         plan,
         &glyphs.bitmaps,
         renderer.config().font_size_px,
+        renderer.config().line_height_px,
         clear_color,
         renderer.config().cursor_color_rgba8,
         renderer.config().surface_padding_px,

@@ -48,6 +48,17 @@ pub enum GromaqError {
         actual: f32,
     },
 
+    /// Font line height must be useful for rendering.
+    #[error("font line height must be finite and between {minimum} and {maximum}, got {actual}")]
+    InvalidLineHeight {
+        /// Inclusive lower bound.
+        minimum: f32,
+        /// Inclusive upper bound.
+        maximum: f32,
+        /// Actual invalid value.
+        actual: f32,
+    },
+
     /// Frame target must stay within supported deterministic pacing bounds.
     #[error("target fps must be between {minimum} and {maximum}, got {actual}")]
     InvalidTargetFps {

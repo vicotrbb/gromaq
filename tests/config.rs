@@ -73,13 +73,35 @@ fn invalid_font_sizes_are_rejected() {
 }
 
 #[test]
+fn invalid_line_heights_are_rejected() {
+    for line_height_px in [5.9, f32::NAN, f32::INFINITY, 1025.0] {
+        let mut config = GromaqConfig::default();
+        config.font.line_height_px = line_height_px;
+
+        let error = config.validate().unwrap_err();
+
+        assert!(error.to_string().contains("line height"));
+    }
+
+    let mut config = GromaqConfig::default();
+    config.font.size_px = 18.0;
+    config.font.line_height_px = 17.0;
+
+    let error = config.validate().unwrap_err();
+
+    assert!(error.to_string().contains("line height"));
+}
+
+#[test]
 fn font_settings_round_renderer_font_size_for_cache_keys() {
     let mut config = GromaqConfig::default();
     config.font.size_px = 16.5;
+    config.font.line_height_px = 20.5;
 
     config.validate().unwrap();
 
     assert_eq!(config.font.renderer_font_size_px(), 17);
+    assert_eq!(config.font.renderer_line_height_px(), 21);
 }
 
 #[test]

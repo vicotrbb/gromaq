@@ -73,6 +73,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.performance.target_fps = 120;
     config.performance.dirty_region_rendering = false;
     config.font.size_px = 16.5;
+    config.font.line_height_px = 21.0;
     config.theme.background = "#1f2028".to_owned();
     config.theme.foreground = "#e8e2d6".to_owned();
     config.theme.cursor = "#f4c06a".to_owned();
@@ -85,6 +86,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     assert_eq!(renderer_config.target_fps, 120);
     assert!(!renderer_config.dirty_regions);
     assert_eq!(renderer_config.font_size_px, 17);
+    assert_eq!(renderer_config.line_height_px, 21);
     assert_eq!(
         renderer_config.clear_color,
         [
@@ -217,6 +219,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
         plan,
         &glyphs.bitmaps,
         renderer.config().font_size_px,
+        renderer.config().line_height_px,
         [0.0, 0.0, 0.0, 1.0],
         [244, 192, 106, 255],
         12,

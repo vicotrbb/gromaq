@@ -244,6 +244,7 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("[shell]"));
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
+    assert!(exit.stdout.contains("line_height_px = 18"));
     assert!(exit.stdout.contains("[theme]"));
     assert!(exit.stdout.contains("selection = \"#26364f\""));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
@@ -273,6 +274,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         [font]
         family = "Gromaq Mono"
         size_px = 16.5
+        line_height_px = 21
 
         [theme]
         background = "#1f2028"
@@ -306,6 +308,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("shell args: -l"));
     assert!(exit.stdout.contains("shell cwd: /tmp"));
     assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
+    assert!(exit.stdout.contains("line height: 21px"));
     assert!(exit.stdout.contains("theme background: #1f2028"));
     assert!(exit.stdout.contains("theme foreground: #e8e2d6"));
     assert!(exit.stdout.contains("theme cursor: #f4c06a"));
@@ -575,6 +578,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             target_fps: 120,
             dirty_regions: false,
             font_size_px: 17,
+            line_height_px: 18,
             ..RendererConfig::default()
         }
     );

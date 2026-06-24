@@ -12,8 +12,8 @@ mod theme;
 
 pub use reload::{ConfigFileReloader, ConfigReload};
 pub use settings::{
-    FontSettings, MAX_FONT_SIZE_PX, MAX_TARGET_FPS, MAX_TERMINAL_CELLS, MIN_FONT_SIZE_PX,
-    PerformanceSettings, ShellSettings, TerminalSettings,
+    FontSettings, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX, MAX_TARGET_FPS, MAX_TERMINAL_CELLS,
+    MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX, PerformanceSettings, ShellSettings, TerminalSettings,
 };
 pub use theme::{
     ANSI_COLOR_COUNT, CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_ANSI_COLORS_RGB8,
@@ -82,6 +82,16 @@ impl GromaqConfig {
                 minimum: MIN_FONT_SIZE_PX,
                 maximum: MAX_FONT_SIZE_PX,
                 actual: self.font.size_px,
+            });
+        }
+        if !self.font.line_height_px.is_finite()
+            || !(MIN_LINE_HEIGHT_PX..=MAX_LINE_HEIGHT_PX).contains(&self.font.line_height_px)
+            || self.font.line_height_px < self.font.size_px
+        {
+            return Err(GromaqError::InvalidLineHeight {
+                minimum: self.font.size_px.max(MIN_LINE_HEIGHT_PX),
+                maximum: MAX_LINE_HEIGHT_PX,
+                actual: self.font.line_height_px,
             });
         }
         if !(1..=MAX_TARGET_FPS).contains(&self.performance.target_fps) {

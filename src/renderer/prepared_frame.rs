@@ -47,6 +47,7 @@ impl PreparedSurfaceGlyphFrame {
         plan: &RenderPlan,
         glyphs: &[GlyphBitmap],
         fallback_cell_size_px: u16,
+        line_height_px: u16,
         clear_color: [f64; 4],
         cursor_color_rgba8: [u8; 4],
         surface_padding_px: u16,
@@ -69,6 +70,7 @@ impl PreparedSurfaceGlyphFrame {
         }
 
         let fallback_cell_size_px = u32::from(fallback_cell_size_px);
+        let line_height_px = u32::from(line_height_px);
         let slot_width = glyphs
             .iter()
             .map(|glyph| glyph.width)
@@ -78,7 +80,8 @@ impl PreparedSurfaceGlyphFrame {
             .iter()
             .map(|glyph| glyph.height)
             .max()
-            .unwrap_or(fallback_cell_size_px);
+            .unwrap_or(fallback_cell_size_px)
+            .max(line_height_px);
         if slot_width == 0 || slot_height == 0 {
             return Err(SurfaceFrameError::InvalidFrame(
                 "surface frame cell dimensions must be non-zero".to_owned(),
@@ -386,6 +389,7 @@ mod tests {
             &plan,
             &glyphs,
             14,
+            14,
             [0.0, 0.0, 0.0, 1.0],
             [244, 192, 106, 255],
             0,
@@ -424,12 +428,14 @@ mod tests {
             &plan,
             &[],
             18,
+            22,
             [0.0, 0.0, 0.0, 1.0],
             [244, 192, 106, 255],
             12,
         )
         .unwrap();
         let frame = prepared.as_surface_glyph_frame();
+        assert_eq!(frame.height, (2 * 22) + (2 * 12));
 
         assert!(frame.batch.quads.is_empty());
         assert_eq!(frame.cursor_batch.quads.len(), 1);

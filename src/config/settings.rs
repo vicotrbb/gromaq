@@ -10,6 +10,10 @@ pub const MAX_TERMINAL_CELLS: u64 = 1_000_000;
 pub const MIN_FONT_SIZE_PX: f32 = 6.0;
 /// Maximum renderable configured font size in pixels.
 pub const MAX_FONT_SIZE_PX: f32 = 512.0;
+/// Minimum renderable configured line height in pixels.
+pub const MIN_LINE_HEIGHT_PX: f32 = 6.0;
+/// Maximum renderable configured line height in pixels.
+pub const MAX_LINE_HEIGHT_PX: f32 = 1024.0;
 /// Maximum supported target refresh rate for deterministic frame pacing.
 pub const MAX_TARGET_FPS: u32 = 1_000;
 
@@ -58,6 +62,8 @@ pub struct FontSettings {
     pub family: String,
     /// Font size in pixels.
     pub size_px: f32,
+    /// Terminal row height in pixels.
+    pub line_height_px: f32,
 }
 
 impl Default for FontSettings {
@@ -65,6 +71,7 @@ impl Default for FontSettings {
         Self {
             family: "monospace".to_owned(),
             size_px: 14.0,
+            line_height_px: 18.0,
         }
     }
 }
@@ -73,6 +80,11 @@ impl FontSettings {
     /// Deterministic renderer font size used for glyph cache keys and render planning.
     pub fn renderer_font_size_px(&self) -> u16 {
         self.size_px.round() as u16
+    }
+
+    /// Deterministic renderer row height used for quad planning.
+    pub fn renderer_line_height_px(&self) -> u16 {
+        self.line_height_px.round() as u16
     }
 }
 

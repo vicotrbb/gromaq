@@ -28,7 +28,8 @@ pub use config::{
     DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR,
     DEFAULT_CURSOR_RGB8, DEFAULT_FOREGROUND, DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION,
     DEFAULT_SELECTION_RGB8, DEFAULT_SURFACE_PADDING_PX, FontSettings, GromaqConfig,
-    PerformanceSettings, ShellSettings, TerminalSettings, ThemeSettings,
+    MAX_LINE_HEIGHT_PX, MIN_LINE_HEIGHT_PX, PerformanceSettings, ShellSettings, TerminalSettings,
+    ThemeSettings,
 };
 pub use dirty::{DirtyRegion, DirtyTracker};
 pub use error::{GromaqError, Result};
