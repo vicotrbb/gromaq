@@ -19,6 +19,8 @@ pub struct NativeAppRunReport {
     pub frames_presented: u64,
     /// Active monitor refresh rate in millihertz, if the platform reported one.
     pub monitor_refresh_millihertz: Option<u32>,
+    /// Configured native surface presentation mode, if a surface was configured.
+    pub surface_present_mode: Option<&'static str>,
     /// Effective FPS target used for presented-frame interval accounting.
     pub frame_interval_target_fps: u32,
     /// Count of measured intervals between presented frames.
@@ -84,6 +86,7 @@ impl PresentedFrameIntervals {
         redraw_requests: u64,
         frames_presented: u64,
         monitor_refresh_millihertz: Option<u32>,
+        surface_present_mode: Option<&'static str>,
         frame_interval_target_fps: u32,
     ) -> NativeAppRunReport {
         NativeAppRunReport {
@@ -91,6 +94,7 @@ impl PresentedFrameIntervals {
             redraw_requests,
             frames_presented,
             monitor_refresh_millihertz,
+            surface_present_mode,
             frame_interval_target_fps,
             frame_interval_samples: self.samples,
             frame_interval_total_ns: self.total_ns,
@@ -137,10 +141,11 @@ mod tests {
             144,
         );
 
-        let report = intervals.run_report(1, 2, 3, None, 144);
+        let report = intervals.run_report(1, 2, 3, None, None, 144);
 
         assert_eq!(report.frame_interval_samples, 2);
         assert_eq!(report.monitor_refresh_millihertz, None);
+        assert_eq!(report.surface_present_mode, None);
         assert_eq!(report.frame_interval_target_fps, 144);
         assert_eq!(report.frame_intervals_over_target, 1);
         assert_eq!(report.frame_intervals_over_double_target, 1);

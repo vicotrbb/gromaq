@@ -148,6 +148,7 @@ pub struct NativeAppLifecycle {
     redraw_requests: u64,
     frames_presented: u64,
     monitor_refresh_millihertz: Option<u32>,
+    surface_present_mode: Option<&'static str>,
     frame_intervals: PresentedFrameIntervals,
 }
 
@@ -162,6 +163,7 @@ impl NativeAppLifecycle {
             redraw_requests: 0,
             frames_presented: 0,
             monitor_refresh_millihertz: None,
+            surface_present_mode: None,
             frame_intervals: PresentedFrameIntervals::default(),
         }
     }
@@ -195,9 +197,19 @@ impl NativeAppLifecycle {
         &mut self,
         monitor_refresh_millihertz: Option<u32>,
     ) {
+        self.on_window_created_with_surface_report(monitor_refresh_millihertz, None);
+    }
+
+    /// Record that the native window was created with known monitor/surface metadata.
+    pub fn on_window_created_with_surface_report(
+        &mut self,
+        monitor_refresh_millihertz: Option<u32>,
+        surface_present_mode: Option<&'static str>,
+    ) {
         self.has_window = true;
         self.windows_created += 1;
         self.monitor_refresh_millihertz = monitor_refresh_millihertz;
+        self.surface_present_mode = surface_present_mode;
     }
 
     /// Handle the event-loop idle boundary before waiting for more events.
@@ -309,6 +321,7 @@ impl NativeAppLifecycle {
             self.redraw_requests,
             self.frames_presented,
             self.monitor_refresh_millihertz,
+            self.surface_present_mode,
             self.frame_interval_target_fps(),
         )
     }

@@ -145,7 +145,7 @@ fn native_app_lifecycle_accounts_frame_intervals_against_monitor_refresh() {
     let first_presented_at = Instant::now();
     let monitor_frame_interval = Duration::from_nanos(16_666_666);
 
-    lifecycle.on_window_created_with_monitor_refresh(Some(60_000));
+    lifecycle.on_window_created_with_surface_report(Some(60_000), Some("Mailbox"));
     lifecycle.on_redraw_requested_at(first_presented_at);
     lifecycle.on_redraw_requested_at(first_presented_at + monitor_frame_interval);
     lifecycle.on_redraw_requested_at(first_presented_at + monitor_frame_interval * 2);
@@ -153,6 +153,7 @@ fn native_app_lifecycle_accounts_frame_intervals_against_monitor_refresh() {
     let report = lifecycle.run_report();
 
     assert_eq!(report.monitor_refresh_millihertz, Some(60_000));
+    assert_eq!(report.surface_present_mode, Some("Mailbox"));
     assert_eq!(report.frame_interval_target_fps, 60);
     assert_eq!(report.frame_interval_samples, 2);
     assert_eq!(report.frame_intervals_over_target, 0);

@@ -100,6 +100,14 @@ where
         self.controller.lifecycle().size()
     }
 
+    /// Last configured native presentation mode.
+    pub fn present_mode(&self) -> Option<wgpu::PresentMode> {
+        self.controller
+            .lifecycle()
+            .current_config()
+            .map(|config| config.present_mode)
+    }
+
     /// Whether surface configuration is suspended for a zero-sized native window.
     pub fn is_suspended(&self) -> bool {
         self.controller.lifecycle().is_suspended()

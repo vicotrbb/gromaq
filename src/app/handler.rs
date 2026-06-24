@@ -35,9 +35,16 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                 let monitor_refresh_millihertz = window
                     .current_monitor()
                     .and_then(|monitor| monitor.refresh_rate_millihertz());
+                let surface_present_mode = self
+                    .surface
+                    .as_ref()
+                    .and_then(|surface| surface.present_mode())
+                    .map(surface_present_mode_name);
                 self.window = Some(window);
-                self.lifecycle
-                    .on_window_created_with_monitor_refresh(monitor_refresh_millihertz);
+                self.lifecycle.on_window_created_with_surface_report(
+                    monitor_refresh_millihertz,
+                    surface_present_mode,
+                );
                 if let Err(error) = self.runtime.start_shell(&self.pty_spawner) {
                     self.startup_error = Some(error.to_string());
                     event_loop.exit();
@@ -157,6 +164,17 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
             }
             _ => {}
         }
+    }
+}
+
+fn surface_present_mode_name(present_mode: wgpu::PresentMode) -> &'static str {
+    match present_mode {
+        wgpu::PresentMode::AutoVsync => "AutoVsync",
+        wgpu::PresentMode::AutoNoVsync => "AutoNoVsync",
+        wgpu::PresentMode::Fifo => "Fifo",
+        wgpu::PresentMode::FifoRelaxed => "FifoRelaxed",
+        wgpu::PresentMode::Immediate => "Immediate",
+        wgpu::PresentMode::Mailbox => "Mailbox",
     }
 }
 

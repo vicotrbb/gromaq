@@ -21,6 +21,7 @@ fn native_window_surface_configures_and_resizes_surface_backend() {
         &[(1280, 800)]
     );
     assert_eq!(surface.configured_size(), Some((1280, 800)));
+    assert_eq!(surface.present_mode(), Some(wgpu::PresentMode::Fifo));
 
     assert_eq!(
         surface.resize(1280, 800).unwrap(),

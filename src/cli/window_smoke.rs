@@ -50,11 +50,12 @@ where
                     .monitor_refresh_millihertz
                     .map(|refresh| refresh.to_string())
                     .unwrap_or_else(|| "unknown".to_owned());
+                let surface_present_mode = report.surface_present_mode.unwrap_or("unknown");
                 let frame_pacing_accepted = window_frame_pacing_accepted(&report);
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nframe interval target fps: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nframe pacing accepted: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nframe interval target fps: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval p95 ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nframe pacing accepted: {}\n",
                         report.frames_presented,
                         report.frame_interval_target_fps,
                         started_at.elapsed().as_nanos(),
