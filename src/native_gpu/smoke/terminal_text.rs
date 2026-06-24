@@ -1,7 +1,9 @@
 use std::path::Path;
 use std::time::Instant;
 
-use super::super::readback::rgba_pixel_at;
+mod metrics;
+mod snapshot;
+
 use super::super::reports::{
     GpuTerminalTextPerfReport, GpuTerminalTextPerfRunner, GpuTerminalTextReport,
     GpuTerminalTextRunner, GpuTerminalTextSnapshotReport, GpuTerminalTextSnapshotRunner,
@@ -13,6 +15,8 @@ use crate::renderer::{
     CursorQuadPlanner, GlyphQuadConfig, GlyphQuadPlanner, TextDecorationQuadConfig,
     TextDecorationQuadPlanner,
 };
+use metrics::terminal_text_report_from_pixels;
+use snapshot::terminal_text_ppm_bytes;
 
 const TERMINAL_TEXT_PERF_SMOKE_FRAMES: usize = 16;
 const MIN_TERMINAL_TEXT_CONTRAST_X100: u32 = 700;
@@ -190,70 +194,6 @@ fn checked_terminal_text_target_dimensions(
     Ok((width, height))
 }
 
-fn terminal_text_report_from_pixels(
-    draw: &TerminalTextSmokeDraw,
-    pixels: &[u8],
-) -> std::result::Result<GpuTerminalTextReport, GpuBootstrapError> {
-    let background_pixel = first_nontransparent_pixel(pixels);
-    let cursor_pixel = first_cursor_pixel(&draw.cursor_batch, pixels, draw.target_width)?;
-    let glyph_pixel = first_glyph_pixel(pixels, background_pixel, cursor_pixel);
-    let glyph_background_contrast_x100 = contrast_ratio_x100(glyph_pixel, background_pixel);
-    if glyph_background_contrast_x100 < MIN_TERMINAL_TEXT_CONTRAST_X100 {
-        return Err(GpuBootstrapError::SmokeReadback(format!(
-            "terminal text contrast {glyph_background_contrast_x100} is below required {MIN_TERMINAL_TEXT_CONTRAST_X100}"
-        )));
-    }
-    Ok(GpuTerminalTextReport {
-        width: draw.target_width,
-        height: draw.target_height,
-        glyphs: draw.frame.plan.glyphs.len(),
-        background_quads: draw.background_batch.quads.len(),
-        quads: draw.quad_batch.quads.len(),
-        decoration_quads: draw.decoration_batch.quads.len(),
-        cursor_quads: draw.cursor_batch.quads.len(),
-        rasterized_glyphs: draw.frame.batch.rasterized,
-        reused_glyphs: draw.frame.batch.reused,
-        first_drawn_pixel: background_pixel,
-        background_pixel,
-        glyph_pixel,
-        glyph_background_contrast_x100,
-        cursor_pixel,
-        drawn_pixels: pixels.chunks_exact(4).filter(|pixel| pixel[3] != 0).count(),
-    })
-}
-
-fn terminal_text_ppm_bytes(
-    width: u32,
-    height: u32,
-    pixels: &[u8],
-) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
-    let expected_rgba_len =
-        usize::try_from(u64::from(width) * u64::from(height) * 4).map_err(|_| {
-            GpuBootstrapError::SmokeReadback("terminal text snapshot is too large".to_owned())
-        })?;
-    if pixels.len() != expected_rgba_len {
-        return Err(GpuBootstrapError::SmokeReadback(format!(
-            "terminal text snapshot expected {expected_rgba_len} RGBA bytes, got {}",
-            pixels.len()
-        )));
-    }
-    let header = format!("P6\n{width} {height}\n255\n");
-    let rgb_len = usize::try_from(u64::from(width) * u64::from(height) * 3).map_err(|_| {
-        GpuBootstrapError::SmokeReadback(
-            "terminal text snapshot RGB buffer is too large".to_owned(),
-        )
-    })?;
-    let mut snapshot = Vec::new();
-    snapshot
-        .try_reserve_exact(header.len() + rgb_len)
-        .map_err(|_| GpuBootstrapError::SmokeReadback("snapshot allocation failed".to_owned()))?;
-    snapshot.extend_from_slice(header.as_bytes());
-    for pixel in pixels.chunks_exact(4) {
-        snapshot.extend_from_slice(&pixel[..3]);
-    }
-    Ok(snapshot)
-}
-
 fn average_duration_ns(durations: &[u128]) -> u128 {
     if durations.is_empty() {
         return 0;
@@ -269,68 +209,6 @@ fn p95_duration_ns(durations: &[u128]) -> u128 {
     sorted.sort_unstable();
     let index = ((sorted.len() * 95).div_ceil(100)).saturating_sub(1);
     sorted[index]
-}
-
-fn first_nontransparent_pixel(pixels: &[u8]) -> [u8; 4] {
-    pixels
-        .chunks_exact(4)
-        .find(|pixel| pixel[3] != 0)
-        .map(|pixel| [pixel[0], pixel[1], pixel[2], pixel[3]])
-        .unwrap_or([0, 0, 0, 0])
-}
-
-fn first_glyph_pixel(pixels: &[u8], background_pixel: [u8; 4], cursor_pixel: [u8; 4]) -> [u8; 4] {
-    pixels
-        .chunks_exact(4)
-        .filter(|pixel| {
-            pixel[3] >= 128
-                && [pixel[0], pixel[1], pixel[2], pixel[3]] != background_pixel
-                && [pixel[0], pixel[1], pixel[2], pixel[3]] != cursor_pixel
-        })
-        .max_by_key(|pixel| {
-            contrast_ratio_x100([pixel[0], pixel[1], pixel[2], pixel[3]], background_pixel)
-        })
-        .map(|pixel| [pixel[0], pixel[1], pixel[2], pixel[3]])
-        .unwrap_or([0, 0, 0, 0])
-}
-
-fn contrast_ratio_x100(foreground: [u8; 4], background: [u8; 4]) -> u32 {
-    let foreground = relative_luminance(foreground);
-    let background = relative_luminance(background);
-    let lighter = foreground.max(background);
-    let darker = foreground.min(background);
-    (((lighter + 0.05) / (darker + 0.05)) * 100.0).round() as u32
-}
-
-fn relative_luminance([red, green, blue, _alpha]: [u8; 4]) -> f64 {
-    0.2126 * linear_channel(red) + 0.7152 * linear_channel(green) + 0.0722 * linear_channel(blue)
-}
-
-fn linear_channel(value: u8) -> f64 {
-    let value = f64::from(value) / 255.0;
-    if value <= 0.04045 {
-        value / 12.92
-    } else {
-        ((value + 0.055) / 1.055).powf(2.4)
-    }
-}
-
-fn first_cursor_pixel(
-    cursor_batch: &BackgroundQuadBatch,
-    pixels: &[u8],
-    width: u32,
-) -> std::result::Result<[u8; 4], GpuBootstrapError> {
-    let Some(cursor) = cursor_batch.quads.first() else {
-        return Ok([0, 0, 0, 0]);
-    };
-    let x = cursor.vertices[0].position[0] as u32;
-    let y = cursor.vertices[0].position[1] as u32;
-    let pixel_index =
-        usize::try_from(u64::from(y) * u64::from(width) + u64::from(x)).map_err(|_| {
-            GpuBootstrapError::SmokeReadback("cursor pixel offset is too large".to_owned())
-        })?;
-    let pixel = rgba_pixel_at(pixels, pixel_index, "cursor pixel")?;
-    Ok([pixel[0], pixel[1], pixel[2], pixel[3]])
 }
 
 #[cfg(test)]
@@ -381,41 +259,5 @@ mod tests {
     #[test]
     fn terminal_text_perf_p95_uses_inclusive_rank() {
         assert_eq!(p95_duration_ns(&[10, 20, 30, 40, 50]), 50);
-    }
-
-    #[test]
-    fn terminal_text_contrast_ratio_reports_wcag_scaled_ratio() {
-        assert_eq!(
-            contrast_ratio_x100([255, 255, 255, 255], [0, 0, 0, 255]),
-            2100
-        );
-        assert!(contrast_ratio_x100([244, 247, 251, 255], [9, 13, 18, 255]) > 1500);
-    }
-
-    #[test]
-    fn terminal_text_contrast_gate_rejects_low_contrast_samples() {
-        assert!(
-            contrast_ratio_x100([80, 80, 80, 255], [70, 70, 70, 255])
-                < MIN_TERMINAL_TEXT_CONTRAST_X100
-        );
-    }
-
-    #[test]
-    fn terminal_text_ppm_bytes_writes_binary_rgb_snapshot() {
-        let snapshot = terminal_text_ppm_bytes(2, 1, &[255, 0, 0, 255, 4, 5, 6, 128]).unwrap();
-
-        assert_eq!(snapshot, b"P6\n2 1\n255\n\xff\x00\x00\x04\x05\x06");
-    }
-
-    #[test]
-    fn terminal_text_ppm_bytes_rejects_mismatched_rgba_len() {
-        let error = terminal_text_ppm_bytes(2, 1, &[255, 0, 0, 255]).unwrap_err();
-
-        assert_eq!(
-            error,
-            GpuBootstrapError::SmokeReadback(
-                "terminal text snapshot expected 8 RGBA bytes, got 4".to_owned()
-            )
-        );
     }
 }
