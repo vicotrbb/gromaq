@@ -5,10 +5,14 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
+mod draw_buffers;
 mod quad_bytes;
 mod readback;
 mod shaders;
 mod upload;
+use draw_buffers::{
+    checked_textured_index_count, validate_background_draw_buffers, validate_textured_draw_buffers,
+};
 use quad_bytes::{
     background_quad_index_bytes, background_quad_vertex_bytes, glyph_quad_index_bytes,
     glyph_quad_vertex_bytes, textured_quad_index_bytes, textured_quad_vertex_bytes,
@@ -1118,59 +1122,10 @@ struct BackgroundDrawInput {
     index_count: u32,
 }
 
-fn checked_textured_index_count(index_count: usize) -> std::result::Result<u32, GpuBootstrapError> {
-    u32::try_from(index_count).map_err(|_| {
-        GpuBootstrapError::SmokeReadback("terminal text index count is too large".to_owned())
-    })
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct TexturedDrawBufferLayout {
-    vertex_buffer_size: u64,
-    index_buffer_size: u64,
-    index_count: u32,
-}
-
-fn validate_textured_draw_buffers(
-    input: &TexturedDrawInput<'_>,
-) -> std::result::Result<TexturedDrawBufferLayout, GpuBootstrapError> {
-    if input.vertex_bytes.is_empty() || input.index_bytes.is_empty() || input.index_count == 0 {
-        return Err(GpuBootstrapError::SmokeReadback(
-            "textured draw buffers must be non-empty".to_owned(),
-        ));
-    }
-    let vertex_buffer_size = u64::try_from(input.vertex_bytes.len()).map_err(|_| {
-        GpuBootstrapError::SmokeReadback("textured vertex buffer is too large".to_owned())
-    })?;
-    let index_buffer_size = u64::try_from(input.index_bytes.len()).map_err(|_| {
-        GpuBootstrapError::SmokeReadback("textured index buffer is too large".to_owned())
-    })?;
-    Ok(TexturedDrawBufferLayout {
-        vertex_buffer_size,
-        index_buffer_size,
-        index_count: input.index_count,
-    })
-}
-
-fn validate_background_draw_buffers(
+fn validate_background_draw_input(
     input: &BackgroundDrawInput,
-) -> std::result::Result<TexturedDrawBufferLayout, GpuBootstrapError> {
-    if input.vertex_bytes.is_empty() || input.index_bytes.is_empty() || input.index_count == 0 {
-        return Err(GpuBootstrapError::SmokeReadback(
-            "background draw buffers must be non-empty".to_owned(),
-        ));
-    }
-    let vertex_buffer_size = u64::try_from(input.vertex_bytes.len()).map_err(|_| {
-        GpuBootstrapError::SmokeReadback("background vertex buffer is too large".to_owned())
-    })?;
-    let index_buffer_size = u64::try_from(input.index_bytes.len()).map_err(|_| {
-        GpuBootstrapError::SmokeReadback("background index buffer is too large".to_owned())
-    })?;
-    Ok(TexturedDrawBufferLayout {
-        vertex_buffer_size,
-        index_buffer_size,
-        index_count: input.index_count,
-    })
+) -> std::result::Result<draw_buffers::DrawBufferLayout, GpuBootstrapError> {
+    validate_background_draw_buffers(&input.vertex_bytes, &input.index_bytes, input.index_count)
 }
 
 fn draw_textured_vertices_rgba8(
@@ -1178,21 +1133,22 @@ fn draw_textured_vertices_rgba8(
     queue: &wgpu::Queue,
     input: TexturedDrawInput<'_>,
 ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
-    let buffer_layout = validate_textured_draw_buffers(&input)?;
+    let buffer_layout =
+        validate_textured_draw_buffers(input.vertex_bytes, input.index_bytes, input.index_count)?;
     let background_layout = input
         .background
         .as_ref()
-        .map(validate_background_draw_buffers)
+        .map(validate_background_draw_input)
         .transpose()?;
     let decoration_layout = input
         .decoration
         .as_ref()
-        .map(validate_background_draw_buffers)
+        .map(validate_background_draw_input)
         .transpose()?;
     let cursor_layout = input
         .cursor
         .as_ref()
-        .map(validate_background_draw_buffers)
+        .map(validate_background_draw_input)
         .transpose()?;
 
     let source = device.create_texture(&wgpu::TextureDescriptor {
@@ -1645,64 +1601,6 @@ fn draw_textured_vertices_rgba8(
 mod tests {
     use super::*;
 
-    fn textured_draw_input<'a>(
-        pattern: &'a UploadPattern,
-        source_layout: UploadPatternLayout,
-        vertex_bytes: &'a [u8],
-        index_bytes: &'a [u8],
-        index_count: u32,
-    ) -> TexturedDrawInput<'a> {
-        TexturedDrawInput {
-            pattern,
-            source_layout,
-            background: None,
-            decoration: None,
-            cursor: None,
-            vertex_bytes,
-            index_bytes,
-            index_count,
-            index_format: wgpu::IndexFormat::Uint16,
-            width: 1,
-            height: 1,
-        }
-    }
-
-    #[test]
-    fn textured_draw_buffer_layout_reports_checked_sizes() {
-        let pattern = UploadPattern::checker_rgba8_2x2();
-        let source_layout = pattern.rgba8_layout().unwrap();
-        let vertex_bytes = [1_u8, 2, 3, 4];
-        let index_bytes = [5_u8, 6];
-        let input = textured_draw_input(&pattern, source_layout, &vertex_bytes, &index_bytes, 1);
-
-        let layout = validate_textured_draw_buffers(&input).unwrap();
-
-        assert_eq!(
-            layout,
-            TexturedDrawBufferLayout {
-                vertex_buffer_size: 4,
-                index_buffer_size: 2,
-                index_count: 1,
-            }
-        );
-    }
-
-    #[test]
-    fn textured_draw_buffer_layout_rejects_empty_buffers() {
-        let pattern = UploadPattern::checker_rgba8_2x2();
-        let source_layout = pattern.rgba8_layout().unwrap();
-        let vertex_bytes = [];
-        let index_bytes = [1_u8, 2];
-        let input = textured_draw_input(&pattern, source_layout, &vertex_bytes, &index_bytes, 1);
-
-        let error = validate_textured_draw_buffers(&input).unwrap_err();
-
-        assert_eq!(
-            error,
-            GpuBootstrapError::SmokeReadback("textured draw buffers must be non-empty".to_owned())
-        );
-    }
-
     #[test]
     fn terminal_text_target_dimensions_reports_checked_size() {
         let dimensions = checked_terminal_text_target_dimensions(80, 24, 8, 16).unwrap();
@@ -1731,55 +1629,6 @@ mod tests {
             GpuBootstrapError::SmokeReadback(
                 "terminal text target height is too large to represent".to_owned()
             )
-        );
-    }
-
-    #[test]
-    fn background_draw_buffer_layout_reports_checked_sizes() {
-        let input = BackgroundDrawInput {
-            vertex_bytes: vec![1, 2, 3, 4],
-            index_bytes: vec![5, 6, 7, 8],
-            index_count: 1,
-        };
-
-        let layout = validate_background_draw_buffers(&input).unwrap();
-
-        assert_eq!(
-            layout,
-            TexturedDrawBufferLayout {
-                vertex_buffer_size: 4,
-                index_buffer_size: 4,
-                index_count: 1,
-            }
-        );
-    }
-
-    #[test]
-    fn background_draw_buffer_layout_rejects_empty_buffers() {
-        let input = BackgroundDrawInput {
-            vertex_bytes: Vec::new(),
-            index_bytes: vec![1, 2, 3, 4],
-            index_count: 1,
-        };
-
-        let error = validate_background_draw_buffers(&input).unwrap_err();
-
-        assert_eq!(
-            error,
-            GpuBootstrapError::SmokeReadback(
-                "background draw buffers must be non-empty".to_owned()
-            )
-        );
-    }
-
-    #[test]
-    #[cfg(target_pointer_width = "64")]
-    fn textured_index_count_rejects_values_larger_than_wgpu_draw_range() {
-        let error = checked_textured_index_count(usize::MAX).unwrap_err();
-
-        assert_eq!(
-            error,
-            GpuBootstrapError::SmokeReadback("terminal text index count is too large".to_owned())
         );
     }
 }
