@@ -17,6 +17,7 @@ mod params;
 mod reflow;
 mod selection_copy;
 mod snapshot;
+mod state;
 mod types;
 mod width;
 
@@ -29,6 +30,7 @@ use params::{
     push_sgr_extended_color_parameter,
 };
 use snapshot::{cell_screenshot_color, push_snapshot_row};
+use state::{CharacterSet, Cursor, DcsHandler, DirtyRun, SavedCursorState, SavedScreen};
 pub use types::{CursorShape, CursorSnapshot, PerfSnapshot, Screenshot, TerminalConfig};
 use width::{
     char_width, is_combining_enclosing_keycap, is_emoji_modifier, is_emoji_modifier_base_candidate,
@@ -43,63 +45,6 @@ const MAX_METADATA_IDS: usize = 4096;
 const MAX_OSC8_HYPERLINKS: usize = MAX_METADATA_IDS;
 const MAX_UNDERLINE_COLORS: usize = MAX_METADATA_IDS;
 const MAX_DCS_PAYLOAD_BYTES: usize = 64;
-
-#[derive(Debug, Clone, Copy)]
-struct Cursor {
-    row: u16,
-    col: u16,
-    visible: bool,
-    shape: CursorShape,
-    blinking: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum CharacterSet {
-    G0,
-    G1,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct SavedCursorState {
-    cursor: Cursor,
-    style: Style,
-    g0_dec_special_graphics: bool,
-    g1_dec_special_graphics: bool,
-    active_charset: CharacterSet,
-}
-
-#[derive(Debug, Clone)]
-struct SavedScreen {
-    grid: Grid,
-    cursor: Cursor,
-    hard_breaks: Vec<bool>,
-    tab_stops: Vec<bool>,
-    wrap_pending: bool,
-    auto_wrap: bool,
-    origin_mode: bool,
-    application_cursor_keys: bool,
-    application_keypad: bool,
-    focus_event_reporting: bool,
-    insert_mode: bool,
-    linefeed_newline_mode: bool,
-    g0_dec_special_graphics: bool,
-    g1_dec_special_graphics: bool,
-    active_charset: CharacterSet,
-    scroll_top: u16,
-    scroll_bottom: u16,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct DirtyRun {
-    row: u16,
-    col_start: u16,
-    col_end: u16,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum DcsHandler {
-    Decrqss,
-}
 
 /// Deterministic terminal emulator state.
 pub struct Terminal {
