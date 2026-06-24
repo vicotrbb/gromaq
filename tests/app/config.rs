@@ -2,7 +2,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use gromaq::app::{NativeAppConfig, NativeTerminalApp, NativeTerminalRuntimeConfig};
+use gromaq::app::{
+    NativeAppConfig, NativeTerminalApp, NativeTerminalRuntimeConfig, NativeTextZoomAction,
+};
 use gromaq::pty::ShellCommand;
 use gromaq::renderer::RendererConfig;
 use gromaq::{ConfigFileReloader, CursorShape, CursorStyleSetting, GromaqConfig};
@@ -163,6 +165,53 @@ fn native_app_can_start_with_explicit_renderer_config() {
     .unwrap();
 
     assert_eq!(app.renderer().config(), &renderer_config);
+}
+
+#[test]
+fn native_app_text_zoom_reconfigures_renderer_metrics_and_grid() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+    )
+    .unwrap();
+    let default_grid = (
+        app.runtime().terminal().dump_grid().cols,
+        app.runtime().terminal().dump_grid().rows,
+    );
+
+    assert!(
+        app.apply_text_zoom_action(NativeTextZoomAction::Increase)
+            .unwrap()
+    );
+
+    assert_eq!(app.renderer().config().font_size_px, 24);
+    assert_eq!(app.renderer().config().cell_width_px, 14);
+    assert_eq!(app.renderer().config().line_height_px, 33);
+    assert!(
+        app.runtime().terminal().dump_grid().cols < default_grid.0,
+        "zooming in should reduce visible columns"
+    );
+    assert!(
+        app.runtime().terminal().dump_grid().rows < default_grid.1,
+        "zooming in should reduce visible rows"
+    );
+
+    assert!(
+        app.apply_text_zoom_action(NativeTextZoomAction::Reset)
+            .unwrap()
+    );
+
+    assert_eq!(app.renderer().config().font_size_px, 21);
+    assert_eq!(app.renderer().config().cell_width_px, 12);
+    assert_eq!(app.renderer().config().line_height_px, 29);
+    assert_eq!(
+        (
+            app.runtime().terminal().dump_grid().cols,
+            app.runtime().terminal().dump_grid().rows,
+        ),
+        default_grid
+    );
 }
 
 #[test]

@@ -1,6 +1,7 @@
 use gromaq::app::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
-    is_native_copy_shortcut, is_native_paste_shortcut,
+    NativeTextZoomAction, is_native_copy_shortcut, is_native_paste_shortcut,
+    native_text_zoom_action,
 };
 use gromaq::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
@@ -293,6 +294,44 @@ fn native_copy_shortcut_accepts_super_c_or_control_shift_c_without_plain_control
         &Key::Character("c".into()),
         ModifiersState::CONTROL | ModifiersState::SUPER
     ));
+}
+
+#[test]
+fn native_text_zoom_shortcuts_match_browser_controls() {
+    assert_eq!(
+        native_text_zoom_action(&Key::Character("+".into()), ModifiersState::SUPER),
+        Some(NativeTextZoomAction::Increase)
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Character("=".into()), ModifiersState::CONTROL),
+        Some(NativeTextZoomAction::Increase)
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Character("-".into()), ModifiersState::SUPER),
+        Some(NativeTextZoomAction::Decrease)
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Character("0".into()), ModifiersState::CONTROL),
+        Some(NativeTextZoomAction::Reset)
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Character("+".into()), ModifiersState::empty()),
+        None
+    );
+    assert_eq!(
+        native_text_zoom_action(
+            &Key::Character("+".into()),
+            ModifiersState::CONTROL | ModifiersState::SUPER
+        ),
+        None
+    );
+    assert_eq!(
+        native_text_zoom_action(
+            &Key::Character("+".into()),
+            ModifiersState::CONTROL | ModifiersState::ALT
+        ),
+        None
+    );
 }
 
 #[test]

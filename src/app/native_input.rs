@@ -6,6 +6,17 @@ use winit::keyboard::{Key, ModifiersState, NamedKey};
 use crate::input::key_modifiers_from_winit;
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
 
+/// Native text zoom action requested by app-owned keyboard shortcuts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NativeTextZoomAction {
+    /// Increase terminal text size.
+    Increase,
+    /// Decrease terminal text size.
+    Decrease,
+    /// Reset terminal text size to the default metrics.
+    Reset,
+}
+
 /// Maps native window pixel positions to terminal grid-relative mouse events.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NativeMouseGridMapper {
@@ -275,6 +286,26 @@ pub fn is_native_paste_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
             && !modifiers.alt_key()
             && ((modifiers.control_key() && !modifiers.super_key())
                 || (modifiers.super_key() && !modifiers.control_key())))
+}
+
+/// Browser-style native text zoom shortcut for the terminal viewport.
+pub fn native_text_zoom_action(
+    key: &Key,
+    modifiers: ModifiersState,
+) -> Option<NativeTextZoomAction> {
+    let command_modifier = modifiers.control_key() ^ modifiers.super_key();
+    if !command_modifier || modifiers.alt_key() {
+        return None;
+    }
+    let Key::Character(character) = key else {
+        return None;
+    };
+    match character.as_ref() {
+        "+" | "=" => Some(NativeTextZoomAction::Increase),
+        "-" | "_" => Some(NativeTextZoomAction::Decrease),
+        "0" => Some(NativeTextZoomAction::Reset),
+        _ => None,
+    }
 }
 
 pub(super) fn native_scrollback_key_direction(

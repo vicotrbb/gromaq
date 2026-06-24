@@ -235,18 +235,25 @@ impl NativeTerminalApp {
         logical_key: winit::keyboard::Key,
         physical_key: winit::keyboard::PhysicalKey,
     ) {
-        let result = if super::is_native_copy_shortcut(&logical_key, self.modifiers) {
-            let mut clipboard = NativeClipboard::new();
-            self.runtime.copy_selection_to_clipboard(&mut clipboard);
-            Ok(())
-        } else if super::is_native_paste_shortcut(&logical_key, self.modifiers) {
-            let clipboard = NativeClipboard::new();
-            self.runtime.send_clipboard_paste(&clipboard).map(|_| ())
-        } else {
-            self.runtime
-                .send_winit_key_event_input(&logical_key, Some(physical_key), self.modifiers)
-                .map(|_| ())
-        };
+        let result =
+            if let Some(action) = super::native_text_zoom_action(&logical_key, self.modifiers) {
+                self.apply_text_zoom_action(action).map(|changed| {
+                    if changed && let Some(window) = &self.window {
+                        window.request_redraw();
+                    }
+                })
+            } else if super::is_native_copy_shortcut(&logical_key, self.modifiers) {
+                let mut clipboard = NativeClipboard::new();
+                self.runtime.copy_selection_to_clipboard(&mut clipboard);
+                Ok(())
+            } else if super::is_native_paste_shortcut(&logical_key, self.modifiers) {
+                let clipboard = NativeClipboard::new();
+                self.runtime.send_clipboard_paste(&clipboard).map(|_| ())
+            } else {
+                self.runtime
+                    .send_winit_key_event_input(&logical_key, Some(physical_key), self.modifiers)
+                    .map(|_| ())
+            };
         if let Err(error) = result {
             self.startup_error = Some(error.to_string());
             event_loop.exit();

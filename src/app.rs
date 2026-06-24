@@ -8,7 +8,10 @@ use winit::event_loop::EventLoop;
 use winit::keyboard::ModifiersState;
 use winit::window::{Window, WindowId};
 
-use crate::config::ConfigFileReloader;
+use crate::config::{
+    ConfigFileReloader, MAX_CELL_WIDTH_PX, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX, MIN_CELL_WIDTH_PX,
+    MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX,
+};
 use crate::font::RasterizedGlyphCache;
 use crate::native_gpu::NativeGpuContext;
 use crate::pty::PtySession;
@@ -31,7 +34,8 @@ pub use lifecycle::{
 };
 pub use native_input::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
-    NativeWindowMouseInput, is_native_copy_shortcut, is_native_paste_shortcut,
+    NativeTextZoomAction, NativeWindowMouseInput, is_native_copy_shortcut,
+    is_native_paste_shortcut, native_text_zoom_action,
 };
 use native_input::{native_mouse_button, wheel_mouse_button};
 pub use perf::{NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot};
@@ -165,10 +169,100 @@ impl NativeTerminalApp {
         &self.font_family
     }
 
+    /// Apply a browser-style terminal text zoom action to the active renderer metrics.
+    pub fn apply_text_zoom_action(
+        &mut self,
+        action: NativeTextZoomAction,
+    ) -> Result<bool, NativeAppError> {
+        let current = self.renderer.config().clone();
+        let next = match action {
+            NativeTextZoomAction::Increase => scaled_renderer_font_metrics(&current, 1.15),
+            NativeTextZoomAction::Decrease => scaled_renderer_font_metrics(&current, 1.0 / 1.15),
+            NativeTextZoomAction::Reset => default_renderer_font_metrics(&current),
+        };
+        if next == current {
+            return Ok(false);
+        }
+        self.apply_renderer_config_to_current_viewport(next)?;
+        Ok(true)
+    }
+
     /// Take a startup error captured from the event handler.
     pub fn take_startup_error(&mut self) -> Option<String> {
         self.startup_error.take()
     }
+
+    fn apply_renderer_config_to_current_viewport(
+        &mut self,
+        renderer_config: RendererConfig,
+    ) -> Result<(), NativeAppError> {
+        let resize_mapper = NativeResizeGridMapper::new(
+            renderer_config.cell_width_px,
+            renderer_config.line_height_px,
+            renderer_config.surface_padding_px,
+        )
+        .ok_or_else(|| {
+            NativeAppError::Runtime("native renderer cell dimensions must be non-zero".to_owned())
+        })?;
+        let (width, height) = self
+            .window
+            .as_ref()
+            .map(|window| {
+                let size = window.inner_size();
+                (size.width, size.height)
+            })
+            .unwrap_or_else(|| {
+                (
+                    self.lifecycle.config().width,
+                    self.lifecycle.config().height,
+                )
+            });
+        if let Some(resize) = resize_mapper.resize_for_window(width, height) {
+            self.runtime.resize_terminal(resize)?;
+        }
+        self.resize_mapper = resize_mapper;
+        self.renderer.reconfigure(renderer_config);
+        self.runtime.invalidate_terminal_frame();
+        Ok(())
+    }
+}
+
+fn scaled_renderer_font_metrics(config: &RendererConfig, factor: f32) -> RendererConfig {
+    let font_size_px = scaled_metric(
+        config.font_size_px,
+        factor,
+        MIN_FONT_SIZE_PX,
+        MAX_FONT_SIZE_PX,
+    );
+    let font_size_ratio = f32::from(font_size_px) / f32::from(config.font_size_px.max(1));
+    let mut next = config.clone();
+    next.font_size_px = font_size_px;
+    next.cell_width_px = scaled_metric(
+        config.cell_width_px,
+        font_size_ratio,
+        MIN_CELL_WIDTH_PX,
+        MAX_CELL_WIDTH_PX,
+    );
+    next.line_height_px = scaled_metric(
+        config.line_height_px,
+        font_size_ratio,
+        MIN_LINE_HEIGHT_PX.max(f32::from(next.font_size_px)),
+        MAX_LINE_HEIGHT_PX,
+    );
+    next
+}
+
+fn default_renderer_font_metrics(config: &RendererConfig) -> RendererConfig {
+    let defaults = RendererConfig::default();
+    let mut next = config.clone();
+    next.font_size_px = defaults.font_size_px;
+    next.cell_width_px = defaults.cell_width_px;
+    next.line_height_px = defaults.line_height_px;
+    next
+}
+
+fn scaled_metric(value: u16, factor: f32, minimum: f32, maximum: f32) -> u16 {
+    (f32::from(value) * factor).round().clamp(minimum, maximum) as u16
 }
 
 /// Run the native `winit` terminal application loop.

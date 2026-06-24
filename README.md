@@ -177,9 +177,9 @@ cwd = "/tmp"
 
 [font]
 family = "monospace"
-size_px = 18.0
-# cell_width_px = 10
-line_height_px = 25.0
+size_px = 21.0
+# cell_width_px = 12
+line_height_px = 29.0
 
 [theme]
 preset = "gromaq-dark"
