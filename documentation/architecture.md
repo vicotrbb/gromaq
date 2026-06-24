@@ -22,11 +22,14 @@ handoff, and validation tooling.
   drawing.
 - `native_gpu`: GPU bootstrap, offscreen smoke paths, surface creation, upload
   and draw/readback helpers, and structured GPU reports.
-- `app`: native `winit` app wiring, lifecycle state, config reload application,
-  PTY bridge, input mapping, text zoom, font discovery, runtime rendering, and
-  native window surface presentation.
+- `app`: native `winit` app wiring, lifecycle state, launch wrappers, config
+  reload application, PTY bridge, input mapping, text zoom, font discovery,
+  runtime rendering, and native window surface presentation. Handler actions,
+  shortcut policy, lifecycle run-report data, and frame-interval accounting live
+  in focused child modules.
 - `cli`: executable smoke commands, config utilities, GPU reports, runtime
-  validation commands, and bounded live-window probes.
+  validation commands, and bounded live-window probes. GPU command context
+  traits are isolated from GPU CLI output formatting.
 - `test_api`: deterministic integration hooks used by tests and future debug
   tooling.
 
