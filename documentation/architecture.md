@@ -7,7 +7,8 @@ handoff, and validation tooling.
 ## Module Map
 
 - `terminal`: VT/ANSI parser integration, terminal state, modes, reports,
-  editing, scrollback interaction, reflow, selection/copy, and snapshot APIs.
+  editing, reset/cursor lifecycle, scrollback interaction, reflow,
+  selection/copy, and snapshot APIs.
 - `grid`, `cell`, `dirty`, `scrollback`, `selection`, `input`, and `mouse`:
   core data structures and protocol helpers used by the terminal and app
   layers.
@@ -29,7 +30,8 @@ handoff, and validation tooling.
   in focused child modules.
 - `cli`: executable smoke commands, config utilities, GPU reports, runtime
   validation commands, and bounded live-window probes. GPU command context
-  traits are isolated from GPU CLI output formatting.
+  traits are isolated from GPU CLI output formatting, and config launch
+  boundaries are isolated from config-check/template formatting.
 - `test_api`: deterministic integration hooks used by tests and future debug
   tooling.
 

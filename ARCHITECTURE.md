@@ -25,7 +25,7 @@ The core is headless and tested without a window or GPU. This keeps terminal beh
 
 Configuration code is organized as a public `config::GromaqConfig` entry point plus focused private modules. `config::settings` owns terminal, shell, font, and performance sections plus bounded dimension and shell validation; `config::theme` owns theme color parsing; `config::reload` owns deterministic config-file polling while preserving the last valid configuration on invalid edits.
 
-Terminal code is organized as a state-machine parent plus focused helper modules. `terminal.rs` owns `Terminal`, parser callbacks, grid mutation, scrollback, selection metadata, and public snapshots. `terminal::width` owns Unicode width, emoji clustering predicates, metadata IDs, and DEC special graphics mapping; `terminal::snapshot` owns deterministic screenshot colors and row padding; `terminal::params` owns CSI/SGR parameter helpers and default tab stops; `terminal::osc` owns bounded OSC title, OSC 52 clipboard, and OSC 8 hyperlink decoding.
+Terminal code is organized as a state-machine parent plus focused helper modules. `terminal.rs` owns `Terminal`, parser callbacks, grid mutation, scrollback, selection metadata, and public snapshots. `terminal::width` owns Unicode width, emoji clustering predicates, metadata IDs, and DEC special graphics mapping; `terminal::snapshot` owns deterministic screenshot colors and row padding; `terminal::params` owns CSI/SGR parameter helpers and default tab stops; `terminal::osc` owns bounded OSC title, OSC 52 clipboard, and OSC 8 hyperlink decoding; `terminal::edit` owns row/cell editing operations while `terminal::edit::reset` owns reset and cursor save/restore lifecycle helpers.
 
 ## PTY Boundary
 
@@ -48,7 +48,9 @@ Native app lifecycle code keeps platform action decisions in `app::lifecycle`, w
 The CLI keeps dispatch in `cli.rs`, but command implementations live behind
 focused smoke modules. GPU command context traits and metadata-only fallback
 adapters live in `cli::gpu::context`, while GPU command output formatting stays
-in `cli::gpu`. Configuration, clipboard, runtime output,
+in `cli::gpu`. Config launch types and the production native app launcher live
+in `cli::config_commands::launch`, while config check/template formatting stays
+in `cli::config_commands`. Clipboard, runtime output,
 scrollback, reflow, glyph-frame, and frame-scheduler checks each own their
 domain-specific command code. Runtime input smoke commands are split further:
 `runtime_input_smoke::pty_smoke` owns injectable PTY fixtures,
