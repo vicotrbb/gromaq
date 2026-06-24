@@ -112,7 +112,7 @@ fn run_runtime_config_reload_smoke_with_path(
     let runtime_config = app.runtime().config();
     let app_config = app.lifecycle().config();
     let renderer_config = app.renderer().config();
-    if grid.cols != 113 || grid.rows != 34 {
+    if grid.cols != 113 || grid.rows != 31 {
         return Err(format!(
             "terminal dimensions did not fit reloaded renderer metrics, got {}x{}",
             grid.cols, grid.rows

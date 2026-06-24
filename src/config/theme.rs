@@ -7,26 +7,26 @@ use crate::error::{GromaqError, Result};
 /// Maximum supported visual surface padding in physical pixels.
 pub const MAX_SURFACE_PADDING_PX: u16 = 512;
 /// Built-in polished dark theme background.
-pub const DEFAULT_BACKGROUND: &str = "#0b0f14";
+pub const DEFAULT_BACKGROUND: &str = "#090d12";
 /// Built-in polished dark theme background as RGB8.
-pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [11, 15, 20];
+pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [9, 13, 18];
 /// Built-in polished dark theme foreground.
-pub const DEFAULT_FOREGROUND: &str = "#f2f4f8";
+pub const DEFAULT_FOREGROUND: &str = "#f4f7fb";
 /// Built-in polished dark theme foreground as RGB8.
-pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [242, 244, 248];
+pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [244, 247, 251];
 /// Built-in polished dark theme cursor.
-pub const DEFAULT_CURSOR: &str = "#f6c177";
+pub const DEFAULT_CURSOR: &str = "#ffd27a";
 /// Built-in polished dark theme cursor as RGB8.
-pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [246, 193, 119];
+pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [255, 210, 122];
 /// Built-in polished dark theme selection background.
-pub const DEFAULT_SELECTION: &str = "#26364f";
+pub const DEFAULT_SELECTION: &str = "#2b4162";
 /// Built-in polished dark theme selection background as RGB8.
-pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [38, 54, 79];
+pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [43, 65, 98];
 /// Number of configurable ANSI palette entries.
 pub const ANSI_COLOR_COUNT: usize = 16;
 /// Built-in polished dark ANSI palette.
 pub const DEFAULT_ANSI_COLORS: [&str; ANSI_COLOR_COUNT] = [
-    "#151922", "#ff6b7a", "#7ee787", "#f6c177", "#82aaff", "#c792ea", "#7dcfff", "#d7dde8",
+    "#151922", "#ff6b7a", "#7ee787", "#ffd27a", "#82aaff", "#c792ea", "#7dcfff", "#d7dde8",
     "#6b7280", "#ff8fa3", "#a6e3a1", "#f9e2af", "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
 ];
 /// Built-in polished dark ANSI palette as RGB8.
@@ -34,7 +34,7 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
     [21, 25, 34],
     [255, 107, 122],
     [126, 231, 135],
-    [246, 193, 119],
+    [255, 210, 122],
     [130, 170, 255],
     [199, 146, 234],
     [125, 207, 255],
@@ -49,7 +49,7 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
     [255, 255, 255],
 ];
 /// Built-in visual breathing room around terminal cells.
-pub const DEFAULT_SURFACE_PADDING_PX: u16 = 16;
+pub const DEFAULT_SURFACE_PADDING_PX: u16 = 18;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
 
