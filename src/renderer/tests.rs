@@ -2,6 +2,7 @@ use std::time::{Duration, Instant};
 
 use super::*;
 
+mod prepared_frame;
 mod surface_validation;
 
 #[test]
