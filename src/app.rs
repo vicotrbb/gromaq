@@ -8,10 +8,7 @@ use winit::event_loop::EventLoop;
 use winit::keyboard::ModifiersState;
 use winit::window::{Window, WindowId};
 
-use crate::config::{
-    ConfigFileReloader, MAX_CELL_WIDTH_PX, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX, MIN_CELL_WIDTH_PX,
-    MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX,
-};
+use crate::config::ConfigFileReloader;
 use crate::font::RasterizedGlyphCache;
 use crate::native_gpu::NativeGpuContext;
 use crate::pty::PtySession;
@@ -27,6 +24,7 @@ mod presentation;
 mod pty_bridge;
 mod runtime;
 mod surface;
+mod text_zoom;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
 pub use lifecycle::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
@@ -48,6 +46,7 @@ pub use surface::{
     load_native_glyph_cache, render_and_present_terminal_glyph_frame,
     render_and_present_terminal_glyph_frame_report,
 };
+use text_zoom::renderer_config_for_text_zoom;
 
 /// Native terminal application handler for the `winit` event loop.
 pub struct NativeTerminalApp {
@@ -175,11 +174,7 @@ impl NativeTerminalApp {
         action: NativeTextZoomAction,
     ) -> Result<bool, NativeAppError> {
         let current = self.renderer.config().clone();
-        let next = match action {
-            NativeTextZoomAction::Increase => scaled_renderer_font_metrics(&current, 1.15),
-            NativeTextZoomAction::Decrease => scaled_renderer_font_metrics(&current, 1.0 / 1.15),
-            NativeTextZoomAction::Reset => default_renderer_font_metrics(&current),
-        };
+        let next = renderer_config_for_text_zoom(&current, action);
         if next == current {
             return Ok(false);
         }
@@ -225,44 +220,6 @@ impl NativeTerminalApp {
         self.runtime.invalidate_terminal_frame();
         Ok(())
     }
-}
-
-fn scaled_renderer_font_metrics(config: &RendererConfig, factor: f32) -> RendererConfig {
-    let font_size_px = scaled_metric(
-        config.font_size_px,
-        factor,
-        MIN_FONT_SIZE_PX,
-        MAX_FONT_SIZE_PX,
-    );
-    let font_size_ratio = f32::from(font_size_px) / f32::from(config.font_size_px.max(1));
-    let mut next = config.clone();
-    next.font_size_px = font_size_px;
-    next.cell_width_px = scaled_metric(
-        config.cell_width_px,
-        font_size_ratio,
-        MIN_CELL_WIDTH_PX,
-        MAX_CELL_WIDTH_PX,
-    );
-    next.line_height_px = scaled_metric(
-        config.line_height_px,
-        font_size_ratio,
-        MIN_LINE_HEIGHT_PX.max(f32::from(next.font_size_px)),
-        MAX_LINE_HEIGHT_PX,
-    );
-    next
-}
-
-fn default_renderer_font_metrics(config: &RendererConfig) -> RendererConfig {
-    let defaults = RendererConfig::default();
-    let mut next = config.clone();
-    next.font_size_px = defaults.font_size_px;
-    next.cell_width_px = defaults.cell_width_px;
-    next.line_height_px = defaults.line_height_px;
-    next
-}
-
-fn scaled_metric(value: u16, factor: f32, minimum: f32, maximum: f32) -> u16 {
-    (f32::from(value) * factor).round().clamp(minimum, maximum) as u16
 }
 
 /// Run the native `winit` terminal application loop.
