@@ -107,6 +107,7 @@ fn native_app_lifecycle_requests_bounded_continuous_redraw_until_frame_limit() {
         report.frame_interval_max_ns,
         target_interval.as_nanos() as u64
     );
+    assert_eq!(report.frame_interval_max_sample_index, 1);
     assert_eq!(report.frame_interval_p95_ns, 8_000_000);
     assert_eq!(
         report.frame_interval_p95_exact_ns,
@@ -134,9 +135,12 @@ fn native_app_lifecycle_reports_dropped_presented_frame_intervals() {
     assert_eq!(report.frames_presented, 3);
     assert_eq!(report.frame_interval_samples, 2);
     assert_eq!(report.frame_interval_p95_exact_ns, 20_833_332);
+    assert_eq!(report.frame_interval_max_sample_index, 2);
     assert_eq!(report.frame_intervals_over_target, 1);
     assert_eq!(report.frame_intervals_over_double_target, 1);
     assert_eq!(report.dropped_frames, 2);
+    assert_eq!(report.first_dropped_frame_interval_sample, 2);
+    assert_eq!(report.last_dropped_frame_interval_sample, 2);
 }
 
 #[test]

@@ -56,6 +56,8 @@ pub struct NativeAppRunReport {
     pub frame_interval_avg_ns: u64,
     /// Maximum measured presented-frame interval duration in nanoseconds.
     pub frame_interval_max_ns: u64,
+    /// One-based sample index where the maximum presented-frame interval was observed.
+    pub frame_interval_max_sample_index: u64,
     /// Approximate p95 presented-frame interval in nanoseconds, using fixed buckets.
     pub frame_interval_p95_ns: u64,
     /// Exact p95 presented-frame interval in nanoseconds when all intervals fit in telemetry.
@@ -66,6 +68,10 @@ pub struct NativeAppRunReport {
     pub frame_intervals_over_double_target: u64,
     /// Number of target frame intervals missed between presented frames.
     pub dropped_frames: u64,
+    /// First one-based interval sample index that missed at least one target frame.
+    pub first_dropped_frame_interval_sample: u64,
+    /// Last one-based interval sample index that missed at least one target frame.
+    pub last_dropped_frame_interval_sample: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,9 +81,12 @@ pub(super) struct PresentedFrameIntervals {
     total_ns: u64,
     avg_ns: u64,
     max_ns: u64,
+    max_sample_index: u64,
     intervals_over_target: u64,
     intervals_over_double_target: u64,
     dropped_frames: u64,
+    first_dropped_frame_interval_sample: u64,
+    last_dropped_frame_interval_sample: u64,
     histogram: RuntimeDurationHistogram,
     interval_samples_ns: [u64; PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY],
     interval_sample_len: usize,
@@ -91,9 +100,12 @@ impl Default for PresentedFrameIntervals {
             total_ns: 0,
             avg_ns: 0,
             max_ns: 0,
+            max_sample_index: 0,
             intervals_over_target: 0,
             intervals_over_double_target: 0,
             dropped_frames: 0,
+            first_dropped_frame_interval_sample: 0,
+            last_dropped_frame_interval_sample: 0,
             histogram: RuntimeDurationHistogram::default(),
             interval_samples_ns: [0; PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY],
             interval_sample_len: 0,
@@ -130,6 +142,7 @@ impl PresentedFrameIntervals {
                 presented_at.saturating_duration_since(last_presented_at),
             );
             let target_interval_ns = target_interval_nanos(target_fps);
+            let sample_index = self.samples.saturating_add(1);
             if elapsed_ns > target_interval_ns {
                 self.intervals_over_target = self.intervals_over_target.saturating_add(1);
             }
@@ -137,13 +150,21 @@ impl PresentedFrameIntervals {
                 self.intervals_over_double_target =
                     self.intervals_over_double_target.saturating_add(1);
             }
-            self.dropped_frames = self
-                .dropped_frames
-                .saturating_add(dropped_frames_for_interval(elapsed_ns, target_fps));
-            self.samples = self.samples.saturating_add(1);
+            let dropped_frames = dropped_frames_for_interval(elapsed_ns, target_fps);
+            if dropped_frames > 0 {
+                if self.first_dropped_frame_interval_sample == 0 {
+                    self.first_dropped_frame_interval_sample = sample_index;
+                }
+                self.last_dropped_frame_interval_sample = sample_index;
+            }
+            self.dropped_frames = self.dropped_frames.saturating_add(dropped_frames);
+            self.samples = sample_index;
             self.total_ns = self.total_ns.saturating_add(elapsed_ns);
             self.avg_ns = average_duration_nanos(self.total_ns, self.samples);
-            self.max_ns = self.max_ns.max(elapsed_ns);
+            if elapsed_ns > self.max_ns {
+                self.max_ns = elapsed_ns;
+                self.max_sample_index = sample_index;
+            }
             self.histogram.record(elapsed_ns);
             if self.interval_sample_len < PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY {
                 self.interval_samples_ns[self.interval_sample_len] = elapsed_ns;
@@ -177,11 +198,14 @@ impl PresentedFrameIntervals {
             frame_interval_total_ns: self.total_ns,
             frame_interval_avg_ns: self.avg_ns,
             frame_interval_max_ns: self.max_ns,
+            frame_interval_max_sample_index: self.max_sample_index,
             frame_interval_p95_ns: self.histogram.p95_upper_bound_ns(self.samples),
             frame_interval_p95_exact_ns: self.exact_p95_ns(),
             frame_intervals_over_target: self.intervals_over_target,
             frame_intervals_over_double_target: self.intervals_over_double_target,
             dropped_frames: self.dropped_frames,
+            first_dropped_frame_interval_sample: self.first_dropped_frame_interval_sample,
+            last_dropped_frame_interval_sample: self.last_dropped_frame_interval_sample,
         }
     }
 
@@ -246,10 +270,13 @@ mod tests {
         assert_eq!(report.window_height_px, None);
         assert_eq!(report.window_scale_milliscale, None);
         assert_eq!(report.frame_interval_target_fps, 144);
+        assert_eq!(report.frame_interval_max_sample_index, 2);
         assert_eq!(report.frame_interval_p95_exact_ns, 20_833_332);
         assert_eq!(report.frame_intervals_over_target, 1);
         assert_eq!(report.frame_intervals_over_double_target, 1);
         assert_eq!(report.dropped_frames, 2);
+        assert_eq!(report.first_dropped_frame_interval_sample, 2);
+        assert_eq!(report.last_dropped_frame_interval_sample, 2);
     }
 
     #[test]

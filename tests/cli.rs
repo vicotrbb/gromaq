@@ -101,11 +101,14 @@ impl NativeAppLauncher for MockAppLauncher {
             frame_interval_samples: frames_presented.saturating_sub(1),
             frame_interval_avg_ns: 6_940_000,
             frame_interval_max_ns: 8_000_000,
+            frame_interval_max_sample_index: 17,
             frame_interval_p95_ns: 8_000_000,
             frame_interval_p95_exact_ns: 8_000_000,
             frame_intervals_over_target: 2,
             frame_intervals_over_double_target: 0,
             dropped_frames: 1,
+            first_dropped_frame_interval_sample: 17,
+            last_dropped_frame_interval_sample: 17,
             ..NativeAppRunReport::default()
         })
     }
@@ -508,6 +511,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert!(exit.stdout.contains("frame interval samples: 179\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
     assert!(exit.stdout.contains("frame interval max ns: 8000000\n"));
+    assert!(exit.stdout.contains("frame interval max sample: 17\n"));
     assert!(exit.stdout.contains("frame interval p95 ns: 8000000\n"));
     assert!(
         exit.stdout
@@ -519,6 +523,14 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
             .contains("frame intervals over double target: 0\n")
     );
     assert!(exit.stdout.contains("dropped frames: 1\n"));
+    assert!(
+        exit.stdout
+            .contains("first dropped frame interval sample: 17\n")
+    );
+    assert!(
+        exit.stdout
+            .contains("last dropped frame interval sample: 17\n")
+    );
     assert!(exit.stdout.contains("frame pacing accepted: false\n"));
     let _elapsed_ns = exit
         .stdout
