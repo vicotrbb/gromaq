@@ -50,7 +50,7 @@ impl PreparedSurfaceGlyphFrame {
     pub fn from_render_plan(
         plan: &RenderPlan,
         glyphs: &[GlyphBitmap],
-        fallback_cell_size_px: u16,
+        cell_width_px: u16,
         line_height_px: u16,
         clear_color: [f64; 4],
         cursor_color_rgba8: [u8; 4],
@@ -73,19 +73,20 @@ impl PreparedSurfaceGlyphFrame {
             }
         }
 
-        let fallback_cell_size_px = u32::from(fallback_cell_size_px);
-        let line_height_px = u32::from(line_height_px);
+        let cell_width_px = u32::from(cell_width_px);
+        let cell_height_px = u32::from(line_height_px);
         let slot_width = glyphs
             .iter()
             .map(|glyph| glyph.width)
             .max()
-            .unwrap_or(fallback_cell_size_px);
+            .unwrap_or(cell_width_px)
+            .max(cell_width_px);
         let slot_height = glyphs
             .iter()
             .map(|glyph| glyph.height)
             .max()
-            .unwrap_or(fallback_cell_size_px)
-            .max(line_height_px);
+            .unwrap_or(cell_height_px)
+            .max(cell_height_px);
         if slot_width == 0 || slot_height == 0 {
             return Err(SurfaceFrameError::InvalidFrame(
                 "surface frame cell dimensions must be non-zero".to_owned(),
@@ -94,13 +95,13 @@ impl PreparedSurfaceGlyphFrame {
         let width = checked_surface_frame_pixel_dimension(
             "surface glyph frame width",
             plan.viewport_cols,
-            slot_width,
+            cell_width_px,
             surface_padding_px,
         )?;
         let height = checked_surface_frame_pixel_dimension(
             "surface glyph frame height",
             plan.viewport_rows,
-            slot_height,
+            cell_height_px,
             surface_padding_px,
         )?;
         let padded = glyphs
@@ -124,8 +125,8 @@ impl PreparedSurfaceGlyphFrame {
             (columns, atlas)
         };
         let mut batch = GlyphQuadPlanner::new(GlyphQuadConfig {
-            cell_width_px: slot_width,
-            cell_height_px: slot_height,
+            cell_width_px,
+            cell_height_px,
             atlas_slot_width_px: slot_width,
             atlas_slot_height_px: slot_height,
             atlas_columns: columns,
@@ -135,20 +136,20 @@ impl PreparedSurfaceGlyphFrame {
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
         let mut background_batch = BackgroundQuadPlanner::new(BackgroundQuadConfig {
-            cell_width_px: slot_width,
-            cell_height_px: slot_height,
+            cell_width_px,
+            cell_height_px,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
         let mut decoration_batch = TextDecorationQuadPlanner::new(TextDecorationQuadConfig {
-            cell_width_px: slot_width,
-            cell_height_px: slot_height,
+            cell_width_px,
+            cell_height_px,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
         let mut cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
-            cell_width_px: slot_width,
-            cell_height_px: slot_height,
+            cell_width_px,
+            cell_height_px,
             color_rgba8: cursor_color_rgba8,
         })
         .plan(plan)
@@ -316,5 +317,65 @@ mod tests {
         assert_eq!(frame.atlas.height, 22);
         assert_eq!(frame.width, 168);
         assert!(frame.atlas.rgba.iter().all(|byte| *byte == 0));
+    }
+
+    #[test]
+    fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
+        let entry = GlyphEntry {
+            slot: 0,
+            generation: 0,
+        };
+        let plan = RenderPlan {
+            viewport_cols: 3,
+            viewport_rows: 1,
+            cursor: CursorSnapshot {
+                row: 0,
+                col: 0,
+                visible: false,
+                shape: CursorShape::Block,
+                blinking: true,
+            },
+            default_foreground_rgb8: [232, 226, 214],
+            ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+            clear_regions: Vec::new(),
+            backgrounds: Vec::new(),
+            decorations: Vec::new(),
+            glyphs: vec![PlannedGlyph {
+                row: 0,
+                col: 1,
+                text: "i".to_owned(),
+                ch: 'i',
+                style: Style::default(),
+                font_size_px: 18,
+                is_wide: false,
+                atlas_entry: entry,
+            }],
+        };
+        let glyphs = [GlyphBitmap {
+            entry,
+            width: 5,
+            height: 7,
+            rgba: vec![255; 5 * 7 * 4],
+        }];
+
+        let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+            &plan,
+            &glyphs,
+            18,
+            22,
+            [0.0, 0.0, 0.0, 1.0],
+            [244, 192, 106, 255],
+            4,
+        )
+        .unwrap();
+        let frame = prepared.as_surface_glyph_frame();
+        let glyph_quad = &frame.batch.quads[0];
+
+        assert_eq!(frame.width, (3 * 18) + (2 * 4));
+        assert_eq!(frame.height, 22 + (2 * 4));
+        assert_eq!(frame.atlas.width, 18);
+        assert_eq!(frame.atlas.height, 22);
+        assert_eq!(glyph_quad.vertices[0].position, [22.0, 4.0]);
+        assert_eq!(glyph_quad.vertices[2].position, [40.0, 26.0]);
     }
 }
