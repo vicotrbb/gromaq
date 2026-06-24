@@ -27,7 +27,10 @@ mod runtime;
 mod surface;
 mod text_zoom;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
-pub use fonts::{load_default_native_glyph_cache, load_native_glyph_cache};
+pub use fonts::{
+    NativeFontResolution, load_default_native_glyph_cache, load_native_glyph_cache,
+    resolve_native_font_paths,
+};
 pub use lifecycle::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
     NativeAppRunReport,

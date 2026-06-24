@@ -349,6 +349,11 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("shell args: -l"));
     assert!(exit.stdout.contains("shell cwd: /tmp"));
     assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
+    assert!(
+        exit.stdout
+            .contains("font source: <unresolved: native runtime failed: configured font family is not installed or supported by name: Gromaq Mono; use an explicit font file path>")
+    );
+    assert!(exit.stdout.contains("font fallbacks: <unknown>"));
     assert!(exit.stdout.contains("cell width: 11px"));
     assert!(exit.stdout.contains("line height: 21px"));
     assert!(exit.stdout.contains("theme preset: gromaq-dark"));

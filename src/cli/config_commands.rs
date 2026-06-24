@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use super::CliExit;
 use crate::app::{
-    NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig,
+    NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig, resolve_native_font_paths,
     run_native_app_with_runtime_renderer_font_and_config_file,
 };
 use crate::config::{
@@ -155,39 +155,71 @@ where
 
 pub(super) fn config_check_exit(path: &str) -> CliExit {
     match GromaqConfig::from_toml_file(path) {
-        Ok(config) => CliExit {
-            code: 0,
-            stdout: format!(
-                "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\ncell width: {}px\nline height: {}px\ntheme preset: {}\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntheme selection: {}\ntheme cursor style: {}\ntheme cursor blinking: {}\ntheme surface padding px: {}\ntheme dim opacity: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
-                path,
-                config.terminal.cols,
-                config.terminal.rows,
-                config.terminal.scrollback_lines,
-                config.shell.program.as_deref().unwrap_or("<default>"),
-                format_config_list(&config.shell.args),
-                config.shell.cwd.as_deref().unwrap_or("<default>"),
-                config.font.family,
-                config.font.size_px,
-                config.font.renderer_cell_width_px(),
-                config.font.line_height_px,
-                format_theme_preset(config.theme.preset),
-                config.theme.background,
-                config.theme.foreground,
-                config.theme.cursor,
-                config.theme.selection,
-                format_cursor_style(config.theme.cursor_style),
-                config.theme.cursor_blinking,
-                config.theme.surface_padding_px,
-                config.theme.dim_opacity,
-                config.performance.target_fps,
-                config.performance.dirty_region_rendering
-            ),
-            stderr: String::new(),
-        },
+        Ok(config) => {
+            let font_resolution = format_font_resolution(&config.font.family);
+            CliExit {
+                code: 0,
+                stdout: format!(
+                    "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nfont: {} {}px\nfont source: {}\nfont fallbacks: {}\ncell width: {}px\nline height: {}px\ntheme preset: {}\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntheme selection: {}\ntheme cursor style: {}\ntheme cursor blinking: {}\ntheme surface padding px: {}\ntheme dim opacity: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
+                    path,
+                    config.terminal.cols,
+                    config.terminal.rows,
+                    config.terminal.scrollback_lines,
+                    config.shell.program.as_deref().unwrap_or("<default>"),
+                    format_config_list(&config.shell.args),
+                    config.shell.cwd.as_deref().unwrap_or("<default>"),
+                    config.font.family,
+                    config.font.size_px,
+                    font_resolution.primary,
+                    font_resolution.fallbacks,
+                    config.font.renderer_cell_width_px(),
+                    config.font.line_height_px,
+                    format_theme_preset(config.theme.preset),
+                    config.theme.background,
+                    config.theme.foreground,
+                    config.theme.cursor,
+                    config.theme.selection,
+                    format_cursor_style(config.theme.cursor_style),
+                    config.theme.cursor_blinking,
+                    config.theme.surface_padding_px,
+                    config.theme.dim_opacity,
+                    config.performance.target_fps,
+                    config.performance.dirty_region_rendering
+                ),
+                stderr: String::new(),
+            }
+        }
         Err(error) => CliExit {
             code: 1,
             stdout: String::new(),
             stderr: format!("config check failed: {error}\n"),
+        },
+    }
+}
+
+struct FontResolutionText {
+    primary: String,
+    fallbacks: String,
+}
+
+fn format_font_resolution(font_family: &str) -> FontResolutionText {
+    match resolve_native_font_paths(font_family) {
+        Ok(resolution) => FontResolutionText {
+            primary: resolution.primary_path.display().to_string(),
+            fallbacks: if resolution.fallback_paths.is_empty() {
+                "<none>".to_owned()
+            } else {
+                resolution
+                    .fallback_paths
+                    .iter()
+                    .map(|path| path.display().to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            },
+        },
+        Err(error) => FontResolutionText {
+            primary: format!("<unresolved: {error}>"),
+            fallbacks: "<unknown>".to_owned(),
         },
     }
 }
