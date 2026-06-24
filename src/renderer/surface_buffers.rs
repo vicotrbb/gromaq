@@ -1,4 +1,5 @@
-use super::{BackgroundQuadBatch, GlyphQuadBatch, SurfaceFrameError, SurfaceGlyphFrame};
+use super::surface_frame::SurfaceFrameError;
+use super::{BackgroundQuadBatch, GlyphQuadBatch, SurfaceGlyphFrame};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct SurfaceGlyphAtlasLayout {
