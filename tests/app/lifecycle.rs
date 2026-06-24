@@ -62,25 +62,47 @@ fn native_app_lifecycle_requests_bounded_continuous_redraw_until_frame_limit() {
         ..NativeAppConfig::default()
     });
     let first_presented_at = std::time::Instant::now();
+    let target_interval = NativeAppConfig::default().target_frame_interval();
 
     lifecycle.on_window_created();
 
     assert_eq!(
         lifecycle.on_redraw_requested_at(first_presented_at),
-        NativeAppAction::RequestRedraw
+        NativeAppAction::None
     );
     assert_eq!(lifecycle.frames_presented(), 1);
+    assert_eq!(lifecycle.redraw_requests(), 0);
+    assert_eq!(
+        lifecycle.next_pty_pump_deadline(first_presented_at),
+        Some(first_presented_at + target_interval)
+    );
+
+    assert_eq!(
+        lifecycle.on_about_to_wait_at(first_presented_at + target_interval / 2),
+        NativeAppAction::None
+    );
+
+    assert_eq!(
+        lifecycle.on_about_to_wait_at(first_presented_at + target_interval),
+        NativeAppAction::RequestRedraw
+    );
     assert_eq!(lifecycle.redraw_requests(), 1);
 
     assert_eq!(
-        lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_millis(7)),
-        NativeAppAction::RequestRedraw
+        lifecycle.on_redraw_requested_at(first_presented_at + target_interval),
+        NativeAppAction::None
     );
     assert_eq!(lifecycle.frames_presented(), 2);
+    assert_eq!(lifecycle.redraw_requests(), 1);
+
+    assert_eq!(
+        lifecycle.on_about_to_wait_at(first_presented_at + target_interval * 2),
+        NativeAppAction::RequestRedraw
+    );
     assert_eq!(lifecycle.redraw_requests(), 2);
 
     assert_eq!(
-        lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_millis(16)),
+        lifecycle.on_redraw_requested_at(first_presented_at + target_interval * 2),
         NativeAppAction::Exit
     );
     assert_eq!(lifecycle.frames_presented(), 3);
@@ -90,10 +112,19 @@ fn native_app_lifecycle_requests_bounded_continuous_redraw_until_frame_limit() {
     let report = lifecycle.run_report();
     assert_eq!(report.frames_presented, 3);
     assert_eq!(report.frame_interval_samples, 2);
-    assert_eq!(report.frame_interval_total_ns, 16_000_000);
-    assert_eq!(report.frame_interval_avg_ns, 8_000_000);
-    assert_eq!(report.frame_interval_max_ns, 9_000_000);
-    assert_eq!(report.frame_interval_p95_ns, 10_000_000);
+    assert_eq!(
+        report.frame_interval_total_ns,
+        target_interval.as_nanos() as u64 * 2
+    );
+    assert_eq!(
+        report.frame_interval_avg_ns,
+        target_interval.as_nanos() as u64
+    );
+    assert_eq!(
+        report.frame_interval_max_ns,
+        target_interval.as_nanos() as u64
+    );
+    assert_eq!(report.frame_interval_p95_ns, 8_000_000);
     assert_eq!(report.dropped_frames, 0);
 }
 

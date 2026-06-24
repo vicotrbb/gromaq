@@ -147,6 +147,7 @@ pub struct NativeAppLifecycle {
     windows_created: u64,
     redraw_requests: u64,
     frames_presented: u64,
+    next_redraw_at: Option<Instant>,
     frame_intervals: PresentedFrameIntervals,
 }
 
@@ -160,6 +161,7 @@ impl NativeAppLifecycle {
             windows_created: 0,
             redraw_requests: 0,
             frames_presented: 0,
+            next_redraw_at: None,
             frame_intervals: PresentedFrameIntervals::default(),
         }
     }
@@ -191,8 +193,17 @@ impl NativeAppLifecycle {
 
     /// Handle the event-loop idle boundary before waiting for more events.
     pub fn on_about_to_wait(&mut self) -> NativeAppAction {
+        self.on_about_to_wait_at(Instant::now())
+    }
+
+    /// Handle the event-loop idle boundary at a deterministic instant.
+    pub fn on_about_to_wait_at(&mut self, now: Instant) -> NativeAppAction {
         if self.close_requested {
             NativeAppAction::Exit
+        } else if self.next_redraw_at.is_some_and(|deadline| now >= deadline) {
+            self.next_redraw_at = None;
+            self.redraw_requests += 1;
+            NativeAppAction::RequestRedraw
         } else {
             NativeAppAction::None
         }
@@ -201,6 +212,7 @@ impl NativeAppLifecycle {
     /// Record that terminal output changed the grid and a redraw should be scheduled.
     pub fn on_terminal_output_ready(&mut self) -> NativeAppAction {
         if self.has_window && !self.close_requested {
+            self.next_redraw_at = None;
             self.redraw_requests += 1;
             NativeAppAction::RequestRedraw
         } else if self.close_requested {
@@ -220,7 +232,12 @@ impl NativeAppLifecycle {
     /// Next timer deadline for polling PTY output without forcing a redraw.
     pub fn next_pty_pump_deadline(&self, now: Instant) -> Option<Instant> {
         if self.has_window && !self.close_requested {
-            Some(now + self.config.target_frame_interval())
+            let next_pty_pump_at = now + self.config.target_frame_interval();
+            Some(
+                self.next_redraw_at
+                    .map(|next_redraw_at| next_redraw_at.min(next_pty_pump_at))
+                    .unwrap_or(next_pty_pump_at),
+            )
         } else {
             None
         }
@@ -254,8 +271,8 @@ impl NativeAppLifecycle {
             self.close_requested = true;
             NativeAppAction::Exit
         } else if self.config.redraw_until_presented_frame_limit && self.has_window {
-            self.redraw_requests += 1;
-            NativeAppAction::RequestRedraw
+            self.next_redraw_at = Some(presented_at + self.config.target_frame_interval());
+            NativeAppAction::None
         } else {
             NativeAppAction::None
         }

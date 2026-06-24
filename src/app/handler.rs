@@ -60,10 +60,10 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                 return;
             }
         }
+        self.pump_output_and_apply_action(event_loop);
         if let Some(deadline) = self.lifecycle.next_pty_pump_deadline(Instant::now()) {
             event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
         }
-        self.pump_output_and_apply_action(event_loop);
     }
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: NativeAppEvent) {
