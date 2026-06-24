@@ -1,13 +1,11 @@
-use std::collections::VecDeque;
-
-use crate::app::{
-    NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
-};
-use crate::pty::{PtyConfig, PtyError, ShellCommand};
+use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
+use crate::pty::ShellCommand;
 use crate::renderer::{RendererConfig, WgpuRenderer};
 
 use super::CliExit;
+use pty_smoke::{RuntimeChunkedOutputSmokePtySpawner, RuntimeLargeOutputSmokePtySpawner};
+
+mod pty_smoke;
 
 const RUNTIME_OUTPUT_SMOKE_COLS: u16 = 32;
 const RUNTIME_OUTPUT_SMOKE_ROWS: u16 = 8;
@@ -17,40 +15,6 @@ const RUNTIME_BOUNDED_STATE_BATCHES: usize = 4;
 const RUNTIME_CONTINUOUS_OUTPUT_BATCHES: usize = 32;
 const RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH: usize = 8;
 const RUNTIME_CONTINUOUS_OUTPUT_SCROLLBACK_LINES: usize = 64;
-
-#[derive(Debug, Clone)]
-struct RuntimeLargeOutputSmokePtySpawner {
-    payload: Vec<u8>,
-}
-
-#[derive(Debug)]
-struct RuntimeLargeOutputSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-}
-
-impl NativePtySpawner for RuntimeLargeOutputSmokePtySpawner {
-    type Session = RuntimeLargeOutputSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeLargeOutputSmokePtySession {
-            output: VecDeque::from([self.payload.clone()]),
-        })
-    }
-}
-
-impl NativePtySessionIo for RuntimeLargeOutputSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
 
 fn runtime_large_output_payload(lines: usize) -> Vec<u8> {
     let mut payload = Vec::new();
@@ -65,7 +29,7 @@ pub(super) fn runtime_large_output_smoke_exit() -> CliExit {
     let expected_bytes = payload.len();
     let last_line = format!("gromaq-runtime-line-{:03}", RUNTIME_LARGE_OUTPUT_LINES - 1);
     let viewport_cells = runtime_output_smoke_viewport_cells();
-    let spawner = RuntimeLargeOutputSmokePtySpawner { payload };
+    let spawner = RuntimeLargeOutputSmokePtySpawner::new(payload);
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: RUNTIME_OUTPUT_SMOKE_COLS,
         terminal_rows: RUNTIME_OUTPUT_SMOKE_ROWS,
@@ -164,40 +128,6 @@ fn runtime_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
     }
 }
 
-#[derive(Debug, Clone)]
-struct RuntimeChunkedOutputSmokePtySpawner {
-    payloads: Vec<Vec<u8>>,
-}
-
-#[derive(Debug)]
-struct RuntimeChunkedOutputSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-}
-
-impl NativePtySpawner for RuntimeChunkedOutputSmokePtySpawner {
-    type Session = RuntimeChunkedOutputSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeChunkedOutputSmokePtySession {
-            output: VecDeque::from(self.payloads.clone()),
-        })
-    }
-}
-
-impl NativePtySessionIo for RuntimeChunkedOutputSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
-
 fn runtime_bounded_state_payloads() -> Vec<Vec<u8>> {
     (0..RUNTIME_BOUNDED_STATE_BATCHES)
         .map(|batch| {
@@ -218,7 +148,7 @@ pub(super) fn runtime_bounded_state_smoke_exit() -> CliExit {
     let total_lines = RUNTIME_LARGE_OUTPUT_LINES * RUNTIME_BOUNDED_STATE_BATCHES;
     let last_line = format!("gromaq-bounded-line-{:04}", total_lines - 1);
     let viewport_cells = runtime_output_smoke_viewport_cells();
-    let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
+    let spawner = RuntimeChunkedOutputSmokePtySpawner::new(payloads);
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: RUNTIME_OUTPUT_SMOKE_COLS,
         terminal_rows: RUNTIME_OUTPUT_SMOKE_ROWS,
@@ -361,7 +291,7 @@ pub(super) fn runtime_continuous_output_smoke_exit() -> CliExit {
     let total_lines = RUNTIME_CONTINUOUS_OUTPUT_BATCHES * RUNTIME_CONTINUOUS_OUTPUT_LINES_PER_BATCH;
     let last_line = format!("gromaq-continuous-line-{:03}", total_lines - 1);
     let viewport_cells = runtime_output_smoke_viewport_cells();
-    let spawner = RuntimeChunkedOutputSmokePtySpawner { payloads };
+    let spawner = RuntimeChunkedOutputSmokePtySpawner::new(payloads);
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: RUNTIME_OUTPUT_SMOKE_COLS,
         terminal_rows: RUNTIME_OUTPUT_SMOKE_ROWS,
