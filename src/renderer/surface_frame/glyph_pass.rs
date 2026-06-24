@@ -14,6 +14,8 @@ pub(super) fn render_glyph_frame_to_view(
     queue: &wgpu::Queue,
     view: &wgpu::TextureView,
     format: wgpu::TextureFormat,
+    target_width: u32,
+    target_height: u32,
     frame: SurfaceGlyphFrame<'_>,
 ) -> std::result::Result<(), SurfaceFrameError> {
     let atlas_layout = validate_surface_glyph_frame(frame)?;
@@ -150,8 +152,8 @@ pub(super) fn render_glyph_frame_to_view(
         queue,
         format,
         frame.background_batch,
-        frame.width,
-        frame.height,
+        target_width,
+        target_height,
         SolidDrawLabels {
             shader: "gromaq-surface-background-shader",
             pipeline_layout: "gromaq-surface-background-pipeline-layout",
@@ -163,7 +165,7 @@ pub(super) fn render_glyph_frame_to_view(
     let glyph_draw = if frame.batch.quads.is_empty() {
         None
     } else {
-        let vertex_bytes = surface_glyph_vertex_bytes(frame.batch, frame.width, frame.height)?;
+        let vertex_bytes = surface_glyph_vertex_bytes(frame.batch, target_width, target_height)?;
         let index_bytes = surface_glyph_index_bytes(frame.batch);
         let buffer_layout =
             validate_surface_glyph_buffers(&vertex_bytes, &index_bytes, frame.batch.indices.len())?;
@@ -188,8 +190,8 @@ pub(super) fn render_glyph_frame_to_view(
         queue,
         format,
         frame.decoration_batch,
-        frame.width,
-        frame.height,
+        target_width,
+        target_height,
         SolidDrawLabels {
             shader: "gromaq-surface-decoration-shader",
             pipeline_layout: "gromaq-surface-decoration-pipeline-layout",
@@ -203,8 +205,8 @@ pub(super) fn render_glyph_frame_to_view(
         queue,
         format,
         frame.cursor_batch,
-        frame.width,
-        frame.height,
+        target_width,
+        target_height,
         SolidDrawLabels {
             shader: "gromaq-surface-cursor-shader",
             pipeline_layout: "gromaq-surface-cursor-pipeline-layout",

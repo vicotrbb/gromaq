@@ -1,6 +1,7 @@
 use crate::renderer::surface_buffers::{
     SurfaceGlyphAtlasLayout, SurfaceGlyphBufferLayout, surface_background_vertex_byte_capacity,
-    surface_glyph_vertex_byte_capacity, validate_surface_background_buffers,
+    surface_background_vertex_bytes, surface_glyph_vertex_byte_capacity,
+    surface_glyph_vertex_bytes, validate_surface_background_buffers,
     validate_surface_glyph_buffers, validate_surface_glyph_frame,
 };
 use crate::renderer::{
@@ -275,6 +276,52 @@ fn surface_background_vertex_byte_capacity_uses_checked_multiplication() {
 }
 
 #[test]
+fn surface_glyph_vertices_normalize_against_surface_target_size() {
+    let mut batch = one_quad_batch();
+    batch.quads[0].vertices[0].position = [16.0, 22.0];
+
+    let vertex_bytes = surface_glyph_vertex_bytes(&batch, 1280, 800).unwrap();
+
+    assert_f32_near(f32_at(&vertex_bytes, 0), -0.975);
+    assert_f32_near(f32_at(&vertex_bytes, 4), 0.945);
+}
+
+#[test]
+fn surface_background_vertices_normalize_against_surface_target_size() {
+    let batch = BackgroundQuadBatch {
+        quads: vec![BackgroundQuad {
+            row: 0,
+            col: 0,
+            cols: 1,
+            vertices: [
+                BackgroundVertex {
+                    position: [16.0, 22.0],
+                    color_rgba: [1.0, 0.0, 0.0, 1.0],
+                },
+                BackgroundVertex {
+                    position: [32.0, 22.0],
+                    color_rgba: [1.0, 0.0, 0.0, 1.0],
+                },
+                BackgroundVertex {
+                    position: [32.0, 44.0],
+                    color_rgba: [1.0, 0.0, 0.0, 1.0],
+                },
+                BackgroundVertex {
+                    position: [16.0, 44.0],
+                    color_rgba: [1.0, 0.0, 0.0, 1.0],
+                },
+            ],
+        }],
+        indices: vec![0, 1, 2, 0, 2, 3],
+    };
+
+    let vertex_bytes = surface_background_vertex_bytes(&batch, 1280, 800).unwrap();
+
+    assert_f32_near(f32_at(&vertex_bytes, 0), -0.975);
+    assert_f32_near(f32_at(&vertex_bytes, 4), 0.945);
+}
+
+#[test]
 fn surface_glyph_buffer_validation_rejects_empty_buffers() {
     let vertex_bytes = [];
     let index_bytes = [1_u8, 2, 3, 4];
@@ -284,6 +331,17 @@ fn surface_glyph_buffer_validation_rejects_empty_buffers() {
     assert_eq!(
         error,
         SurfaceFrameError::InvalidFrame("surface glyph draw buffers must be non-empty".to_owned())
+    );
+}
+
+fn f32_at(bytes: &[u8], offset: usize) -> f32 {
+    f32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap())
+}
+
+fn assert_f32_near(actual: f32, expected: f32) {
+    assert!(
+        (actual - expected).abs() < f32::EPSILON,
+        "expected {actual} to equal {expected}"
     );
 }
 

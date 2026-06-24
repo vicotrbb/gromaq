@@ -52,6 +52,7 @@ pub struct WgpuSurfaceBackend<'a> {
     device: wgpu::Device,
     queue: wgpu::Queue,
     current_format: Option<wgpu::TextureFormat>,
+    current_size: Option<(u32, u32)>,
 }
 
 impl<'a> WgpuSurfaceBackend<'a> {
@@ -62,6 +63,7 @@ impl<'a> WgpuSurfaceBackend<'a> {
             device: device.clone(),
             queue: queue.clone(),
             current_format: None,
+            current_size: None,
         }
     }
 }
@@ -70,6 +72,7 @@ impl SurfaceBackend for WgpuSurfaceBackend<'_> {
     fn configure(&mut self, config: &wgpu::SurfaceConfiguration) {
         self.surface.configure(&self.device, config);
         self.current_format = Some(config.format);
+        self.current_size = Some((config.width, config.height));
     }
 }
 
@@ -132,6 +135,11 @@ impl SurfaceFrameBackend for WgpuSurfaceBackend<'_> {
                 "surface must be configured before drawing terminal glyphs".to_owned(),
             ));
         };
+        let Some((target_width, target_height)) = self.current_size else {
+            return Err(SurfaceFrameError::InvalidFrame(
+                "surface target size is unknown before drawing terminal glyphs".to_owned(),
+            ));
+        };
         let frame = match self.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(frame)
             | wgpu::CurrentSurfaceTexture::Suboptimal(frame) => frame,
@@ -144,7 +152,15 @@ impl SurfaceFrameBackend for WgpuSurfaceBackend<'_> {
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        render_glyph_frame_to_view(&self.device, &self.queue, &view, format, glyph_frame)?;
+        render_glyph_frame_to_view(
+            &self.device,
+            &self.queue,
+            &view,
+            format,
+            target_width,
+            target_height,
+            glyph_frame,
+        )?;
         frame.present();
         Ok(())
     }
