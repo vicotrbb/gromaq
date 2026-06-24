@@ -87,6 +87,11 @@ impl NativeTerminalApp {
         mut runtime_config: NativeTerminalRuntimeConfig,
         renderer_config: RendererConfig,
     ) -> Result<Self, NativeAppError> {
+        if config.width == 0 || config.height == 0 {
+            return Err(NativeAppError::Runtime(
+                "native window dimensions must be non-zero".to_owned(),
+            ));
+        }
         let resize_mapper = NativeResizeGridMapper::new(
             renderer_config.font_size_px,
             renderer_config.line_height_px,
@@ -218,7 +223,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "native runtime failed: native window and terminal reference dimensions must be non-zero"
+            "native runtime failed: native window dimensions must be non-zero"
         );
     }
 
