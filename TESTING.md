@@ -24,11 +24,11 @@ the behavior under test.
 - `tests/vt_editing.rs`: VT editing, cursor, tab, scrolling, charset, and
   mode fixtures.
 - `tests/reflow.rs`: visible-grid and scrollback resize fixtures.
-- `tests/terminal_state.rs`: core grid, cursor, Unicode, status-report, and
+- `tests/terminal_state/{basic,control,reports,scrollback,unicode}.rs`: core grid, cursor, Unicode, status-report, and
   scrollback fixtures.
 - `tests/fixtures/README.md`: file-backed terminal golden fixture inventory,
   update workflow, and review rules.
-- `tests/app.rs`: native runtime, PTY, input, mouse, resize, surface, and
+- `tests/app/*.rs` and `tests/app/runtime_core/*.rs`: native runtime, PTY, input, mouse, resize, surface, and
   redraw boundary fixtures.
 - `tests/pty.rs`: real PTY command and optional external-tool fixtures.
 - `tests/native_gpu.rs` and `tests/cli.rs`: GPU and CLI smoke fixtures.
