@@ -181,6 +181,7 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
+        renderer.config().font_size_px,
         [0.0, 0.0, 0.0, 1.0],
         [244, 192, 106, 255],
         12,

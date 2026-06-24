@@ -462,6 +462,7 @@ fn prepared_surface_glyph_frame_large_plan(c: &mut Criterion) {
             let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
                 black_box(&plan),
                 black_box(&glyphs.bitmaps),
+                black_box(14),
                 black_box([0.0, 0.0, 0.0, 1.0]),
                 black_box([244, 192, 106, 255]),
                 black_box(12),

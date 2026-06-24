@@ -169,18 +169,11 @@ where
             ..NativeGlyphFramePresentation::default()
         });
     };
-    if plan.glyphs.is_empty() {
-        surface.clear_and_present(clear_color)?;
-        return Ok(NativeGlyphFramePresentation {
-            rendered: true,
-            clear_presented: true,
-            ..NativeGlyphFramePresentation::default()
-        });
-    }
     let glyphs = glyph_cache.rasterize_plan(plan)?;
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
+        renderer.config().font_size_px,
         clear_color,
         renderer.config().cursor_color_rgba8,
         renderer.config().surface_padding_px,

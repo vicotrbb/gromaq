@@ -390,6 +390,46 @@ fn native_redraw_presents_dirty_runtime_frame_as_glyph_frame() {
 }
 
 #[test]
+fn native_redraw_presents_blank_runtime_cursor_frame_without_clear_only_fallback() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
+    let mut glyph_cache = RasterizedGlyphCache::from_bytes(system_mono_font()).unwrap();
+    let backend = MockSurfaceBackend::default();
+    let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());
+    surface.configure_initial(1280, 800).unwrap();
+
+    let report = render_and_present_terminal_glyph_frame_report(
+        &mut runtime,
+        &mut renderer,
+        &mut glyph_cache,
+        &mut surface,
+    )
+    .unwrap();
+
+    assert!(surface.backend().presented_clear_colors.borrow().is_empty());
+    assert_eq!(surface.backend().presented_glyph_frames.borrow().len(), 1);
+    assert!(report.rendered);
+    assert!(report.glyph_frame_presented);
+    assert!(!report.clear_presented);
+    assert_eq!(report.glyph_quads, 0);
+    assert_eq!(report.cursor_quads, 1);
+    assert_eq!(report.atlas_occupied_slots, 0);
+    assert!(report.atlas_bytes > 0);
+}
+
+#[test]
 fn native_surface_redraw_repaints_full_visible_grid_after_partial_output() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {

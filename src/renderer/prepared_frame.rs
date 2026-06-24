@@ -46,16 +46,12 @@ impl PreparedSurfaceGlyphFrame {
     pub fn from_render_plan(
         plan: &RenderPlan,
         glyphs: &[GlyphBitmap],
+        fallback_cell_size_px: u16,
         clear_color: [f64; 4],
         cursor_color_rgba8: [u8; 4],
         surface_padding_px: u16,
     ) -> std::result::Result<Self, SurfaceFrameError> {
-        if plan.glyphs.is_empty() {
-            return Err(SurfaceFrameError::InvalidFrame(
-                "render plan contains no glyphs to present".to_owned(),
-            ));
-        }
-        if glyphs.is_empty() {
+        if !plan.glyphs.is_empty() && glyphs.is_empty() {
             return Err(SurfaceFrameError::InvalidFrame(
                 "surface glyph frame requires rasterized glyph bitmaps".to_owned(),
             ));
@@ -72,11 +68,20 @@ impl PreparedSurfaceGlyphFrame {
             }
         }
 
-        let slot_width = glyphs.iter().map(|glyph| glyph.width).max().unwrap_or(0);
-        let slot_height = glyphs.iter().map(|glyph| glyph.height).max().unwrap_or(0);
+        let fallback_cell_size_px = u32::from(fallback_cell_size_px);
+        let slot_width = glyphs
+            .iter()
+            .map(|glyph| glyph.width)
+            .max()
+            .unwrap_or(fallback_cell_size_px);
+        let slot_height = glyphs
+            .iter()
+            .map(|glyph| glyph.height)
+            .max()
+            .unwrap_or(fallback_cell_size_px);
         if slot_width == 0 || slot_height == 0 {
             return Err(SurfaceFrameError::InvalidFrame(
-                "rasterized glyph dimensions must be non-zero".to_owned(),
+                "surface frame cell dimensions must be non-zero".to_owned(),
             ));
         }
         let width = checked_surface_frame_pixel_dimension(
@@ -99,9 +104,18 @@ impl PreparedSurfaceGlyphFrame {
                     .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))
             })
             .collect::<std::result::Result<Vec<_>, _>>()?;
-        let columns = atlas_columns_for_glyphs(&padded);
-        let atlas = GlyphAtlasImage::pack_rgba8(slot_width, slot_height, columns, &padded)
-            .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
+        let (columns, atlas) = if padded.is_empty() {
+            (
+                1,
+                transparent_glyph_atlas(slot_width, slot_height)
+                    .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?,
+            )
+        } else {
+            let columns = atlas_columns_for_glyphs(&padded);
+            let atlas = GlyphAtlasImage::pack_rgba8(slot_width, slot_height, columns, &padded)
+                .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
+            (columns, atlas)
+        };
         let mut batch = GlyphQuadPlanner::new(GlyphQuadConfig {
             cell_width_px: slot_width,
             cell_height_px: slot_height,
@@ -240,6 +254,32 @@ fn translate_background_vertex(vertex: &mut BackgroundVertex, offset: f32) {
     vertex.position[1] += offset;
 }
 
+fn transparent_glyph_atlas(
+    width: u32,
+    height: u32,
+) -> std::result::Result<GlyphAtlasImage, SurfaceFrameError> {
+    let len = width
+        .checked_mul(height)
+        .and_then(|pixels| pixels.checked_mul(4))
+        .and_then(|bytes| usize::try_from(bytes).ok())
+        .ok_or_else(|| {
+            SurfaceFrameError::InvalidFrame("transparent glyph atlas is too large".to_owned())
+        })?;
+    let mut rgba = Vec::new();
+    rgba.try_reserve_exact(len).map_err(|_| {
+        SurfaceFrameError::InvalidFrame(
+            "transparent glyph atlas is too large to allocate".to_owned(),
+        )
+    })?;
+    rgba.resize(len, 0);
+    Ok(GlyphAtlasImage {
+        width,
+        height,
+        rgba,
+        occupied_slots: 0,
+    })
+}
+
 fn atlas_columns_for_glyphs(glyphs: &[GlyphBitmap]) -> u32 {
     let slots = glyphs
         .iter()
@@ -343,6 +383,7 @@ mod tests {
         let error = PreparedSurfaceGlyphFrame::from_render_plan(
             &plan,
             &glyphs,
+            14,
             [0.0, 0.0, 0.0, 1.0],
             [244, 192, 106, 255],
             0,
@@ -355,5 +396,46 @@ mod tests {
                 "surface glyph frame width is too large to represent".to_owned()
             )
         );
+    }
+
+    #[test]
+    fn prepared_surface_glyph_frame_builds_cursor_only_blank_frame() {
+        let plan = RenderPlan {
+            viewport_cols: 8,
+            viewport_rows: 2,
+            cursor: CursorSnapshot {
+                row: 0,
+                col: 0,
+                visible: true,
+                shape: CursorShape::Block,
+                blinking: true,
+            },
+            default_foreground_rgb8: [232, 226, 214],
+            clear_regions: Vec::new(),
+            backgrounds: Vec::new(),
+            decorations: Vec::new(),
+            glyphs: Vec::new(),
+        };
+
+        let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
+            &plan,
+            &[],
+            18,
+            [0.0, 0.0, 0.0, 1.0],
+            [244, 192, 106, 255],
+            12,
+        )
+        .unwrap();
+        let frame = prepared.as_surface_glyph_frame();
+
+        assert!(frame.batch.quads.is_empty());
+        assert_eq!(frame.cursor_batch.quads.len(), 1);
+        assert_eq!(frame.cursor_batch.indices.len(), 6);
+        assert_eq!(frame.atlas.occupied_slots, 0);
+        assert_eq!(frame.atlas.width, 18);
+        assert_eq!(frame.atlas.height, 18);
+        assert_eq!(frame.width, 168);
+        assert_eq!(frame.height, 60);
+        assert!(frame.atlas.rgba.iter().all(|byte| *byte == 0));
     }
 }
