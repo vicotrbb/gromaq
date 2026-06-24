@@ -20,6 +20,7 @@ mod handler;
 mod lifecycle;
 mod native_input;
 mod perf;
+mod presentation;
 mod pty_bridge;
 mod runtime;
 mod surface;
