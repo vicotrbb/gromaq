@@ -1,6 +1,7 @@
 //! CPU-side render planning from terminal snapshots.
 
 use crate::cell::{Color, Style, UnderlineStyle};
+use crate::config::DEFAULT_ANSI_COLORS_RGB8;
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
 use crate::grid::GridSnapshot;
@@ -21,6 +22,7 @@ mod types;
 pub struct RenderPlanner {
     font_size_px: u16,
     default_foreground_rgb8: [u8; 3],
+    ansi_colors_rgb8: [[u8; 3]; 16],
 }
 
 impl RenderPlanner {
@@ -31,9 +33,23 @@ impl RenderPlanner {
 
     /// Create a render planner for a fixed font size and default foreground color.
     pub fn with_default_foreground(font_size_px: u16, default_foreground_rgb8: [u8; 3]) -> Self {
+        Self::with_theme(
+            font_size_px,
+            default_foreground_rgb8,
+            DEFAULT_ANSI_COLORS_RGB8,
+        )
+    }
+
+    /// Create a render planner for a fixed font size and theme palette.
+    pub fn with_theme(
+        font_size_px: u16,
+        default_foreground_rgb8: [u8; 3],
+        ansi_colors_rgb8: [[u8; 3]; 16],
+    ) -> Self {
         Self {
             font_size_px,
             default_foreground_rgb8,
+            ansi_colors_rgb8,
         }
     }
 
@@ -60,9 +76,11 @@ impl RenderPlanner {
             for row in region.row_start..region.row_end {
                 for col in region.col_start..region.col_end {
                     let cell = grid.cell(row, col);
-                    if let Some(color_rgba8) =
-                        style_background_rgba8(cell.style, self.default_foreground_rgb8)
-                    {
+                    if let Some(color_rgba8) = style_background_rgba8(
+                        cell.style,
+                        self.default_foreground_rgb8,
+                        self.ansi_colors_rgb8,
+                    ) {
                         append_background_fill(&mut backgrounds, row, col, color_rgba8);
                     }
                     append_cell_decorations(
@@ -72,6 +90,7 @@ impl RenderPlanner {
                         cell.style,
                         grid.cell_underline_color(row, col),
                         self.default_foreground_rgb8,
+                        self.ansi_colors_rgb8,
                     );
                     if cell.text.is_empty() || cell.is_wide_trailing {
                         continue;
@@ -103,6 +122,7 @@ impl RenderPlanner {
             viewport_rows: grid.rows,
             cursor,
             default_foreground_rgb8: self.default_foreground_rgb8,
+            ansi_colors_rgb8: self.ansi_colors_rgb8,
             clear_regions: dirty_regions.to_vec(),
             backgrounds,
             decorations,
@@ -140,6 +160,7 @@ fn append_cell_decorations(
     style: Style,
     underline_color: Color,
     default_foreground_rgb8: [u8; 3],
+    ansi_colors_rgb8: [[u8; 3]; 16],
 ) {
     if style.hidden {
         return;
@@ -151,11 +172,20 @@ fn append_cell_decorations(
                 row,
                 col,
                 TextDecorationKind::Underline,
-                decoration_color_rgba8(underline_color, style, default_foreground_rgb8),
+                decoration_color_rgba8(
+                    underline_color,
+                    style,
+                    default_foreground_rgb8,
+                    ansi_colors_rgb8,
+                ),
             ),
             UnderlineStyle::Double => {
-                let color_rgba8 =
-                    decoration_color_rgba8(underline_color, style, default_foreground_rgb8);
+                let color_rgba8 = decoration_color_rgba8(
+                    underline_color,
+                    style,
+                    default_foreground_rgb8,
+                    ansi_colors_rgb8,
+                );
                 append_text_decoration(
                     decorations,
                     row,
@@ -176,21 +206,36 @@ fn append_cell_decorations(
                 row,
                 col,
                 TextDecorationKind::CurlyUnderline,
-                decoration_color_rgba8(underline_color, style, default_foreground_rgb8),
+                decoration_color_rgba8(
+                    underline_color,
+                    style,
+                    default_foreground_rgb8,
+                    ansi_colors_rgb8,
+                ),
             ),
             UnderlineStyle::Dotted => append_text_decoration(
                 decorations,
                 row,
                 col,
                 TextDecorationKind::DottedUnderline,
-                decoration_color_rgba8(underline_color, style, default_foreground_rgb8),
+                decoration_color_rgba8(
+                    underline_color,
+                    style,
+                    default_foreground_rgb8,
+                    ansi_colors_rgb8,
+                ),
             ),
             UnderlineStyle::Dashed => append_text_decoration(
                 decorations,
                 row,
                 col,
                 TextDecorationKind::DashedUnderline,
-                decoration_color_rgba8(underline_color, style, default_foreground_rgb8),
+                decoration_color_rgba8(
+                    underline_color,
+                    style,
+                    default_foreground_rgb8,
+                    ansi_colors_rgb8,
+                ),
             ),
         }
     }
@@ -200,7 +245,12 @@ fn append_cell_decorations(
             row,
             col,
             TextDecorationKind::Overline,
-            decoration_color_rgba8(Color::Default, style, default_foreground_rgb8),
+            decoration_color_rgba8(
+                Color::Default,
+                style,
+                default_foreground_rgb8,
+                ansi_colors_rgb8,
+            ),
         );
     }
     if style.strikethrough {
@@ -209,7 +259,12 @@ fn append_cell_decorations(
             row,
             col,
             TextDecorationKind::Strikethrough,
-            decoration_color_rgba8(Color::Default, style, default_foreground_rgb8),
+            decoration_color_rgba8(
+                Color::Default,
+                style,
+                default_foreground_rgb8,
+                ansi_colors_rgb8,
+            ),
         );
     }
 }

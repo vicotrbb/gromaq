@@ -171,6 +171,12 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
         background = "#1f2028"
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
+        ansi = [
+            "#000001", "#000002", "#000003", "#000004",
+            "#000005", "#000006", "#000007", "#000008",
+            "#000009", "#00000a", "#00000b", "#00000c",
+            "#00000d", "#00000e", "#00000f", "#000010",
+        ]
         surface_padding_px = 18
         "##,
     )
@@ -179,6 +185,8 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.background_rgb8().unwrap(), [31, 32, 40]);
     assert_eq!(config.theme.foreground_rgb8().unwrap(), [232, 226, 214]);
     assert_eq!(config.theme.cursor_rgb8().unwrap(), [244, 192, 106]);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [0, 0, 1]);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [0, 0, 16]);
     assert_eq!(config.theme.surface_padding_px, 18);
 }
 
@@ -235,6 +243,25 @@ fn invalid_theme_surface_padding_is_rejected() {
         GromaqError::InvalidThemePadding {
             maximum: 512,
             actual: 513,
+        }
+    ));
+}
+
+#[test]
+fn invalid_theme_ansi_palette_length_is_rejected() {
+    let error = GromaqConfig::from_toml_str(
+        r##"
+        [theme]
+        ansi = ["#000000", "#111111"]
+        "##,
+    )
+    .unwrap_err();
+
+    assert!(matches!(
+        error,
+        GromaqError::InvalidThemeAnsiPaletteLength {
+            expected: 16,
+            actual: 2,
         }
     ));
 }

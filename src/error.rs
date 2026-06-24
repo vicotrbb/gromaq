@@ -68,6 +68,15 @@ pub enum GromaqError {
         actual: String,
     },
 
+    /// Theme ANSI palettes must provide exactly sixteen colors.
+    #[error("theme ANSI palette must contain exactly {expected} colors, got {actual}")]
+    InvalidThemeAnsiPaletteLength {
+        /// Required ANSI palette color count.
+        expected: usize,
+        /// Actual configured ANSI palette color count.
+        actual: usize,
+    },
+
     /// Theme surface padding must stay bounded.
     #[error("theme surface padding must be at most {maximum}px, got {actual}px")]
     InvalidThemePadding {

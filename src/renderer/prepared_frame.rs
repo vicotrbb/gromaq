@@ -298,6 +298,7 @@ fn atlas_columns_for_glyphs(glyphs: &[GlyphBitmap]) -> u32 {
 mod tests {
     use super::*;
     use crate::cell::Style;
+    use crate::config::DEFAULT_ANSI_COLORS_RGB8;
     use crate::renderer::{GlyphEntry, PlannedGlyph};
     use crate::terminal::{CursorShape, CursorSnapshot};
 
@@ -359,6 +360,7 @@ mod tests {
                 blinking: true,
             },
             default_foreground_rgb8: [229, 229, 229],
+            ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
             clear_regions: Vec::new(),
             backgrounds: Vec::new(),
             decorations: Vec::new(),
@@ -411,6 +413,7 @@ mod tests {
                 blinking: true,
             },
             default_foreground_rgb8: [232, 226, 214],
+            ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
             clear_regions: Vec::new(),
             backgrounds: Vec::new(),
             decorations: Vec::new(),

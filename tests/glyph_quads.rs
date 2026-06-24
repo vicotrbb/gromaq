@@ -4,7 +4,9 @@ use gromaq::renderer::{
     GlyphQuadPlanner, PlannedGlyph, PlannedTextDecoration, RenderPlan, RenderPlanner,
     TextDecorationKind, TextDecorationQuadConfig, TextDecorationQuadPlanner,
 };
-use gromaq::{CursorShape, CursorSnapshot, Style, Terminal, TerminalConfig};
+use gromaq::{
+    CursorShape, CursorSnapshot, DEFAULT_ANSI_COLORS_RGB8, Style, Terminal, TerminalConfig,
+};
 
 fn rgba(red: u8, green: u8, blue: u8, alpha: f32) -> [f32; 4] {
     [
@@ -144,7 +146,7 @@ fn glyph_quad_planner_maps_terminal_style_to_foreground_rgba() {
     assert_eq!(batch.quads.len(), 5);
     assert_eq!(
         batch.quads[0].vertices[0].foreground_rgba,
-        rgba(205, 49, 49, 1.0)
+        rgba(255, 107, 122, 1.0)
     );
     assert_eq!(
         batch.quads[1].vertices[0].foreground_rgba,
@@ -241,7 +243,7 @@ fn background_quad_planner_builds_solid_cell_spans() {
     assert_eq!(second.cols, 1);
     assert_eq!(second.vertices[0].position, [32.0, 0.0]);
     assert_eq!(second.vertices[1].position, [40.0, 0.0]);
-    assert_eq!(second.vertices[0].color_rgba, rgba(36, 114, 200, 1.0));
+    assert_eq!(second.vertices[0].color_rgba, rgba(130, 170, 255, 1.0));
 }
 
 #[test]
@@ -257,6 +259,7 @@ fn background_quad_planner_rejects_invalid_dimensions() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -379,6 +382,7 @@ fn text_decoration_quad_planner_builds_line_geometry() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: vec![
@@ -462,6 +466,7 @@ fn text_decoration_quad_planner_builds_styled_underline_geometry() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: vec![
@@ -527,6 +532,7 @@ fn text_decoration_quad_planner_rejects_invalid_dimensions() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -562,6 +568,7 @@ fn cursor_quad_planner_builds_cursor_shapes() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -607,6 +614,7 @@ fn cursor_quad_planner_skips_invisible_or_out_of_bounds_cursor() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -646,6 +654,7 @@ fn glyph_quad_planner_rejects_invalid_atlas_dimensions() {
                     blinking: true,
                 },
                 default_foreground_rgb8: [229, 229, 229],
+                ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
                 clear_regions: Vec::new(),
                 backgrounds: Vec::new(),
                 decorations: Vec::new(),
@@ -677,6 +686,7 @@ fn glyph_quad_planner_rejects_slots_outside_the_atlas_image() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -723,6 +733,7 @@ fn glyph_quad_planner_rejects_overflowing_atlas_coordinates() {
             blinking: true,
         },
         default_foreground_rgb8: [229, 229, 229],
+        ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),

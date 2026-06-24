@@ -90,7 +90,7 @@ fn render_plan_collects_styled_background_fills_for_dirty_cells() {
     assert_eq!(plan.backgrounds[1].row, 0);
     assert_eq!(plan.backgrounds[1].col, 4);
     assert_eq!(plan.backgrounds[1].cols, 1);
-    assert_eq!(plan.backgrounds[1].color_rgba8, [205, 49, 49, 255]);
+    assert_eq!(plan.backgrounds[1].color_rgba8, [255, 107, 122, 255]);
 }
 
 #[test]

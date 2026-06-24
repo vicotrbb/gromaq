@@ -17,6 +17,8 @@ pub struct RenderPlan {
     pub cursor: CursorSnapshot,
     /// Default foreground color used for cells with terminal default color.
     pub default_foreground_rgb8: [u8; 3],
+    /// ANSI color palette used for terminal colors 0-15.
+    pub ansi_colors_rgb8: [[u8; 3]; 16],
     /// Dirty rectangles to clear before drawing glyphs.
     pub clear_regions: Vec<DirtyRegion>,
     /// Styled cell background fills in row-major order.
