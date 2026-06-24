@@ -83,32 +83,21 @@ pub struct NativePtyResize {
 /// Maps native window pixel sizes to terminal row/column counts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NativeResizeGridMapper {
-    reference_width_px: u32,
-    reference_height_px: u32,
-    reference_cols: u16,
-    reference_rows: u16,
+    cell_width_px: u16,
+    line_height_px: u16,
+    surface_padding_px: u16,
 }
 
 impl NativeResizeGridMapper {
-    /// Create a mapper from a non-empty reference window and terminal size.
-    pub fn new(
-        reference_width_px: u32,
-        reference_height_px: u32,
-        reference_cols: u16,
-        reference_rows: u16,
-    ) -> Option<Self> {
-        if reference_width_px == 0
-            || reference_height_px == 0
-            || reference_cols == 0
-            || reference_rows == 0
-        {
+    /// Create a mapper from non-empty rendered cell metrics.
+    pub fn new(cell_width_px: u16, line_height_px: u16, surface_padding_px: u16) -> Option<Self> {
+        if cell_width_px == 0 || line_height_px == 0 {
             return None;
         }
         Some(Self {
-            reference_width_px,
-            reference_height_px,
-            reference_cols,
-            reference_rows,
+            cell_width_px,
+            line_height_px,
+            surface_padding_px,
         })
     }
 
@@ -117,8 +106,16 @@ impl NativeResizeGridMapper {
         if width_px == 0 || height_px == 0 {
             return None;
         }
-        let cols = scaled_cells(width_px, self.reference_width_px, self.reference_cols);
-        let rows = scaled_cells(height_px, self.reference_height_px, self.reference_rows);
+        let horizontal_padding = u32::from(self.surface_padding_px).saturating_mul(2);
+        let vertical_padding = u32::from(self.surface_padding_px).saturating_mul(2);
+        let cols = fitted_cells(
+            width_px.saturating_sub(horizontal_padding),
+            self.cell_width_px,
+        );
+        let rows = fitted_cells(
+            height_px.saturating_sub(vertical_padding),
+            self.line_height_px,
+        );
         Some(NativePtyResize {
             cols,
             rows,
@@ -126,6 +123,11 @@ impl NativeResizeGridMapper {
             pixel_height: clamp_u32_to_u16(height_px),
         })
     }
+}
+
+fn fitted_cells(available_px: u32, cell_px: u16) -> u16 {
+    let cells = available_px / u32::from(cell_px);
+    clamp_u32_to_u16(cells.max(1))
 }
 
 impl NativeMouseGridMapper {
@@ -261,9 +263,4 @@ pub(super) fn native_scrollback_key_direction(
         Key::Named(NamedKey::PageDown) => Some(ScrollbackKeyDirection::Down),
         _ => None,
     }
-}
-
-fn scaled_cells(actual_px: u32, reference_px: u32, reference_cells: u16) -> u16 {
-    let scaled = (u64::from(actual_px) * u64::from(reference_cells)) / u64::from(reference_px);
-    u16::try_from(scaled.max(1)).unwrap_or(u16::MAX)
 }

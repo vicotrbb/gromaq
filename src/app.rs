@@ -84,20 +84,23 @@ impl NativeTerminalApp {
     /// Create a native terminal app handler with explicit runtime and renderer configuration.
     pub fn new_with_runtime_and_renderer_config(
         config: NativeAppConfig,
-        runtime_config: NativeTerminalRuntimeConfig,
+        mut runtime_config: NativeTerminalRuntimeConfig,
         renderer_config: RendererConfig,
     ) -> Result<Self, NativeAppError> {
         let resize_mapper = NativeResizeGridMapper::new(
-            config.width,
-            config.height,
-            runtime_config.terminal_cols,
-            runtime_config.terminal_rows,
+            renderer_config.font_size_px,
+            renderer_config.line_height_px,
+            renderer_config.surface_padding_px,
         )
         .ok_or_else(|| {
-            NativeAppError::Runtime(
-                "native window and terminal reference dimensions must be non-zero".to_owned(),
-            )
+            NativeAppError::Runtime("native renderer cell dimensions must be non-zero".to_owned())
         })?;
+        if let Some(resize) = resize_mapper.resize_for_window(config.width, config.height) {
+            runtime_config.terminal_cols = resize.cols;
+            runtime_config.terminal_rows = resize.rows;
+            runtime_config.pixel_width = resize.pixel_width;
+            runtime_config.pixel_height = resize.pixel_height;
+        }
         let runtime = NativeTerminalRuntime::new(runtime_config)?;
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),

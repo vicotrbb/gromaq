@@ -136,14 +136,14 @@ fn native_mouse_button_tracker_reports_active_drag_button_priority() {
 }
 
 #[test]
-fn native_resize_grid_mapper_scales_window_pixels_to_terminal_size() {
-    let mapper = NativeResizeGridMapper::new(1280, 800, 120, 36).unwrap();
+fn native_resize_grid_mapper_fits_cells_inside_window_padding() {
+    let mapper = NativeResizeGridMapper::new(14, 18, 14).unwrap();
 
     assert_eq!(
         mapper.resize_for_window(1280, 800),
         Some(NativePtyResize {
-            cols: 120,
-            rows: 36,
+            cols: 89,
+            rows: 42,
             pixel_width: 1280,
             pixel_height: 800,
         })
@@ -151,14 +151,23 @@ fn native_resize_grid_mapper_scales_window_pixels_to_terminal_size() {
     assert_eq!(
         mapper.resize_for_window(640, 400),
         Some(NativePtyResize {
-            cols: 60,
-            rows: 18,
+            cols: 43,
+            rows: 20,
             pixel_width: 640,
             pixel_height: 400,
         })
     );
+    assert_eq!(
+        mapper.resize_for_window(20, 20),
+        Some(NativePtyResize {
+            cols: 1,
+            rows: 1,
+            pixel_width: 20,
+            pixel_height: 20,
+        })
+    );
     assert_eq!(mapper.resize_for_window(0, 400), None);
-    assert_eq!(NativeResizeGridMapper::new(0, 800, 120, 36), None);
+    assert_eq!(NativeResizeGridMapper::new(0, 18, 14), None);
 }
 
 #[test]

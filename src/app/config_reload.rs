@@ -48,19 +48,24 @@ impl NativeTerminalApp {
             self.reload_reference_size(&app_config);
         runtime_config.pixel_width = pixel_width;
         runtime_config.pixel_height = pixel_height;
-        let resize_mapper = NativeResizeGridMapper::new(
-            reference_width_px,
-            reference_height_px,
-            runtime_config.terminal_cols,
-            runtime_config.terminal_rows,
-        )
-        .ok_or_else(|| {
-            NativeAppError::Runtime(
-                "native window and terminal reference dimensions must be non-zero".to_owned(),
-            )
-        })?;
         let renderer_config = RendererConfig::from_gromaq_config(config)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
+        let resize_mapper = NativeResizeGridMapper::new(
+            renderer_config.font_size_px,
+            renderer_config.line_height_px,
+            renderer_config.surface_padding_px,
+        )
+        .ok_or_else(|| {
+            NativeAppError::Runtime("native renderer cell dimensions must be non-zero".to_owned())
+        })?;
+        if let Some(resize) =
+            resize_mapper.resize_for_window(reference_width_px, reference_height_px)
+        {
+            runtime_config.terminal_cols = resize.cols;
+            runtime_config.terminal_rows = resize.rows;
+            runtime_config.pixel_width = resize.pixel_width;
+            runtime_config.pixel_height = resize.pixel_height;
+        }
         let terminal_config_changed = self.runtime.config().terminal_cols
             != runtime_config.terminal_cols
             || self.runtime.config().terminal_rows != runtime_config.terminal_rows

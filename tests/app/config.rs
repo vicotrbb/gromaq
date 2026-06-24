@@ -10,6 +10,21 @@ use winit::dpi::Size;
 
 use crate::support::test_app_config_path;
 
+fn expected_grid_for_window(
+    width_px: u32,
+    height_px: u32,
+    renderer_config: &RendererConfig,
+) -> (u16, u16) {
+    let cols = width_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2)
+        / u32::from(renderer_config.font_size_px);
+    let rows = height_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2)
+        / u32::from(renderer_config.line_height_px);
+    (
+        u16::try_from(cols.max(1)).unwrap(),
+        u16::try_from(rows.max(1)).unwrap(),
+    )
+}
+
 #[test]
 fn native_app_config_builds_terminal_window_attributes() {
     let config = NativeAppConfig::default();
@@ -100,8 +115,13 @@ fn native_app_can_start_with_explicit_runtime_config() {
             .unwrap();
 
     let grid = app.runtime().terminal().dump_grid();
-    assert_eq!(grid.cols, 40);
-    assert_eq!(grid.rows, 10);
+    assert_eq!(
+        (grid.cols, grid.rows),
+        expected_grid_for_window(1280, 800, &RendererConfig::default())
+    );
+    assert_eq!(app.runtime().config().scrollback_lines, 64);
+    assert_eq!(app.runtime().config().pixel_width, 1280);
+    assert_eq!(app.runtime().config().pixel_height, 800);
     assert_eq!(
         app.runtime().terminal().dump_cursor().shape,
         CursorShape::Bar
@@ -173,6 +193,13 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
         [244, 192, 106, 255]
     );
     assert_eq!(app.renderer().config().surface_padding_px, 18);
+    assert_eq!(
+        (
+            app.runtime().terminal().dump_grid().cols,
+            app.runtime().terminal().dump_grid().rows,
+        ),
+        expected_grid_for_window(1280, 800, app.renderer().config())
+    );
     assert!(!app.runtime().has_shell_session());
 }
 
@@ -207,10 +234,20 @@ fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
 
     app.apply_reloadable_gromaq_config(&config).unwrap();
 
-    assert_eq!(app.runtime().terminal().dump_grid().cols, 12);
-    assert_eq!(app.runtime().terminal().dump_grid().rows, 3);
-    assert_eq!(app.runtime().config().terminal_cols, 12);
-    assert_eq!(app.runtime().config().terminal_rows, 3);
+    assert_eq!(
+        (
+            app.runtime().terminal().dump_grid().cols,
+            app.runtime().terminal().dump_grid().rows,
+        ),
+        expected_grid_for_window(1280, 800, &RendererConfig::default())
+    );
+    assert_eq!(
+        (
+            app.runtime().config().terminal_cols,
+            app.runtime().config().terminal_rows,
+        ),
+        expected_grid_for_window(1280, 800, &RendererConfig::default())
+    );
     assert_eq!(app.runtime().config().scrollback_lines, 16);
     assert_eq!(
         app.runtime().config().shell.program,
@@ -299,8 +336,13 @@ fn native_app_polls_config_file_and_applies_reloadable_render_settings() {
 
     assert!(app.reload_config_if_changed().unwrap());
     assert_eq!(app.lifecycle().config().target_fps, 120);
-    assert_eq!(app.runtime().terminal().dump_grid().cols, 24);
-    assert_eq!(app.runtime().terminal().dump_grid().rows, 6);
+    assert_eq!(
+        (
+            app.runtime().terminal().dump_grid().cols,
+            app.runtime().terminal().dump_grid().rows,
+        ),
+        expected_grid_for_window(1280, 800, app.renderer().config())
+    );
     assert_eq!(app.runtime().config().scrollback_lines, 64);
     assert_eq!(
         app.runtime().config().shell.program,
