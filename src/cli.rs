@@ -38,7 +38,9 @@ use runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
     runtime_large_output_smoke_exit, runtime_memory_smoke_exit,
 };
-use runtime_real_shell_smoke::runtime_real_shell_smoke_exit;
+use runtime_real_shell_smoke::{
+    runtime_real_shell_large_output_smoke_exit, runtime_real_shell_smoke_exit,
+};
 use runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
 
@@ -210,6 +212,9 @@ where
         CliCommand::RuntimeMemorySmoke => runtime_memory_smoke_exit(),
         CliCommand::RuntimeContinuousOutputSmoke => runtime_continuous_output_smoke_exit(),
         CliCommand::RuntimeRealShellSmoke => runtime_real_shell_smoke_exit(),
+        CliCommand::RuntimeRealShellLargeOutputSmoke => {
+            runtime_real_shell_large_output_smoke_exit()
+        }
         CliCommand::RuntimeAlternateScreenSmoke => runtime_alternate_screen_smoke_exit(),
         CliCommand::RuntimeReflowSmoke => runtime_reflow_smoke_exit(),
         CliCommand::RuntimeConfigReloadSmoke => runtime_config_reload_smoke_exit(),

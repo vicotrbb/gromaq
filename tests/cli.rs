@@ -203,7 +203,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -506,6 +506,37 @@ fn runtime_real_shell_smoke_cli_drives_real_shell_through_runtime() {
     assert!(exit.stdout.contains("exit echo observed: true"));
     assert!(exit.stdout.contains("render p95 ns:"));
     assert!(exit.stdout.contains("input-to-render p95 ns:"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_real_shell_large_output_smoke_cli_renders_real_shell_burst() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(
+        ["gromaq", "--runtime-real-shell-large-output-smoke"],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(
+        exit.stdout
+            .contains("runtime real-shell large-output smoke: ok")
+    );
+    assert!(exit.stdout.contains("shell: /bin/sh"));
+    assert!(exit.stdout.contains("lines: 256"));
+    assert!(exit.stdout.contains("pumped bytes:"));
+    assert!(exit.stdout.contains("scrollback cap: 64"));
+    assert!(exit.stdout.contains("scrollback lines: 64"));
+    assert!(exit.stdout.contains("rendered frames:"));
+    assert!(exit.stdout.contains("rendered dirty regions:"));
+    assert!(exit.stdout.contains("rendered dirty cells max:"));
+    assert!(exit.stdout.contains("first line evicted: true"));
+    assert!(exit.stdout.contains("last line observed: true"));
+    assert!(exit.stdout.contains("render p95 ns:"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
