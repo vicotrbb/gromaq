@@ -57,13 +57,10 @@ fn gpu_terminal_text_smoke_cli_reports_draw_result() {
     assert!(exit.stdout.contains("quads: 3"));
     assert!(exit.stdout.contains("decoration quads: 1"));
     assert!(exit.stdout.contains("cursor quads: 1"));
-    assert!(
-        exit.stdout
-            .contains("first drawn pixel: [13, 188, 121, 255]")
-    );
-    assert!(exit.stdout.contains("background pixel: [9, 13, 18, 255]"));
-    assert!(exit.stdout.contains("glyph pixel: [244, 247, 251, 255]"));
-    assert!(exit.stdout.contains("glyph/background contrast x100: 1842"));
+    assert!(exit.stdout.contains("first drawn pixel: [23, 27, 36, 255]"));
+    assert!(exit.stdout.contains("background pixel: [23, 27, 36, 255]"));
+    assert!(exit.stdout.contains("glyph pixel: [237, 243, 251, 255]"));
+    assert!(exit.stdout.contains("glyph/background contrast x100: 1544"));
     assert!(exit.stdout.contains("cursor pixel: [229, 229, 229, 255]"));
     assert!(exit.stdout.contains("drawn pixels: 160"));
     assert!(exit.stderr.is_empty());
@@ -116,16 +113,16 @@ fn gpu_terminal_text_snapshot_cli_writes_ppm_artifact() {
     assert!(exit.stdout.contains("size: 2x1"));
     assert!(exit.stdout.contains("bytes written: 17"));
     assert!(exit.stdout.contains("glyphs: 2"));
-    assert!(exit.stdout.contains("background pixel: [9, 13, 18, 255]"));
-    assert!(exit.stdout.contains("glyph pixel: [244, 247, 251, 255]"));
-    assert!(exit.stdout.contains("glyph/background contrast x100: 1842"));
+    assert!(exit.stdout.contains("background pixel: [23, 27, 36, 255]"));
+    assert!(exit.stdout.contains("glyph pixel: [237, 243, 251, 255]"));
+    assert!(exit.stdout.contains("glyph/background contrast x100: 1544"));
     assert!(exit.stdout.contains("cursor pixel: [229, 229, 229, 255]"));
     assert!(exit.stdout.contains("drawn pixels: 2"));
     assert!(exit.stderr.is_empty());
     assert_eq!(backend.requests.borrow().len(), 1);
     assert_eq!(
         fs::read(&path).unwrap(),
-        b"P6\n2 1\n255\n\x09\x0d\x12\xf4\xf7\xfb"
+        b"P6\n2 1\n255\n\x17\x1b\x24\xed\xf3\xfb"
     );
 
     fs::remove_file(path).unwrap();

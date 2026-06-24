@@ -94,8 +94,8 @@ target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
 frames. On 2026-06-24, `cargo run -- --gpu-terminal-text-smoke` drew a 144x36
 offscreen terminal frame with 4 glyphs, 4 glyph quads, 1 background quad, 1
 decoration quad, 1 cursor quad, 3 rasterized glyphs, 1 reused glyph, 1476 drawn
-pixels, a sampled background pixel of `[1, 1, 2, 255]`, a sampled glyph pixel of
-`[254, 253, 214, 254]`, and a contrast ratio of 2010 x100 against the 700 x100
+pixels, a sampled background pixel of `[2, 3, 4, 255]`, a sampled glyph pixel of
+`[254, 253, 214, 254]`, and a contrast ratio of 1989 x100 against the 700 x100
 minimum smoke gate. On the same date,
 `cargo run -- --gpu-terminal-text-perf-smoke` measured 16 repeated offscreen
 terminal text GPU draw/readback frames at 144x36 pixels, reported 1452 drawn
@@ -107,8 +107,8 @@ On the same date,
 `cargo run -- --gpu-terminal-text-snapshot target/gromaq-terminal-text-smoke.ppm`
 wrote a 144x36 binary PPM artifact of the same contrast-gated terminal-text
 smoke frame, reported 15566 bytes written, 4 glyphs, 1476 drawn pixels, sampled
-background `[1, 1, 2, 255]`, sampled glyph `[254, 253, 214, 254]`, cursor
-`[200, 200, 200, 255]`, and the same 2010 x100 contrast ratio. These are
+background `[2, 3, 4, 255]`, sampled glyph `[254, 253, 214, 254]`, cursor
+`[200, 200, 200, 255]`, and the same 1989 x100 contrast ratio. These are
 deterministic smoke results, an inspectable offscreen snapshot artifact, and
 offscreen GPU draw/readback timing results, not live hardware acceptance
 measurements.

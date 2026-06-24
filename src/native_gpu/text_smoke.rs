@@ -2,6 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::config::{DEFAULT_BACKGROUND_RGB8, DEFAULT_FOREGROUND_RGB8};
 use crate::font::{RasterizedGlyphBatch, RasterizedGlyphCache};
 use crate::renderer::{GlyphAtlas, GlyphAtlasConfig, GlyphAtlasImage, RenderPlan, RenderPlanner};
 use crate::{Terminal, TerminalConfig};
@@ -30,8 +31,13 @@ pub(super) fn build_text_atlas_smoke_frame()
         TerminalConfig::new(8, 2)
             .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?,
     );
+    let [background_red, background_green, background_blue] = DEFAULT_BACKGROUND_RGB8;
+    let [foreground_red, foreground_green, foreground_blue] = DEFAULT_FOREGROUND_RGB8;
+    let default_theme_sample = format!(
+        "\x1b[48:2:{background_red}:{background_green}:{background_blue};38:2:{foreground_red}:{foreground_green}:{foreground_blue}m A😀A\x1b[0;4;31mB"
+    );
     terminal
-        .write_str("\x1b[48:2:9:13:18;38:2:244:247:251m A😀A\x1b[0;4;31mB")
+        .write_str(&default_theme_sample)
         .map_err(|error| GpuBootstrapError::SmokeReadback(error.to_string()))?;
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(

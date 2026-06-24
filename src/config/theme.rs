@@ -11,46 +11,46 @@ pub const MIN_DIM_OPACITY: f32 = 0.1;
 /// Maximum useful opacity for dim text.
 pub const MAX_DIM_OPACITY: f32 = 1.0;
 /// Built-in polished dark theme background.
-pub const DEFAULT_BACKGROUND: &str = "#090d12";
+pub const DEFAULT_BACKGROUND: &str = "#171b24";
 /// Built-in polished dark theme background as RGB8.
-pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [9, 13, 18];
+pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [23, 27, 36];
 /// Built-in polished dark theme foreground.
-pub const DEFAULT_FOREGROUND: &str = "#f4f7fb";
+pub const DEFAULT_FOREGROUND: &str = "#edf3fb";
 /// Built-in polished dark theme foreground as RGB8.
-pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [244, 247, 251];
+pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [237, 243, 251];
 /// Built-in polished dark theme cursor.
-pub const DEFAULT_CURSOR: &str = "#ffd27a";
+pub const DEFAULT_CURSOR: &str = "#f6c177";
 /// Built-in polished dark theme cursor as RGB8.
-pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [255, 210, 122];
+pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [246, 193, 119];
 /// Built-in polished dark theme selection background.
-pub const DEFAULT_SELECTION: &str = "#2b4162";
+pub const DEFAULT_SELECTION: &str = "#33445f";
 /// Built-in polished dark theme selection background as RGB8.
-pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [43, 65, 98];
+pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [51, 68, 95];
 /// Number of configurable ANSI palette entries.
 pub const ANSI_COLOR_COUNT: usize = 16;
 /// Built-in polished dark ANSI palette.
 pub const DEFAULT_ANSI_COLORS: [&str; ANSI_COLOR_COUNT] = [
-    "#151922", "#ff6b7a", "#7ee787", "#ffd27a", "#82aaff", "#c792ea", "#7dcfff", "#d7dde8",
-    "#6b7280", "#ff8fa3", "#a6e3a1", "#f9e2af", "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
+    "#2a2f3a", "#ff6b7a", "#8bdc8b", "#f6c177", "#8aadf4", "#c6a0f6", "#8bd5ca", "#cad3e3",
+    "#6e7686", "#ff8fa3", "#a6e3a1", "#f9d58a", "#a6c8ff", "#f5bde6", "#9ee7dc", "#f7fbff",
 ];
 /// Built-in polished dark ANSI palette as RGB8.
 pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
-    [21, 25, 34],
+    [42, 47, 58],
     [255, 107, 122],
-    [126, 231, 135],
-    [255, 210, 122],
-    [130, 170, 255],
-    [199, 146, 234],
-    [125, 207, 255],
-    [215, 221, 232],
-    [107, 114, 128],
+    [139, 220, 139],
+    [246, 193, 119],
+    [138, 173, 244],
+    [198, 160, 246],
+    [139, 213, 202],
+    [202, 211, 227],
+    [110, 118, 134],
     [255, 143, 163],
     [166, 227, 161],
-    [249, 226, 175],
-    [137, 180, 250],
-    [245, 194, 231],
-    [148, 226, 213],
-    [255, 255, 255],
+    [249, 213, 138],
+    [166, 200, 255],
+    [245, 189, 230],
+    [158, 231, 220],
+    [247, 251, 255],
 ];
 /// Built-in visual breathing room around terminal cells.
 pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;

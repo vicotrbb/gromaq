@@ -10,17 +10,17 @@ override any individual field in TOML:
 ```toml
 [theme]
 preset = "gromaq-dark"
-background = "#090d12"
-foreground = "#f4f7fb"
-cursor = "#ffd27a"
-selection = "#2b4162"
+background = "#171b24"
+foreground = "#edf3fb"
+cursor = "#f6c177"
+selection = "#33445f"
 cursor_style = "block"
 cursor_blinking = true
 ansi = [
-  "#151922", "#ff6b7a", "#7ee787", "#ffd27a",
-  "#82aaff", "#c792ea", "#7dcfff", "#d7dde8",
-  "#6b7280", "#ff8fa3", "#a6e3a1", "#f9e2af",
-  "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
+  "#2a2f3a", "#ff6b7a", "#8bdc8b", "#f6c177",
+  "#8aadf4", "#c6a0f6", "#8bd5ca", "#cad3e3",
+  "#6e7686", "#ff8fa3", "#a6e3a1", "#f9d58a",
+  "#a6c8ff", "#f5bde6", "#9ee7dc", "#f7fbff",
 ]
 surface_padding_px = 14
 dim_opacity = 0.66

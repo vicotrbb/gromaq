@@ -201,10 +201,10 @@ impl GpuTerminalTextRunner for MockContext {
             cursor_quads: 1,
             rasterized_glyphs: 2,
             reused_glyphs: 1,
-            first_drawn_pixel: [13, 188, 121, 255],
-            background_pixel: [9, 13, 18, 255],
-            glyph_pixel: [244, 247, 251, 255],
-            glyph_background_contrast_x100: 1842,
+            first_drawn_pixel: [23, 27, 36, 255],
+            background_pixel: [23, 27, 36, 255],
+            glyph_pixel: [237, 243, 251, 255],
+            glyph_background_contrast_x100: 1544,
             cursor_pixel: [229, 229, 229, 255],
             drawn_pixels: 160,
         })
@@ -231,7 +231,7 @@ impl GpuTerminalTextSnapshotRunner for MockContext {
         &self,
         path: &Path,
     ) -> Result<GpuTerminalTextSnapshotReport, GpuBootstrapError> {
-        let snapshot = b"P6\n2 1\n255\n\x09\x0d\x12\xf4\xf7\xfb";
+        let snapshot = b"P6\n2 1\n255\n\x17\x1b\x24\xed\xf3\xfb";
         fs::write(path, snapshot).map_err(|error| {
             GpuBootstrapError::SmokeReadback(format!("failed to write mock snapshot: {error}"))
         })?;
@@ -240,9 +240,9 @@ impl GpuTerminalTextSnapshotRunner for MockContext {
             height: 1,
             bytes_written: snapshot.len(),
             glyphs: 2,
-            background_pixel: [9, 13, 18, 255],
-            glyph_pixel: [244, 247, 251, 255],
-            glyph_background_contrast_x100: 1842,
+            background_pixel: [23, 27, 36, 255],
+            glyph_pixel: [237, 243, 251, 255],
+            glyph_background_contrast_x100: 1544,
             cursor_pixel: [229, 229, 229, 255],
             drawn_pixels: 2,
         })
@@ -302,10 +302,10 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("# cell_width_px = 12"));
     assert!(exit.stdout.contains("[theme]"));
     assert!(exit.stdout.contains("preset = \"gromaq-dark\""));
-    assert!(exit.stdout.contains("selection = \"#2b4162\""));
+    assert!(exit.stdout.contains("selection = \"#33445f\""));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
     assert!(exit.stdout.contains("cursor_blinking = true"));
-    assert!(exit.stdout.contains("ansi = [\"#151922\", \"#ff6b7a\""));
+    assert!(exit.stdout.contains("ansi = [\"#2a2f3a\", \"#ff6b7a\""));
     assert!(exit.stdout.contains("surface_padding_px = 14"));
     assert!(exit.stdout.contains("dim_opacity = 0.66"));
     assert!(exit.stdout.contains("[performance]"));
