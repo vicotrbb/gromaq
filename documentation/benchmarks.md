@@ -34,7 +34,13 @@ lines and 128 styled scrollback cell rows, used the runtime state snapshot to
 keep retained cell data within the 4096-cell deterministic cap for a 32-column
 bounded runtime, rendered 4 CPU-side dirty frames, reported viewport-capped
 rendered dirty-region work, and verified
-`gromaq-bounded-line-2047` in the render plan. On the same date,
+`gromaq-bounded-line-2047` in the render plan. On 2026-06-24,
+`cargo run -- --runtime-memory-smoke` extended that deterministic long-session
+path with one warmup batch, 8 measured batches, process RSS sampling through
+`ps`, a 65536 KiB RSS growth cap after warmup, and the same capped
+scrollback-state assertions; it pumped 110592 bytes from 4608 lines, rendered 9
+CPU-side frames, retained 128 scrollback lines, reported RSS growth of 1280 KiB,
+and verified `gromaq-memory-line-4607` in the render plan. On 2026-06-23,
 `cargo run -- --runtime-continuous-output-smoke` pumped 6912 bytes from 256
 lines across 32 small PTY batches, rendered each dirty batch, verified the
 configured 64-line scrollback cap, reported viewport-capped rendered dirty-region
@@ -136,7 +142,7 @@ foundation components named above. They do not prove:
 - p95 frame time below 6.94ms
 - p95 input latency below 10ms
 - near-zero idle CPU
-- live process memory stability during long sessions
+- live window process memory stability during real interactive long sessions
 - smooth interactive scrolling with a live window surface
 
 Those remain acceptance criteria for later live measurement work.

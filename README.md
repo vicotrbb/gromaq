@@ -76,6 +76,7 @@ Implemented and tested:
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
 - Deterministic runtime state-footprint snapshot and bounded-state smoke with `--runtime-bounded-state-smoke`, including capped scrollback lines, styled cell rows, retained cell count, and retained-cell cap
+- Deterministic runtime process-memory smoke with `--runtime-memory-smoke`, including warmup RSS sampling, repeated long-output batches, capped scrollback state, and bounded RSS growth
 - Deterministic runtime continuous-output smoke with `--runtime-continuous-output-smoke`
 - Deterministic runtime alternate-screen smoke with `--runtime-alternate-screen-smoke`
 - Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
@@ -109,7 +110,7 @@ Not yet complete:
 - Broader alternate-screen mouse workflows beyond scripted Vim and tmux proof paths
 - Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
 - Compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows
-- Performance acceptance proof for 144Hz, frame time, input latency, idle CPU, and memory growth
+- Live performance acceptance proof for 144Hz, frame time, input latency, idle CPU, and real-session memory growth
 
 ## Development
 
@@ -133,6 +134,7 @@ cargo run -- --runtime-scrollback-smoke
 cargo run -- --runtime-perf-smoke
 cargo run -- --runtime-large-output-smoke
 cargo run -- --runtime-bounded-state-smoke
+cargo run -- --runtime-memory-smoke
 cargo run -- --runtime-continuous-output-smoke
 cargo run -- --runtime-alternate-screen-smoke
 cargo run -- --runtime-reflow-smoke

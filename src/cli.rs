@@ -32,7 +32,7 @@ use runtime_input_smoke::{
 };
 use runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
-    runtime_large_output_smoke_exit,
+    runtime_large_output_smoke_exit, runtime_memory_smoke_exit,
 };
 use runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
@@ -142,6 +142,7 @@ where
         && arg != "--runtime-perf-smoke"
         && arg != "--runtime-large-output-smoke"
         && arg != "--runtime-bounded-state-smoke"
+        && arg != "--runtime-memory-smoke"
         && arg != "--runtime-continuous-output-smoke"
         && arg != "--runtime-alternate-screen-smoke"
         && arg != "--runtime-reflow-smoke"
@@ -241,6 +242,9 @@ where
     if arg == "--runtime-bounded-state-smoke" {
         return runtime_bounded_state_smoke_exit();
     }
+    if arg == "--runtime-memory-smoke" {
+        return runtime_memory_smoke_exit();
+    }
     if arg == "--runtime-continuous-output-smoke" {
         return runtime_continuous_output_smoke_exit();
     }
@@ -273,5 +277,5 @@ where
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }
