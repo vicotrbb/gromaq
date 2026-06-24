@@ -7,6 +7,7 @@ use thiserror::Error;
 
 mod quad_bytes;
 mod readback;
+mod shaders;
 mod upload;
 use quad_bytes::{
     background_quad_index_bytes, background_quad_vertex_bytes, glyph_quad_index_bytes,
@@ -14,6 +15,7 @@ use quad_bytes::{
 };
 pub use readback::ReadbackLayout;
 use readback::{last_rgba_pixel, read_texture_rgba8, rgba_pixel_at};
+use shaders::{BACKGROUND_QUAD_WGSL, TEXTURED_QUAD_WGSL};
 pub use upload::{UploadPattern, UploadPatternLayout};
 
 use crate::font::{RasterizedGlyphBatch, RasterizedGlyphCache};
@@ -1638,67 +1640,6 @@ fn draw_textured_vertices_rgba8(
     queue.submit([encoder.finish()]);
     read_texture_rgba8(device, queue, &target, input.width, input.height)
 }
-
-const BACKGROUND_QUAD_WGSL: &str = r#"
-struct VertexIn {
-    @location(0) position: vec2<f32>,
-    @location(1) color: vec4<f32>,
-};
-
-struct VertexOut {
-    @builtin(position) position: vec4<f32>,
-    @location(0) color: vec4<f32>,
-};
-
-@vertex
-fn vs_main(input: VertexIn) -> VertexOut {
-    var output: VertexOut;
-    output.position = vec4<f32>(input.position, 0.0, 1.0);
-    output.color = input.color;
-    return output;
-}
-
-@fragment
-fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
-    return input.color;
-}
-"#;
-
-const TEXTURED_QUAD_WGSL: &str = r#"
-struct VertexIn {
-    @location(0) position: vec2<f32>,
-    @location(1) uv: vec2<f32>,
-    @location(2) foreground: vec4<f32>,
-};
-
-struct VertexOut {
-    @builtin(position) position: vec4<f32>,
-    @location(0) uv: vec2<f32>,
-    @location(1) foreground: vec4<f32>,
-};
-
-@vertex
-fn vs_main(input: VertexIn) -> VertexOut {
-    var output: VertexOut;
-    output.position = vec4<f32>(input.position, 0.0, 1.0);
-    output.uv = input.uv;
-    output.foreground = input.foreground;
-    return output;
-}
-
-@group(0) @binding(0) var atlas_texture: texture_2d<f32>;
-@group(0) @binding(1) var atlas_sampler: sampler;
-
-@fragment
-fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
-    let sample = textureSample(atlas_texture, atlas_sampler, input.uv);
-    var rgb = sample.rgb;
-    if (abs(sample.r - sample.g) + abs(sample.g - sample.b) < 0.03) {
-        rgb = sample.rgb * input.foreground.rgb;
-    }
-    return vec4<f32>(rgb, sample.a * input.foreground.a);
-}
-"#;
 
 #[cfg(test)]
 mod tests {
