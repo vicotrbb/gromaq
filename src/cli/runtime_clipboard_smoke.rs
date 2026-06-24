@@ -45,14 +45,15 @@ impl NativePtySessionIo for RuntimeClipboardPasteSmokePtySession {
 }
 
 pub(super) fn runtime_clipboard_paste_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> CliExit {
-    let paste_key_recognized =
-        is_native_paste_shortcut(&Key::Named(NamedKey::Paste), ModifiersState::empty());
-    if !paste_key_recognized {
+    let recognized_paste_shortcuts = recognized_native_paste_shortcuts();
+    if recognized_paste_shortcuts.len() != NATIVE_PASTE_SHORTCUT_COUNT {
         return CliExit {
             code: 1,
             stdout: String::new(),
-            stderr: "runtime clipboard paste smoke failed: OS Paste key was not recognized\n"
-                .to_owned(),
+            stderr: format!(
+                "runtime clipboard paste smoke failed: recognized native paste shortcuts: {}\n",
+                recognized_paste_shortcuts.join(", ")
+            ),
         };
     }
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
@@ -109,14 +110,42 @@ pub(super) fn runtime_clipboard_paste_smoke_exit<C: HostClipboard>(clipboard: &m
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime clipboard paste smoke: ok\npaste key recognized: {}\npasted bytes: {}\nclipboard pastes: {}\nprevious text restored: {}\n",
-            paste_key_recognized,
+            "runtime clipboard paste smoke: ok\nrecognized native paste shortcuts: {}\npasted bytes: {}\nclipboard pastes: {}\nprevious text restored: {}\n",
+            recognized_paste_shortcuts.join(", "),
             RUNTIME_CLIPBOARD_PASTE_SMOKE_TEXT.len(),
             metrics.clipboard_pastes,
             restored_previous_text
         ),
         stderr: String::new(),
     }
+}
+
+const NATIVE_PASTE_SHORTCUT_COUNT: usize = 4;
+
+fn recognized_native_paste_shortcuts() -> Vec<&'static str> {
+    [
+        (
+            "dedicated-paste",
+            Key::Named(NamedKey::Paste),
+            ModifiersState::empty(),
+        ),
+        (
+            "shift-insert",
+            Key::Named(NamedKey::Insert),
+            ModifiersState::SHIFT,
+        ),
+        (
+            "control-v",
+            Key::Character("v".into()),
+            ModifiersState::CONTROL,
+        ),
+        ("super-v", Key::Character("v".into()), ModifiersState::SUPER),
+    ]
+    .into_iter()
+    .filter_map(|(label, key, modifiers)| {
+        is_native_paste_shortcut(&key, modifiers).then_some(label)
+    })
+    .collect()
 }
 
 fn runtime_clipboard_paste_smoke_error(error: impl std::fmt::Display) -> CliExit {

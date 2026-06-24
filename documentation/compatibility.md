@@ -46,7 +46,7 @@ remaining terminal-core work.
 | Unicode wide/combining/emoji clusters | Terminal-state tests and glyph rasterization tests | Proven for covered clusters |
 | Scrollback retention and viewport navigation | Unit/integration tests and runtime scrollback smoke | Proven |
 | Selection/copy and OSC 52 clipboard | Unit tests and native clipboard smoke paths | Proven for covered paths |
-| Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, and native shortcuts | Proven for covered keys |
+| Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, and native shortcuts, including dedicated Paste, Shift+Insert, Control+V, and Super+V paste routing | Proven for covered keys |
 | Mouse reporting modes | Runtime mouse smoke and alternate-screen mouse tests | Proven for default and SGR covered paths |
 
 ## Live Native Window Proof

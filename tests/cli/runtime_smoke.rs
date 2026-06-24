@@ -20,7 +20,9 @@ fn runtime_clipboard_paste_smoke_cli_routes_clipboard_text_to_runtime_pty() {
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("runtime clipboard paste smoke: ok"));
-    assert!(exit.stdout.contains("paste key recognized: true"));
+    assert!(exit.stdout.contains(
+        "recognized native paste shortcuts: dedicated-paste, shift-insert, control-v, super-v"
+    ));
     assert!(exit.stdout.contains("pasted bytes: 30"));
     assert!(exit.stdout.contains("clipboard pastes: 1"));
     assert!(exit.stdout.contains("previous text restored: true"));
