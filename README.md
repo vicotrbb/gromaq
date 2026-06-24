@@ -178,10 +178,10 @@ family = "monospace"
 size_px = 16.5
 
 [theme]
-background = "#202127"
-foreground = "#e8e2d6"
-cursor = "#f4c06a"
-surface_padding_px = 12
+background = "#0b0f14"
+foreground = "#f2f4f8"
+cursor = "#f6c177"
+surface_padding_px = 14
 
 [performance]
 target_fps = 144

@@ -1,6 +1,9 @@
 //! GPU renderer boundary.
 
-use crate::config::GromaqConfig;
+use crate::config::{
+    DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR_RGB8, DEFAULT_FOREGROUND_RGB8,
+    DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
+};
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
 use crate::grid::GridSnapshot;
@@ -68,10 +71,10 @@ impl Default for RendererConfig {
             target_fps: 144,
             dirty_regions: true,
             font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
-            clear_color: rgb8_to_clear_color([32, 33, 39]),
-            default_foreground_rgb8: [232, 226, 214],
-            cursor_color_rgba8: [244, 192, 106, 255],
-            surface_padding_px: 12,
+            clear_color: rgb8_to_clear_color(DEFAULT_BACKGROUND_RGB8),
+            default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
+            cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8),
+            surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
         }
     }
 }

@@ -15,7 +15,10 @@ pub use settings::{
     FontSettings, MAX_FONT_SIZE_PX, MAX_TARGET_FPS, MAX_TERMINAL_CELLS, MIN_FONT_SIZE_PX,
     PerformanceSettings, ShellSettings, TerminalSettings,
 };
-pub use theme::ThemeSettings;
+pub use theme::{
+    DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR, DEFAULT_CURSOR_RGB8,
+    DEFAULT_FOREGROUND, DEFAULT_FOREGROUND_RGB8, DEFAULT_SURFACE_PADDING_PX, ThemeSettings,
+};
 
 pub(crate) use settings::validate_terminal_dimensions;
 

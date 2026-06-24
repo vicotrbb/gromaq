@@ -98,6 +98,26 @@ fn renderer_config_maps_validated_gromaq_settings() {
 }
 
 #[test]
+fn renderer_default_theme_matches_default_gromaq_config() {
+    let default_renderer = RendererConfig::default();
+    let mapped_renderer = RendererConfig::from_gromaq_config(&GromaqConfig::default()).unwrap();
+
+    assert_eq!(default_renderer.clear_color, mapped_renderer.clear_color);
+    assert_eq!(
+        default_renderer.default_foreground_rgb8,
+        mapped_renderer.default_foreground_rgb8
+    );
+    assert_eq!(
+        default_renderer.cursor_color_rgba8,
+        mapped_renderer.cursor_color_rgba8
+    );
+    assert_eq!(
+        default_renderer.surface_padding_px,
+        mapped_renderer.surface_padding_px
+    );
+}
+
+#[test]
 fn wgpu_renderer_reconfigure_updates_future_frame_planning() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
     terminal.write_str("A").unwrap();

@@ -6,6 +6,20 @@ use crate::error::{GromaqError, Result};
 
 /// Maximum supported visual surface padding in physical pixels.
 pub const MAX_SURFACE_PADDING_PX: u16 = 512;
+/// Built-in polished dark theme background.
+pub const DEFAULT_BACKGROUND: &str = "#0b0f14";
+/// Built-in polished dark theme background as RGB8.
+pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [11, 15, 20];
+/// Built-in polished dark theme foreground.
+pub const DEFAULT_FOREGROUND: &str = "#f2f4f8";
+/// Built-in polished dark theme foreground as RGB8.
+pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [242, 244, 248];
+/// Built-in polished dark theme cursor.
+pub const DEFAULT_CURSOR: &str = "#f6c177";
+/// Built-in polished dark theme cursor as RGB8.
+pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [246, 193, 119];
+/// Built-in visual breathing room around terminal cells.
+pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 
 /// Theme section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -24,10 +38,10 @@ pub struct ThemeSettings {
 impl Default for ThemeSettings {
     fn default() -> Self {
         Self {
-            background: "#202127".to_owned(),
-            foreground: "#e8e2d6".to_owned(),
-            cursor: "#f4c06a".to_owned(),
-            surface_padding_px: 12,
+            background: DEFAULT_BACKGROUND.to_owned(),
+            foreground: DEFAULT_FOREGROUND.to_owned(),
+            cursor: DEFAULT_CURSOR.to_owned(),
+            surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
         }
     }
 }
