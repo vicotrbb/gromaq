@@ -23,6 +23,7 @@ ansi = [
   "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
 ]
 surface_padding_px = 14
+dim_opacity = 0.66
 ```
 
 ## Fields
@@ -36,6 +37,7 @@ surface_padding_px = 14
 - `cursor_blinking`: whether the default cursor requests blinking.
 - `ansi`: exactly sixteen normal and bright ANSI colors as `#RRGGBB`.
 - `surface_padding_px`: empty space around rendered cells in physical pixels.
+- `dim_opacity`: opacity multiplier for SGR dim text, from `0.1` to `1.0`.
 
 Generate a parseable starter file with:
 

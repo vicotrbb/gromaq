@@ -1,6 +1,6 @@
 //! CPU-side render planning from terminal snapshots.
 
-use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_SELECTION_RGB8};
+use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY, DEFAULT_SELECTION_RGB8};
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
 use crate::grid::GridSnapshot;
@@ -20,12 +20,13 @@ mod decorations;
 mod types;
 
 /// CPU-side render planner for deterministic renderer tests.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RenderPlanner {
     font_size_px: u16,
     default_foreground_rgb8: [u8; 3],
     ansi_colors_rgb8: [[u8; 3]; 16],
     selection_background_rgba8: [u8; 4],
+    dim_opacity: f32,
 }
 
 impl RenderPlanner {
@@ -59,6 +60,7 @@ impl RenderPlanner {
                 DEFAULT_SELECTION_RGB8[2],
                 255,
             ],
+            DEFAULT_DIM_OPACITY,
         )
     }
 
@@ -68,12 +70,14 @@ impl RenderPlanner {
         default_foreground_rgb8: [u8; 3],
         ansi_colors_rgb8: [[u8; 3]; 16],
         selection_background_rgba8: [u8; 4],
+        dim_opacity: f32,
     ) -> Self {
         Self {
             font_size_px,
             default_foreground_rgb8,
             ansi_colors_rgb8,
             selection_background_rgba8,
+            dim_opacity,
         }
     }
 
@@ -152,6 +156,7 @@ impl RenderPlanner {
             cursor,
             default_foreground_rgb8: self.default_foreground_rgb8,
             ansi_colors_rgb8: self.ansi_colors_rgb8,
+            dim_opacity: self.dim_opacity,
             clear_regions: dirty_regions.to_vec(),
             backgrounds,
             decorations,

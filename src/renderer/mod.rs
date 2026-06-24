@@ -1,7 +1,7 @@
 //! GPU renderer boundary.
 
 use crate::config::{
-    DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR_RGB8,
+    DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR_RGB8, DEFAULT_DIM_OPACITY,
     DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION_RGB8, DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
 };
 use crate::dirty::DirtyRegion;
@@ -76,6 +76,8 @@ pub struct RendererConfig {
     pub selection_background_rgba8: [u8; 4],
     /// Empty space around rendered terminal cells in physical pixels.
     pub surface_padding_px: u16,
+    /// Opacity multiplier for SGR dim text.
+    pub dim_opacity: f32,
 }
 
 impl Default for RendererConfig {
@@ -92,6 +94,7 @@ impl Default for RendererConfig {
             cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8),
             selection_background_rgba8: rgb8_to_rgba8(DEFAULT_SELECTION_RGB8),
             surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+            dim_opacity: DEFAULT_DIM_OPACITY,
         }
     }
 }
@@ -112,6 +115,7 @@ impl RendererConfig {
             cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),
             selection_background_rgba8: rgb8_to_rgba8(config.theme.selection_rgb8()?),
             surface_padding_px: config.theme.surface_padding_px,
+            dim_opacity: config.theme.dim_opacity,
         })
     }
 }
@@ -150,6 +154,7 @@ impl WgpuRenderer {
                 config.default_foreground_rgb8,
                 config.ansi_colors_rgb8,
                 config.selection_background_rgba8,
+                config.dim_opacity,
             ),
             config,
             glyph_atlas: GlyphAtlas::new(atlas_config),
@@ -169,6 +174,7 @@ impl WgpuRenderer {
             config.default_foreground_rgb8,
             config.ansi_colors_rgb8,
             config.selection_background_rgba8,
+            config.dim_opacity,
         );
         self.config = config;
         self.last_plan = None;

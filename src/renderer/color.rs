@@ -4,6 +4,7 @@ pub(super) fn style_foreground_rgba(
     style: Style,
     default_foreground_rgb8: [u8; 3],
     ansi_colors_rgb8: [[u8; 3]; 16],
+    dim_opacity: f32,
 ) -> [f32; 4] {
     if style.hidden {
         return [0.0, 0.0, 0.0, 0.0];
@@ -14,7 +15,7 @@ pub(super) fn style_foreground_rgba(
         style.foreground
     };
     let [red, green, blue] = color_rgb8(color, default_foreground_rgb8, ansi_colors_rgb8);
-    let alpha = if style.dim { 0.66 } else { 1.0 };
+    let alpha = if style.dim { dim_opacity } else { 1.0 };
     [
         srgb8_to_linear_f32(red),
         srgb8_to_linear_f32(green),

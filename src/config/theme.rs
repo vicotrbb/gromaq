@@ -6,6 +6,10 @@ use crate::error::{GromaqError, Result};
 
 /// Maximum supported visual surface padding in physical pixels.
 pub const MAX_SURFACE_PADDING_PX: u16 = 512;
+/// Minimum useful opacity for dim text.
+pub const MIN_DIM_OPACITY: f32 = 0.1;
+/// Maximum useful opacity for dim text.
+pub const MAX_DIM_OPACITY: f32 = 1.0;
 /// Built-in polished dark theme background.
 pub const DEFAULT_BACKGROUND: &str = "#090d12";
 /// Built-in polished dark theme background as RGB8.
@@ -50,6 +54,8 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
 ];
 /// Built-in visual breathing room around terminal cells.
 pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
+/// Built-in opacity for SGR dim text.
+pub const DEFAULT_DIM_OPACITY: f32 = 0.66;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
 
@@ -76,7 +82,7 @@ pub enum CursorStyleSetting {
 }
 
 /// Theme section of the configuration file.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ThemeSettings {
     /// Named built-in theme preset used as the baseline for explicit overrides.
@@ -97,6 +103,8 @@ pub struct ThemeSettings {
     pub ansi: Vec<String>,
     /// Empty space around rendered terminal cells in physical pixels.
     pub surface_padding_px: u16,
+    /// Opacity multiplier for SGR dim text.
+    pub dim_opacity: f32,
 }
 
 impl Default for ThemeSettings {
@@ -114,6 +122,7 @@ impl Default for ThemeSettings {
                 .map(|color| (*color).to_owned())
                 .collect(),
             surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+            dim_opacity: DEFAULT_DIM_OPACITY,
         }
     }
 }
@@ -130,6 +139,15 @@ impl ThemeSettings {
             return Err(GromaqError::InvalidThemePadding {
                 maximum: MAX_SURFACE_PADDING_PX,
                 actual: self.surface_padding_px,
+            });
+        }
+        if !self.dim_opacity.is_finite()
+            || !(MIN_DIM_OPACITY..=MAX_DIM_OPACITY).contains(&self.dim_opacity)
+        {
+            return Err(GromaqError::InvalidThemeDimOpacity {
+                minimum: MIN_DIM_OPACITY,
+                maximum: MAX_DIM_OPACITY,
+                actual: self.dim_opacity,
             });
         }
         Ok(())

@@ -112,8 +112,12 @@ impl GlyphQuadPlanner {
             .map_err(|_| GlyphQuadError::IndexCountTooLarge)?;
 
         for glyph in &plan.glyphs {
-            let quad =
-                self.plan_glyph(glyph, plan.default_foreground_rgb8, plan.ansi_colors_rgb8)?;
+            let quad = self.plan_glyph(
+                glyph,
+                plan.default_foreground_rgb8,
+                plan.ansi_colors_rgb8,
+                plan.dim_opacity,
+            )?;
             let base = checked_glyph_quad_base_index(quads.len())?;
             indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
             quads.push(quad);
@@ -141,6 +145,7 @@ impl GlyphQuadPlanner {
         glyph: &PlannedGlyph,
         default_foreground_rgb8: [u8; 3],
         ansi_colors_rgb8: [[u8; 3]; 16],
+        dim_opacity: f32,
     ) -> std::result::Result<GlyphQuad, GlyphQuadError> {
         let cell_width = self.config.cell_width_px as f32;
         let cell_height = self.config.cell_height_px as f32;
@@ -173,8 +178,12 @@ impl GlyphQuadPlanner {
         let v0 = atlas_y0 as f32 / self.config.atlas_height_px as f32;
         let u1 = atlas_x1 as f32 / self.config.atlas_width_px as f32;
         let v1 = atlas_y1 as f32 / self.config.atlas_height_px as f32;
-        let foreground_rgba =
-            style_foreground_rgba(glyph.style, default_foreground_rgb8, ansi_colors_rgb8);
+        let foreground_rgba = style_foreground_rgba(
+            glyph.style,
+            default_foreground_rgb8,
+            ansi_colors_rgb8,
+            dim_opacity,
+        );
 
         Ok(GlyphQuad {
             text: glyph.text.clone(),

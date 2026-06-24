@@ -5,7 +5,8 @@ use gromaq::renderer::{
     TextDecorationKind, TextDecorationQuadConfig, TextDecorationQuadPlanner,
 };
 use gromaq::{
-    CursorShape, CursorSnapshot, DEFAULT_ANSI_COLORS_RGB8, Style, Terminal, TerminalConfig,
+    CursorShape, CursorSnapshot, DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY, Style, Terminal,
+    TerminalConfig,
 };
 
 fn rgba(red: u8, green: u8, blue: u8, alpha: f32) -> [f32; 4] {
@@ -90,7 +91,13 @@ fn glyph_quad_planner_preserves_multi_codepoint_cell_text() {
     terminal.write_str("👨\u{200d}👩").unwrap();
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
-    let mut render_planner = RenderPlanner::new(14);
+    let mut render_planner = RenderPlanner::with_visual_theme(
+        14,
+        [229, 229, 229],
+        DEFAULT_ANSI_COLORS_RGB8,
+        [43, 65, 98, 255],
+        0.42,
+    );
     let plan = render_planner
         .plan_frame(
             &terminal.dump_grid(),
@@ -131,7 +138,13 @@ fn glyph_quad_planner_maps_terminal_style_to_foreground_rgba() {
         .unwrap();
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
-    let mut render_planner = RenderPlanner::new(14);
+    let mut render_planner = RenderPlanner::with_visual_theme(
+        14,
+        [229, 229, 229],
+        DEFAULT_ANSI_COLORS_RGB8,
+        [43, 65, 98, 255],
+        0.42,
+    );
     let plan = render_planner
         .plan_frame(
             &terminal.dump_grid(),
@@ -167,7 +180,7 @@ fn glyph_quad_planner_maps_terminal_style_to_foreground_rgba() {
     );
     assert_eq!(
         batch.quads[3].vertices[0].foreground_rgba,
-        rgba(100, 120, 140, 0.66)
+        rgba(100, 120, 140, 0.42)
     );
     assert_eq!(
         batch.quads[4].vertices[0].foreground_rgba,
@@ -269,6 +282,7 @@ fn background_quad_planner_rejects_invalid_dimensions() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -392,6 +406,7 @@ fn text_decoration_quad_planner_builds_line_geometry() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: vec![
@@ -476,6 +491,7 @@ fn text_decoration_quad_planner_builds_styled_underline_geometry() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: vec![
@@ -542,6 +558,7 @@ fn text_decoration_quad_planner_rejects_invalid_dimensions() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -578,6 +595,7 @@ fn cursor_quad_planner_builds_cursor_shapes() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -624,6 +642,7 @@ fn cursor_quad_planner_skips_invisible_or_out_of_bounds_cursor() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -664,6 +683,7 @@ fn glyph_quad_planner_rejects_invalid_atlas_dimensions() {
                 },
                 default_foreground_rgb8: [229, 229, 229],
                 ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+                dim_opacity: DEFAULT_DIM_OPACITY,
                 clear_regions: Vec::new(),
                 backgrounds: Vec::new(),
                 decorations: Vec::new(),
@@ -696,6 +716,7 @@ fn glyph_quad_planner_rejects_slots_outside_the_atlas_image() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -743,6 +764,7 @@ fn glyph_quad_planner_rejects_overflowing_atlas_coordinates() {
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),

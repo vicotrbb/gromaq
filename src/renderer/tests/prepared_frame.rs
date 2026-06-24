@@ -1,5 +1,5 @@
 use crate::cell::Style;
-use crate::config::DEFAULT_ANSI_COLORS_RGB8;
+use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY};
 use crate::renderer::{
     GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame, RenderPlan, SurfaceFrameError,
 };
@@ -23,6 +23,7 @@ fn prepared_surface_glyph_frame_rejects_oversized_glyph_bitmap_before_padding() 
         },
         default_foreground_rgb8: [229, 229, 229],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -79,6 +80,7 @@ fn prepared_surface_glyph_frame_builds_cursor_only_blank_frame() {
         },
         default_foreground_rgb8: [232, 226, 214],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -126,6 +128,7 @@ fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
         },
         default_foreground_rgb8: [232, 226, 214],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),
@@ -188,6 +191,7 @@ fn prepared_surface_glyph_frame_preserves_shaped_glyph_placement_in_atlas() {
         },
         default_foreground_rgb8: [232, 226, 214],
         ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
+        dim_opacity: DEFAULT_DIM_OPACITY,
         clear_regions: Vec::new(),
         backgrounds: Vec::new(),
         decorations: Vec::new(),

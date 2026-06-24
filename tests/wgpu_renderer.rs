@@ -108,6 +108,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.theme.selection = "#26364f".to_owned();
     config.theme.ansi[1] = "#010203".to_owned();
     config.theme.surface_padding_px = 18;
+    config.theme.dim_opacity = 0.42;
 
     let renderer_config = RendererConfig::from_gromaq_config(&config).unwrap();
 
@@ -125,6 +126,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
         [38, 54, 79, 255]
     );
     assert_eq!(renderer_config.surface_padding_px, 18);
+    assert_eq!(renderer_config.dim_opacity, 0.42);
 }
 
 #[test]
@@ -163,6 +165,7 @@ fn renderer_default_theme_matches_default_gromaq_config() {
         default_renderer.surface_padding_px,
         mapped_renderer.surface_padding_px
     );
+    assert_eq!(default_renderer.dim_opacity, mapped_renderer.dim_opacity);
     assert_eq!(
         default_renderer.cell_width_px,
         mapped_renderer.cell_width_px

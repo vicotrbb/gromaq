@@ -282,6 +282,7 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("cursor_blinking = true"));
     assert!(exit.stdout.contains("ansi = [\"#151922\", \"#ff6b7a\""));
     assert!(exit.stdout.contains("surface_padding_px = 14"));
+    assert!(exit.stdout.contains("dim_opacity = 0.66"));
     assert!(exit.stdout.contains("[performance]"));
     let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
     assert_eq!(parsed, GromaqConfig::default());
@@ -317,6 +318,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         cursor_style = "underline"
         cursor_blinking = false
         surface_padding_px = 18
+        dim_opacity = 0.42
 
         [performance]
         target_fps = 120
@@ -351,6 +353,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme cursor style: underline"));
     assert!(exit.stdout.contains("theme cursor blinking: false"));
     assert!(exit.stdout.contains("theme surface padding px: 18"));
+    assert!(exit.stdout.contains("theme dim opacity: 0.42"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: true"));
     assert!(exit.stderr.is_empty());

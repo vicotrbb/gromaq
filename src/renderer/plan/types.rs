@@ -7,7 +7,7 @@ use crate::terminal::CursorSnapshot;
 use crate::renderer::atlas::GlyphEntry;
 
 /// Deterministic CPU-side frame plan consumed by the native renderer.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RenderPlan {
     /// Viewport columns represented by this plan.
     pub viewport_cols: u16,
@@ -19,6 +19,8 @@ pub struct RenderPlan {
     pub default_foreground_rgb8: [u8; 3],
     /// ANSI color palette used for terminal colors 0-15.
     pub ansi_colors_rgb8: [[u8; 3]; 16],
+    /// Opacity multiplier used for SGR dim text.
+    pub dim_opacity: f32,
     /// Dirty rectangles to clear before drawing glyphs.
     pub clear_regions: Vec<DirtyRegion>,
     /// Styled cell background fills in row-major order.

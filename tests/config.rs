@@ -1,8 +1,8 @@
 use std::fs;
 
 use gromaq::{
-    ConfigFileReloader, CursorStyleSetting, DEFAULT_BACKGROUND_RGB8, GromaqConfig, GromaqError,
-    ShellSettings, TerminalConfig, ThemePresetSetting,
+    ConfigFileReloader, CursorStyleSetting, DEFAULT_BACKGROUND_RGB8, DEFAULT_DIM_OPACITY,
+    GromaqConfig, GromaqError, ShellSettings, TerminalConfig, ThemePresetSetting,
 };
 
 #[test]
@@ -35,6 +35,8 @@ fn default_font_metrics_are_readable_for_native_terminal_windows() {
 #[test]
 fn default_theme_has_high_foreground_background_contrast() {
     let theme = GromaqConfig::default().theme;
+
+    assert_eq!(theme.dim_opacity, DEFAULT_DIM_OPACITY);
 
     let contrast = contrast_ratio(
         theme.foreground_rgb8().unwrap(),
@@ -251,6 +253,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
         selection = "#26364f"
         cursor_style = "bar"
         cursor_blinking = false
+        dim_opacity = 0.72
         ansi = [
             "#000001", "#000002", "#000003", "#000004",
             "#000005", "#000006", "#000007", "#000008",
@@ -269,6 +272,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.selection_rgb8().unwrap(), [38, 54, 79]);
     assert_eq!(config.theme.cursor_style, CursorStyleSetting::Bar);
     assert!(!config.theme.cursor_blinking);
+    assert_eq!(config.theme.dim_opacity, 0.72);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [0, 0, 1]);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [0, 0, 16]);
     assert_eq!(config.theme.surface_padding_px, 18);
@@ -354,6 +358,21 @@ fn invalid_theme_surface_padding_is_rejected() {
             actual: 513,
         }
     ));
+}
+
+#[test]
+fn invalid_theme_dim_opacity_is_rejected() {
+    for dim_opacity in [0.09, f32::NAN, f32::INFINITY, 1.01] {
+        let mut config = GromaqConfig::default();
+        config.theme.dim_opacity = dim_opacity;
+
+        let error = config.validate().unwrap_err();
+
+        assert!(
+            error.to_string().contains("dim opacity"),
+            "{error} did not mention dim opacity"
+        );
+    }
 }
 
 #[test]

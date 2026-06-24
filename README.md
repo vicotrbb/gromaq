@@ -196,6 +196,7 @@ ansi = [
   "#89b4fa", "#f5c2e7", "#94e2d5", "#ffffff",
 ]
 surface_padding_px = 14
+dim_opacity = 0.66
 
 [performance]
 target_fps = 144
@@ -204,8 +205,8 @@ dirty_region_rendering = true
 
 `gromaq-dark` is the built-in default theme preset. It provides the baseline
 background, foreground, cursor, selection, ANSI palette, cursor style, cursor
-blinking, and surface padding; every field in `[theme]` can still be overridden
-directly in TOML. The theme fields are documented in
+blinking, surface padding, and dim text opacity; every field in `[theme]` can
+still be overridden directly in TOML. The theme fields are documented in
 [`documentation/theme.md`](documentation/theme.md).
 
 `font.family` accepts the default `monospace` family name, other family names

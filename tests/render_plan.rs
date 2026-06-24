@@ -1,5 +1,5 @@
 use gromaq::renderer::{GlyphAtlas, GlyphAtlasConfig, RenderPlanner};
-use gromaq::{Color, SelectionRange, Style, Terminal, TerminalConfig};
+use gromaq::{Color, DEFAULT_DIM_OPACITY, SelectionRange, Style, Terminal, TerminalConfig};
 
 #[test]
 fn render_plan_contains_dirty_glyphs_with_atlas_entries() {
@@ -101,8 +101,13 @@ fn render_plan_collects_themed_selection_backgrounds_for_dirty_cells() {
     terminal.set_selection(SelectionRange::new((0, 1), (1, 2)));
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
-    let mut planner =
-        RenderPlanner::with_visual_theme(14, [240, 240, 240], [[0, 0, 0]; 16], [9, 8, 7, 255]);
+    let mut planner = RenderPlanner::with_visual_theme(
+        14,
+        [240, 240, 240],
+        [[0, 0, 0]; 16],
+        [9, 8, 7, 255],
+        DEFAULT_DIM_OPACITY,
+    );
 
     let plan = planner
         .plan_frame(

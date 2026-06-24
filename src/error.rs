@@ -108,6 +108,17 @@ pub enum GromaqError {
         actual: u16,
     },
 
+    /// Theme dim opacity must stay visible and bounded.
+    #[error("theme dim opacity must be finite and between {minimum} and {maximum}, got {actual}")]
+    InvalidThemeDimOpacity {
+        /// Inclusive lower bound.
+        minimum: f32,
+        /// Inclusive upper bound.
+        maximum: f32,
+        /// Actual invalid value.
+        actual: f32,
+    },
+
     /// Configured shell program must contain a usable command.
     #[error("shell program must not be empty")]
     InvalidShellProgram,
