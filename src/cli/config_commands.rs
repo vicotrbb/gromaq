@@ -7,7 +7,9 @@ use crate::app::{
     NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig,
     run_native_app_with_runtime_renderer_font_and_config_file,
 };
-use crate::config::{CursorStyleSetting, GromaqConfig, ShellSettings, format_theme_preset};
+use crate::config::{
+    CursorStyleSetting, DEFAULT_FONT_FAMILY, GromaqConfig, ShellSettings, format_theme_preset,
+};
 use crate::pty::ShellCommand;
 use crate::renderer::RendererConfig;
 
@@ -48,7 +50,7 @@ impl Default for NativeAppLaunchConfig {
             app: NativeAppConfig::default(),
             runtime: NativeTerminalRuntimeConfig::default(),
             renderer: RendererConfig::default(),
-            font_family: "monospace".to_owned(),
+            font_family: DEFAULT_FONT_FAMILY.to_owned(),
             config_path: None,
         }
     }

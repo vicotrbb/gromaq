@@ -12,8 +12,8 @@ mod theme;
 
 pub use reload::{ConfigFileReloader, ConfigReload};
 pub use settings::{
-    FontSettings, MAX_CELL_WIDTH_PX, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX, MAX_TARGET_FPS,
-    MAX_TERMINAL_CELLS, MIN_CELL_WIDTH_PX, MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX,
+    DEFAULT_FONT_FAMILY, FontSettings, MAX_CELL_WIDTH_PX, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX,
+    MAX_TARGET_FPS, MAX_TERMINAL_CELLS, MIN_CELL_WIDTH_PX, MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX,
     PerformanceSettings, ShellSettings, TerminalSettings,
 };
 pub use theme::{

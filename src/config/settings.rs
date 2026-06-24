@@ -20,6 +20,8 @@ pub const MIN_LINE_HEIGHT_PX: f32 = 6.0;
 pub const MAX_LINE_HEIGHT_PX: f32 = 1024.0;
 /// Maximum supported target refresh rate for deterministic frame pacing.
 pub const MAX_TARGET_FPS: u32 = 1_000;
+/// Built-in automatic monospace font stack.
+pub const DEFAULT_FONT_FAMILY: &str = "monospace";
 
 /// Terminal section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -76,7 +78,7 @@ pub struct FontSettings {
 impl Default for FontSettings {
     fn default() -> Self {
         Self {
-            family: "monospace".to_owned(),
+            family: DEFAULT_FONT_FAMILY.to_owned(),
             size_px: 21.0,
             cell_width_px: None,
             line_height_px: 29.0,

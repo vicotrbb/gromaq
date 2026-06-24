@@ -8,7 +8,7 @@ use winit::event_loop::EventLoop;
 use winit::keyboard::ModifiersState;
 use winit::window::{Window, WindowId};
 
-use crate::config::ConfigFileReloader;
+use crate::config::{ConfigFileReloader, DEFAULT_FONT_FAMILY};
 use crate::font::RasterizedGlyphCache;
 use crate::native_gpu::NativeGpuContext;
 use crate::pty::PtySession;
@@ -96,7 +96,7 @@ impl NativeTerminalApp {
             config,
             runtime_config,
             renderer_config,
-            "monospace",
+            DEFAULT_FONT_FAMILY,
         )
     }
 
@@ -264,7 +264,7 @@ pub fn run_native_app_with_runtime_renderer_and_config_file(
         config,
         runtime_config,
         renderer_config,
-        "monospace",
+        DEFAULT_FONT_FAMILY,
         config_path,
     )
 }

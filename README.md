@@ -208,9 +208,13 @@ blinking, surface padding, and dim text opacity; every field in `[theme]` can
 still be overridden directly in TOML. The theme fields are documented in
 [`documentation/theme.md`](documentation/theme.md).
 
-`font.family` accepts the default `monospace` family name, other family names
-for future platform font discovery, or an explicit `.ttf`/`.ttc` file path to
-use as the primary native rasterization font.
+`font.family = "monospace"` uses Gromaq's automatic mono stack: polished
+user-installed terminal fonts such as JetBrains Mono Nerd Font, Cascadia Mono,
+and Iosevka Term are preferred when present, then the app falls back to SF Mono,
+Menlo, and common Linux mono fonts. Explicit `.ttf`, `.ttc`, and `.otf` file
+paths are also supported. Supported named aliases currently include
+`JetBrains Mono`, `JetBrains Mono Nerd Font`, `Cascadia Mono`,
+`CaskaydiaCove Nerd Font`, `Iosevka Term`, `SF Mono`, and `Menlo`.
 
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in

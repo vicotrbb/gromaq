@@ -87,6 +87,20 @@ fn configured_native_glyph_cache_rejects_missing_explicit_font_file_path() {
 }
 
 #[test]
+fn configured_native_glyph_cache_rejects_unsupported_font_family_name() {
+    let error = match load_native_glyph_cache("Definitely Missing Mono") {
+        Ok(_) => panic!("unsupported named font should be rejected"),
+        Err(error) => error,
+    };
+
+    assert!(
+        error
+            .to_string()
+            .contains("configured font family is not installed or supported by name")
+    );
+}
+
+#[test]
 fn default_native_glyph_cache_rasterizes_emoji_with_fallback_font() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("😀").unwrap();
