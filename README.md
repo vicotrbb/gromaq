@@ -74,6 +74,7 @@ Implemented and tested:
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
 - Deterministic runtime local scrollback navigation smoke with `--runtime-scrollback-smoke`
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
+- Deterministic runtime performance-budget smoke with `--runtime-perf-budget-smoke`, enforcing render p95 within 6.94ms and input-to-render p95 within 10ms for the CPU-side input-echo path
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
 - Deterministic runtime state-footprint snapshot and bounded-state smoke with `--runtime-bounded-state-smoke`, including capped scrollback lines, styled cell rows, retained cell count, and retained-cell cap
 - Deterministic runtime process-memory smoke with `--runtime-memory-smoke`, including warmup RSS sampling, repeated long-output batches, capped scrollback state, and bounded RSS growth
@@ -132,6 +133,7 @@ cargo run -- --runtime-clipboard-paste-smoke
 cargo run -- --runtime-glyph-frame-smoke
 cargo run -- --runtime-scrollback-smoke
 cargo run -- --runtime-perf-smoke
+cargo run -- --runtime-perf-budget-smoke
 cargo run -- --runtime-large-output-smoke
 cargo run -- --runtime-bounded-state-smoke
 cargo run -- --runtime-memory-smoke

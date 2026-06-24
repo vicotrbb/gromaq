@@ -28,7 +28,7 @@ use runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
 use runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
 use runtime_input_smoke::{
     runtime_focus_smoke_exit, runtime_idle_smoke_exit, runtime_mouse_smoke_exit,
-    runtime_perf_smoke_exit, runtime_response_smoke_exit,
+    runtime_perf_budget_smoke_exit, runtime_perf_smoke_exit, runtime_response_smoke_exit,
 };
 use runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
@@ -140,6 +140,7 @@ where
         && arg != "--runtime-glyph-frame-smoke"
         && arg != "--runtime-scrollback-smoke"
         && arg != "--runtime-perf-smoke"
+        && arg != "--runtime-perf-budget-smoke"
         && arg != "--runtime-large-output-smoke"
         && arg != "--runtime-bounded-state-smoke"
         && arg != "--runtime-memory-smoke"
@@ -236,6 +237,9 @@ where
     if arg == "--runtime-perf-smoke" {
         return runtime_perf_smoke_exit();
     }
+    if arg == "--runtime-perf-budget-smoke" {
+        return runtime_perf_budget_smoke_exit();
+    }
     if arg == "--runtime-large-output-smoke" {
         return runtime_large_output_smoke_exit();
     }
@@ -277,5 +281,5 @@ where
 }
 
 fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--frame-scheduler-smoke]\n".to_owned()
 }

@@ -23,7 +23,11 @@ can be reported from structured counters instead of subjective observation.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95
-counters. On the same date,
+counters. On 2026-06-24, `cargo run -- --runtime-perf-budget-smoke` ran the
+same deterministic input-echo render path as an executable budget gate, failing
+if render p95 exceeds 6940000 ns or input-to-render p95 exceeds 10000000 ns; it
+pumped 1 byte, rendered 1 CPU-side frame, reported render p95 500000 ns, and
+reported input-to-render p95 1000000 ns. On 2026-06-23,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 reported viewport-capped rendered dirty-region work, verified
