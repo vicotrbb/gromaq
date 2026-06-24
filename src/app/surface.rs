@@ -156,6 +156,9 @@ pub fn render_and_present_terminal_glyph_frame_report<S, B>(
 where
     B: SurfaceFrameBackend,
 {
+    // Swapchain frames are not retained. Until native partial-present support exists,
+    // every surface presentation must redraw the full visible terminal contents.
+    runtime.invalidate_terminal_frame();
     if !runtime.render_terminal_frame(renderer)? {
         return Ok(NativeGlyphFramePresentation::default());
     }
