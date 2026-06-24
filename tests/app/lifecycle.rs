@@ -2,7 +2,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicUsize, Ordering},
 };
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use gromaq::app::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
@@ -183,15 +183,23 @@ fn real_native_pty_spawner_sends_output_ready_event_when_reader_receives_bytes()
         })
         .unwrap();
 
+    let deadline = Instant::now() + Duration::from_secs(3);
     let mut output = Vec::new();
-    for _ in 0..30 {
+    while Instant::now() < deadline {
         output.extend(session.drain_available_output().unwrap());
-        if String::from_utf8_lossy(&output).contains("gromaq-proxy-wakeup") {
+        if String::from_utf8_lossy(&output).contains("gromaq-proxy-wakeup")
+            && wakeups.load(Ordering::Relaxed) > 0
+        {
             break;
         }
         std::thread::sleep(Duration::from_millis(20));
     }
 
-    assert!(String::from_utf8_lossy(&output).contains("gromaq-proxy-wakeup"));
-    assert!(wakeups.load(Ordering::Relaxed) > 0);
+    let output = String::from_utf8_lossy(&output);
+    let wakeups = wakeups.load(Ordering::Relaxed);
+    assert!(
+        output.contains("gromaq-proxy-wakeup"),
+        "real PTY reader output before deadline: {output:?}"
+    );
+    assert!(wakeups > 0, "real PTY reader wakeup count: {wakeups}");
 }
