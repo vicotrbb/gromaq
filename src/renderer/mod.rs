@@ -13,6 +13,8 @@ mod atlas;
 mod color;
 mod plan;
 mod prepared_frame;
+mod prepared_frame_atlas;
+mod prepared_frame_geometry;
 mod quads;
 mod scheduler;
 mod surface;

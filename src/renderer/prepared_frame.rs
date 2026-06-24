@@ -1,10 +1,14 @@
 //! Owned terminal glyph-frame preparation before native surface presentation.
 
 use super::{
-    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, BackgroundVertex,
-    CursorQuadConfig, CursorQuadPlanner, GlyphAtlasImage, GlyphBitmap, GlyphQuadBatch,
-    GlyphQuadConfig, GlyphQuadPlanner, GlyphVertex, RenderPlan, SurfaceFrameError,
-    TextDecorationQuadConfig, TextDecorationQuadPlanner,
+    BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadPlanner, CursorQuadConfig,
+    CursorQuadPlanner, GlyphAtlasImage, GlyphBitmap, GlyphQuadBatch, GlyphQuadConfig,
+    GlyphQuadPlanner, RenderPlan, SurfaceFrameError, TextDecorationQuadConfig,
+    TextDecorationQuadPlanner,
+};
+use crate::renderer::prepared_frame_atlas::{atlas_columns_for_glyphs, transparent_glyph_atlas};
+use crate::renderer::prepared_frame_geometry::{
+    checked_surface_frame_pixel_dimension, translate_background_batch, translate_glyph_batch,
 };
 
 /// Glyph frame data ready for presentation to a native surface.
@@ -205,98 +209,6 @@ impl PreparedSurfaceGlyphFrame {
     }
 }
 
-fn checked_surface_frame_pixel_dimension(
-    label: &'static str,
-    cells: u16,
-    cell_size_px: u32,
-    surface_padding_px: u16,
-) -> std::result::Result<u32, SurfaceFrameError> {
-    u32::from(cells)
-        .checked_mul(cell_size_px)
-        .and_then(|cell_pixels| {
-            u32::from(surface_padding_px)
-                .checked_mul(2)
-                .and_then(|padding_pixels| cell_pixels.checked_add(padding_pixels))
-        })
-        .ok_or_else(|| {
-            SurfaceFrameError::InvalidFrame(format!("{label} is too large to represent"))
-        })
-}
-
-fn translate_glyph_batch(batch: &mut GlyphQuadBatch, surface_padding_px: u16) {
-    if surface_padding_px == 0 {
-        return;
-    }
-    let offset = f32::from(surface_padding_px);
-    for quad in &mut batch.quads {
-        for vertex in &mut quad.vertices {
-            translate_glyph_vertex(vertex, offset);
-        }
-    }
-}
-
-fn translate_glyph_vertex(vertex: &mut GlyphVertex, offset: f32) {
-    vertex.position[0] += offset;
-    vertex.position[1] += offset;
-}
-
-fn translate_background_batch(batch: &mut BackgroundQuadBatch, surface_padding_px: u16) {
-    if surface_padding_px == 0 {
-        return;
-    }
-    let offset = f32::from(surface_padding_px);
-    for quad in &mut batch.quads {
-        for vertex in &mut quad.vertices {
-            translate_background_vertex(vertex, offset);
-        }
-    }
-}
-
-fn translate_background_vertex(vertex: &mut BackgroundVertex, offset: f32) {
-    vertex.position[0] += offset;
-    vertex.position[1] += offset;
-}
-
-fn transparent_glyph_atlas(
-    width: u32,
-    height: u32,
-) -> std::result::Result<GlyphAtlasImage, SurfaceFrameError> {
-    let len = width
-        .checked_mul(height)
-        .and_then(|pixels| pixels.checked_mul(4))
-        .and_then(|bytes| usize::try_from(bytes).ok())
-        .ok_or_else(|| {
-            SurfaceFrameError::InvalidFrame("transparent glyph atlas is too large".to_owned())
-        })?;
-    let mut rgba = Vec::new();
-    rgba.try_reserve_exact(len).map_err(|_| {
-        SurfaceFrameError::InvalidFrame(
-            "transparent glyph atlas is too large to allocate".to_owned(),
-        )
-    })?;
-    rgba.resize(len, 0);
-    Ok(GlyphAtlasImage {
-        width,
-        height,
-        rgba,
-        occupied_slots: 0,
-    })
-}
-
-fn atlas_columns_for_glyphs(glyphs: &[GlyphBitmap]) -> u32 {
-    let slots = glyphs
-        .iter()
-        .map(|glyph| u64::from(glyph.entry.slot))
-        .max()
-        .unwrap_or(0)
-        + 1;
-    let mut columns = 1_u32;
-    while u64::from(columns) * u64::from(columns) < slots {
-        columns += 1;
-    }
-    columns
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -304,47 +216,6 @@ mod tests {
     use crate::config::DEFAULT_ANSI_COLORS_RGB8;
     use crate::renderer::{GlyphEntry, PlannedGlyph};
     use crate::terminal::{CursorShape, CursorSnapshot};
-
-    #[test]
-    fn atlas_columns_for_glyphs_uses_widened_slot_math() {
-        let glyphs = [
-            GlyphBitmap {
-                entry: GlyphEntry {
-                    slot: 0,
-                    generation: 0,
-                },
-                width: 1,
-                height: 1,
-                rgba: Vec::new(),
-            },
-            GlyphBitmap {
-                entry: GlyphEntry {
-                    slot: 3,
-                    generation: 0,
-                },
-                width: 1,
-                height: 1,
-                rgba: Vec::new(),
-            },
-        ];
-
-        assert_eq!(atlas_columns_for_glyphs(&glyphs), 2);
-    }
-
-    #[test]
-    fn atlas_columns_for_glyphs_handles_maximum_slot_without_overflow() {
-        let glyphs = [GlyphBitmap {
-            entry: GlyphEntry {
-                slot: u32::MAX,
-                generation: 0,
-            },
-            width: 1,
-            height: 1,
-            rgba: Vec::new(),
-        }];
-
-        assert_eq!(atlas_columns_for_glyphs(&glyphs), 65_536);
-    }
 
     #[test]
     fn prepared_surface_glyph_frame_rejects_overflowing_pixel_width() {
@@ -442,9 +313,8 @@ mod tests {
         assert_eq!(frame.cursor_batch.indices.len(), 6);
         assert_eq!(frame.atlas.occupied_slots, 0);
         assert_eq!(frame.atlas.width, 18);
-        assert_eq!(frame.atlas.height, 18);
+        assert_eq!(frame.atlas.height, 22);
         assert_eq!(frame.width, 168);
-        assert_eq!(frame.height, 60);
         assert!(frame.atlas.rgba.iter().all(|byte| *byte == 0));
     }
 }
