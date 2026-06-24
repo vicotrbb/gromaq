@@ -7,7 +7,7 @@ use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 #[test]
 fn native_mouse_grid_mapper_converts_window_pixels_to_terminal_cells() {
-    let mapper = NativeMouseGridMapper::new(800, 400, 80, 20).unwrap();
+    let mapper = NativeMouseGridMapper::new(800, 400, 10, 20, 0, 80, 20).unwrap();
 
     assert_eq!(
         mapper.mouse_event_at(25.0, 39.0, MouseEventKind::Press, MouseButton::Left),
@@ -61,7 +61,52 @@ fn native_mouse_grid_mapper_converts_window_pixels_to_terminal_cells() {
         ),
         None
     );
-    assert_eq!(NativeMouseGridMapper::new(0, 400, 80, 20), None);
+    assert_eq!(NativeMouseGridMapper::new(0, 400, 10, 20, 0, 80, 20), None);
+}
+
+#[test]
+fn native_mouse_grid_mapper_uses_rendered_padding_and_cell_metrics() {
+    let mapper = NativeMouseGridMapper::new(1280, 800, 16, 22, 16, 78, 34).unwrap();
+
+    assert_eq!(
+        mapper.mouse_event_at(16.0, 16.0, MouseEventKind::Press, MouseButton::Left),
+        Some(MouseEvent::new(
+            MouseEventKind::Press,
+            MouseButton::Left,
+            0,
+            0
+        ))
+    );
+    assert_eq!(
+        mapper.mouse_event_at(48.0, 38.0, MouseEventKind::Press, MouseButton::Left),
+        Some(MouseEvent::new(
+            MouseEventKind::Press,
+            MouseButton::Left,
+            2,
+            1
+        ))
+    );
+    assert_eq!(
+        mapper.mouse_event_at(1263.0, 763.0, MouseEventKind::Release, MouseButton::Left,),
+        Some(MouseEvent::new(
+            MouseEventKind::Release,
+            MouseButton::Left,
+            77,
+            33
+        ))
+    );
+    assert_eq!(
+        mapper.mouse_event_at(15.0, 16.0, MouseEventKind::Press, MouseButton::Left),
+        None
+    );
+    assert_eq!(
+        mapper.mouse_event_at(1264.0, 16.0, MouseEventKind::Press, MouseButton::Left),
+        None
+    );
+    assert_eq!(
+        mapper.mouse_event_at(16.0, 764.0, MouseEventKind::Press, MouseButton::Left),
+        None
+    );
 }
 
 #[test]

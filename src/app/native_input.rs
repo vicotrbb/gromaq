@@ -11,6 +11,9 @@ use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
 pub struct NativeMouseGridMapper {
     window_width_px: u32,
     window_height_px: u32,
+    cell_width_px: u16,
+    line_height_px: u16,
+    surface_padding_px: u16,
     cols: u16,
     rows: u16,
 }
@@ -26,6 +29,12 @@ pub struct NativeWindowMouseInput {
     pub window_width_px: u32,
     /// Current window height in physical pixels.
     pub window_height_px: u32,
+    /// Rendered terminal cell width in physical pixels.
+    pub cell_width_px: u16,
+    /// Rendered terminal row height in physical pixels.
+    pub line_height_px: u16,
+    /// Empty space around rendered terminal cells in physical pixels.
+    pub surface_padding_px: u16,
     /// Mouse event kind.
     pub kind: MouseEventKind,
     /// Mouse button identity.
@@ -132,13 +141,30 @@ fn fitted_cells(available_px: u32, cell_px: u16) -> u16 {
 
 impl NativeMouseGridMapper {
     /// Create a mapper for a non-empty window and terminal grid.
-    pub fn new(window_width_px: u32, window_height_px: u32, cols: u16, rows: u16) -> Option<Self> {
-        if window_width_px == 0 || window_height_px == 0 || cols == 0 || rows == 0 {
+    pub fn new(
+        window_width_px: u32,
+        window_height_px: u32,
+        cell_width_px: u16,
+        line_height_px: u16,
+        surface_padding_px: u16,
+        cols: u16,
+        rows: u16,
+    ) -> Option<Self> {
+        if window_width_px == 0
+            || window_height_px == 0
+            || cell_width_px == 0
+            || line_height_px == 0
+            || cols == 0
+            || rows == 0
+        {
             return None;
         }
         Some(Self {
             window_width_px,
             window_height_px,
+            cell_width_px,
+            line_height_px,
+            surface_padding_px,
             cols,
             rows,
         })
@@ -161,14 +187,19 @@ impl NativeMouseGridMapper {
         {
             return None;
         }
-        let col = ((x / f64::from(self.window_width_px)) * f64::from(self.cols)) as u16;
-        let row = ((y / f64::from(self.window_height_px)) * f64::from(self.rows)) as u16;
-        Some(MouseEvent::new(
-            kind,
-            button,
-            col.min(self.cols - 1),
-            row.min(self.rows - 1),
-        ))
+        let grid_x = x - f64::from(self.surface_padding_px);
+        let grid_y = y - f64::from(self.surface_padding_px);
+        if grid_x < 0.0 || grid_y < 0.0 {
+            return None;
+        }
+        let grid_width_px = f64::from(self.cell_width_px) * f64::from(self.cols);
+        let grid_height_px = f64::from(self.line_height_px) * f64::from(self.rows);
+        if grid_x >= grid_width_px || grid_y >= grid_height_px {
+            return None;
+        }
+        let col = (grid_x / f64::from(self.cell_width_px)) as u16;
+        let row = (grid_y / f64::from(self.line_height_px)) as u16;
+        Some(MouseEvent::new(kind, button, col, row))
     }
 
     /// Convert a window pixel position to a grid-relative mouse event with modifiers.

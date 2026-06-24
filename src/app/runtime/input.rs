@@ -4,7 +4,7 @@ use tracing::trace;
 use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
 use crate::app::native_input::{
-    NativeMouseGridMapper, NativeWindowMouseInput, ScrollbackKeyDirection,
+    NativeMouseGridMapper, NativeWindowMouseInput, ScrollbackKeyDirection, clamp_u32_to_u16,
     native_scrollback_key_direction,
 };
 use crate::app::perf::add_usize_counter;
@@ -128,6 +128,9 @@ where
             y,
             window_width_px,
             window_height_px,
+            cell_width_px: inferred_cell_size_px(window_width_px, self.terminal.dump_grid().cols),
+            line_height_px: inferred_cell_size_px(window_height_px, self.terminal.dump_grid().rows),
+            surface_padding_px: 0,
             kind,
             button,
             modifiers: ModifiersState::empty(),
@@ -143,6 +146,9 @@ where
         let Some(mapper) = NativeMouseGridMapper::new(
             input.window_width_px,
             input.window_height_px,
+            input.cell_width_px,
+            input.line_height_px,
+            input.surface_padding_px,
             grid.cols,
             grid.rows,
         ) else {
@@ -203,4 +209,11 @@ where
         }
         Ok(())
     }
+}
+
+fn inferred_cell_size_px(window_px: u32, cells: u16) -> u16 {
+    if cells == 0 {
+        return 0;
+    }
+    clamp_u32_to_u16((window_px / u32::from(cells)).max(1))
 }
