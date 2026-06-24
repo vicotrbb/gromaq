@@ -19,6 +19,7 @@ mod params;
 mod print;
 mod reflow;
 mod reports;
+mod scroll;
 mod selection_copy;
 mod sgr;
 mod snapshot;
