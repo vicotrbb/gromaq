@@ -5,6 +5,7 @@ use super::{CliExit, NativeAppLaunchConfig, NativeAppLauncher};
 use crate::pty::ShellCommand;
 
 const WINDOW_PERF_SMOKE_FRAME_LIMIT: u64 = 180;
+const WINDOW_PERF_SMOKE_WARMUP_FRAMES: u64 = 12;
 
 pub(super) fn window_smoke_exit<A>(command: CliCommand<'_>, app_launcher: Option<&A>) -> CliExit
 where
@@ -25,7 +26,10 @@ where
     let mut launch_config = NativeAppLaunchConfig::default();
     let frame_limit = match command {
         CliCommand::WindowSmoke => 1,
-        CliCommand::WindowPerfSmoke => WINDOW_PERF_SMOKE_FRAME_LIMIT,
+        CliCommand::WindowPerfSmoke => {
+            launch_config.app.frame_interval_warmup_frames = WINDOW_PERF_SMOKE_WARMUP_FRAMES;
+            WINDOW_PERF_SMOKE_FRAME_LIMIT + WINDOW_PERF_SMOKE_WARMUP_FRAMES
+        }
         _ => unreachable!(),
     };
     launch_config.app.exit_after_presented_frames = Some(frame_limit);
@@ -63,7 +67,7 @@ where
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nwindow physical size: {window_size}\nwindow scale milliscale: {window_scale}\nglyph frame presented: {}\nglyph frame size: {}x{}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame decoration quads: {}\nglyph frame cursor quads: {}\nglyph frame atlas bytes: {}\nglyph frame atlas occupied slots: {}\nframe interval target fps: {}\nframe interval target ns: {frame_interval_target_ns}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval max sample: {}\nframe interval p95 ns: {}\nframe interval p95 exact ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nfirst dropped frame interval sample: {}\nlast dropped frame interval sample: {}\nframe pacing accepted: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nwindow physical size: {window_size}\nwindow scale milliscale: {window_scale}\nglyph frame presented: {}\nglyph frame size: {}x{}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame decoration quads: {}\nglyph frame cursor quads: {}\nglyph frame atlas bytes: {}\nglyph frame atlas occupied slots: {}\nframe interval target fps: {}\nframe interval target ns: {frame_interval_target_ns}\nframe interval warmup frames: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval max sample: {}\nframe interval p95 ns: {}\nframe interval p95 exact ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nfirst dropped frame interval sample: {}\nlast dropped frame interval sample: {}\nframe pacing accepted: {}\n",
                         report.frames_presented,
                         report.glyph_frame_presented,
                         report.glyph_frame_width,
@@ -75,6 +79,7 @@ where
                         report.glyph_frame_atlas_bytes,
                         report.glyph_frame_atlas_occupied_slots,
                         report.frame_interval_target_fps,
+                        report.frame_interval_warmup_frames,
                         started_at.elapsed().as_nanos(),
                         report.frame_interval_samples,
                         report.frame_interval_avg_ns,

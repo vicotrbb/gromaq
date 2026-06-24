@@ -80,6 +80,8 @@ impl NativeAppLauncher for MockAppLauncher {
         config: NativeAppLaunchConfig,
     ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
         let frames_presented = config.app.exit_after_presented_frames.unwrap_or_default();
+        let warmup_frames = config.app.frame_interval_warmup_frames;
+        let frame_interval_samples = frames_presented.saturating_sub(warmup_frames);
         self.launches.borrow_mut().push(config);
         Ok(NativeAppRunReport {
             frames_presented,
@@ -98,7 +100,8 @@ impl NativeAppLauncher for MockAppLauncher {
             glyph_frame_atlas_bytes: 4096,
             glyph_frame_atlas_occupied_slots: 8,
             frame_interval_target_fps: 60,
-            frame_interval_samples: frames_presented.saturating_sub(1),
+            frame_interval_warmup_frames: warmup_frames,
+            frame_interval_samples,
             frame_interval_avg_ns: 6_940_000,
             frame_interval_max_ns: 8_000_000,
             frame_interval_max_sample_index: 17,
@@ -506,9 +509,9 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 180\nframes presented: 180\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 192\nframes presented: 192\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nframe interval warmup frames: 12\nelapsed ns: "
     ));
-    assert!(exit.stdout.contains("frame interval samples: 179\n"));
+    assert!(exit.stdout.contains("frame interval samples: 180\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
     assert!(exit.stdout.contains("frame interval max ns: 8000000\n"));
     assert!(exit.stdout.contains("frame interval max sample: 17\n"));
@@ -541,8 +544,9 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
-    assert_eq!(launch.app.exit_after_presented_frames, Some(180));
+    assert_eq!(launch.app.exit_after_presented_frames, Some(192));
     assert!(launch.app.redraw_until_presented_frame_limit);
+    assert_eq!(launch.app.frame_interval_warmup_frames, 12);
     assert_eq!(launch.app.target_fps, 144);
     assert_eq!(launch.runtime.shell.program, "/bin/sh");
     assert_eq!(

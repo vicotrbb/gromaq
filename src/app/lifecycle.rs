@@ -34,6 +34,8 @@ pub struct NativeAppConfig {
     pub exit_after_presented_frames: Option<u64>,
     /// Request redraws after presented frames until the configured frame limit is reached.
     pub redraw_until_presented_frame_limit: bool,
+    /// Number of initial presented frames excluded from frame-interval performance metrics.
+    pub frame_interval_warmup_frames: u64,
 }
 
 impl Default for NativeAppConfig {
@@ -45,6 +47,7 @@ impl Default for NativeAppConfig {
             target_fps: 144,
             exit_after_presented_frames: None,
             redraw_until_presented_frame_limit: false,
+            frame_interval_warmup_frames: 0,
         }
     }
 }
@@ -309,8 +312,9 @@ impl NativeAppLifecycle {
 
     /// Record that a redraw was presented by the native app boundary at `presented_at`.
     pub fn on_redraw_requested_at(&mut self, presented_at: Instant) -> NativeAppAction {
-        self.record_frame_presented_at(presented_at);
-        self.frames_presented += 1;
+        let presented_frame_index = self.frames_presented.saturating_add(1);
+        self.record_frame_presented_at(presented_at, presented_frame_index);
+        self.frames_presented = presented_frame_index;
         let Some(limit) = self.config.exit_after_presented_frames else {
             return NativeAppAction::None;
         };
@@ -373,13 +377,18 @@ impl NativeAppLifecycle {
                 .last_glyph_frame_presentation
                 .atlas_occupied_slots,
             frame_interval_target_fps: self.frame_interval_target_fps(),
+            frame_interval_warmup_frames: self.config.frame_interval_warmup_frames,
         })
     }
 
-    fn record_frame_presented_at(&mut self, presented_at: Instant) {
+    fn record_frame_presented_at(&mut self, presented_at: Instant, presented_frame_index: u64) {
         let target_fps = self.frame_interval_target_fps();
-        self.frame_intervals
-            .record_presented_at(presented_at, target_fps);
+        self.frame_intervals.record_presented_at(
+            presented_at,
+            target_fps,
+            presented_frame_index,
+            self.config.frame_interval_warmup_frames,
+        );
     }
 
     fn frame_interval_target_fps(&self) -> u32 {

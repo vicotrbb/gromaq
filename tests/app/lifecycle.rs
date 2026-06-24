@@ -144,6 +144,33 @@ fn native_app_lifecycle_reports_dropped_presented_frame_intervals() {
 }
 
 #[test]
+fn native_app_lifecycle_excludes_configured_warmup_frame_intervals() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
+        exit_after_presented_frames: Some(4),
+        redraw_until_presented_frame_limit: true,
+        frame_interval_warmup_frames: 2,
+        ..NativeAppConfig::default()
+    });
+    let first_presented_at = Instant::now();
+
+    lifecycle.on_window_created();
+    lifecycle.on_redraw_requested_at(first_presented_at);
+    lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_nanos(50_000_000));
+    lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_nanos(56_944_444));
+    lifecycle.on_redraw_requested_at(first_presented_at + Duration::from_nanos(63_888_888));
+
+    let report = lifecycle.run_report();
+
+    assert_eq!(report.frames_presented, 4);
+    assert_eq!(report.frame_interval_warmup_frames, 2);
+    assert_eq!(report.frame_interval_samples, 2);
+    assert_eq!(report.frame_interval_max_sample_index, 1);
+    assert_eq!(report.dropped_frames, 0);
+    assert_eq!(report.first_dropped_frame_interval_sample, 0);
+    assert_eq!(report.last_dropped_frame_interval_sample, 0);
+}
+
+#[test]
 fn native_app_lifecycle_accounts_frame_intervals_against_monitor_refresh() {
     let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig {
         target_fps: 144,

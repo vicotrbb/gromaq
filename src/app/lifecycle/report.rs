@@ -48,6 +48,8 @@ pub struct NativeAppRunReport {
     pub glyph_frame_atlas_occupied_slots: usize,
     /// Effective FPS target used for presented-frame interval accounting.
     pub frame_interval_target_fps: u32,
+    /// Number of initial presented frames excluded from interval metrics.
+    pub frame_interval_warmup_frames: u64,
     /// Count of measured intervals between presented frames.
     pub frame_interval_samples: u64,
     /// Total measured presented-frame interval duration in nanoseconds.
@@ -133,14 +135,25 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) glyph_frame_atlas_bytes: usize,
     pub(super) glyph_frame_atlas_occupied_slots: usize,
     pub(super) frame_interval_target_fps: u32,
+    pub(super) frame_interval_warmup_frames: u64,
 }
 
 impl PresentedFrameIntervals {
-    pub(super) fn record_presented_at(&mut self, presented_at: Instant, target_fps: u32) {
+    pub(super) fn record_presented_at(
+        &mut self,
+        presented_at: Instant,
+        target_fps: u32,
+        presented_frame_index: u64,
+        warmup_frames: u64,
+    ) {
         if let Some(last_presented_at) = self.last_presented_at {
             let elapsed_ns = saturating_duration_nanos(
                 presented_at.saturating_duration_since(last_presented_at),
             );
+            if presented_frame_index <= warmup_frames {
+                self.last_presented_at = Some(presented_at);
+                return;
+            }
             let target_interval_ns = target_interval_nanos(target_fps);
             let sample_index = self.samples.saturating_add(1);
             if elapsed_ns > target_interval_ns {
@@ -194,6 +207,7 @@ impl PresentedFrameIntervals {
             glyph_frame_atlas_bytes: input.glyph_frame_atlas_bytes,
             glyph_frame_atlas_occupied_slots: input.glyph_frame_atlas_occupied_slots,
             frame_interval_target_fps: input.frame_interval_target_fps,
+            frame_interval_warmup_frames: input.frame_interval_warmup_frames,
             frame_interval_samples: self.samples,
             frame_interval_total_ns: self.total_ns,
             frame_interval_avg_ns: self.avg_ns,
@@ -248,11 +262,18 @@ mod tests {
         let started_at = Instant::now();
         let mut intervals = PresentedFrameIntervals::default();
 
-        intervals.record_presented_at(started_at, 144);
-        intervals.record_presented_at(started_at + std::time::Duration::from_nanos(6_944_444), 144);
+        intervals.record_presented_at(started_at, 144, 1, 0);
+        intervals.record_presented_at(
+            started_at + std::time::Duration::from_nanos(6_944_444),
+            144,
+            2,
+            0,
+        );
         intervals.record_presented_at(
             started_at + std::time::Duration::from_nanos(27_777_776),
             144,
+            3,
+            0,
         );
 
         let report = intervals.run_report(NativeAppRunReportInput {
@@ -270,6 +291,7 @@ mod tests {
         assert_eq!(report.window_height_px, None);
         assert_eq!(report.window_scale_milliscale, None);
         assert_eq!(report.frame_interval_target_fps, 144);
+        assert_eq!(report.frame_interval_warmup_frames, 0);
         assert_eq!(report.frame_interval_max_sample_index, 2);
         assert_eq!(report.frame_interval_p95_exact_ns, 20_833_332);
         assert_eq!(report.frame_intervals_over_target, 1);
@@ -288,6 +310,8 @@ mod tests {
             intervals.record_presented_at(
                 started_at + std::time::Duration::from_nanos(frame as u64),
                 144,
+                u64::try_from(frame + 1).unwrap(),
+                0,
             );
         }
 
@@ -309,6 +333,8 @@ mod tests {
                     u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 1).unwrap(),
                 ),
             144,
+            u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 2).unwrap(),
+            0,
         );
         let report = intervals.run_report(NativeAppRunReportInput {
             frames_presented: u64::try_from(PRESENTED_FRAME_INTERVAL_SAMPLE_CAPACITY + 2).unwrap(),
