@@ -4,10 +4,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
 
-use thiserror::Error;
 use winit::application::ApplicationHandler;
 use winit::dpi::PhysicalPosition;
-use winit::error::{EventLoopError, OsError};
 use winit::event::{ElementState, Ime, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::ModifiersState;
@@ -15,23 +13,20 @@ use winit::window::{Window, WindowId};
 
 use crate::clipboard::NativeClipboard;
 use crate::config::{ConfigFileReloader, GromaqConfig};
-use crate::error::GromaqError;
-use crate::font::{FontRasterError, RasterizedGlyphCache};
+use crate::font::RasterizedGlyphCache;
 use crate::mouse::{MouseButton, MouseEventKind};
-use crate::native_gpu::{
-    GpuBootstrap, GpuBootstrapConfig, GpuBootstrapError, GpuSurfaceError, NativeGpuContext,
-};
+use crate::native_gpu::{GpuBootstrap, GpuBootstrapConfig, NativeGpuContext};
 use crate::pty::{PtySession, ShellCommand};
-use crate::renderer::{
-    RendererConfig, SurfaceConfigError, SurfaceFrameError, WgpuRenderer, WgpuSurfaceBackend,
-};
+use crate::renderer::{RendererConfig, SurfaceFrameError, WgpuRenderer, WgpuSurfaceBackend};
 
+mod errors;
 mod lifecycle;
 mod native_input;
 mod perf;
 mod pty_bridge;
 mod runtime;
 mod surface;
+pub use errors::{NativeAppError, NativeGlyphFrameError};
 pub use lifecycle::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
 };
@@ -555,89 +550,6 @@ impl NativeTerminalApp {
             surface.clear_and_present(self.renderer.config().clear_color)?;
         }
         Ok(())
-    }
-}
-
-/// Errors from launching the native application loop.
-#[derive(Debug, Error)]
-pub enum NativeAppError {
-    /// The event loop could not be created or executed.
-    #[error("native event loop failed: {0}")]
-    EventLoop(#[from] EventLoopError),
-    /// The native window could not be created.
-    #[error("native window creation failed: {0}")]
-    WindowCreation(String),
-    /// Native terminal runtime setup failed.
-    #[error("native runtime failed: {0}")]
-    Runtime(String),
-    /// Native GPU setup failed.
-    #[error("native GPU setup failed: {0}")]
-    Gpu(String),
-}
-
-/// Errors while preparing or presenting a terminal glyph frame.
-#[derive(Debug, Error)]
-pub enum NativeGlyphFrameError {
-    /// Font rasterization failed while building the glyph atlas image.
-    #[error("native glyph rasterization failed: {0}")]
-    Font(#[from] FontRasterError),
-    /// Surface frame acquisition, drawing, or presentation failed.
-    #[error("native glyph surface presentation failed: {0}")]
-    Surface(#[from] SurfaceFrameError),
-    /// CPU-side render planning failed before presentation.
-    #[error("native glyph render planning failed: {0}")]
-    Renderer(#[from] GromaqError),
-}
-
-impl From<OsError> for NativeAppError {
-    fn from(value: OsError) -> Self {
-        Self::WindowCreation(value.to_string())
-    }
-}
-
-impl From<GromaqError> for NativeAppError {
-    fn from(value: GromaqError) -> Self {
-        Self::Runtime(value.to_string())
-    }
-}
-
-impl From<GpuBootstrapError> for NativeAppError {
-    fn from(value: GpuBootstrapError) -> Self {
-        Self::Gpu(value.to_string())
-    }
-}
-
-impl From<GpuSurfaceError> for NativeAppError {
-    fn from(value: GpuSurfaceError) -> Self {
-        Self::Gpu(value.to_string())
-    }
-}
-
-impl From<SurfaceConfigError> for NativeAppError {
-    fn from(value: SurfaceConfigError) -> Self {
-        Self::Gpu(value.to_string())
-    }
-}
-
-impl From<SurfaceFrameError> for NativeAppError {
-    fn from(value: SurfaceFrameError) -> Self {
-        Self::Gpu(value.to_string())
-    }
-}
-
-impl From<FontRasterError> for NativeAppError {
-    fn from(value: FontRasterError) -> Self {
-        Self::Runtime(value.to_string())
-    }
-}
-
-impl From<NativeGlyphFrameError> for NativeAppError {
-    fn from(value: NativeGlyphFrameError) -> Self {
-        match value {
-            NativeGlyphFrameError::Font(error) => Self::Runtime(error.to_string()),
-            NativeGlyphFrameError::Surface(error) => Self::Gpu(error.to_string()),
-            NativeGlyphFrameError::Renderer(error) => Self::Runtime(error.to_string()),
-        }
     }
 }
 
