@@ -16,14 +16,18 @@ impl SurfaceBackend for MockSurfaceBackend {
 }
 
 #[test]
-fn surface_config_planner_prefers_srgb_fifo_and_opaque_alpha() {
+fn surface_config_planner_prefers_srgb_mailbox_and_opaque_alpha() {
     let caps = SurfaceCapabilities {
         formats: vec![
             TextureFormat::Rgba8Unorm,
             TextureFormat::Bgra8UnormSrgb,
             TextureFormat::Rgba8UnormSrgb,
         ],
-        present_modes: vec![PresentMode::Immediate, PresentMode::Fifo],
+        present_modes: vec![
+            PresentMode::Immediate,
+            PresentMode::Fifo,
+            PresentMode::Mailbox,
+        ],
         alpha_modes: vec![
             CompositeAlphaMode::PreMultiplied,
             CompositeAlphaMode::Opaque,
@@ -36,11 +40,25 @@ fn surface_config_planner_prefers_srgb_fifo_and_opaque_alpha() {
     assert_eq!(config.width, 1280);
     assert_eq!(config.height, 800);
     assert_eq!(config.format, TextureFormat::Bgra8UnormSrgb);
-    assert_eq!(config.present_mode, PresentMode::Fifo);
+    assert_eq!(config.present_mode, PresentMode::Mailbox);
     assert_eq!(config.alpha_mode, CompositeAlphaMode::Opaque);
     assert_eq!(config.usage, TextureUsages::RENDER_ATTACHMENT);
     assert_eq!(config.desired_maximum_frame_latency, 1);
     assert!(config.view_formats.is_empty());
+}
+
+#[test]
+fn surface_config_planner_uses_fifo_when_mailbox_is_unavailable() {
+    let caps = SurfaceCapabilities {
+        formats: vec![TextureFormat::Bgra8UnormSrgb],
+        present_modes: vec![PresentMode::Immediate, PresentMode::Fifo],
+        alpha_modes: vec![CompositeAlphaMode::Opaque],
+        usages: TextureUsages::RENDER_ATTACHMENT,
+    };
+
+    let config = SurfaceConfigPlanner::new().plan(&caps, 1280, 800).unwrap();
+
+    assert_eq!(config.present_mode, PresentMode::Fifo);
 }
 
 #[test]

@@ -273,7 +273,9 @@ fn choose_surface_format(formats: &[wgpu::TextureFormat]) -> wgpu::TextureFormat
 }
 
 fn choose_present_mode(present_modes: &[wgpu::PresentMode]) -> wgpu::PresentMode {
-    if present_modes.contains(&wgpu::PresentMode::Fifo) {
+    if present_modes.contains(&wgpu::PresentMode::Mailbox) {
+        wgpu::PresentMode::Mailbox
+    } else if present_modes.contains(&wgpu::PresentMode::Fifo) {
         wgpu::PresentMode::Fifo
     } else {
         present_modes[0]
