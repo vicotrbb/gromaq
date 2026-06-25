@@ -32,6 +32,7 @@ mod tests;
 mod text_zoom;
 mod text_zoom_action;
 mod viewport_resize;
+mod welcome;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
 pub use fonts::{
     NativeFontResolution, load_default_native_glyph_cache, load_native_glyph_cache,

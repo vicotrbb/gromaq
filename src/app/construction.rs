@@ -8,6 +8,8 @@ use crate::app::{
 use crate::config::DEFAULT_FONT_FAMILY;
 use crate::renderer::{RendererConfig, WgpuRenderer};
 
+use super::welcome::default_welcome_text;
+
 impl NativeTerminalApp {
     /// Create a native terminal app handler.
     pub fn new(config: NativeAppConfig) -> Result<Self, NativeAppError> {
@@ -69,9 +71,10 @@ impl NativeTerminalApp {
             runtime_config.pixel_height = resize.pixel_height;
         }
         let mut runtime = NativeTerminalRuntime::new(runtime_config)?;
-        if let Some(startup_text) = config.startup_text.as_deref() {
-            runtime.write_startup_text(startup_text)?;
-        }
+        let startup_text = config.startup_text.clone().unwrap_or_else(|| {
+            default_welcome_text(&config, runtime.config(), &renderer_config, &font_family)
+        });
+        runtime.write_startup_text(&startup_text)?;
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
