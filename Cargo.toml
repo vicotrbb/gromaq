@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 description = "Native Rust GPU-rendered terminal emulator foundation for gromaq.dev"
-repository = "https://gromaq.dev"
+homepage = "https://gromaq.dev"
+repository = "https://github.com/vicotrbb/gromaq"
+readme = "README.md"
+keywords = ["terminal", "gpu", "wgpu", "pty", "emulator"]
+categories = ["command-line-utilities"]
 
 [lib]
 name = "gromaq"
