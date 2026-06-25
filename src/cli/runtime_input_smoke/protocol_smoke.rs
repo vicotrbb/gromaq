@@ -3,27 +3,14 @@ use crate::cli::CliExit;
 use crate::mouse::{MouseButton, MouseEvent, MouseEventKind};
 use crate::pty::ShellCommand;
 
-use super::pty_smoke::RuntimeInputCaptureSmokePtySpawner;
+use super::pty_smoke::{RuntimeInputCaptureSmokePtySession, RuntimeInputCaptureSmokePtySpawner};
 
 const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";
 const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1006h";
 const RUNTIME_RESPONSE_SMOKE_QUERIES: &str = "\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
 pub(in crate::cli) fn runtime_focus_smoke_exit() -> CliExit {
-    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 24,
-        terminal_rows: 4,
-        scrollback_lines: 128,
-        pixel_width: 0,
-        pixel_height: 0,
-        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
-        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
-        shell: ShellCommand {
-            program: "/bin/sh".into(),
-            args: Vec::new(),
-            cwd: None,
-        },
-    }) {
+    let mut runtime = match runtime_protocol_smoke_runtime() {
         Ok(runtime) => runtime,
         Err(error) => return runtime_focus_smoke_error(error),
     };
@@ -46,10 +33,7 @@ pub(in crate::cli) fn runtime_focus_smoke_exit() -> CliExit {
         Err(error) => return runtime_focus_smoke_error(error),
     };
     let metrics = runtime.dump_runtime_perf_metrics();
-    let input = runtime
-        .shell_session()
-        .map(|session| session.input.concat())
-        .unwrap_or_default();
+    let input = captured_shell_input(&runtime);
 
     if pumped_bytes != RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING.len()
         || !focused
@@ -91,20 +75,7 @@ fn runtime_focus_smoke_error(error: impl std::fmt::Display) -> CliExit {
 }
 
 pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
-    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 24,
-        terminal_rows: 4,
-        scrollback_lines: 128,
-        pixel_width: 0,
-        pixel_height: 0,
-        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
-        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
-        shell: ShellCommand {
-            program: "/bin/sh".into(),
-            args: Vec::new(),
-            cwd: None,
-        },
-    }) {
+    let mut runtime = match runtime_protocol_smoke_runtime() {
         Ok(runtime) => runtime,
         Err(error) => return runtime_mouse_smoke_error(error),
     };
@@ -146,10 +117,7 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
         Err(error) => return runtime_mouse_smoke_error(error),
     };
     let metrics = runtime.dump_runtime_perf_metrics();
-    let input = runtime
-        .shell_session()
-        .map(|session| session.input.concat())
-        .unwrap_or_default();
+    let input = captured_shell_input(&runtime);
     let expected_input = [
         b"\x1b[<0;3;2M".as_slice(),
         b"\x1b[<0;3;2m".as_slice(),
@@ -199,20 +167,7 @@ fn runtime_mouse_smoke_error(error: impl std::fmt::Display) -> CliExit {
 }
 
 pub(in crate::cli) fn runtime_response_smoke_exit() -> CliExit {
-    let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 24,
-        terminal_rows: 4,
-        scrollback_lines: 128,
-        pixel_width: 0,
-        pixel_height: 0,
-        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
-        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
-        shell: ShellCommand {
-            program: "/bin/sh".into(),
-            args: Vec::new(),
-            cwd: None,
-        },
-    }) {
+    let mut runtime = match runtime_protocol_smoke_runtime() {
         Ok(runtime) => runtime,
         Err(error) => return runtime_response_smoke_error(error),
     };
@@ -227,10 +182,7 @@ pub(in crate::cli) fn runtime_response_smoke_exit() -> CliExit {
         Err(error) => return runtime_response_smoke_error(error),
     };
     let metrics = runtime.dump_runtime_perf_metrics();
-    let input = runtime
-        .shell_session()
-        .map(|session| session.input.concat())
-        .unwrap_or_default();
+    let input = captured_shell_input(&runtime);
     let expected_response = b"\x1b[3;5R\x1b[0n\x1b[?1;2c\x1b[>0;1;0c";
 
     if pumped_bytes != RUNTIME_RESPONSE_SMOKE_QUERIES.len()
@@ -266,4 +218,32 @@ fn runtime_response_smoke_error(error: impl std::fmt::Display) -> CliExit {
         stdout: String::new(),
         stderr: format!("runtime response smoke failed: {error}\n"),
     }
+}
+
+fn runtime_protocol_smoke_runtime()
+-> Result<NativeTerminalRuntime<RuntimeInputCaptureSmokePtySession>, String> {
+    NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 24,
+        terminal_rows: 4,
+        scrollback_lines: 128,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .map_err(|error| error.to_string())
+}
+
+fn captured_shell_input(
+    runtime: &NativeTerminalRuntime<RuntimeInputCaptureSmokePtySession>,
+) -> Vec<u8> {
+    runtime
+        .shell_session()
+        .map(|session| session.input.concat())
+        .unwrap_or_default()
 }
