@@ -9,7 +9,7 @@ remaining terminal-core work.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| `/bin/sh` interactive input/output | Native PTY smoke and app runtime tests | Proven in CI/local tests |
+| `/bin/sh` interactive input/output | Native PTY smoke, real-shell command-output smoke, and app runtime tests | Proven in CI/local tests |
 | `bash` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
 | `zsh` command lifecycle and repaint preservation | Real PTY command workflow plus native redraw preservation test | Conditional on host binary |
 | `fish` command lifecycle | Real PTY command workflow when available | Conditional on host binary |

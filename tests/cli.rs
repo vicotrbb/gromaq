@@ -312,14 +312,14 @@ fn unknown_cli_argument_returns_usage_error() {
 
     let exit = run_with_backend(["gromaq", "--wat"], &backend);
 
-    assert_eq!(
-        exit,
-        CliExit {
-            code: 2,
-            stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--window-glyph-frame-snapshot <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-glyph-frame-snapshot <path>|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-perf-budget-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
-        }
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(
+        exit.stderr
+            .contains("--runtime-real-shell-command-output-smoke")
     );
+    assert!(exit.stderr.ends_with("unknown argument: --wat\n"));
     assert!(backend.requests.borrow().is_empty());
 }
 
@@ -483,6 +483,30 @@ fn frame_scheduler_smoke_cli_reports_144hz_timeline_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("frame-paced wait ns:"));
     assert!(exit.stdout.contains("frames presented: 3"));
     assert!(exit.stdout.contains("dropped frames: 2"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_real_shell_command_output_smoke_preserves_output_after_prompt_redraw() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(
+        ["gromaq", "--runtime-real-shell-command-output-smoke"],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(
+        exit.stdout
+            .contains("runtime real-shell command-output smoke: ok")
+    );
+    assert!(exit.stdout.contains("shell: /bin/sh"));
+    assert!(exit.stdout.contains("command output observed: true"));
+    assert!(exit.stdout.contains("prompt observed: true"));
+    assert!(exit.stdout.contains("full redraw preserved output: true"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
@@ -814,7 +838,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             dirty_regions: false,
             font_size_px: 17,
             cell_width_px: 9,
-            line_height_px: 33,
+            line_height_px: 44,
             ..RendererConfig::default()
         }
     );

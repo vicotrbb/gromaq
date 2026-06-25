@@ -4,7 +4,8 @@ use crate::app::NativeTerminalRuntime;
 use crate::pty::ShellCommand;
 
 use super::{
-    REAL_SHELL_EXIT, REAL_SHELL_LARGE_OUTPUT_LINES, REAL_SHELL_READY, REAL_SHELL_REFLOW_OUTPUT,
+    REAL_SHELL_COMMAND_OUTPUT_PROMPT, REAL_SHELL_EXIT, REAL_SHELL_LARGE_OUTPUT_LINES,
+    REAL_SHELL_READY, REAL_SHELL_REFLOW_OUTPUT,
 };
 
 pub(super) fn real_shell_command() -> ShellCommand {
@@ -17,6 +18,24 @@ pub(super) fn real_shell_command() -> ShellCommand {
                  while IFS= read -r line; do \
                  printf 'gromaq-real-shell-echo:%s\\n' \"$line\"; \
                  [ \"$line\" = '{REAL_SHELL_EXIT}' ] && exit 0; \
+                 done"
+            )),
+        ],
+        cwd: None,
+    }
+}
+
+pub(super) fn real_shell_command_output_command() -> ShellCommand {
+    ShellCommand {
+        program: OsString::from("/bin/sh"),
+        args: vec![
+            OsString::from("-c"),
+            OsString::from(format!(
+                "printf '{REAL_SHELL_READY}\\n'; \
+                 while IFS= read -r line; do \
+                 [ \"$line\" = '{REAL_SHELL_EXIT}' ] && exit 0; \
+                 eval \"$line\"; \
+                 printf '{REAL_SHELL_COMMAND_OUTPUT_PROMPT}\\n'; \
                  done"
             )),
         ],
