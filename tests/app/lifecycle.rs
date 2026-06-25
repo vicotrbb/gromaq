@@ -9,6 +9,7 @@ use gromaq::app::{
     NativeGlyphFramePresentation, NativePtySpawner, RealNativePtySpawner,
 };
 use gromaq::pty::{PtyConfig, ShellCommand};
+use gromaq::renderer::SurfaceFrameError;
 
 #[test]
 fn native_app_lifecycle_requests_window_redraw_and_exit_in_order() {
@@ -152,6 +153,23 @@ fn native_app_lifecycle_does_not_count_failed_redraw_attempts_as_presented_frame
     assert_eq!(report.redraw_attempts, 3);
     assert_eq!(report.frames_presented, 0);
     assert_eq!(report.frame_interval_samples, 0);
+}
+
+#[test]
+fn native_app_lifecycle_reports_skipped_surface_frame_acquisition_outcomes() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
+
+    lifecycle.record_surface_frame_skip(SurfaceFrameError::Timeout);
+    lifecycle.record_surface_frame_skip(SurfaceFrameError::Timeout);
+    lifecycle.record_surface_frame_skip(SurfaceFrameError::Occluded);
+    lifecycle.record_surface_frame_skip(SurfaceFrameError::Lost);
+
+    assert_eq!(lifecycle.surface_frame_timeouts(), 2);
+    assert_eq!(lifecycle.surface_frame_occluded(), 1);
+
+    let report = lifecycle.run_report();
+    assert_eq!(report.surface_frame_timeouts, 2);
+    assert_eq!(report.surface_frame_occluded, 1);
 }
 
 #[test]

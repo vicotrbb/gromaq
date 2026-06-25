@@ -68,9 +68,11 @@ where
                         code: 1,
                         stdout: String::new(),
                         stderr: format!(
-                            "window perf smoke failed: no glyph frame was presented; redraw attempts: {}; frames presented: {}; glyph quads: {}; background quads: {}; cursor quads: {}\n",
+                            "window perf smoke failed: no glyph frame was presented; redraw attempts: {}; frames presented: {}; surface timeouts: {}; surface occluded: {}; glyph quads: {}; background quads: {}; cursor quads: {}\n",
                             report.redraw_attempts,
                             report.frames_presented,
+                            report.surface_frame_timeouts,
+                            report.surface_frame_occluded,
                             report.glyph_frame_glyph_quads,
                             report.glyph_frame_background_quads,
                             report.glyph_frame_cursor_quads,
@@ -96,9 +98,11 @@ where
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nwindow physical size: {window_size}\nwindow scale milliscale: {window_scale}\nglyph frame presented: {}\nglyph frame size: {}x{}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame decoration quads: {}\nglyph frame cursor quads: {}\nglyph frame atlas bytes: {}\nglyph frame atlas occupied slots: {}\nframe interval target fps: {}\nframe interval target ns: {frame_interval_target_ns}\nframe interval p95 budget ns: {frame_interval_p95_budget_ns}\nframe interval warmup frames: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval max sample: {}\nframe interval p95 ns: {}\nframe interval p95 exact ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nfirst dropped frame interval sample: {}\nlast dropped frame interval sample: {}\nframe pacing accepted: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nwindow physical size: {window_size}\nwindow scale milliscale: {window_scale}\nglyph frame presented: {}\nglyph frame size: {}x{}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame decoration quads: {}\nglyph frame cursor quads: {}\nglyph frame atlas bytes: {}\nglyph frame atlas occupied slots: {}\nframe interval target fps: {}\nframe interval target ns: {frame_interval_target_ns}\nframe interval p95 budget ns: {frame_interval_p95_budget_ns}\nframe interval warmup frames: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval max sample: {}\nframe interval p95 ns: {}\nframe interval p95 exact ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nfirst dropped frame interval sample: {}\nlast dropped frame interval sample: {}\nframe pacing accepted: {}\n",
                         report.redraw_attempts,
                         report.frames_presented,
+                        report.surface_frame_timeouts,
+                        report.surface_frame_occluded,
                         report.glyph_frame_presented,
                         report.glyph_frame_width,
                         report.glyph_frame_height,
@@ -132,16 +136,20 @@ where
                         code: 1,
                         stdout: String::new(),
                         stderr: format!(
-                            "window smoke failed: no surface frame was presented; redraw attempts: {}\n",
-                            report.redraw_attempts
+                            "window smoke failed: no surface frame was presented; redraw attempts: {}; surface timeouts: {}; surface occluded: {}\n",
+                            report.redraw_attempts,
+                            report.surface_frame_timeouts,
+                            report.surface_frame_occluded
                         ),
                     }
                 } else {
                     CliExit {
                         code: 0,
                         stdout: format!(
-                            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\n",
-                            report.redraw_attempts
+                            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\nsurface timeouts: {}\nsurface occluded: {}\n",
+                            report.redraw_attempts,
+                            report.surface_frame_timeouts,
+                            report.surface_frame_occluded
                         ),
                         stderr: String::new(),
                     }

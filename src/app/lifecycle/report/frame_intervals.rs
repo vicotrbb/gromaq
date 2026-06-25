@@ -107,6 +107,8 @@ impl PresentedFrameIntervals {
             redraw_requests: input.redraw_requests,
             redraw_attempts: input.redraw_attempts,
             frames_presented: input.frames_presented,
+            surface_frame_timeouts: input.surface_frame_timeouts,
+            surface_frame_occluded: input.surface_frame_occluded,
             monitor_refresh_millihertz: input.monitor_refresh_millihertz,
             surface_present_mode: input.surface_present_mode,
             window_width_px: input.window_width_px,

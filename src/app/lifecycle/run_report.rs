@@ -13,6 +13,8 @@ impl NativeAppLifecycle {
             redraw_requests: self.redraw_requests,
             redraw_attempts: self.redraw_attempts,
             frames_presented: self.frames_presented,
+            surface_frame_timeouts: self.surface_frame_timeouts,
+            surface_frame_occluded: self.surface_frame_occluded,
             monitor_refresh_millihertz: self.monitor_refresh_millihertz,
             surface_present_mode: self.surface_present_mode,
             window_width_px: self.window_width_px,

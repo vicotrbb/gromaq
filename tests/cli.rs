@@ -143,9 +143,11 @@ impl NativeAppLauncher for NoGlyphFrameAppLauncher {
         &self,
         config: NativeAppLaunchConfig,
     ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
+        let redraw_attempts = config.app.exit_after_redraw_attempts.unwrap_or_default();
         Ok(NativeAppRunReport {
-            redraw_attempts: config.app.exit_after_redraw_attempts.unwrap_or_default(),
+            redraw_attempts,
             frames_presented: 0,
+            surface_frame_occluded: redraw_attempts,
             frame_interval_target_fps: 60,
             frame_interval_warmup_frames: config.app.frame_interval_warmup_frames,
             frame_interval_samples: 0,
@@ -520,7 +522,7 @@ fn window_smoke_launches_bounded_native_terminal_app() {
         exit,
         CliExit {
             code: 0,
-            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\n".to_owned(),
+            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\nsurface timeouts: 0\nsurface occluded: 0\n".to_owned(),
             stderr: String::new(),
         }
     );
@@ -548,7 +550,7 @@ fn window_smoke_fails_when_no_surface_frame_is_presented() {
     assert!(exit.stdout.is_empty());
     assert!(
         exit.stderr
-            .contains("window smoke failed: no surface frame was presented; redraw attempts: 16")
+            .contains("window smoke failed: no surface frame was presented; redraw attempts: 16; surface timeouts: 0; surface occluded: 16")
     );
     assert!(backend.requests.borrow().is_empty());
 }
@@ -567,7 +569,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 192\nredraw attempts: 192\nframes presented: 192\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nframe interval p95 budget ns: 20000000\nframe interval warmup frames: 12\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 192\nredraw attempts: 192\nframes presented: 192\nsurface timeouts: 0\nsurface occluded: 0\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nframe interval p95 budget ns: 20000000\nframe interval warmup frames: 12\nelapsed ns: "
     ));
     assert!(exit.stdout.contains("frame interval samples: 180\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
@@ -636,7 +638,7 @@ fn window_perf_smoke_fails_when_no_glyph_frame_is_presented() {
     assert!(exit.stdout.is_empty());
     assert!(
         exit.stderr.contains(
-            "window perf smoke failed: no glyph frame was presented; redraw attempts: 768; frames presented: 0"
+            "window perf smoke failed: no glyph frame was presented; redraw attempts: 768; frames presented: 0; surface timeouts: 0; surface occluded: 768"
         )
     );
     assert!(backend.requests.borrow().is_empty());

@@ -3,6 +3,7 @@
 use std::time::Instant;
 
 use super::NativeGlyphFramePresentation;
+use crate::renderer::SurfaceFrameError;
 
 mod config;
 mod event;
@@ -38,6 +39,8 @@ pub struct NativeAppLifecycle {
     redraw_requests: u64,
     redraw_attempts: u64,
     frames_presented: u64,
+    surface_frame_timeouts: u64,
+    surface_frame_occluded: u64,
     monitor_refresh_millihertz: Option<u32>,
     surface_present_mode: Option<&'static str>,
     window_width_px: Option<u32>,
@@ -58,6 +61,8 @@ impl NativeAppLifecycle {
             redraw_requests: 0,
             redraw_attempts: 0,
             frames_presented: 0,
+            surface_frame_timeouts: 0,
+            surface_frame_occluded: 0,
             monitor_refresh_millihertz: None,
             surface_present_mode: None,
             window_width_px: None,
@@ -173,6 +178,22 @@ impl NativeAppLifecycle {
         }
     }
 
+    /// Record a skipped surface-frame acquisition outcome.
+    pub fn record_surface_frame_skip(&mut self, error: SurfaceFrameError) {
+        match error {
+            SurfaceFrameError::Timeout => {
+                self.surface_frame_timeouts = self.surface_frame_timeouts.saturating_add(1);
+            }
+            SurfaceFrameError::Occluded => {
+                self.surface_frame_occluded = self.surface_frame_occluded.saturating_add(1);
+            }
+            SurfaceFrameError::Outdated
+            | SurfaceFrameError::Lost
+            | SurfaceFrameError::Validation
+            | SurfaceFrameError::InvalidFrame(_) => {}
+        }
+    }
+
     /// Next timer deadline for polling PTY output without forcing a redraw.
     pub fn next_pty_pump_deadline(&self, now: Instant) -> Option<Instant> {
         if self.has_window && !self.close_requested {
@@ -277,5 +298,15 @@ impl NativeAppLifecycle {
     /// Count of redraw events observed by this lifecycle.
     pub fn frames_presented(&self) -> u64 {
         self.frames_presented
+    }
+
+    /// Count of skipped redraw attempts caused by surface acquisition timeouts.
+    pub fn surface_frame_timeouts(&self) -> u64 {
+        self.surface_frame_timeouts
+    }
+
+    /// Count of skipped redraw attempts caused by the surface being occluded.
+    pub fn surface_frame_occluded(&self) -> u64 {
+        self.surface_frame_occluded
     }
 }

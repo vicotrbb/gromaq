@@ -15,6 +15,10 @@ pub struct NativeAppRunReport {
     pub redraw_attempts: u64,
     /// Count of redraw attempts that presented a native surface frame.
     pub frames_presented: u64,
+    /// Count of skipped surface-frame acquisitions that timed out.
+    pub surface_frame_timeouts: u64,
+    /// Count of skipped surface-frame acquisitions while the surface was occluded.
+    pub surface_frame_occluded: u64,
     /// Active monitor refresh rate in millihertz, if the platform reported one.
     pub monitor_refresh_millihertz: Option<u32>,
     /// Configured native surface presentation mode, if a surface was configured.
@@ -87,6 +91,8 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) redraw_requests: u64,
     pub(super) redraw_attempts: u64,
     pub(super) frames_presented: u64,
+    pub(super) surface_frame_timeouts: u64,
+    pub(super) surface_frame_occluded: u64,
     pub(super) monitor_refresh_millihertz: Option<u32>,
     pub(super) surface_present_mode: Option<&'static str>,
     pub(super) window_width_px: Option<u32>,

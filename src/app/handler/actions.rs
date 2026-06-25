@@ -52,8 +52,10 @@ impl NativeTerminalApp {
             }
             Err(error) => match error {
                 NativeGlyphFrameError::Surface(
-                    SurfaceFrameError::Timeout | SurfaceFrameError::Occluded,
-                ) => {}
+                    surface_error @ (SurfaceFrameError::Timeout | SurfaceFrameError::Occluded),
+                ) => {
+                    self.lifecycle.record_surface_frame_skip(surface_error);
+                }
                 NativeGlyphFrameError::Surface(
                     SurfaceFrameError::Outdated
                     | SurfaceFrameError::Lost
