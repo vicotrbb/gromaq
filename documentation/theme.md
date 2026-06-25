@@ -28,7 +28,10 @@ selection contrast, cursor contrast, and readable ANSI color contrast gates.
 `cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm` writes
 a deterministic PPM artifact from the same native glyph-frame preparation path,
 covering default text, ANSI colors, selection background, cursor geometry, and
-surface padding without requiring a live GPU window.
+surface padding without requiring a live GPU window. The smoke also rejects
+blank or low-value snapshots by counting high-contrast text pixels and exact
+selection/cursor-color pixels in the generated RGBA frame before writing the
+PPM.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:

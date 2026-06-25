@@ -94,6 +94,7 @@ Implemented and tested:
 - Deterministic runtime text zoom smoke with `--runtime-text-zoom-smoke`
 - Deterministic default theme legibility smoke with `--theme-legibility-smoke`, reporting the built-in preset, default font metrics, foreground/background, selection, cursor, and readable ANSI contrast gates
 - Deterministic default theme preview snapshot export with `--theme-preview-snapshot <path>`, writing a PPM artifact from the native glyph-frame preparation path without launching a GPU window
+- Pixel-level default theme preview gates for high-contrast text, selection color, and cursor color before snapshot export
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`

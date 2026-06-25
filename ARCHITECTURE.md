@@ -52,7 +52,9 @@ in `cli::gpu`. Config launch types and the production native app launcher live
 in `cli::config_commands::launch`, while config check/template formatting stays
 in `cli::config_commands`. Clipboard, runtime output,
 scrollback, reflow, glyph-frame, and frame-scheduler checks each own their
-domain-specific command code. Runtime input smoke commands are split further:
+domain-specific command code. Theme smoke commands keep CLI/report flow separate
+from preview pixel validation so visual proof gates remain reviewable. Runtime
+input smoke commands are split further:
 `runtime_input_smoke::pty_smoke` owns injectable PTY fixtures,
 `runtime_input_smoke::protocol_smoke` owns focus/mouse/terminal-response
 protocol checks, and `runtime_input_smoke::perf_smoke` owns input-echo
