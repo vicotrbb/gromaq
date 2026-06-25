@@ -20,8 +20,10 @@ remaining terminal-core work.
 | Workflow | Current proof | Status |
 | --- | --- | --- |
 | `vim` launch workflow | Real PTY command workflow when available | Conditional on host binary |
+| `vim` alternate-screen enter/exit | Scripted real PTY workflow when available | Conditional on host binary |
 | `vim` SGR mouse split selection | Scripted real PTY workflow when available | Conditional on host binary |
 | `nvim` launch workflow | Real PTY command workflow when available | Conditional on host binary |
+| `nvim` alternate-screen enter/exit | Scripted real PTY workflow when available | Conditional on host binary |
 | `nvim` SGR mouse split selection | Scripted real PTY workflow when available | Conditional on host binary |
 | `tmux` launch workflow | Real PTY command workflow when available | Conditional on host binary |
 | `tmux` SGR mouse pane selection | Scripted real PTY workflow when available | Conditional on host binary |

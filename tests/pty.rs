@@ -352,6 +352,15 @@ fn pty_session_runs_vim_mouse_window_selection_when_available() {
 }
 
 #[test]
+fn pty_session_runs_vim_alternate_screen_enter_exit_when_available() {
+    assert_shell_command_enters_and_leaves_alternate_screen_when_available(
+        "vim",
+        "TERM=xterm-256color vim -Nu NONE -n -i NONE -N --noplugin".to_owned(),
+        b":qa!\r",
+    );
+}
+
+#[test]
 fn pty_session_runs_nvim_version_when_available() {
     assert_program_outputs_when_available("nvim", &["--version"], "NVIM");
 }
@@ -420,6 +429,15 @@ fn pty_session_runs_nvim_mouse_window_selection_when_available() {
     let selected_window = fs::read_to_string(&result_file).unwrap();
     assert_eq!(selected_window.trim(), "1");
     let _ = fs::remove_file(result_file);
+}
+
+#[test]
+fn pty_session_runs_nvim_alternate_screen_enter_exit_when_available() {
+    assert_shell_command_enters_and_leaves_alternate_screen_when_available(
+        "nvim",
+        "TERM=xterm-256color nvim -u NONE -n -i NONE -N --noplugin".to_owned(),
+        b":qa!\r",
+    );
 }
 
 #[test]

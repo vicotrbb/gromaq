@@ -132,6 +132,42 @@ pub(super) fn assert_program_outputs_when_available_with_timeout(
     );
 }
 
+pub(super) fn assert_shell_command_enters_and_leaves_alternate_screen_when_available(
+    program_name: &str,
+    command: String,
+    exit_input: &[u8],
+) {
+    let Some(_program) = find_program(program_name) else {
+        eprintln!(
+            "skipping {program_name} alternate-screen PTY workflow test because {program_name} is not on PATH"
+        );
+        return;
+    };
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+
+    let enter_output =
+        drain_until_contains(&mut session, "\x1b[?1049h", 100, Duration::from_millis(20));
+    assert!(
+        enter_output.contains("\x1b[?1049h"),
+        "{program_name} did not enter alternate screen: {enter_output:?}"
+    );
+
+    session.write_all(exit_input).unwrap();
+    let leave_output =
+        drain_until_contains(&mut session, "\x1b[?1049l", 100, Duration::from_millis(20));
+    assert!(
+        leave_output.contains("\x1b[?1049l"),
+        "{program_name} did not leave alternate screen: {leave_output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+}
+
 pub(super) fn spawn_shell_pty_command(command: String) -> PtySession {
     let config = PtyConfig {
         rows: 24,
