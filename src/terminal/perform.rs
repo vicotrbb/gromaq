@@ -2,26 +2,10 @@
 
 use vte::{Params, Perform};
 
-use super::osc::{
-    Osc8HyperlinkAction, decode_bounded_osc_text, decode_osc8_hyperlink, decode_osc52_clipboard,
-};
 use super::params::{first_value, first_values};
 use super::state::{CharacterSet, DcsHandler};
-use super::width::{map_dec_special_graphics, metadata_id_for_index};
-use super::{MAX_DCS_PAYLOAD_BYTES, MAX_OSC8_HYPERLINKS, Terminal};
-
-impl Terminal {
-    fn intern_hyperlink(&mut self, uri: String) -> u16 {
-        if let Some(index) = self.hyperlinks.iter().position(|existing| existing == &uri) {
-            return metadata_id_for_index(index);
-        }
-        if self.hyperlinks.len() == MAX_OSC8_HYPERLINKS {
-            return 0;
-        }
-        self.hyperlinks.push(uri);
-        metadata_id_for_index(self.hyperlinks.len() - 1)
-    }
-}
+use super::width::map_dec_special_graphics;
+use super::{MAX_DCS_PAYLOAD_BYTES, Terminal};
 
 impl Perform for Terminal {
     fn hook(&mut self, _params: &Params, intermediates: &[u8], ignore: bool, action: char) {
@@ -215,51 +199,6 @@ impl Perform for Terminal {
     }
 
     fn osc_dispatch(&mut self, params: &[&[u8]], _bell_terminated: bool) {
-        let Some(command) = params
-            .first()
-            .and_then(|bytes| std::str::from_utf8(bytes).ok())
-        else {
-            return;
-        };
-        match command {
-            "0" => {
-                if let Some(label) = params
-                    .get(1)
-                    .and_then(|bytes| decode_bounded_osc_text(bytes))
-                {
-                    self.icon_label = Some(label.to_owned());
-                    self.title = Some(label.to_owned());
-                }
-            }
-            "1" => {
-                if let Some(icon_label) = params
-                    .get(1)
-                    .and_then(|bytes| decode_bounded_osc_text(bytes))
-                {
-                    self.icon_label = Some(icon_label.to_owned());
-                }
-            }
-            "2" => {
-                if let Some(title) = params
-                    .get(1)
-                    .and_then(|bytes| decode_bounded_osc_text(bytes))
-                {
-                    self.title = Some(title.to_owned());
-                }
-            }
-            "52" => {
-                if let Some(text) = decode_osc52_clipboard(params) {
-                    self.clipboard_text = Some(text);
-                }
-            }
-            "8" => match decode_osc8_hyperlink(params) {
-                Osc8HyperlinkAction::Open(uri) => {
-                    self.current_hyperlink_id = self.intern_hyperlink(uri);
-                }
-                Osc8HyperlinkAction::Close => self.current_hyperlink_id = 0,
-                Osc8HyperlinkAction::Ignore => {}
-            },
-            _ => {}
-        }
+        self.dispatch_osc(params);
     }
 }

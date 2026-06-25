@@ -1,6 +1,72 @@
 use base64::{Engine as _, engine::general_purpose};
 
-use super::{MAX_OSC_TITLE_BYTES, MAX_OSC8_HYPERLINK_BYTES, MAX_OSC52_CLIPBOARD_BYTES};
+use super::width::metadata_id_for_index;
+use super::{
+    MAX_OSC_TITLE_BYTES, MAX_OSC8_HYPERLINK_BYTES, MAX_OSC8_HYPERLINKS, MAX_OSC52_CLIPBOARD_BYTES,
+    Terminal,
+};
+
+impl Terminal {
+    pub(super) fn dispatch_osc(&mut self, params: &[&[u8]]) {
+        let Some(command) = params
+            .first()
+            .and_then(|bytes| std::str::from_utf8(bytes).ok())
+        else {
+            return;
+        };
+        match command {
+            "0" => {
+                if let Some(label) = params
+                    .get(1)
+                    .and_then(|bytes| decode_bounded_osc_text(bytes))
+                {
+                    self.icon_label = Some(label.to_owned());
+                    self.title = Some(label.to_owned());
+                }
+            }
+            "1" => {
+                if let Some(icon_label) = params
+                    .get(1)
+                    .and_then(|bytes| decode_bounded_osc_text(bytes))
+                {
+                    self.icon_label = Some(icon_label.to_owned());
+                }
+            }
+            "2" => {
+                if let Some(title) = params
+                    .get(1)
+                    .and_then(|bytes| decode_bounded_osc_text(bytes))
+                {
+                    self.title = Some(title.to_owned());
+                }
+            }
+            "52" => {
+                if let Some(text) = decode_osc52_clipboard(params) {
+                    self.clipboard_text = Some(text);
+                }
+            }
+            "8" => match decode_osc8_hyperlink(params) {
+                Osc8HyperlinkAction::Open(uri) => {
+                    self.current_hyperlink_id = self.intern_hyperlink(uri);
+                }
+                Osc8HyperlinkAction::Close => self.current_hyperlink_id = 0,
+                Osc8HyperlinkAction::Ignore => {}
+            },
+            _ => {}
+        }
+    }
+
+    fn intern_hyperlink(&mut self, uri: String) -> u16 {
+        if let Some(index) = self.hyperlinks.iter().position(|existing| existing == &uri) {
+            return metadata_id_for_index(index);
+        }
+        if self.hyperlinks.len() == MAX_OSC8_HYPERLINKS {
+            return 0;
+        }
+        self.hyperlinks.push(uri);
+        metadata_id_for_index(self.hyperlinks.len() - 1)
+    }
+}
 
 pub(super) fn decode_bounded_osc_text(bytes: &[u8]) -> Option<&str> {
     if bytes.len() > MAX_OSC_TITLE_BYTES {
