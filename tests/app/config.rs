@@ -191,9 +191,9 @@ fn native_app_text_zoom_reconfigures_renderer_metrics_and_grid() {
             .unwrap()
     );
 
-    assert_eq!(app.renderer().config().font_size_px, 43);
-    assert_eq!(app.renderer().config().cell_width_px, 24);
-    assert_eq!(app.renderer().config().line_height_px, 59);
+    assert_eq!(app.renderer().config().font_size_px, 39);
+    assert_eq!(app.renderer().config().cell_width_px, 22);
+    assert_eq!(app.renderer().config().line_height_px, 54);
     assert!(
         app.runtime().terminal().dump_grid().cols < default_grid.0,
         "zooming in should reduce visible columns"
@@ -208,9 +208,9 @@ fn native_app_text_zoom_reconfigures_renderer_metrics_and_grid() {
             .unwrap()
     );
 
-    assert_eq!(app.renderer().config().font_size_px, 37);
-    assert_eq!(app.renderer().config().cell_width_px, 21);
-    assert_eq!(app.renderer().config().line_height_px, 51);
+    assert_eq!(app.renderer().config().font_size_px, 34);
+    assert_eq!(app.renderer().config().cell_width_px, 19);
+    assert_eq!(app.renderer().config().line_height_px, 47);
     assert_eq!(
         (
             app.runtime().terminal().dump_grid().cols,

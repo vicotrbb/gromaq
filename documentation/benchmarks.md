@@ -62,7 +62,7 @@ both output rows, and the repainted prompt in the render plan. On
 2026-06-25,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
-selection background, one cursor quad, a 700x232 frame, a 53856-byte atlas, 51 px
+selection background, one cursor quad, a 700x232 frame, a 53856-byte atlas, 47 px
 line height, and 14 px surface padding through the native glyph-frame path. On
 2026-06-25,
 `cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm`

@@ -107,8 +107,8 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
 ];
 
 const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
-    ("README.md", "size_px = 37.0"),
-    ("README.md", "line_height_px = 51.0"),
+    ("README.md", "size_px = 34.0"),
+    ("README.md", "line_height_px = 47.0"),
     ("README.md", "surface_padding_px = 14"),
     ("README.md", "cell_spacing_px = 0"),
     ("README.md", "preset = \"gromaq-ghostty\""),
@@ -118,9 +118,9 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm",
     ),
-    ("documentation/theme.md", "37 px font size"),
-    ("documentation/theme.md", "51 px line height"),
-    ("documentation/theme.md", "21 px automatic cell width"),
+    ("documentation/theme.md", "34 px font size"),
+    ("documentation/theme.md", "47 px line height"),
+    ("documentation/theme.md", "19 px automatic cell width"),
     ("documentation/theme.md", "built-in default is `14`"),
     ("documentation/theme.md", "cell_spacing_px"),
     ("documentation/theme.md", "Control/Super `+`"),
@@ -137,8 +137,8 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/theme.md",
         "`cargo run -- --theme-preview-snapshot",
     ),
-    ("documentation/compatibility.md", "37/21/51 px"),
-    ("documentation/compatibility.md", "43/24/59 px"),
+    ("documentation/compatibility.md", "34/19/47 px"),
+    ("documentation/compatibility.md", "39/22/54 px"),
     ("documentation/compatibility.md", "gromaq-ghostty"),
 ];
 

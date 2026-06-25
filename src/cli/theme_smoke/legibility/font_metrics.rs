@@ -1,6 +1,6 @@
-const DEFAULT_FONT_SIZE_MIN_PX: u16 = 37;
-const DEFAULT_CELL_WIDTH_MIN_PX: u16 = 21;
-const DEFAULT_LINE_HEIGHT_MIN_PX: u16 = 51;
+const DEFAULT_FONT_SIZE_MIN_PX: u16 = 34;
+const DEFAULT_CELL_WIDTH_MIN_PX: u16 = 19;
+const DEFAULT_LINE_HEIGHT_MIN_PX: u16 = 47;
 const DEFAULT_CELL_WIDTH_RATIO_MIN_X100: u64 = 54;
 const DEFAULT_CELL_WIDTH_RATIO_MAX_X100: u64 = 62;
 const DEFAULT_LINE_HEIGHT_RATIO_MIN_X100: u64 = 130;
@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn default_font_metrics_gate_accepts_current_readable_defaults() {
-        assert!(has_readable_default_font_metrics(37, 21, 51));
+        assert!(has_readable_default_font_metrics(34, 19, 47));
     }
 
     #[test]
@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn default_font_metrics_gate_rejects_cramped_or_loose_geometry() {
-        assert!(!has_readable_default_font_metrics(37, 16, 51));
-        assert!(!has_readable_default_font_metrics(37, 21, 60));
+        assert!(!has_readable_default_font_metrics(34, 16, 47));
+        assert!(!has_readable_default_font_metrics(34, 19, 56));
     }
 }

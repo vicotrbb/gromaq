@@ -160,12 +160,12 @@ fn runtime_text_zoom_smoke_reports_browser_style_zoom_metrics_without_gpu_bootst
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("runtime text zoom smoke: ok"));
-    assert!(exit.stdout.contains("default font size px: 37"));
-    assert!(exit.stdout.contains("default cell width px: 21"));
-    assert!(exit.stdout.contains("default line height px: 51"));
-    assert!(exit.stdout.contains("zoomed font size px: 43"));
-    assert!(exit.stdout.contains("zoomed cell width px: 24"));
-    assert!(exit.stdout.contains("zoomed line height px: 59"));
+    assert!(exit.stdout.contains("default font size px: 34"));
+    assert!(exit.stdout.contains("default cell width px: 19"));
+    assert!(exit.stdout.contains("default line height px: 47"));
+    assert!(exit.stdout.contains("zoomed font size px: 39"));
+    assert!(exit.stdout.contains("zoomed cell width px: 22"));
+    assert!(exit.stdout.contains("zoomed line height px: 54"));
     assert!(exit.stdout.contains("zoom in reduced grid: true"));
     assert!(exit.stdout.contains("reset restored metrics: true"));
     assert!(exit.stdout.contains("reset restored grid: true"));
