@@ -13,14 +13,16 @@ use super::{
     REAL_SHELL_SMOKE_POLL_INTERVAL, REAL_SHELL_SMOKE_ROWS, REAL_SHELL_SMOKE_TIMEOUT,
 };
 
+mod budget;
 mod output;
 
+use budget::{
+    REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS, real_shell_large_output_budget_failure,
+};
 use output::{
     RuntimeRealShellLargeOutputReport, runtime_real_shell_large_output_smoke_error,
     runtime_real_shell_large_output_smoke_failure, runtime_real_shell_large_output_smoke_success,
 };
-
-const REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS: u64 = 6_940_000;
 
 pub(in crate::cli) fn runtime_real_shell_large_output_smoke_exit() -> CliExit {
     let probe = match run_runtime_real_shell_large_output_smoke() {
@@ -47,7 +49,7 @@ pub(in crate::cli) fn runtime_real_shell_large_output_smoke_exit() -> CliExit {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct RuntimeRealShellLargeOutputSmokeProbe {
+pub(super) struct RuntimeRealShellLargeOutputSmokeProbe {
     pumped_bytes: usize,
     scrollback_lines: usize,
     rendered_frames: u64,
@@ -128,52 +130,5 @@ fn run_runtime_real_shell_large_output_smoke() -> RuntimeRealShellLargeOutputRes
             ));
         }
         thread::sleep(REAL_SHELL_SMOKE_POLL_INTERVAL);
-    }
-}
-
-fn real_shell_large_output_budget_failure(
-    probe: &RuntimeRealShellLargeOutputSmokeProbe,
-) -> Option<&'static str> {
-    if probe.render_p95_ns > REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS {
-        return Some("real-shell large-output render p95 exceeded 144Hz frame budget");
-    }
-    None
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn probe(render_p95_ns: u64) -> RuntimeRealShellLargeOutputSmokeProbe {
-        RuntimeRealShellLargeOutputSmokeProbe {
-            pumped_bytes: 1,
-            scrollback_lines: REAL_SHELL_LARGE_OUTPUT_SCROLLBACK_LINES,
-            rendered_frames: 1,
-            rendered_dirty_regions: 1,
-            rendered_dirty_cells_max: 1,
-            first_line_evicted: true,
-            last_line_observed: true,
-            render_p95_ns,
-        }
-    }
-
-    #[test]
-    fn real_shell_large_output_budget_accepts_render_p95_at_limit() {
-        assert_eq!(
-            real_shell_large_output_budget_failure(&probe(
-                REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS
-            )),
-            None
-        );
-    }
-
-    #[test]
-    fn real_shell_large_output_budget_rejects_render_p95_over_limit() {
-        assert_eq!(
-            real_shell_large_output_budget_failure(&probe(
-                REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS + 1
-            )),
-            Some("real-shell large-output render p95 exceeded 144Hz frame budget")
-        );
     }
 }
