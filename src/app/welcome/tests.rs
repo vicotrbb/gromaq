@@ -35,6 +35,17 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
 }
 
 #[test]
+fn default_welcome_avatar_is_trimmed_and_uses_supported_block_glyphs() {
+    let lines: Vec<_> = WELCOME_AVATAR_ANSI.lines().collect();
+    let widths: Vec<_> = lines.iter().map(|line| ansi_visible_width(line)).collect();
+
+    assert_eq!(lines.len(), 15);
+    assert_eq!(widths.iter().copied().max(), Some(21));
+    assert!(widths.iter().all(|width| *width == 21));
+    assert!(WELCOME_AVATAR_ANSI.chars().any(is_quadrant_block));
+}
+
+#[test]
 fn default_welcome_text_uses_renderer_theme_colors() {
     let mut renderer = RendererConfig {
         default_foreground_rgb8: [1, 2, 3],
@@ -53,6 +64,26 @@ fn default_welcome_text_uses_renderer_theme_colors() {
     assert!(text.contains(WELCOME_AVATAR_ANSI.lines().nth(2).unwrap()));
     assert!(text.contains("\x1b[1;38;2;1;2;3mBuild"));
     assert!(text.contains("\x1b[38;2;10;11;12mnative Rust GPU terminal"));
+}
+
+fn is_quadrant_block(ch: char) -> bool {
+    matches!(
+        ch,
+        '▘' | '▝'
+            | '▀'
+            | '▖'
+            | '▌'
+            | '▞'
+            | '▛'
+            | '▗'
+            | '▚'
+            | '▐'
+            | '▜'
+            | '▄'
+            | '▙'
+            | '▟'
+            | '█'
+    )
 }
 
 #[test]

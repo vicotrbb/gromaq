@@ -26,6 +26,7 @@ export async function generateAssetSet({
   terminalColumns,
   terminalRows,
   terminalCrop,
+  terminalMode = 'half-block',
 }) {
   const dir = join(ROOT, folder);
   const sourcePath = join(dir, source);
@@ -51,7 +52,7 @@ export async function generateAssetSet({
   }
 
   const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
-  const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows);
+  const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows, terminalMode);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';
   writeFileSync(join(outputDir, ansiName), terminal, 'utf8');
   console.log(`wrote ${ansiName} ${terminalColumns}x${terminalRows} cells`);
@@ -211,15 +212,15 @@ function chromaKey(image) {
     const blue = rgba[i + 2];
     const distance = colorDistance([red, green, blue], key);
     const dominance = green - Math.max(red, blue);
-    const greenScreen = green > 70 && dominance > 24 && green > red * 1.12 && green > blue * 1.12;
-    const background = greenScreen && (dominance > 44 || distance < 130);
-    const edge = greenScreen || (dominance > 26 && distance < 165);
+    const greenScreen = green > 58 && dominance > 18 && green > red * 1.06 && green > blue * 1.06;
+    const background = greenScreen && (dominance > 32 || distance < 150);
+    const edge = greenScreen || (dominance > 18 && distance < 190);
 
     if (background) {
       rgba[i + 3] = 0;
     } else if (edge) {
-      const distanceAlpha = ((distance - 65) / 100) * 255;
-      const dominanceAlpha = ((44 - dominance) / 20) * 255;
+      const distanceAlpha = ((distance - 58) / 132) * 255;
+      const dominanceAlpha = ((36 - dominance) / 24) * 255;
       const alpha = clamp(Math.round(Math.min(distanceAlpha, dominanceAlpha)), 0, 255);
       rgba[i + 3] = Math.min(rgba[i + 3], alpha);
       rgba[i + 1] = Math.min(green, Math.max(red, blue) + 18);
@@ -322,7 +323,17 @@ function sampleBilinear(image, x, y, out, offset) {
   }
 }
 
-function terminalAnsi(image, columns, rows) {
+function terminalAnsi(image, columns, rows, mode) {
+  if (mode === 'quadrant-block') {
+    return terminalQuadrantBlockAnsi(image, columns, rows);
+  }
+  if (mode !== 'half-block') {
+    throw new Error(`unsupported terminal image mode: ${mode}`);
+  }
+  return terminalHalfBlockAnsi(image, columns, rows);
+}
+
+function terminalHalfBlockAnsi(image, columns, rows) {
   const sampled = contain(image, columns * 4, rows * 8);
   const lines = [];
   for (let row = 0; row < rows; row++) {
@@ -330,9 +341,81 @@ function terminalAnsi(image, columns, rows) {
     for (let col = 0; col < columns; col++) {
       line += terminalHalfBlockCell(sampled, col * 4, row * 8);
     }
-    lines.push(`${line}\x1b[0m`);
+    lines.push(line);
   }
-  return `${lines.join('\n')}\n`;
+  return normalizedTerminalLines(lines);
+}
+
+function terminalQuadrantBlockAnsi(image, columns, rows) {
+  const sampled = contain(image, columns * 2, rows * 2);
+  const lines = [];
+  for (let row = 0; row < rows; row++) {
+    let line = '';
+    for (let col = 0; col < columns; col++) {
+      line += terminalQuadrantBlockCell(sampled, col * 2, row * 2);
+    }
+    lines.push(line);
+  }
+  return normalizedTerminalLines(lines);
+}
+
+const QUADRANT_BLOCKS = [
+  ' ',
+  '▘',
+  '▝',
+  '▀',
+  '▖',
+  '▌',
+  '▞',
+  '▛',
+  '▗',
+  '▚',
+  '▐',
+  '▜',
+  '▄',
+  '▙',
+  '▟',
+  '█',
+];
+
+function terminalQuadrantBlockCell(image, left, top) {
+  let mask = 0;
+  const colors = [];
+  const samples = [
+    [0, 0, 1],
+    [1, 0, 2],
+    [0, 1, 4],
+    [1, 1, 8],
+  ];
+  for (const [x, y, bit] of samples) {
+    const sample = pixel(image, left + x, top + y);
+    if (!isTerminalVisible(sample)) continue;
+    mask |= bit;
+    colors.push(sample);
+  }
+  if (mask === 0) return ' ';
+  const color = boostTerminalColor(averageVisibleColor(colors), colors.length / 4);
+  return `${fg(color)}${QUADRANT_BLOCKS[mask]}`;
+}
+
+function normalizedTerminalLines(lines) {
+  const trimmed = lines.map((line) => line.replace(/ +$/u, ''));
+  const width = Math.max(...trimmed.map(ansiVisibleWidth));
+  return `${trimmed
+    .map((line) => `${line}${' '.repeat(width - ansiVisibleWidth(line))}\x1b[0m`)
+    .join('\n')}\n`;
+}
+
+function ansiVisibleWidth(value) {
+  let width = 0;
+  for (let index = 0; index < value.length; index++) {
+    if (value[index] === '\x1b') {
+      while (index < value.length && !/[A-Za-z]/u.test(value[index])) index++;
+    } else {
+      width++;
+    }
+  }
+  return width;
 }
 
 function terminalHalfBlockCell(image, left, top) {
@@ -350,7 +433,7 @@ function terminalHalfBlockCell(image, left, top) {
 function isTerminalVisible(pixel) {
   const [red, green, blue, alpha] = pixel;
   const dominance = green - Math.max(red, blue);
-  const greenScreen = green > 55 && dominance > 18 && green > red * 1.08 && green > blue * 1.08;
+  const greenScreen = green > 48 && dominance > 14 && green > red * 1.04 && green > blue * 1.04;
   return alpha > 18 && !greenScreen;
 }
 
