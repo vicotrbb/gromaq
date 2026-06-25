@@ -512,6 +512,29 @@ fn runtime_real_shell_command_output_smoke_preserves_output_after_prompt_redraw(
 }
 
 #[test]
+fn runtime_text_zoom_smoke_reports_browser_style_zoom_metrics_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-text-zoom-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime text zoom smoke: ok"));
+    assert!(exit.stdout.contains("default font size px: 32"));
+    assert!(exit.stdout.contains("default cell width px: 18"));
+    assert!(exit.stdout.contains("default line height px: 44"));
+    assert!(exit.stdout.contains("zoomed font size px: 37"));
+    assert!(exit.stdout.contains("zoomed cell width px: 21"));
+    assert!(exit.stdout.contains("zoomed line height px: 51"));
+    assert!(exit.stdout.contains("zoom in reduced grid: true"));
+    assert!(exit.stdout.contains("reset restored metrics: true"));
+    assert!(exit.stdout.contains("reset restored grid: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn no_arguments_launches_native_terminal_app() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),

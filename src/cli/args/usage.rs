@@ -17,8 +17,9 @@ pub(in crate::cli) fn usage() -> String {
         "--runtime-real-shell-perf-budget-smoke|",
         "--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|",
         "--runtime-alternate-screen-smoke|--runtime-reflow-smoke|",
-        "--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|",
-        "--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|",
+        "--runtime-config-reload-smoke|--runtime-text-zoom-smoke|",
+        "--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|",
+        "--runtime-idle-smoke|--runtime-idle-cpu-smoke|",
         "--frame-scheduler-smoke]\n"
     )
     .to_owned()

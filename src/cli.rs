@@ -15,6 +15,7 @@ mod runtime_output_smoke;
 mod runtime_real_shell_smoke;
 mod runtime_reflow_smoke;
 mod runtime_scrollback_smoke;
+mod runtime_text_zoom_smoke;
 mod window_smoke;
 pub use config_commands::{
     NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,

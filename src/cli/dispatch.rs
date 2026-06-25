@@ -30,6 +30,7 @@ use super::runtime_real_shell_smoke::{
 };
 use super::runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
+use super::runtime_text_zoom_smoke::runtime_text_zoom_smoke_exit;
 use super::window_smoke::{window_glyph_frame_snapshot_exit, window_smoke_exit};
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
@@ -229,6 +230,7 @@ where
         CliCommand::RuntimeAlternateScreenSmoke => runtime_alternate_screen_smoke_exit(),
         CliCommand::RuntimeReflowSmoke => runtime_reflow_smoke_exit(),
         CliCommand::RuntimeConfigReloadSmoke => runtime_config_reload_smoke_exit(),
+        CliCommand::RuntimeTextZoomSmoke => runtime_text_zoom_smoke_exit(),
         CliCommand::RuntimeFocusSmoke => runtime_focus_smoke_exit(),
         CliCommand::RuntimeMouseSmoke => runtime_mouse_smoke_exit(),
         CliCommand::RuntimeResponseSmoke => runtime_response_smoke_exit(),
