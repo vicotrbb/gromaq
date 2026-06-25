@@ -96,6 +96,7 @@ fn default_monospace_font_candidate_paths() -> Vec<PathBuf> {
 
 fn named_font_candidate_paths(font_family: &str) -> Option<Vec<PathBuf>> {
     let files = match normalized_font_family_name(font_family).as_str() {
+        "meslolgsnf" | "meslolgsnerdfont" | "meslo" => MESLO_LGS_FONT_FILES,
         "jetbrainsmono" | "jetbrainsmononerdfont" => JETBRAINS_MONO_FONT_FILES,
         "cascadiamono" | "caskaydiacovenerdfont" => CASCADIA_MONO_FONT_FILES,
         "iosevkaterm" | "iosevka" => IOSEVKA_TERM_FONT_FILES,
@@ -168,6 +169,7 @@ const DEFAULT_PREFERRED_MONO_FONT_FILES: &[&str] = &[
     "JetBrainsMonoNerdFont-Regular.ttf",
     "JetBrainsMonoNLNerdFont-Regular.ttf",
     "JetBrainsMono-Regular.ttf",
+    "MesloLGS NF Regular.ttf",
     "CaskaydiaCoveNerdFont-Regular.ttf",
     "CascadiaMono.ttf",
     "IosevkaTerm-Regular.ttf",
@@ -196,6 +198,8 @@ const JETBRAINS_MONO_FONT_FILES: &[&str] = &[
     "JetBrainsMonoNLNerdFont-Regular.ttf",
     "JetBrainsMono-Regular.ttf",
 ];
+
+const MESLO_LGS_FONT_FILES: &[&str] = &["MesloLGS NF Regular.ttf"];
 
 const CASCADIA_MONO_FONT_FILES: &[&str] = &[
     "CaskaydiaCoveNerdFont-Regular.ttf",
@@ -236,6 +240,12 @@ mod tests {
             .unwrap();
 
         assert!(jetbrains_index < sf_mono_index);
+
+        let meslo_index = names
+            .iter()
+            .position(|name| name == "MesloLGS NF Regular.ttf")
+            .unwrap();
+        assert!(meslo_index < sf_mono_index);
     }
 
     #[test]
@@ -248,6 +258,13 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert!(names.contains(&"JetBrainsMonoNerdFont-Regular.ttf".into()));
+        let meslo_candidates = named_font_candidate_paths("MesloLGS NF").unwrap();
+        let meslo_names = meslo_candidates
+            .iter()
+            .filter_map(|path| path.file_name())
+            .map(|name| name.to_string_lossy())
+            .collect::<Vec<_>>();
+        assert!(meslo_names.contains(&"MesloLGS NF Regular.ttf".into()));
         assert!(named_font_candidate_paths("Unmapped Mono").is_none());
     }
 }
