@@ -73,109 +73,58 @@ where
         };
     };
     if command == CliCommand::ConfigCheck {
-        let Some(path) = args.next() else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}missing config path for --config-check\n", usage()),
-            };
+        let path = match required_path_arg(&mut args, "--config-check") {
+            Ok(path) => path,
+            Err(exit) => return exit,
         };
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return config_check_exit(path.as_ref());
     }
     if command == CliCommand::ConfigTemplate {
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return config_template_exit();
     }
     if command == CliCommand::GpuTerminalTextSnapshot {
-        let Some(path) = args.next() else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!(
-                    "{}missing snapshot path for --gpu-terminal-text-snapshot\n",
-                    usage()
-                ),
-            };
+        let path = match required_snapshot_path_arg(&mut args, "--gpu-terminal-text-snapshot") {
+            Ok(path) => path,
+            Err(exit) => return exit,
         };
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return gpu_terminal_text_snapshot_exit(path.as_ref(), backend);
     }
     if command == CliCommand::RuntimeGlyphFrameSnapshot {
-        let Some(path) = args.next() else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!(
-                    "{}missing snapshot path for --runtime-glyph-frame-snapshot\n",
-                    usage()
-                ),
-            };
+        let path = match required_snapshot_path_arg(&mut args, "--runtime-glyph-frame-snapshot") {
+            Ok(path) => path,
+            Err(exit) => return exit,
         };
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return runtime_glyph_frame_snapshot_exit(path.as_ref());
     }
     if command == CliCommand::ThemePreviewSnapshot {
-        let Some(path) = args.next() else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!(
-                    "{}missing snapshot path for --theme-preview-snapshot\n",
-                    usage()
-                ),
-            };
+        let path = match required_snapshot_path_arg(&mut args, "--theme-preview-snapshot") {
+            Ok(path) => path,
+            Err(exit) => return exit,
         };
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return theme_preview_snapshot_exit(path.as_ref());
     }
     if command == CliCommand::WindowGlyphFrameSnapshot {
-        let Some(path) = args.next() else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!(
-                    "{}missing snapshot path for --window-glyph-frame-snapshot\n",
-                    usage()
-                ),
-            };
+        let path = match required_snapshot_path_arg(&mut args, "--window-glyph-frame-snapshot") {
+            Ok(path) => path,
+            Err(exit) => return exit,
         };
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return window_glyph_frame_snapshot_exit(path.as_ref(), app_launcher);
     }
@@ -183,29 +132,18 @@ where
         command,
         CliCommand::WindowSmoke | CliCommand::WindowPerfSmoke
     ) {
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         return window_smoke_exit(command, app_launcher);
     }
     if command == CliCommand::Config {
-        let Some(path) = args.next() else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}missing config path for --config\n", usage()),
-            };
+        let path = match required_path_arg(&mut args, "--config") {
+            Ok(path) => path,
+            Err(exit) => return exit,
         };
-        if let Some(extra) = args.next() {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-            };
+        if let Err(exit) = reject_extra_args(&mut args) {
+            return exit;
         }
         let Some(app_launcher) = app_launcher else {
             return CliExit {
@@ -216,12 +154,8 @@ where
         };
         return launch_config_file_exit(path.as_ref(), app_launcher);
     }
-    if let Some(extra) = args.next() {
-        return CliExit {
-            code: 2,
-            stdout: String::new(),
-            stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref(),),
-        };
+    if let Err(exit) = reject_extra_args(&mut args) {
+        return exit;
     }
 
     match command {
@@ -269,4 +203,43 @@ where
         | CliCommand::WindowPerfSmoke
         | CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
     }
+}
+
+fn required_path_arg<I, S>(args: &mut I, command: &str) -> Result<S, CliExit>
+where
+    I: Iterator<Item = S>,
+    S: AsRef<str>,
+{
+    args.next().ok_or_else(|| CliExit {
+        code: 2,
+        stdout: String::new(),
+        stderr: format!("{}missing config path for {command}\n", usage()),
+    })
+}
+
+fn required_snapshot_path_arg<I, S>(args: &mut I, command: &str) -> Result<S, CliExit>
+where
+    I: Iterator<Item = S>,
+    S: AsRef<str>,
+{
+    args.next().ok_or_else(|| CliExit {
+        code: 2,
+        stdout: String::new(),
+        stderr: format!("{}missing snapshot path for {command}\n", usage()),
+    })
+}
+
+fn reject_extra_args<I, S>(args: &mut I) -> Result<(), CliExit>
+where
+    I: Iterator<Item = S>,
+    S: AsRef<str>,
+{
+    if let Some(extra) = args.next() {
+        return Err(CliExit {
+            code: 2,
+            stdout: String::new(),
+            stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+        });
+    }
+    Ok(())
 }
