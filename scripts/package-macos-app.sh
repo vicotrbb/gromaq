@@ -5,6 +5,9 @@ root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 app_name="${GROMAQ_APP_NAME:-Gromaq}"
 bundle_id="${GROMAQ_BUNDLE_ID:-dev.gromaq.Gromaq}"
 binary_name="${GROMAQ_PACKAGE:-gromaq}"
+version="$(
+  sed -n 's/^version = "\(.*\)"/\1/p' "${root}/Cargo.toml" | head -n 1
+)"
 binary_path="${GROMAQ_BINARY_PATH:-${root}/target/release/${binary_name}}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
 app_dir="${dist_dir}/${app_name}.app"
@@ -83,9 +86,9 @@ cat > "${contents_dir}/Info.plist" <<EOF
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>${version}</string>
   <key>CFBundleVersion</key>
-  <string>0.1.0</string>
+  <string>${version}</string>
   <key>LSMinimumSystemVersion</key>
   <string>12.0</string>
   <key>NSHighResolutionCapable</key>
