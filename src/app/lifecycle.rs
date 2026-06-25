@@ -5,29 +5,18 @@ use std::time::Instant;
 use super::NativeGlyphFramePresentation;
 use crate::renderer::SurfaceFrameError;
 
+mod action;
 mod config;
 mod event;
 mod report;
 mod run_report;
 
+pub use action::NativeAppAction;
 pub use config::NativeAppConfig;
 pub use event::{NativeAppEvent, NativeAppEventProxy};
 pub use report::NativeAppRunReport;
 
 use report::PresentedFrameIntervals;
-
-/// Deterministic action requested by the native app lifecycle.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NativeAppAction {
-    /// No platform action is needed.
-    None,
-    /// Create the native window.
-    CreateWindow,
-    /// Request a redraw for the current native window.
-    RequestRedraw,
-    /// Exit the event loop.
-    Exit,
-}
 
 /// Testable native app lifecycle state.
 #[derive(Debug, Clone, PartialEq, Eq)]
