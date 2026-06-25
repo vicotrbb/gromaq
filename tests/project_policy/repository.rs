@@ -123,6 +123,9 @@ fn distribution_assets_keep_desktop_identity() {
 
     assert!(install_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(install_script.contains("GROMAQ_INSTALL_DESKTOP_ASSETS"));
+    assert!(install_script.contains("GROMAQ_SKIP_CARGO_INSTALL"));
+    assert!(install_script.contains("GROMAQ_INSTALL_ROOT"));
+    assert!(install_script.contains("GROMAQ_PLATFORM"));
     assert!(macos_script.contains("CFBundleIconFile"));
     assert!(macos_script.contains("AppIcon.icns"));
     assert!(macos_script.contains("Cargo.toml"));

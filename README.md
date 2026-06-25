@@ -51,6 +51,15 @@ On Linux, the installer also installs user-local desktop assets by default:
 AppStream metainfo under `${XDG_DATA_HOME:-~/.local/share}`. Set
 `GROMAQ_INSTALL_DESKTOP_ASSETS=0` to install only the binary.
 
+Maintainers can prove Linux desktop asset placement without network or home
+directory writes:
+
+```bash
+GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux \
+  GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof \
+  sh scripts/install.sh
+```
+
 On macOS, source install gives you the `gromaq` binary. To build a `.app` bundle
 with the project logo as the Dock/app icon from a checked-out repository, run:
 
