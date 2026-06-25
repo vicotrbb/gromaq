@@ -21,7 +21,7 @@ mod real_shell;
 mod runtime_smoke;
 #[path = "cli/support.rs"]
 mod support;
-#[path = "cli/theme.rs"]
+#[path = "cli/theme/mod.rs"]
 mod theme;
 #[path = "cli/window/mod.rs"]
 mod window;
