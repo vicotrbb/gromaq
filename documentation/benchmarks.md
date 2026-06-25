@@ -55,6 +55,10 @@ from live windowed GPU pacing proof. On 2026-06-25, `cargo run --
 `/bin/sh`, wrote 97 PTY input bytes, observed two command-output rows plus a
 post-command prompt marker, rendered 3 CPU-side frames, and proved a full redraw
 preserved the command output in the render plan with render p95 500000 ns. On
+2026-06-25, `cargo run -- --runtime-repaint-smoke` pumped 183 deterministic
+zsh-style repaint bytes, rendered one CPU-side frame, forced one full-viewport
+clear region, retained 103 planned glyphs, and preserved the command line,
+both output rows, and the repainted prompt in the render plan. On
 2026-06-24,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one

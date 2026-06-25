@@ -11,7 +11,7 @@ remaining terminal-core work.
 | --- | --- | --- |
 | `/bin/sh` interactive input/output | Native PTY smoke, real-shell command-output smoke, and app runtime tests | Proven in CI/local tests |
 | `bash` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
-| `zsh` command lifecycle and repaint preservation | Real PTY command workflow plus native redraw preservation test | Conditional on host binary |
+| `zsh` command lifecycle and repaint preservation | Real PTY command workflow plus native redraw preservation test and `cargo run -- --runtime-repaint-smoke` deterministic zsh-style prompt repaint proof | Conditional on host binary for real PTY lifecycle; deterministic repaint proof is proven |
 | `fish` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
 | `nushell` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
 
@@ -52,6 +52,7 @@ remaining terminal-core work.
 | Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, and native shortcuts, including dedicated Paste, Shift+Insert, Control+V, and Super+V paste routing | Proven for covered keys |
 | Browser-style terminal text zoom | Native shortcut mapping tests plus native app renderer/grid reconfiguration tests for increase, decrease, reset, shifted plus, modifier-wheel, and dedicated OS/browser zoom-key policy; `cargo run -- --runtime-text-zoom-smoke` verifies default 32/18/44 px metrics zoom to 37/21/51 px, reduce the visible grid, and reset without a live GPU window | Proven for covered controls |
 | Mouse reporting modes | Runtime mouse smoke and alternate-screen mouse tests | Proven for default and SGR covered paths |
+| Shell prompt repaint output retention | App redraw tests and `cargo run -- --runtime-repaint-smoke` prove zsh-style prompt repaint sequences preserve the command line, two output rows, and repainted prompt in a full-viewport render plan after the swapchain-clear boundary | Proven for covered repaint sequence |
 | Theme color propagation | Renderer config mapping plus prepared-frame tests for background, ANSI foreground, selection, and cursor colors | Proven for covered paths |
 | Built-in theme legibility | Config contrast tests for foreground, cursor, selection, and readable ANSI slots across shipped presets, plus prepared-frame preview pixel tests for default padding, foreground glyph coverage, cursor color, and unclipped cell edges | Proven for shipped presets and default prepared-frame path |
 | Default terminal font stack | Native font resolver tests for polished user fonts, including JetBrains Mono Nerd Font and MesloLGS Nerd Font, before system fallbacks | Proven for covered paths |
