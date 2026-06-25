@@ -5,12 +5,8 @@ use std::sync::Arc;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
-use super::super::{
-    NativeAppAction, NativeAppError, NativeGlyphFrameError, NativeTerminalApp,
-    NativeWindowMouseInput,
-};
+use super::super::{NativeAppAction, NativeAppError, NativeGlyphFrameError, NativeTerminalApp};
 use crate::clipboard::NativeClipboard;
-use crate::mouse::{MouseButton, MouseEventKind};
 use crate::native_gpu::{GpuBootstrap, GpuBootstrapConfig};
 use crate::renderer::SurfaceFrameError;
 
@@ -153,31 +149,5 @@ impl NativeTerminalApp {
         self.gpu_context = Some(context);
         self.surface = Some(surface);
         Ok(())
-    }
-
-    pub(super) fn send_current_mouse_input(
-        &mut self,
-        kind: MouseEventKind,
-        button: MouseButton,
-    ) -> Result<(), NativeAppError> {
-        let (Some(position), Some(window)) = (self.cursor_position, self.window.as_ref()) else {
-            return Ok(());
-        };
-        let size = window.inner_size();
-        self.runtime
-            .send_window_mouse_input_event(NativeWindowMouseInput {
-                x: position.x,
-                y: position.y,
-                window_width_px: size.width,
-                window_height_px: size.height,
-                cell_width_px: self.renderer.config().cell_width_px,
-                line_height_px: self.renderer.config().line_height_px,
-                surface_padding_px: self.renderer.config().surface_padding_px,
-                cell_spacing_px: self.renderer.config().cell_spacing_px,
-                kind,
-                button,
-                modifiers: self.modifiers,
-            })
-            .map(|_| ())
     }
 }

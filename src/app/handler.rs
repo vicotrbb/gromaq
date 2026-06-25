@@ -9,6 +9,7 @@ use super::{NativeAppEvent, NativeTerminalApp, native_mouse_button, wheel_mouse_
 use crate::mouse::MouseEventKind;
 
 mod actions;
+mod mouse;
 mod resume;
 mod window_metadata;
 
