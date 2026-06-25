@@ -1,0 +1,35 @@
+name: Release Artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  linux-tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --test project_policy
+      - run: scripts/package-linux-tarball.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gromaq-linux-tarball
+          path: target/dist/*.tar.gz
+
+  macos-app:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --test project_policy
+      - run: scripts/package-macos-app.sh
+      - run: ditto -c -k --sequesterRsrc --keepParent target/dist/Gromaq.app target/dist/Gromaq-macos-app.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gromaq-macos-app
+          path: target/dist/Gromaq-macos-app.zip

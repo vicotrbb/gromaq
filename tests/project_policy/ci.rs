@@ -5,6 +5,7 @@ use super::support::relative_path;
 const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/install.sh",
     "sh -n scripts/package-macos-app.sh",
+    "sh -n scripts/package-linux-tarball.sh",
     "cargo fmt --check",
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
@@ -44,6 +45,14 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo bench --bench parser_throughput -- --list",
 ];
 
+const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
+    "scripts/package-linux-tarball.sh",
+    "scripts/package-macos-app.sh",
+    "actions/upload-artifact@v4",
+    "target/dist/*.tar.gz",
+    "target/dist/Gromaq-macos-app.zip",
+];
+
 #[test]
 fn ci_workflow_runs_required_root_checks() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
@@ -53,6 +62,20 @@ fn ci_workflow_runs_required_root_checks() {
         assert!(
             workflow.contains(command),
             "{} must run `{command}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
+}
+
+#[test]
+fn release_workflow_builds_distribution_artifacts() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for command in REQUIRED_RELEASE_WORKFLOW_COMMANDS {
+        assert!(
+            workflow.contains(command),
+            "{} must run or upload `{command}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
         );
     }

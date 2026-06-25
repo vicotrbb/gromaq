@@ -17,11 +17,13 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "GOOD_FIRST_ISSUES.md",
     "scripts/install.sh",
     "scripts/package-macos-app.sh",
+    "scripts/package-linux-tarball.sh",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
     "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",
     "documentation/benchmarks.md",
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",
+    ".github/workflows/release.yml",
     ".github/labels.yml",
     ".github/ISSUE_TEMPLATE/bug_report.md",
     ".github/ISSUE_TEMPLATE/compatibility_gap.md",
@@ -109,6 +111,7 @@ fn distribution_assets_keep_desktop_identity() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let install_script = fs::read_to_string(root.join("scripts/install.sh")).unwrap();
     let macos_script = fs::read_to_string(root.join("scripts/package-macos-app.sh")).unwrap();
+    let linux_script = fs::read_to_string(root.join("scripts/package-linux-tarball.sh")).unwrap();
     let desktop =
         fs::read_to_string(root.join("packaging/linux/dev.gromaq.Gromaq.desktop")).unwrap();
     let metainfo =
@@ -118,6 +121,9 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(install_script.contains("GROMAQ_INSTALL_DESKTOP_ASSETS"));
     assert!(macos_script.contains("CFBundleIconFile"));
     assert!(macos_script.contains("AppIcon.icns"));
+    assert!(linux_script.contains("dev.gromaq.Gromaq.desktop"));
+    assert!(linux_script.contains("logo-icon-256.png"));
+    assert!(linux_script.contains(".tar.gz"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));

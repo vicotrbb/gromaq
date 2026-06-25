@@ -57,6 +57,16 @@ scripts/package-macos-app.sh
 open target/dist/Gromaq.app
 ```
 
+Release artifact helpers:
+
+```bash
+scripts/package-linux-tarball.sh
+scripts/package-macos-app.sh
+```
+
+Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
+upload a Linux tarball and a zipped macOS `.app` bundle.
+
 ## Status
 
 Implemented and covered by automated tests or deterministic smoke commands:
@@ -89,7 +99,8 @@ Not yet proven enough to call complete:
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 - release packaging beyond source install
-- signed/notarized macOS release artifacts and prebuilt Linux packages
+- signed/notarized macOS release artifacts and package-manager-specific Linux
+  packages
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).
