@@ -11,8 +11,12 @@ use crate::{Terminal, TerminalConfig};
 
 use super::super::CliExit;
 
+mod output;
 mod pixels;
 
+use output::{
+    ThemePreviewSnapshotReport, theme_preview_snapshot_error, theme_preview_snapshot_success,
+};
 use pixels::validate_theme_preview_pixels;
 
 const THEME_PREVIEW_COLS: u16 = 56;
@@ -25,55 +29,9 @@ output stays readable after prompt repaint\r\n";
 
 pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
     match theme_preview_snapshot_report(path) {
-        Ok(report) => CliExit {
-            code: 0,
-            stdout: format!(
-                "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nsurface padding px: {}\ncell spacing px: {}\nhigh contrast text pixels: {}\nselection pixels: {}\ncursor pixels: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
-                report.bytes_written,
-                report.width,
-                report.height,
-                report.preview_pixels,
-                report.font_size_px,
-                report.cell_width_px,
-                report.line_height_px,
-                report.surface_padding_px,
-                report.cell_spacing_px,
-                report.high_contrast_text_pixels,
-                report.selection_pixels,
-                report.cursor_pixels,
-                report.prepared_quads,
-                report.background_quads,
-                report.cursor_quads,
-                report.atlas_bytes
-            ),
-            stderr: String::new(),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("theme preview snapshot failed: {error}\n"),
-        },
+        Ok(report) => theme_preview_snapshot_success(path, &report),
+        Err(error) => theme_preview_snapshot_error(error),
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct ThemePreviewSnapshotReport {
-    bytes_written: usize,
-    width: u32,
-    height: u32,
-    preview_pixels: usize,
-    font_size_px: u16,
-    cell_width_px: u16,
-    line_height_px: u16,
-    surface_padding_px: u16,
-    cell_spacing_px: u16,
-    high_contrast_text_pixels: usize,
-    selection_pixels: usize,
-    cursor_pixels: usize,
-    prepared_quads: usize,
-    background_quads: usize,
-    cursor_quads: usize,
-    atlas_bytes: usize,
 }
 
 fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotReport, String> {
