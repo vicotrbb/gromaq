@@ -26,6 +26,21 @@ fn theme_list_cli_reports_builtin_theme_tokens_without_gpu_bootstrap() {
 }
 
 #[test]
+fn theme_list_cli_rejects_extra_arguments() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--theme-list", "extra"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn theme_legibility_smoke_reports_default_visual_gates_without_gpu_bootstrap() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
