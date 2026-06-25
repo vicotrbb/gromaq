@@ -4,6 +4,10 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::error::{GromaqError, Result};
 
+mod presets;
+
+pub use presets::{GRAPHITE_THEME_PRESET, ThemePresetSetting, format_theme_preset};
+
 /// Maximum supported visual surface padding in physical pixels.
 pub const MAX_SURFACE_PADDING_PX: u16 = 512;
 /// Minimum useful opacity for dim text.
@@ -58,20 +62,6 @@ pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 pub const DEFAULT_DIM_OPACITY: f32 = 0.66;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
-/// Name of the alternate high-contrast graphite theme.
-pub const GRAPHITE_THEME_PRESET: &str = "gromaq-graphite";
-
-/// Named built-in terminal theme preset.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum ThemePresetSetting {
-    /// Polished dark theme tuned for legibility and native terminal screenshots.
-    #[default]
-    GromaqDark,
-    /// Cooler graphite theme with a brighter foreground and crisp ANSI colors.
-    GromaqGraphite,
-}
-
 /// Configurable terminal cursor shape.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -117,46 +107,6 @@ impl Default for ThemeSettings {
 }
 
 impl ThemeSettings {
-    /// Return the complete built-in theme represented by a named preset.
-    pub fn from_preset(preset: ThemePresetSetting) -> Self {
-        match preset {
-            ThemePresetSetting::GromaqDark => Self {
-                preset,
-                background: DEFAULT_BACKGROUND.to_owned(),
-                foreground: DEFAULT_FOREGROUND.to_owned(),
-                cursor: DEFAULT_CURSOR.to_owned(),
-                selection: DEFAULT_SELECTION.to_owned(),
-                cursor_style: CursorStyleSetting::default(),
-                cursor_blinking: true,
-                ansi: DEFAULT_ANSI_COLORS
-                    .iter()
-                    .map(|color| (*color).to_owned())
-                    .collect(),
-                surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
-                dim_opacity: DEFAULT_DIM_OPACITY,
-            },
-            ThemePresetSetting::GromaqGraphite => Self {
-                preset,
-                background: "#0b0f14".to_owned(),
-                foreground: "#f3f6fb".to_owned(),
-                cursor: "#ffd166".to_owned(),
-                selection: "#26445f".to_owned(),
-                cursor_style: CursorStyleSetting::default(),
-                cursor_blinking: true,
-                ansi: [
-                    "#1f2630", "#ff6b7a", "#8fd694", "#ffd166", "#8ab4ff", "#cba6f7", "#7dd3c7",
-                    "#d7deea", "#6b7280", "#ff8fa3", "#a7e3a1", "#ffe08a", "#b6ccff", "#f5bde6",
-                    "#9be4d8", "#ffffff",
-                ]
-                .into_iter()
-                .map(str::to_owned)
-                .collect(),
-                surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
-                dim_opacity: 0.7,
-            },
-        }
-    }
-
     /// Validate configured theme colors.
     pub fn validate(&self) -> Result<()> {
         self.background_rgb8()?;
@@ -215,14 +165,6 @@ impl ThemeSettings {
             colors[index] = parse_hex_rgb("ansi", value)?;
         }
         Ok(colors)
-    }
-}
-
-/// Serialize a theme preset as user-facing TOML text.
-pub fn format_theme_preset(preset: ThemePresetSetting) -> &'static str {
-    match preset {
-        ThemePresetSetting::GromaqDark => DEFAULT_THEME_PRESET,
-        ThemePresetSetting::GromaqGraphite => GRAPHITE_THEME_PRESET,
     }
 }
 
