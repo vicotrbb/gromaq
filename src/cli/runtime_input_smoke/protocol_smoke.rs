@@ -9,6 +9,8 @@ const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";
 const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1006h";
 const RUNTIME_RESPONSE_SMOKE_QUERIES: &str = "\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
+type RuntimeProtocolSmokeRuntime = NativeTerminalRuntime<RuntimeInputCaptureSmokePtySession>;
+
 pub(in crate::cli) fn runtime_focus_smoke_exit() -> CliExit {
     let mut runtime = match runtime_protocol_smoke_runtime() {
         Ok(runtime) => runtime,
@@ -220,8 +222,7 @@ fn runtime_response_smoke_error(error: impl std::fmt::Display) -> CliExit {
     }
 }
 
-fn runtime_protocol_smoke_runtime()
--> Result<NativeTerminalRuntime<RuntimeInputCaptureSmokePtySession>, String> {
+fn runtime_protocol_smoke_runtime() -> Result<RuntimeProtocolSmokeRuntime, String> {
     NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 24,
         terminal_rows: 4,
@@ -239,9 +240,7 @@ fn runtime_protocol_smoke_runtime()
     .map_err(|error| error.to_string())
 }
 
-fn captured_shell_input(
-    runtime: &NativeTerminalRuntime<RuntimeInputCaptureSmokePtySession>,
-) -> Vec<u8> {
+fn captured_shell_input(runtime: &RuntimeProtocolSmokeRuntime) -> Vec<u8> {
     runtime
         .shell_session()
         .map(|session| session.input.concat())
