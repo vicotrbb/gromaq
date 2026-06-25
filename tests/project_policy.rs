@@ -81,6 +81,38 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo bench --bench parser_throughput -- --list",
 ];
 
+const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
+    ("README.md", "size_px = 37.0"),
+    ("README.md", "line_height_px = 51.0"),
+    ("README.md", "preset = \"gromaq-ghostty\""),
+    ("README.md", "cargo run -- --runtime-text-zoom-smoke"),
+    ("README.md", "cargo run -- --theme-legibility-smoke"),
+    (
+        "README.md",
+        "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm",
+    ),
+    ("documentation/theme.md", "37 px font size"),
+    ("documentation/theme.md", "51 px line height"),
+    ("documentation/theme.md", "21 px automatic cell width"),
+    ("documentation/theme.md", "Control/Super `+`"),
+    ("documentation/theme.md", "Control/Super `0`"),
+    (
+        "documentation/theme.md",
+        "`cargo run -- --runtime-text-zoom-smoke`",
+    ),
+    (
+        "documentation/theme.md",
+        "`cargo run -- --theme-legibility-smoke`",
+    ),
+    (
+        "documentation/theme.md",
+        "`cargo run -- --theme-preview-snapshot",
+    ),
+    ("documentation/compatibility.md", "37/21/51 px"),
+    ("documentation/compatibility.md", "43/24/59 px"),
+    ("documentation/compatibility.md", "gromaq-ghostty"),
+];
+
 #[test]
 fn project_remains_native_rust_without_frontend_runtime_files() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -133,6 +165,21 @@ fn ci_workflow_runs_required_root_checks() {
             workflow.contains(command),
             "{} must run `{command}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
+}
+
+#[test]
+fn public_docs_keep_default_visual_contract_and_proof_commands() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    for (relative, marker) in REQUIRED_VISUAL_CONTRACT_DOC_MARKERS {
+        let path = root.join(relative);
+        let source = fs::read_to_string(&path).unwrap();
+        assert!(
+            source.contains(marker),
+            "{} must document `{marker}` for the default visual contract",
+            relative_path(root, &path)
         );
     }
 }
