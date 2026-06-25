@@ -20,6 +20,7 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
     config.theme.foreground = "#e8e2d6".to_owned();
     config.theme.cursor = "#f4c06a".to_owned();
     config.theme.surface_padding_px = 18;
+    config.theme.cell_spacing_px = 2;
     config.theme.dim_opacity = 0.42;
 
     app.apply_reloadable_gromaq_config(&config).unwrap();
@@ -43,6 +44,7 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
         [244, 192, 106, 255]
     );
     assert_eq!(app.renderer().config().surface_padding_px, 18);
+    assert_eq!(app.renderer().config().cell_spacing_px, 2);
     assert_eq!(app.renderer().config().dim_opacity, 0.42);
     assert_eq!(
         (

@@ -20,10 +20,13 @@ fn expected_grid_for_window(
     height_px: u32,
     renderer_config: &RendererConfig,
 ) -> (u16, u16) {
-    let cols = width_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2)
-        / u32::from(renderer_config.cell_width_px);
-    let rows = height_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2)
-        / u32::from(renderer_config.line_height_px);
+    let width = width_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2);
+    let height = height_px.saturating_sub(u32::from(renderer_config.surface_padding_px) * 2);
+    let spacing = u32::from(renderer_config.cell_spacing_px);
+    let cols =
+        width.saturating_add(spacing) / (u32::from(renderer_config.cell_width_px) + spacing).max(1);
+    let rows = height.saturating_add(spacing)
+        / (u32::from(renderer_config.line_height_px) + spacing).max(1);
     (
         u16::try_from(cols.max(1)).unwrap(),
         u16::try_from(rows.max(1)).unwrap(),

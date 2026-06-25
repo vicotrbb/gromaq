@@ -17,6 +17,7 @@ struct RuntimeConfigReloadSmokeReport {
     font_size_px: u16,
     cell_width_px: u16,
     line_height_px: u16,
+    cell_spacing_px: u16,
     shell_program: String,
 }
 
@@ -25,7 +26,7 @@ pub(super) fn runtime_config_reload_smoke_exit() -> CliExit {
         Ok(report) => CliExit {
             code: 0,
             stdout: format!(
-                "runtime config reload smoke: ok\nunchanged poll changed: {}\nchanged poll changed: {}\nterminal: {}x{}\nscrollback lines: {}\ntarget fps: {}\ndirty-region rendering: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nshell: {}\n",
+                "runtime config reload smoke: ok\nunchanged poll changed: {}\nchanged poll changed: {}\nterminal: {}x{}\nscrollback lines: {}\ntarget fps: {}\ndirty-region rendering: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\ncell spacing px: {}\nshell: {}\n",
                 report.unchanged_poll_changed,
                 report.changed_poll_changed,
                 report.cols,
@@ -36,6 +37,7 @@ pub(super) fn runtime_config_reload_smoke_exit() -> CliExit {
                 report.font_size_px,
                 report.cell_width_px,
                 report.line_height_px,
+                report.cell_spacing_px,
                 report.shell_program,
             ),
             stderr: String::new(),
@@ -93,6 +95,9 @@ fn run_runtime_config_reload_smoke_with_path(
         [font]
         size_px = 18.0
 
+        [theme]
+        cell_spacing_px = 2
+
         [shell]
         program = "/bin/sh"
         args = ["-l"]
@@ -112,7 +117,7 @@ fn run_runtime_config_reload_smoke_with_path(
     let runtime_config = app.runtime().config();
     let app_config = app.lifecycle().config();
     let renderer_config = app.renderer().config();
-    if grid.cols != 125 || grid.rows != 15 {
+    if grid.cols != 104 || grid.rows != 14 {
         return Err(format!(
             "terminal dimensions did not fit reloaded renderer metrics, got {}x{}",
             grid.cols, grid.rows
@@ -151,6 +156,12 @@ fn run_runtime_config_reload_smoke_with_path(
             renderer_config.line_height_px
         ));
     }
+    if renderer_config.cell_spacing_px != 2 {
+        return Err(format!(
+            "renderer cell spacing did not reload, got {}",
+            renderer_config.cell_spacing_px
+        ));
+    }
     if runtime_config.shell.program != "/bin/sh" {
         return Err(format!(
             "shell program did not reload, got {}",
@@ -169,6 +180,7 @@ fn run_runtime_config_reload_smoke_with_path(
         font_size_px: renderer_config.font_size_px,
         cell_width_px: renderer_config.cell_width_px,
         line_height_px: renderer_config.line_height_px,
+        cell_spacing_px: renderer_config.cell_spacing_px,
         shell_program: runtime_config.shell.program.display().to_string(),
     })
 }
