@@ -15,6 +15,8 @@ pub use presets::{
 
 /// Maximum supported visual surface padding in physical pixels.
 pub const MAX_SURFACE_PADDING_PX: u16 = 512;
+/// Maximum supported visual gap between adjacent cells in physical pixels.
+pub const MAX_CELL_SPACING_PX: u16 = 32;
 /// Minimum useful opacity for dim text.
 pub const MIN_DIM_OPACITY: f32 = 0.1;
 /// Maximum useful opacity for dim text.
@@ -63,6 +65,8 @@ pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
 ];
 /// Built-in visual breathing room around terminal cells.
 pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
+/// Built-in gap between adjacent terminal cells.
+pub const DEFAULT_CELL_SPACING_PX: u16 = 0;
 /// Built-in opacity for SGR dim text.
 pub const DEFAULT_DIM_OPACITY: f32 = 0.68;
 /// Name of the built-in default dark theme.
@@ -101,6 +105,8 @@ pub struct ThemeSettings {
     pub ansi: Vec<String>,
     /// Empty space around rendered terminal cells in physical pixels.
     pub surface_padding_px: u16,
+    /// Optional visual gap between adjacent terminal cells in physical pixels.
+    pub cell_spacing_px: u16,
     /// Opacity multiplier for SGR dim text.
     pub dim_opacity: f32,
 }
@@ -123,6 +129,12 @@ impl ThemeSettings {
             return Err(GromaqError::InvalidThemePadding {
                 maximum: MAX_SURFACE_PADDING_PX,
                 actual: self.surface_padding_px,
+            });
+        }
+        if self.cell_spacing_px > MAX_CELL_SPACING_PX {
+            return Err(GromaqError::InvalidThemeCellSpacing {
+                maximum: MAX_CELL_SPACING_PX,
+                actual: self.cell_spacing_px,
             });
         }
         if !self.dim_opacity.is_finite()
@@ -204,6 +216,9 @@ impl<'de> Deserialize<'de> for ThemeSettings {
         if let Some(surface_padding_px) = raw.surface_padding_px {
             settings.surface_padding_px = surface_padding_px;
         }
+        if let Some(cell_spacing_px) = raw.cell_spacing_px {
+            settings.cell_spacing_px = cell_spacing_px;
+        }
         if let Some(dim_opacity) = raw.dim_opacity {
             settings.dim_opacity = dim_opacity;
         }
@@ -223,5 +238,6 @@ struct RawThemeSettings {
     cursor_blinking: Option<bool>,
     ansi: Option<Vec<String>>,
     surface_padding_px: Option<u16>,
+    cell_spacing_px: Option<u16>,
     dim_opacity: Option<f32>,
 }

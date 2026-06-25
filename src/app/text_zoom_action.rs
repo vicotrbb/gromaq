@@ -26,6 +26,7 @@ impl NativeTerminalApp {
             renderer_config.cell_width_px,
             renderer_config.line_height_px,
             renderer_config.surface_padding_px,
+            renderer_config.cell_spacing_px,
         )
         .ok_or_else(|| {
             NativeAppError::Runtime("native renderer cell dimensions must be non-zero".to_owned())

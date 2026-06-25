@@ -1,7 +1,8 @@
 use crate::cell::Style;
 use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY};
 use crate::renderer::{
-    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame, RenderPlan,
+    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame,
+    PreparedSurfaceGlyphFrameConfig, RenderPlan,
 };
 use crate::terminal::{CursorShape, CursorSnapshot};
 
@@ -29,11 +30,14 @@ fn prepared_surface_glyph_frame_builds_cursor_only_blank_frame() {
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &[],
-        18,
-        22,
-        [0.0, 0.0, 0.0, 1.0],
-        [244, 192, 106, 255],
-        12,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: 18,
+            line_height_px: 22,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+            cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 12,
+            cell_spacing_px: 0,
+        },
     )
     .unwrap();
     let frame = prepared.as_surface_glyph_frame();
@@ -57,9 +61,9 @@ fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
     };
     let plan = RenderPlan {
         viewport_cols: 3,
-        viewport_rows: 1,
+        viewport_rows: 2,
         cursor: CursorSnapshot {
-            row: 0,
+            row: 1,
             col: 0,
             visible: false,
             shape: CursorShape::Block,
@@ -72,7 +76,7 @@ fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
         backgrounds: Vec::new(),
         decorations: Vec::new(),
         glyphs: vec![PlannedGlyph {
-            row: 0,
+            row: 1,
             col: 1,
             text: "i".to_owned(),
             ch: 'i',
@@ -94,22 +98,25 @@ fn prepared_surface_glyph_frame_uses_configured_cell_metrics_for_geometry() {
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &glyphs,
-        18,
-        22,
-        [0.0, 0.0, 0.0, 1.0],
-        [244, 192, 106, 255],
-        4,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: 18,
+            line_height_px: 22,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+            cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 4,
+            cell_spacing_px: 3,
+        },
     )
     .unwrap();
     let frame = prepared.as_surface_glyph_frame();
     let glyph_quad = &frame.batch.quads[0];
 
-    assert_eq!(frame.width, (3 * 18) + (2 * 4));
-    assert_eq!(frame.height, 22 + (2 * 4));
+    assert_eq!(frame.width, (3 * 18) + (2 * 3) + (2 * 4));
+    assert_eq!(frame.height, (2 * 22) + 3 + (2 * 4));
     assert_eq!(frame.atlas.width, 18);
     assert_eq!(frame.atlas.height, 22);
-    assert_eq!(glyph_quad.vertices[0].position, [22.0, 4.0]);
-    assert_eq!(glyph_quad.vertices[2].position, [40.0, 26.0]);
+    assert_eq!(glyph_quad.vertices[0].position, [25.0, 29.0]);
+    assert_eq!(glyph_quad.vertices[2].position, [43.0, 51.0]);
 }
 
 #[test]
@@ -157,11 +164,14 @@ fn prepared_surface_glyph_frame_preserves_shaped_glyph_placement_in_atlas() {
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &glyphs,
-        8,
-        8,
-        [0.0, 0.0, 0.0, 1.0],
-        [244, 192, 106, 255],
-        0,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: 8,
+            line_height_px: 8,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+            cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 0,
+            cell_spacing_px: 0,
+        },
     )
     .unwrap();
     let frame = prepared.as_surface_glyph_frame();

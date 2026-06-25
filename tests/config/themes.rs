@@ -116,6 +116,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
             "#00000d", "#00000e", "#00000f", "#000010",
         ]
         surface_padding_px = 18
+        cell_spacing_px = 2
         "##,
     )
     .unwrap();
@@ -131,6 +132,7 @@ fn theme_toml_config_accepts_hex_rgb_colors() {
     assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [0, 0, 1]);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [0, 0, 16]);
     assert_eq!(config.theme.surface_padding_px, 18);
+    assert_eq!(config.theme.cell_spacing_px, 2);
 }
 
 #[test]
@@ -220,6 +222,7 @@ fn theme_toml_config_preserves_explicit_overrides_on_named_preset() {
         background = "#101820"
         cursor_blinking = false
         surface_padding_px = 20
+        cell_spacing_px = 3
         "##,
     )
     .unwrap();
@@ -229,6 +232,7 @@ fn theme_toml_config_preserves_explicit_overrides_on_named_preset() {
     assert_eq!(config.theme.foreground_rgb8().unwrap(), [243, 246, 251]);
     assert!(!config.theme.cursor_blinking);
     assert_eq!(config.theme.surface_padding_px, 20);
+    assert_eq!(config.theme.cell_spacing_px, 3);
 }
 
 #[test]
@@ -291,6 +295,25 @@ fn invalid_theme_surface_padding_is_rejected() {
         GromaqError::InvalidThemePadding {
             maximum: 512,
             actual: 513,
+        }
+    ));
+}
+
+#[test]
+fn invalid_theme_cell_spacing_is_rejected() {
+    let error = GromaqConfig::from_toml_str(
+        r#"
+        [theme]
+        cell_spacing_px = 33
+        "#,
+    )
+    .unwrap_err();
+
+    assert!(matches!(
+        error,
+        GromaqError::InvalidThemeCellSpacing {
+            maximum: 32,
+            actual: 33,
         }
     ));
 }

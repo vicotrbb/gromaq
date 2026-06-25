@@ -8,7 +8,8 @@ use super::{
 };
 use crate::renderer::prepared_frame_atlas::{atlas_columns_for_glyphs, transparent_glyph_atlas};
 use crate::renderer::prepared_frame_geometry::{
-    checked_surface_frame_pixel_dimension, translate_background_batch, translate_glyph_batch,
+    apply_background_cell_spacing, apply_glyph_cell_spacing, checked_surface_frame_pixel_dimension,
+    translate_background_batch, translate_glyph_batch,
 };
 use crate::renderer::prepared_frame_preview::{PreparedFramePreview, preview_surface_glyph_frame};
 
@@ -46,16 +47,29 @@ pub struct PreparedSurfaceGlyphFrame {
     clear_color: [f64; 4],
 }
 
+/// Visual metrics and colors used to prepare a surface glyph frame.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PreparedSurfaceGlyphFrameConfig {
+    /// Terminal column width in pixels.
+    pub cell_width_px: u16,
+    /// Terminal row height in pixels.
+    pub line_height_px: u16,
+    /// Clear color used before drawing glyphs.
+    pub clear_color: [f64; 4],
+    /// Cursor color in RGBA8.
+    pub cursor_color_rgba8: [u8; 4],
+    /// Empty space around rendered terminal cells in physical pixels.
+    pub surface_padding_px: u16,
+    /// Visual gap between adjacent rendered terminal cells in physical pixels.
+    pub cell_spacing_px: u16,
+}
+
 impl PreparedSurfaceGlyphFrame {
     /// Build an owned presentable glyph frame from a render plan and rasterized glyph bitmaps.
     pub fn from_render_plan(
         plan: &RenderPlan,
         glyphs: &[GlyphBitmap],
-        cell_width_px: u16,
-        line_height_px: u16,
-        clear_color: [f64; 4],
-        cursor_color_rgba8: [u8; 4],
-        surface_padding_px: u16,
+        config: PreparedSurfaceGlyphFrameConfig,
     ) -> std::result::Result<Self, SurfaceFrameError> {
         if !plan.glyphs.is_empty() && glyphs.is_empty() {
             return Err(SurfaceFrameError::InvalidFrame(
@@ -74,8 +88,8 @@ impl PreparedSurfaceGlyphFrame {
             }
         }
 
-        let cell_width_px = u32::from(cell_width_px);
-        let cell_height_px = u32::from(line_height_px);
+        let cell_width_px = u32::from(config.cell_width_px);
+        let cell_height_px = u32::from(config.line_height_px);
         let slot_width = glyphs
             .iter()
             .map(|glyph| glyph.terminal_slot_width(cell_width_px))
@@ -97,13 +111,15 @@ impl PreparedSurfaceGlyphFrame {
             "surface glyph frame width",
             plan.viewport_cols,
             cell_width_px,
-            surface_padding_px,
+            config.surface_padding_px,
+            config.cell_spacing_px,
         )?;
         let height = checked_surface_frame_pixel_dimension(
             "surface glyph frame height",
             plan.viewport_rows,
             cell_height_px,
-            surface_padding_px,
+            config.surface_padding_px,
+            config.cell_spacing_px,
         )?;
         let padded = glyphs
             .iter()
@@ -151,14 +167,18 @@ impl PreparedSurfaceGlyphFrame {
         let mut cursor_batch = CursorQuadPlanner::new(CursorQuadConfig {
             cell_width_px,
             cell_height_px,
-            color_rgba8: cursor_color_rgba8,
+            color_rgba8: config.cursor_color_rgba8,
         })
         .plan(plan)
         .map_err(|error| SurfaceFrameError::InvalidFrame(error.to_string()))?;
-        translate_glyph_batch(&mut batch, surface_padding_px);
-        translate_background_batch(&mut background_batch, surface_padding_px);
-        translate_background_batch(&mut decoration_batch, surface_padding_px);
-        translate_background_batch(&mut cursor_batch, surface_padding_px);
+        apply_glyph_cell_spacing(&mut batch, cell_width_px, config.cell_spacing_px);
+        apply_background_cell_spacing(&mut background_batch, config.cell_spacing_px);
+        apply_background_cell_spacing(&mut decoration_batch, config.cell_spacing_px);
+        apply_background_cell_spacing(&mut cursor_batch, config.cell_spacing_px);
+        translate_glyph_batch(&mut batch, config.surface_padding_px);
+        translate_background_batch(&mut background_batch, config.surface_padding_px);
+        translate_background_batch(&mut decoration_batch, config.surface_padding_px);
+        translate_background_batch(&mut cursor_batch, config.surface_padding_px);
         Ok(Self {
             atlas,
             background_batch,
@@ -167,7 +187,7 @@ impl PreparedSurfaceGlyphFrame {
             cursor_batch,
             width,
             height,
-            clear_color,
+            clear_color: config.clear_color,
         })
     }
 

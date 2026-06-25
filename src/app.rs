@@ -47,8 +47,8 @@ pub use lifecycle::{
     NativeAppRunReport,
 };
 pub use native_input::{
-    NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
-    NativeTextZoomAction, NativeWindowMouseInput, is_native_copy_shortcut,
+    NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeRenderedGridMetrics,
+    NativeResizeGridMapper, NativeTextZoomAction, NativeWindowMouseInput, is_native_copy_shortcut,
     is_native_paste_shortcut, native_text_zoom_action, native_wheel_text_zoom_action,
 };
 use native_input::{native_mouse_button, wheel_mouse_button};

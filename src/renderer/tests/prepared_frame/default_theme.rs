@@ -4,7 +4,8 @@ use crate::config::{
     DEFAULT_SURFACE_PADDING_PX,
 };
 use crate::renderer::{
-    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame, RenderPlan, RendererConfig,
+    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame,
+    PreparedSurfaceGlyphFrameConfig, RenderPlan, RendererConfig,
 };
 use crate::terminal::{CursorShape, CursorSnapshot};
 
@@ -59,11 +60,14 @@ fn default_theme_prepared_frame_preview_keeps_text_padded_legible_and_unclipped(
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &glyphs,
-        renderer_config.cell_width_px,
-        renderer_config.line_height_px,
-        renderer_config.clear_color,
-        renderer_config.cursor_color_rgba8,
-        renderer_config.surface_padding_px,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: renderer_config.cell_width_px,
+            line_height_px: renderer_config.line_height_px,
+            clear_color: renderer_config.clear_color,
+            cursor_color_rgba8: renderer_config.cursor_color_rgba8,
+            surface_padding_px: renderer_config.surface_padding_px,
+            cell_spacing_px: renderer_config.cell_spacing_px,
+        },
     )
     .unwrap();
     let preview = prepared.preview_rgba8().unwrap();

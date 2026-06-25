@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use gromaq::font::RasterizedGlyphCache;
-use gromaq::renderer::{GpuRenderer, PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
+use gromaq::renderer::{
+    GpuRenderer, PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig, RendererConfig,
+    WgpuRenderer,
+};
 use gromaq::{GromaqConfig, Terminal, TerminalConfig};
 
 fn system_mono_font() -> PathBuf {
@@ -108,6 +111,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.theme.selection = "#26364f".to_owned();
     config.theme.ansi[1] = "#010203".to_owned();
     config.theme.surface_padding_px = 18;
+    config.theme.cell_spacing_px = 2;
     config.theme.dim_opacity = 0.42;
 
     let renderer_config = RendererConfig::from_gromaq_config(&config).unwrap();
@@ -126,6 +130,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
         [38, 54, 79, 255]
     );
     assert_eq!(renderer_config.surface_padding_px, 18);
+    assert_eq!(renderer_config.cell_spacing_px, 2);
     assert_eq!(renderer_config.dim_opacity, 0.42);
 }
 
@@ -164,6 +169,10 @@ fn renderer_default_theme_matches_default_gromaq_config() {
     assert_eq!(
         default_renderer.surface_padding_px,
         mapped_renderer.surface_padding_px
+    );
+    assert_eq!(
+        default_renderer.cell_spacing_px,
+        mapped_renderer.cell_spacing_px
     );
     assert_eq!(default_renderer.dim_opacity, mapped_renderer.dim_opacity);
     assert_eq!(
@@ -256,11 +265,14 @@ fn prepared_surface_glyph_frame_builds_from_render_plan_and_rasterized_glyphs() 
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
-        renderer.config().cell_width_px,
-        renderer.config().line_height_px,
-        [0.0, 0.0, 0.0, 1.0],
-        [244, 192, 106, 255],
-        12,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: renderer.config().cell_width_px,
+            line_height_px: renderer.config().line_height_px,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+            cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 12,
+            cell_spacing_px: 0,
+        },
     )
     .unwrap();
     let frame = prepared.as_surface_glyph_frame();

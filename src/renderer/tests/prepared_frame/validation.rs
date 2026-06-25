@@ -1,7 +1,8 @@
 use crate::cell::Style;
 use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY};
 use crate::renderer::{
-    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame, RenderPlan, SurfaceFrameError,
+    GlyphBitmap, GlyphEntry, PlannedGlyph, PreparedSurfaceGlyphFrame,
+    PreparedSurfaceGlyphFrameConfig, RenderPlan, SurfaceFrameError,
 };
 use crate::terminal::{CursorShape, CursorSnapshot};
 
@@ -50,11 +51,14 @@ fn prepared_surface_glyph_frame_rejects_oversized_glyph_bitmap_before_padding() 
     let error = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &glyphs,
-        14,
-        14,
-        [0.0, 0.0, 0.0, 1.0],
-        [244, 192, 106, 255],
-        0,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: 14,
+            line_height_px: 14,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+            cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 0,
+            cell_spacing_px: 0,
+        },
     )
     .unwrap_err();
 

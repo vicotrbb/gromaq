@@ -4,8 +4,8 @@ use tracing::trace;
 use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
 use crate::app::native_input::{
-    NativeMouseGridMapper, NativeWindowMouseInput, ScrollbackKeyDirection, clamp_u32_to_u16,
-    native_scrollback_key_direction,
+    NativeMouseGridMapper, NativeRenderedGridMetrics, NativeWindowMouseInput,
+    ScrollbackKeyDirection, clamp_u32_to_u16, native_scrollback_key_direction,
 };
 use crate::app::perf::add_usize_counter;
 use crate::app::{NativeAppError, NativePtySessionIo};
@@ -131,6 +131,7 @@ where
             cell_width_px: inferred_cell_size_px(window_width_px, self.terminal.dump_grid().cols),
             line_height_px: inferred_cell_size_px(window_height_px, self.terminal.dump_grid().rows),
             surface_padding_px: 0,
+            cell_spacing_px: 0,
             kind,
             button,
             modifiers: ModifiersState::empty(),
@@ -146,11 +147,14 @@ where
         let Some(mapper) = NativeMouseGridMapper::new(
             input.window_width_px,
             input.window_height_px,
-            input.cell_width_px,
-            input.line_height_px,
-            input.surface_padding_px,
-            grid.cols,
-            grid.rows,
+            NativeRenderedGridMetrics {
+                cell_width_px: input.cell_width_px,
+                line_height_px: input.line_height_px,
+                surface_padding_px: input.surface_padding_px,
+                cell_spacing_px: input.cell_spacing_px,
+                cols: grid.cols,
+                rows: grid.rows,
+            },
         ) else {
             return Ok(false);
         };

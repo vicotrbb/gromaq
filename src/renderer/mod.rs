@@ -1,8 +1,9 @@
 //! GPU renderer boundary.
 
 use crate::config::{
-    DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_RGB8, DEFAULT_CURSOR_RGB8, DEFAULT_DIM_OPACITY,
-    DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION_RGB8, DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
+    DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_RGB8, DEFAULT_CELL_SPACING_PX,
+    DEFAULT_CURSOR_RGB8, DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION_RGB8,
+    DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
 };
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
@@ -34,7 +35,9 @@ pub use plan::{
     PlannedBackground, PlannedGlyph, PlannedTextDecoration, RenderPlan, RenderPlanner,
     TextDecorationKind,
 };
-pub use prepared_frame::{PreparedSurfaceGlyphFrame, SurfaceGlyphFrame};
+pub use prepared_frame::{
+    PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig, SurfaceGlyphFrame,
+};
 pub use prepared_frame_preview::PreparedFramePreview;
 pub use quads::{
     BackgroundQuad, BackgroundQuadBatch, BackgroundQuadConfig, BackgroundQuadError,
@@ -78,6 +81,8 @@ pub struct RendererConfig {
     pub selection_background_rgba8: [u8; 4],
     /// Empty space around rendered terminal cells in physical pixels.
     pub surface_padding_px: u16,
+    /// Visual gap between adjacent rendered terminal cells in physical pixels.
+    pub cell_spacing_px: u16,
     /// Opacity multiplier for SGR dim text.
     pub dim_opacity: f32,
 }
@@ -96,6 +101,7 @@ impl Default for RendererConfig {
             cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8),
             selection_background_rgba8: rgb8_to_rgba8(DEFAULT_SELECTION_RGB8),
             surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+            cell_spacing_px: DEFAULT_CELL_SPACING_PX,
             dim_opacity: DEFAULT_DIM_OPACITY,
         }
     }
@@ -117,6 +123,7 @@ impl RendererConfig {
             cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),
             selection_background_rgba8: rgb8_to_rgba8(config.theme.selection_rgb8()?),
             surface_padding_px: config.theme.surface_padding_px,
+            cell_spacing_px: config.theme.cell_spacing_px,
             dim_opacity: config.theme.dim_opacity,
         })
     }

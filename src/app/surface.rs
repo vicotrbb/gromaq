@@ -3,7 +3,8 @@ use std::path::Path;
 
 use crate::font::RasterizedGlyphCache;
 use crate::renderer::{
-    PreparedSurfaceGlyphFrame, SurfaceBackend, SurfaceFrameBackend, SurfaceFrameError, WgpuRenderer,
+    PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig, SurfaceBackend,
+    SurfaceFrameBackend, SurfaceFrameError, WgpuRenderer,
 };
 
 use super::snapshot::prepared_frame_ppm_bytes;
@@ -75,11 +76,14 @@ where
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
-        renderer.config().cell_width_px,
-        renderer.config().line_height_px,
-        clear_color,
-        renderer.config().cursor_color_rgba8,
-        renderer.config().surface_padding_px,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: renderer.config().cell_width_px,
+            line_height_px: renderer.config().line_height_px,
+            clear_color,
+            cursor_color_rgba8: renderer.config().cursor_color_rgba8,
+            surface_padding_px: renderer.config().surface_padding_px,
+            cell_spacing_px: renderer.config().cell_spacing_px,
+        },
     )?;
     let frame = prepared.as_surface_glyph_frame();
     let snapshot = match snapshot_path {

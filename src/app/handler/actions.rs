@@ -173,6 +173,7 @@ impl NativeTerminalApp {
                 cell_width_px: self.renderer.config().cell_width_px,
                 line_height_px: self.renderer.config().line_height_px,
                 surface_padding_px: self.renderer.config().surface_padding_px,
+                cell_spacing_px: self.renderer.config().cell_spacing_px,
                 kind,
                 button,
                 modifiers: self.modifiers,

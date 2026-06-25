@@ -3,9 +3,9 @@
 use serde::{Deserialize, Serialize};
 
 use super::{
-    CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_BACKGROUND, DEFAULT_CURSOR,
-    DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND, DEFAULT_SELECTION, DEFAULT_SURFACE_PADDING_PX,
-    ThemeSettings,
+    CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_BACKGROUND, DEFAULT_CELL_SPACING_PX,
+    DEFAULT_CURSOR, DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND, DEFAULT_SELECTION,
+    DEFAULT_SURFACE_PADDING_PX, ThemeSettings,
 };
 
 /// Name of the original polished dark terminal theme.
@@ -49,6 +49,7 @@ impl ThemeSettings {
                 .map(str::to_owned)
                 .collect(),
                 surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+                cell_spacing_px: DEFAULT_CELL_SPACING_PX,
                 dim_opacity: 0.66,
             },
             ThemePresetSetting::GromaqGraphite => Self {
@@ -68,6 +69,7 @@ impl ThemeSettings {
                 .map(str::to_owned)
                 .collect(),
                 surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+                cell_spacing_px: DEFAULT_CELL_SPACING_PX,
                 dim_opacity: 0.7,
             },
             ThemePresetSetting::GromaqGhostty => Self {
@@ -83,6 +85,7 @@ impl ThemeSettings {
                     .map(|color| (*color).to_owned())
                     .collect(),
                 surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+                cell_spacing_px: DEFAULT_CELL_SPACING_PX,
                 dim_opacity: DEFAULT_DIM_OPACITY,
             },
         }

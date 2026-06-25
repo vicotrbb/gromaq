@@ -1,7 +1,7 @@
 use gromaq::app::{
-    NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeResizeGridMapper,
-    NativeTextZoomAction, is_native_copy_shortcut, is_native_paste_shortcut,
-    native_text_zoom_action, native_wheel_text_zoom_action,
+    NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeRenderedGridMetrics,
+    NativeResizeGridMapper, NativeTextZoomAction, is_native_copy_shortcut,
+    is_native_paste_shortcut, native_text_zoom_action, native_wheel_text_zoom_action,
 };
 use gromaq::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use winit::dpi::PhysicalPosition;
@@ -10,7 +10,7 @@ use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 #[test]
 fn native_mouse_grid_mapper_converts_window_pixels_to_terminal_cells() {
-    let mapper = NativeMouseGridMapper::new(800, 400, 10, 20, 0, 80, 20).unwrap();
+    let mapper = NativeMouseGridMapper::new(800, 400, metrics(10, 20, 0, 0, 80, 20)).unwrap();
 
     assert_eq!(
         mapper.mouse_event_at(25.0, 39.0, MouseEventKind::Press, MouseButton::Left),
@@ -64,12 +64,15 @@ fn native_mouse_grid_mapper_converts_window_pixels_to_terminal_cells() {
         ),
         None
     );
-    assert_eq!(NativeMouseGridMapper::new(0, 400, 10, 20, 0, 80, 20), None);
+    assert_eq!(
+        NativeMouseGridMapper::new(0, 400, metrics(10, 20, 0, 0, 80, 20)),
+        None
+    );
 }
 
 #[test]
 fn native_mouse_grid_mapper_uses_rendered_padding_and_cell_metrics() {
-    let mapper = NativeMouseGridMapper::new(1280, 800, 16, 22, 16, 78, 34).unwrap();
+    let mapper = NativeMouseGridMapper::new(1280, 800, metrics(16, 22, 16, 0, 78, 34)).unwrap();
 
     assert_eq!(
         mapper.mouse_event_at(16.0, 16.0, MouseEventKind::Press, MouseButton::Left),
@@ -110,6 +113,43 @@ fn native_mouse_grid_mapper_uses_rendered_padding_and_cell_metrics() {
         mapper.mouse_event_at(16.0, 764.0, MouseEventKind::Press, MouseButton::Left),
         None
     );
+}
+
+#[test]
+fn native_mouse_grid_mapper_accounts_for_cell_spacing() {
+    let mapper = NativeMouseGridMapper::new(120, 120, metrics(10, 20, 2, 3, 4, 3)).unwrap();
+
+    assert_eq!(
+        mapper.mouse_event_at(15.0, 26.0, MouseEventKind::Press, MouseButton::Left),
+        Some(MouseEvent::new(
+            MouseEventKind::Press,
+            MouseButton::Left,
+            1,
+            1
+        ))
+    );
+    assert_eq!(
+        mapper.mouse_event_at(50.0, 72.0, MouseEventKind::Press, MouseButton::Left),
+        None
+    );
+}
+
+fn metrics(
+    cell_width_px: u16,
+    line_height_px: u16,
+    surface_padding_px: u16,
+    cell_spacing_px: u16,
+    cols: u16,
+    rows: u16,
+) -> NativeRenderedGridMetrics {
+    NativeRenderedGridMetrics {
+        cell_width_px,
+        line_height_px,
+        surface_padding_px,
+        cell_spacing_px,
+        cols,
+        rows,
+    }
 }
 
 #[test]
@@ -185,7 +225,7 @@ fn native_mouse_button_tracker_reports_active_drag_button_priority() {
 
 #[test]
 fn native_resize_grid_mapper_fits_cells_inside_window_padding() {
-    let mapper = NativeResizeGridMapper::new(14, 18, 14).unwrap();
+    let mapper = NativeResizeGridMapper::new(14, 18, 14, 0).unwrap();
 
     assert_eq!(
         mapper.resize_for_window(1280, 800),
@@ -215,7 +255,22 @@ fn native_resize_grid_mapper_fits_cells_inside_window_padding() {
         })
     );
     assert_eq!(mapper.resize_for_window(0, 400), None);
-    assert_eq!(NativeResizeGridMapper::new(0, 18, 14), None);
+    assert_eq!(NativeResizeGridMapper::new(0, 18, 14, 0), None);
+}
+
+#[test]
+fn native_resize_grid_mapper_fits_spaced_cells_inside_window_padding() {
+    let mapper = NativeResizeGridMapper::new(14, 18, 14, 2).unwrap();
+
+    assert_eq!(
+        mapper.resize_for_window(1280, 800),
+        Some(NativePtyResize {
+            cols: 78,
+            rows: 38,
+            pixel_width: 1280,
+            pixel_height: 800,
+        })
+    );
 }
 
 #[test]

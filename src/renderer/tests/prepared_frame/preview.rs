@@ -1,7 +1,8 @@
 use crate::cell::Style;
 use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY};
 use crate::renderer::{
-    GlyphBitmap, GlyphEntry, PlannedBackground, PlannedGlyph, PreparedSurfaceGlyphFrame, RenderPlan,
+    GlyphBitmap, GlyphEntry, PlannedBackground, PlannedGlyph, PreparedSurfaceGlyphFrame,
+    PreparedSurfaceGlyphFrameConfig, RenderPlan,
 };
 use crate::terminal::{CursorShape, CursorSnapshot};
 
@@ -57,11 +58,14 @@ fn prepared_surface_glyph_frame_preview_renders_background_glyph_and_cursor_pixe
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &glyphs,
-        2,
-        2,
-        [0.0, 0.0, 0.0, 1.0],
-        [244, 192, 106, 255],
-        0,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: 2,
+            line_height_px: 2,
+            clear_color: [0.0, 0.0, 0.0, 1.0],
+            cursor_color_rgba8: [244, 192, 106, 255],
+            surface_padding_px: 0,
+            cell_spacing_px: 0,
+        },
     )
     .unwrap();
 

@@ -21,11 +21,24 @@ pub use shortcuts::{
 pub struct NativeMouseGridMapper {
     window_width_px: u32,
     window_height_px: u32,
-    cell_width_px: u16,
-    line_height_px: u16,
-    surface_padding_px: u16,
-    cols: u16,
-    rows: u16,
+    metrics: NativeRenderedGridMetrics,
+}
+
+/// Rendered terminal grid metrics used by native input hit testing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NativeRenderedGridMetrics {
+    /// Rendered terminal cell width in physical pixels.
+    pub cell_width_px: u16,
+    /// Rendered terminal row height in physical pixels.
+    pub line_height_px: u16,
+    /// Empty space around rendered terminal cells in physical pixels.
+    pub surface_padding_px: u16,
+    /// Visual gap between adjacent rendered terminal cells in physical pixels.
+    pub cell_spacing_px: u16,
+    /// Visible terminal columns.
+    pub cols: u16,
+    /// Visible terminal rows.
+    pub rows: u16,
 }
 
 /// Native window mouse input before terminal grid mapping.
@@ -45,6 +58,8 @@ pub struct NativeWindowMouseInput {
     pub line_height_px: u16,
     /// Empty space around rendered terminal cells in physical pixels.
     pub surface_padding_px: u16,
+    /// Visual gap between adjacent rendered terminal cells in physical pixels.
+    pub cell_spacing_px: u16,
     /// Mouse event kind.
     pub kind: MouseEventKind,
     /// Mouse button identity.
@@ -91,29 +106,21 @@ impl NativeMouseGridMapper {
     pub fn new(
         window_width_px: u32,
         window_height_px: u32,
-        cell_width_px: u16,
-        line_height_px: u16,
-        surface_padding_px: u16,
-        cols: u16,
-        rows: u16,
+        metrics: NativeRenderedGridMetrics,
     ) -> Option<Self> {
         if window_width_px == 0
             || window_height_px == 0
-            || cell_width_px == 0
-            || line_height_px == 0
-            || cols == 0
-            || rows == 0
+            || metrics.cell_width_px == 0
+            || metrics.line_height_px == 0
+            || metrics.cols == 0
+            || metrics.rows == 0
         {
             return None;
         }
         Some(Self {
             window_width_px,
             window_height_px,
-            cell_width_px,
-            line_height_px,
-            surface_padding_px,
-            cols,
-            rows,
+            metrics,
         })
     }
 
@@ -134,18 +141,24 @@ impl NativeMouseGridMapper {
         {
             return None;
         }
-        let grid_x = x - f64::from(self.surface_padding_px);
-        let grid_y = y - f64::from(self.surface_padding_px);
+        let grid_x = x - f64::from(self.metrics.surface_padding_px);
+        let grid_y = y - f64::from(self.metrics.surface_padding_px);
         if grid_x < 0.0 || grid_y < 0.0 {
             return None;
         }
-        let grid_width_px = f64::from(self.cell_width_px) * f64::from(self.cols);
-        let grid_height_px = f64::from(self.line_height_px) * f64::from(self.rows);
+        let cell_pitch_x = f64::from(self.metrics.cell_width_px + self.metrics.cell_spacing_px);
+        let cell_pitch_y = f64::from(self.metrics.line_height_px + self.metrics.cell_spacing_px);
+        let grid_width_px = f64::from(self.metrics.cell_width_px) * f64::from(self.metrics.cols)
+            + f64::from(self.metrics.cell_spacing_px)
+                * f64::from(self.metrics.cols.saturating_sub(1));
+        let grid_height_px = f64::from(self.metrics.line_height_px) * f64::from(self.metrics.rows)
+            + f64::from(self.metrics.cell_spacing_px)
+                * f64::from(self.metrics.rows.saturating_sub(1));
         if grid_x >= grid_width_px || grid_y >= grid_height_px {
             return None;
         }
-        let col = (grid_x / f64::from(self.cell_width_px)) as u16;
-        let row = (grid_y / f64::from(self.line_height_px)) as u16;
+        let col = (grid_x / cell_pitch_x) as u16;
+        let row = (grid_y / cell_pitch_y) as u16;
         Some(MouseEvent::new(kind, button, col, row))
     }
 

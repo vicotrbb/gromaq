@@ -7,7 +7,9 @@ use crate::app::{
 };
 use crate::cli::CliExit;
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
-use crate::renderer::{PreparedSurfaceGlyphFrame, RendererConfig, WgpuRenderer};
+use crate::renderer::{
+    PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig, RendererConfig, WgpuRenderer,
+};
 use crate::selection::SelectionRange;
 
 const RUNTIME_GLYPH_FRAME_SMOKE_TEXT: &str = "gromaq glyph frame";
@@ -128,11 +130,14 @@ pub(super) fn prepare_runtime_glyph_frame_smoke() -> Result<PreparedRuntimeGlyph
     let prepared = match PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
         &glyphs.bitmaps,
-        renderer.config().cell_width_px,
-        renderer.config().line_height_px,
-        renderer.config().clear_color,
-        renderer.config().cursor_color_rgba8,
-        renderer.config().surface_padding_px,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: renderer.config().cell_width_px,
+            line_height_px: renderer.config().line_height_px,
+            clear_color: renderer.config().clear_color,
+            cursor_color_rgba8: renderer.config().cursor_color_rgba8,
+            surface_padding_px: renderer.config().surface_padding_px,
+            cell_spacing_px: renderer.config().cell_spacing_px,
+        },
     ) {
         Ok(prepared) => prepared,
         Err(error) => return Err(runtime_glyph_frame_smoke_error(error)),

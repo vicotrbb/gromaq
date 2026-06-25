@@ -9,7 +9,8 @@ use gromaq::font::FontRasterizer;
 use gromaq::pty::ShellCommand;
 use gromaq::renderer::{
     FrameScheduler, GlyphAtlas, GlyphAtlasConfig, GlyphEntry, GlyphQuadConfig, GlyphQuadPlanner,
-    PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig, WgpuRenderer,
+    PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig, RenderPlanner, RendererConfig,
+    WgpuRenderer,
 };
 use gromaq::{Terminal, TerminalConfig};
 use winit::keyboard::{Key, ModifiersState};
@@ -221,11 +222,14 @@ pub(crate) fn prepared_surface_glyph_frame_large_plan(c: &mut Criterion) {
             let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
                 black_box(&plan),
                 black_box(&glyphs.bitmaps),
-                black_box(14),
-                black_box(18),
-                black_box([0.0, 0.0, 0.0, 1.0]),
-                black_box([244, 192, 106, 255]),
-                black_box(12),
+                black_box(PreparedSurfaceGlyphFrameConfig {
+                    cell_width_px: 14,
+                    line_height_px: 18,
+                    clear_color: [0.0, 0.0, 0.0, 1.0],
+                    cursor_color_rgba8: [244, 192, 106, 255],
+                    surface_padding_px: 12,
+                    cell_spacing_px: 0,
+                }),
             )
             .unwrap();
             let frame = prepared.as_surface_glyph_frame();

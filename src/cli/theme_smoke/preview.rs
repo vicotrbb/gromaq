@@ -3,7 +3,8 @@ use std::path::Path;
 
 use crate::app::load_default_native_glyph_cache;
 use crate::renderer::{
-    GlyphAtlas, GlyphAtlasConfig, PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig,
+    GlyphAtlas, GlyphAtlasConfig, PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig,
+    RenderPlanner, RendererConfig,
 };
 use crate::selection::SelectionRange;
 use crate::{Terminal, TerminalConfig};
@@ -106,11 +107,14 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         &plan,
         &glyphs.bitmaps,
-        renderer_config.cell_width_px,
-        renderer_config.line_height_px,
-        renderer_config.clear_color,
-        renderer_config.cursor_color_rgba8,
-        renderer_config.surface_padding_px,
+        PreparedSurfaceGlyphFrameConfig {
+            cell_width_px: renderer_config.cell_width_px,
+            line_height_px: renderer_config.line_height_px,
+            clear_color: renderer_config.clear_color,
+            cursor_color_rgba8: renderer_config.cursor_color_rgba8,
+            surface_padding_px: renderer_config.surface_padding_px,
+            cell_spacing_px: renderer_config.cell_spacing_px,
+        },
     )
     .map_err(|error| error.to_string())?;
     let preview = prepared

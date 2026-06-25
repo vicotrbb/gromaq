@@ -108,6 +108,15 @@ pub enum GromaqError {
         actual: u16,
     },
 
+    /// Theme cell spacing must stay bounded.
+    #[error("theme cell spacing must be at most {maximum}px, got {actual}px")]
+    InvalidThemeCellSpacing {
+        /// Inclusive upper bound in physical pixels.
+        maximum: u16,
+        /// Actual invalid value in physical pixels.
+        actual: u16,
+    },
+
     /// Theme dim opacity must stay visible and bounded.
     #[error("theme dim opacity must be finite and between {minimum} and {maximum}, got {actual}")]
     InvalidThemeDimOpacity {
