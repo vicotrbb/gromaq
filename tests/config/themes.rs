@@ -65,6 +65,22 @@ fn built_in_theme_presets_keep_core_terminal_colors_legible() {
 }
 
 #[test]
+fn built_in_theme_presets_keep_dim_text_readable() {
+    for preset in [
+        ThemePresetSetting::GromaqDark,
+        ThemePresetSetting::GromaqGraphite,
+        ThemePresetSetting::GromaqGhostty,
+    ] {
+        let theme = ThemeSettings::from_preset(preset);
+        let background = theme.background_rgb8().unwrap();
+        let foreground = theme.foreground_rgb8().unwrap();
+        let dim_foreground = blend_rgb8(foreground, background, theme.dim_opacity);
+
+        assert_contrast_at_least("dim foreground/background", dim_foreground, background, 7.0);
+    }
+}
+
+#[test]
 fn theme_preset_formatter_returns_documented_toml_names() {
     assert_eq!(
         format_theme_preset(ThemePresetSetting::GromaqDark),
@@ -311,4 +327,18 @@ fn invalid_theme_ansi_palette_length_is_rejected() {
             actual: 2,
         }
     ));
+}
+
+fn blend_rgb8(foreground: [u8; 3], background: [u8; 3], opacity: f32) -> [u8; 3] {
+    [
+        blend_channel(foreground[0], background[0], opacity),
+        blend_channel(foreground[1], background[1], opacity),
+        blend_channel(foreground[2], background[2], opacity),
+    ]
+}
+
+fn blend_channel(foreground: u8, background: u8, opacity: f32) -> u8 {
+    ((f32::from(foreground) * opacity) + (f32::from(background) * (1.0 - opacity)))
+        .round()
+        .clamp(0.0, 255.0) as u8
 }
