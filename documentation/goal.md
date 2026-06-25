@@ -304,15 +304,38 @@ The project should be easy for contributors to understand.
 
 Maintain:
 
+- an accurate, polished, open-source-grade `README.md` that reflects the actual
+  current feature set, proof boundaries, installation path, validation commands,
+  screenshots/assets, and contribution workflow
 - clear issue labels
 - clear coding standards
 - reproducible tests
 - reproducible benchmarks
 - minimal setup friction
+- one-command installation for end users where practical, with documented macOS
+  and Linux paths
 - documented architecture
 - clear contribution path
 - good first issue candidates
 - no hidden proprietary assumptions
+- one canonical documentation tree under `documentation/`; do not keep a
+  parallel `docs/` tree
+
+## Distribution and Branding Standards
+
+The public project must be easy to install and visibly branded:
+
+- provide a simple one-command install path for normal macOS and Linux users
+- document manual build/install fallback commands for contributors and
+  unsupported environments
+- ensure the project logo is wired into native application identity where the
+  platform supports it, including window/app/taskbar or dock metadata
+- keep source logo/avatar assets and generated app/icon outputs organized in
+  repository assets
+- test or document the platform boundary for app-icon behavior instead of
+  assuming it works everywhere
+- keep installer scripts small, auditable, and free of hidden network or
+  proprietary assumptions
 
 ## Optional Future Direction
 
@@ -350,6 +373,12 @@ The goal is complete only when:
 - clippy passes with warnings denied
 - formatting passes
 - architecture is documented
+- README quality is suitable for public open-source release
+- macOS and Linux install paths are documented and easy to run, including one
+  simple command for normal users
+- native app branding uses the project logo where supported by the platform
+- repository documentation lives under the intended documentation locations
+  without a stray parallel `docs/` tree
 - no Electron/webview/React/browser UI exists anywhere in the project
 - no major known correctness gaps remain undocumented
 - no major known performance gaps remain undocumented
