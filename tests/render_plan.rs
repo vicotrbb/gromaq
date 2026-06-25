@@ -130,6 +130,43 @@ fn render_plan_collects_themed_selection_backgrounds_for_dirty_cells() {
 }
 
 #[test]
+fn render_plan_selection_background_overrides_existing_cell_background() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("\x1b[48;2;1;2;3mabcd").unwrap();
+    terminal.take_dirty_regions();
+    terminal.set_selection(SelectionRange::new((0, 1), (0, 2)));
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::with_visual_theme(
+        14,
+        [240, 240, 240],
+        [[0, 0, 0]; 16],
+        [9, 8, 7, 255],
+        DEFAULT_DIM_OPACITY,
+    );
+
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+
+    assert_eq!(plan.backgrounds.len(), 3);
+    assert_eq!(plan.backgrounds[0].col, 0);
+    assert_eq!(plan.backgrounds[0].cols, 1);
+    assert_eq!(plan.backgrounds[0].color_rgba8, [1, 2, 3, 255]);
+    assert_eq!(plan.backgrounds[1].col, 1);
+    assert_eq!(plan.backgrounds[1].cols, 2);
+    assert_eq!(plan.backgrounds[1].color_rgba8, [9, 8, 7, 255]);
+    assert_eq!(plan.backgrounds[2].col, 3);
+    assert_eq!(plan.backgrounds[2].cols, 1);
+    assert_eq!(plan.backgrounds[2].color_rgba8, [1, 2, 3, 255]);
+}
+
+#[test]
 fn render_plan_preserves_modifier_on_zwj_joined_component_text() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
     terminal.write_str("👨\u{200d}👩🏽").unwrap();
