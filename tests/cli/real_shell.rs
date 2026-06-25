@@ -29,6 +29,36 @@ fn runtime_real_shell_smoke_cli_drives_real_shell_through_runtime() {
 }
 
 #[test]
+fn runtime_real_shell_perf_budget_smoke_cli_enforces_real_shell_latency_budgets() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(
+        ["gromaq", "--runtime-real-shell-perf-budget-smoke"],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(
+        exit.stdout
+            .contains("runtime real-shell perf budget smoke: ok")
+    );
+    assert!(exit.stdout.contains("shell: /bin/sh"));
+    assert!(exit.stdout.contains("pumped bytes:"));
+    assert!(exit.stdout.contains("rendered frames:"));
+    assert!(exit.stdout.contains("render p95 ns:"));
+    assert!(exit.stdout.contains("render p95 budget ns: 6940000"));
+    assert!(exit.stdout.contains("input-to-render p95 ns:"));
+    assert!(
+        exit.stdout
+            .contains("input-to-render p95 budget ns: 10000000")
+    );
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn runtime_real_shell_large_output_smoke_cli_renders_real_shell_burst() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),

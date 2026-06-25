@@ -1,6 +1,8 @@
 //! Real shell runtime CLI smoke commands.
 
-pub(super) use interactive::runtime_real_shell_smoke_exit;
+pub(super) use interactive::{
+    runtime_real_shell_perf_budget_smoke_exit, runtime_real_shell_smoke_exit,
+};
 pub(super) use large_output::runtime_real_shell_large_output_smoke_exit;
 pub(super) use reflow::runtime_real_shell_reflow_smoke_exit;
 

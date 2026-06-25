@@ -45,7 +45,11 @@ render path for 16 samples after the shaped-glyph placement fix, pumped 16
 bytes, rendered 16 CPU-side frames, reported render p95 2000000 ns against the
 6940000 ns budget, and reported input-to-render p95 4000000 ns against the
 10000000 ns budget. This is deterministic runtime counter evidence, not live
-windowed GPU frame pacing acceptance proof. On 2026-06-24,
+windowed GPU frame pacing acceptance proof. `cargo run --
+--runtime-real-shell-perf-budget-smoke` applies the same render and
+input-to-render p95 budgets to the real `/bin/sh` PTY transcript path, making
+the executable gate closer to daily shell usage while still remaining distinct
+from live windowed GPU pacing proof. On 2026-06-24,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
 selection background, one cursor quad, a 444x160 frame, a 22176-byte atlas, 33 px
