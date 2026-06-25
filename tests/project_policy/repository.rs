@@ -8,6 +8,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "README.md",
     "ARCHITECTURE.md",
     "CONTRIBUTING.md",
+    "CODE_OF_CONDUCT.md",
     "BENCHMARKS.md",
     "COMPATIBILITY.md",
     "ROADMAP.md",

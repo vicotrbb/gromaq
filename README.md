@@ -285,6 +285,7 @@ More theme details are in [`documentation/theme.md`](documentation/theme.md).
 - [`ROADMAP.md`](ROADMAP.md): open work toward daily-driver quality
 - [`SECURITY.md`](SECURITY.md): vulnerability reporting scope and private
   disclosure path
+- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md): public contributor expectations
 
 The repository keeps one documentation tree under `documentation/` for project
 docs that do not belong at the root.
