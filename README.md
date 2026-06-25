@@ -168,6 +168,7 @@ cargo run -- --theme-export gromaq-ghostty target/gromaq-theme.toml
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm
+cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
 cargo run -- --runtime-focus-smoke
 cargo run -- --runtime-mouse-smoke
 cargo run -- --runtime-response-smoke
@@ -251,7 +252,9 @@ selection opacity, before adopting it.
 system, terminal, renderer, and theme stats before the shell prompt. Set it to
 `false` for a blank shell-first startup. The native frame status text, such as
 FPS, is rendered as a presentation overlay and is not written into shell output
-or scrollback.
+or scrollback. Use `gromaq --welcome-preview-snapshot <path>` to render a
+deterministic PPM artifact of the default welcome screen through the prepared
+glyph-frame path without launching a native GPU window.
 
 `font.family = "JetBrains Mono Nerd Font"` is the default preference. The
 special value `"monospace"` remains an automatic mono-stack alias: polished

@@ -40,7 +40,10 @@ explicit theme overrides plus background, cursor, and selection opacity.
 The native app also shows a default welcome screen with system, terminal,
 renderer, and theme stats before shell output. It is enabled by default and can
 be disabled with `[welcome] enabled = false` when users prefer a blank
-shell-first launch.
+shell-first launch. `cargo run -- --welcome-preview-snapshot
+target/gromaq-welcome-preview.ppm` writes a deterministic PPM artifact for the
+default welcome screen through the same prepared glyph-frame path used for
+theme preview snapshots.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:
@@ -139,4 +142,10 @@ Render a preview snapshot from a TOML config with:
 
 ```bash
 gromaq --theme-preview-config gromaq.toml gromaq-theme.ppm
+```
+
+Render the default welcome screen as a reviewable PPM artifact with:
+
+```bash
+gromaq --welcome-preview-snapshot gromaq-welcome-preview.ppm
 ```
