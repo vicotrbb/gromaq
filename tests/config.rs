@@ -2,7 +2,7 @@ use std::fs;
 
 use gromaq::{
     ConfigFileReloader, CursorStyleSetting, DEFAULT_BACKGROUND_RGB8, DEFAULT_DIM_OPACITY,
-    GromaqConfig, GromaqError, ShellSettings, TerminalConfig, ThemePresetSetting,
+    GromaqConfig, GromaqError, ShellSettings, TerminalConfig, ThemePresetSetting, ThemeSettings,
 };
 
 #[test]
@@ -62,6 +62,32 @@ fn default_theme_has_readable_selection_contrast() {
         contrast >= 8.0,
         "default selection contrast ratio {contrast:.2} should stay readable"
     );
+}
+
+#[test]
+fn built_in_theme_presets_keep_core_terminal_colors_legible() {
+    for preset in [
+        ThemePresetSetting::GromaqDark,
+        ThemePresetSetting::GromaqGraphite,
+    ] {
+        let theme = ThemeSettings::from_preset(preset);
+        let background = theme.background_rgb8().unwrap();
+        let foreground = theme.foreground_rgb8().unwrap();
+        let cursor = theme.cursor_rgb8().unwrap();
+        let selection = theme.selection_rgb8().unwrap();
+        let ansi = theme.ansi_rgb8().unwrap();
+
+        assert_contrast_at_least("foreground/background", foreground, background, 12.0);
+        assert_contrast_at_least("cursor/background", cursor, background, 7.0);
+        assert_contrast_at_least("foreground/selection", foreground, selection, 7.0);
+
+        for color in ansi.iter().take(8).skip(1) {
+            assert_contrast_at_least("ansi/background", *color, background, 6.0);
+        }
+        for color in ansi.iter().skip(9) {
+            assert_contrast_at_least("bright ansi/background", *color, background, 7.0);
+        }
+    }
 }
 
 #[test]
@@ -440,6 +466,14 @@ fn contrast_ratio(foreground: [u8; 3], background: [u8; 3]) -> f64 {
     let lighter = foreground.max(background);
     let darker = foreground.min(background);
     (lighter + 0.05) / (darker + 0.05)
+}
+
+fn assert_contrast_at_least(label: &str, foreground: [u8; 3], background: [u8; 3], minimum: f64) {
+    let contrast = contrast_ratio(foreground, background);
+    assert!(
+        contrast >= minimum,
+        "{label} contrast ratio {contrast:.2} should be at least {minimum:.2}"
+    );
 }
 
 fn relative_luminance([red, green, blue]: [u8; 3]) -> f64 {
