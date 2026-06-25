@@ -21,6 +21,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/capture-macos-window-proof.sh",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
     "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",
+    "images/screenshots/gromaq-welcome-preview.png",
     "documentation/benchmarks.md",
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",

@@ -11,6 +11,8 @@ rasterization, GPU presentation path, performance smokes, and compatibility
 tests are under active development, but broader daily-driver proof across
 machines and workflows is still in progress.
 
+![Gromaq welcome screen preview](images/screenshots/gromaq-welcome-preview.png)
+
 ## Install
 
 The current installer builds from source with Cargo. It works on normal macOS
