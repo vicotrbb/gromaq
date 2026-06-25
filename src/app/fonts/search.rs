@@ -1,5 +1,8 @@
 use std::path::PathBuf;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn first_existing_font_path(candidates: Vec<PathBuf>) -> Option<PathBuf> {
     candidates.into_iter().find(|path| path.exists())
 }
@@ -151,105 +154,3 @@ const HACK_FONT_FILES: &[&str] = &[
 const SF_MONO_FONT_FILES: &[&str] = &["SFNSMono.ttf", "SFNSMonoItalic.ttf"];
 
 const MENLO_FONT_FILES: &[&str] = &["Menlo.ttc"];
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_font_stack_prefers_polished_user_fonts_before_system_fallbacks() {
-        let candidates = default_monospace_font_candidate_paths();
-        let names = candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-
-        let jetbrains_index = names
-            .iter()
-            .position(|name| name == "JetBrainsMonoNerdFont-Regular.ttf")
-            .unwrap();
-        let sf_mono_index = names
-            .iter()
-            .position(|name| name == "SFNSMono.ttf")
-            .unwrap();
-
-        assert!(jetbrains_index < sf_mono_index);
-
-        let meslo_index = names
-            .iter()
-            .position(|name| name == "MesloLGS NF Regular.ttf")
-            .unwrap();
-        assert!(meslo_index < sf_mono_index);
-
-        let geist_index = names
-            .iter()
-            .position(|name| name == "GeistMonoNerdFont-Regular.otf")
-            .unwrap();
-        let monaspace_index = names
-            .iter()
-            .position(|name| name == "MonaspaceNeon-Regular.otf")
-            .unwrap();
-        let fira_index = names
-            .iter()
-            .position(|name| name == "FiraCodeNerdFont-Regular.ttf")
-            .unwrap();
-        let hack_index = names
-            .iter()
-            .position(|name| name == "HackNerdFont-Regular.ttf")
-            .unwrap();
-
-        assert!(geist_index < sf_mono_index);
-        assert!(monaspace_index < sf_mono_index);
-        assert!(fira_index < sf_mono_index);
-        assert!(hack_index < sf_mono_index);
-    }
-
-    #[test]
-    fn named_font_resolution_normalizes_common_family_names() {
-        let candidates = named_font_candidate_paths("JetBrains Mono Nerd Font").unwrap();
-        let names = candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-
-        assert!(names.contains(&"JetBrainsMonoNerdFont-Regular.ttf".into()));
-        let meslo_candidates = named_font_candidate_paths("MesloLGS NF").unwrap();
-        let meslo_names = meslo_candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-        assert!(meslo_names.contains(&"MesloLGS NF Regular.ttf".into()));
-        let geist_candidates = named_font_candidate_paths("Geist Mono").unwrap();
-        let geist_names = geist_candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-        assert!(geist_names.contains(&"GeistMonoNerdFont-Regular.otf".into()));
-        let monaspace_candidates = named_font_candidate_paths("Monaspace Neon").unwrap();
-        let monaspace_names = monaspace_candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-        assert!(monaspace_names.contains(&"MonaspaceNeon-Regular.otf".into()));
-        let fira_candidates = named_font_candidate_paths("Fira Code Nerd Font").unwrap();
-        let fira_names = fira_candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-        assert!(fira_names.contains(&"FiraCodeNerdFont-Regular.ttf".into()));
-        let hack_candidates = named_font_candidate_paths("Hack Nerd Font").unwrap();
-        let hack_names = hack_candidates
-            .iter()
-            .filter_map(|path| path.file_name())
-            .map(|name| name.to_string_lossy())
-            .collect::<Vec<_>>();
-        assert!(hack_names.contains(&"HackNerdFont-Regular.ttf".into()));
-        assert!(named_font_candidate_paths("Unmapped Mono").is_none());
-    }
-}
