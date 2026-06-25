@@ -69,6 +69,8 @@ dim_opacity = 0.68
 - `cursor_blinking`: whether the default cursor requests blinking.
 - `ansi`: exactly sixteen normal and bright ANSI colors as `#RRGGBB`.
 - `surface_padding_px`: empty space around rendered cells in physical pixels.
+  The built-in default is `14` to keep text away from the window edge without
+  changing terminal cell semantics.
 - `cell_spacing_px`: optional visual gap between adjacent cells, from `0` to
   `32` physical pixels. The default is `0` to preserve dense terminal alignment.
 - `dim_opacity`: opacity multiplier for SGR dim text, from `0.1` to `1.0`.
