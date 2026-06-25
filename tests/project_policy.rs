@@ -74,6 +74,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo test --all",
+    "cargo run -- --runtime-real-shell-perf-budget-smoke",
     "cargo bench --bench parser_throughput -- --list",
 ];
 
