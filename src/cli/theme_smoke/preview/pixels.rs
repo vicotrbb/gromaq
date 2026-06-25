@@ -111,3 +111,79 @@ fn srgb_component(value: u8) -> f64 {
         ((value + 0.055) / 1.055).powf(2.4)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const BLACK_CLEAR: [f64; 4] = [0.0, 0.0, 0.0, 1.0];
+    const BACKGROUND: [u8; 4] = [0, 0, 0, 255];
+    const WHITE_TEXT: [u8; 4] = [255, 255, 255, 255];
+    const SELECTION: [u8; 4] = [47, 59, 82, 255];
+    const CURSOR: [u8; 4] = [246, 193, 119, 255];
+
+    #[test]
+    fn preview_pixel_validation_counts_text_selection_and_cursor_pixels() {
+        let pixels = preview_pixels(64, true, true);
+
+        let report =
+            validate_theme_preview_pixels(&pixels, 8, BLACK_CLEAR, SELECTION, CURSOR).unwrap();
+
+        assert_eq!(report.high_contrast_text_pixels, 64);
+        assert_eq!(report.selection_pixels, 1);
+        assert_eq!(report.cursor_pixels, 1);
+    }
+
+    #[test]
+    fn preview_pixel_validation_rejects_low_contrast_text_coverage() {
+        let pixels = preview_pixels(63, true, true);
+
+        let error =
+            validate_theme_preview_pixels(&pixels, 8, BLACK_CLEAR, SELECTION, CURSOR).unwrap_err();
+
+        assert_eq!(
+            error,
+            "theme preview rendered too few high-contrast text pixels: 63"
+        );
+    }
+
+    #[test]
+    fn preview_pixel_validation_rejects_missing_cursor_pixels() {
+        let pixels = preview_pixels(64, true, false);
+
+        let error =
+            validate_theme_preview_pixels(&pixels, 8, BLACK_CLEAR, SELECTION, CURSOR).unwrap_err();
+
+        assert_eq!(error, "theme preview did not contain cursor-color pixels");
+    }
+
+    #[test]
+    fn preview_pixel_validation_rejects_wrong_background_pixel() {
+        let mut pixels = preview_pixels(64, true, true);
+        pixels[..4].copy_from_slice(&WHITE_TEXT);
+
+        let error =
+            validate_theme_preview_pixels(&pixels, 8, BLACK_CLEAR, SELECTION, CURSOR).unwrap_err();
+
+        assert!(error.contains("did not match expected"));
+    }
+
+    fn preview_pixels(
+        text_pixels: usize,
+        include_selection: bool,
+        include_cursor: bool,
+    ) -> Vec<u8> {
+        let mut pixels = Vec::new();
+        pixels.extend_from_slice(&BACKGROUND);
+        for _ in 0..text_pixels {
+            pixels.extend_from_slice(&WHITE_TEXT);
+        }
+        if include_selection {
+            pixels.extend_from_slice(&SELECTION);
+        }
+        if include_cursor {
+            pixels.extend_from_slice(&CURSOR);
+        }
+        pixels
+    }
+}
