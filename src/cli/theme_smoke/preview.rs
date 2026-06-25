@@ -1,56 +1,24 @@
-//! Theme and default text legibility CLI smoke command.
-
 use std::fs;
 use std::path::Path;
 
 use crate::app::load_default_native_glyph_cache;
-use crate::config::{GromaqConfig, format_theme_preset};
 use crate::renderer::{
     GlyphAtlas, GlyphAtlasConfig, PreparedSurfaceGlyphFrame, RenderPlanner, RendererConfig,
 };
 use crate::selection::SelectionRange;
 use crate::{Terminal, TerminalConfig};
 
-use super::CliExit;
+use super::super::CliExit;
 
 const THEME_PREVIEW_COLS: u16 = 56;
 const THEME_PREVIEW_ROWS: u16 = 6;
-const FOREGROUND_BACKGROUND_MIN_X100: u64 = 1_200;
-const FOREGROUND_SELECTION_MIN_X100: u64 = 800;
-const CURSOR_BACKGROUND_MIN_X100: u64 = 700;
-const READABLE_ANSI_MIN_X100: u64 = 600;
 const THEME_PREVIEW_TEXT: &str = "\
 \x1b[1mGromaq\x1b[0m native terminal preview\r\n\
 \x1b[31merror\x1b[0m  \x1b[32mok\x1b[0m  \x1b[33mwarn\x1b[0m  \x1b[34mblue\x1b[0m  \x1b[35mmagenta\x1b[0m\r\n\
 ~/Daedalus/gromaq > cargo test --all\r\n\
 output stays readable after prompt repaint\r\n";
 
-pub(super) fn theme_legibility_smoke_exit() -> CliExit {
-    match theme_legibility_report() {
-        Ok(report) => CliExit {
-            code: 0,
-            stdout: format!(
-                "theme legibility smoke: ok\npreset: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nforeground/background contrast x100: {}\nforeground/selection contrast x100: {}\ncursor/background contrast x100: {}\nreadable ansi min contrast x100: {}\n",
-                report.preset,
-                report.font_size_px,
-                report.cell_width_px,
-                report.line_height_px,
-                report.foreground_background_contrast_x100,
-                report.foreground_selection_contrast_x100,
-                report.cursor_background_contrast_x100,
-                report.readable_ansi_min_contrast_x100
-            ),
-            stderr: String::new(),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("theme legibility smoke failed: {error}\n"),
-        },
-    }
-}
-
-pub(super) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
+pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
     match theme_preview_snapshot_report(path) {
         Ok(report) => CliExit {
             code: 0,
@@ -79,18 +47,6 @@ pub(super) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ThemeLegibilityReport {
-    preset: &'static str,
-    font_size_px: u16,
-    cell_width_px: u16,
-    line_height_px: u16,
-    foreground_background_contrast_x100: u64,
-    foreground_selection_contrast_x100: u64,
-    cursor_background_contrast_x100: u64,
-    readable_ansi_min_contrast_x100: u64,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct ThemePreviewSnapshotReport {
     bytes_written: usize,
@@ -105,59 +61,6 @@ struct ThemePreviewSnapshotReport {
     background_quads: usize,
     cursor_quads: usize,
     atlas_bytes: usize,
-}
-
-fn theme_legibility_report() -> Result<ThemeLegibilityReport, String> {
-    let config = GromaqConfig::default();
-    config.validate().map_err(|error| error.to_string())?;
-
-    let background = config
-        .theme
-        .background_rgb8()
-        .map_err(|error| error.to_string())?;
-    let foreground = config
-        .theme
-        .foreground_rgb8()
-        .map_err(|error| error.to_string())?;
-    let selection = config
-        .theme
-        .selection_rgb8()
-        .map_err(|error| error.to_string())?;
-    let cursor = config
-        .theme
-        .cursor_rgb8()
-        .map_err(|error| error.to_string())?;
-    let ansi = config
-        .theme
-        .ansi_rgb8()
-        .map_err(|error| error.to_string())?;
-
-    let readable_ansi_min_contrast_x100 = ansi
-        .iter()
-        .enumerate()
-        .filter(|(index, _)| !matches!(*index, 0 | 8))
-        .map(|(_, color)| contrast_ratio_x100(*color, background))
-        .min()
-        .unwrap_or_default();
-    let report = ThemeLegibilityReport {
-        preset: format_theme_preset(config.theme.preset),
-        font_size_px: config.font.renderer_font_size_px(),
-        cell_width_px: config.font.renderer_cell_width_px(),
-        line_height_px: config.font.renderer_line_height_px(),
-        foreground_background_contrast_x100: contrast_ratio_x100(foreground, background),
-        foreground_selection_contrast_x100: contrast_ratio_x100(foreground, selection),
-        cursor_background_contrast_x100: contrast_ratio_x100(cursor, background),
-        readable_ansi_min_contrast_x100,
-    };
-
-    if report.foreground_background_contrast_x100 < FOREGROUND_BACKGROUND_MIN_X100
-        || report.foreground_selection_contrast_x100 < FOREGROUND_SELECTION_MIN_X100
-        || report.cursor_background_contrast_x100 < CURSOR_BACKGROUND_MIN_X100
-        || report.readable_ansi_min_contrast_x100 < READABLE_ANSI_MIN_X100
-    {
-        return Err(format!("default theme missed legibility gates: {report:?}"));
-    }
-    Ok(report)
 }
 
 fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotReport, String> {
@@ -234,10 +137,6 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
     })
 }
 
-fn contrast_ratio_x100(foreground: [u8; 3], background: [u8; 3]) -> u64 {
-    (contrast_ratio(foreground, background) * 100.0).round() as u64
-}
-
 fn validate_theme_preview_background(
     pixels: &[u8],
     width: u32,
@@ -296,30 +195,4 @@ fn linear_channel_to_srgb8(value: f64) -> u8 {
         (1.055 * value.powf(1.0 / 2.4)) - 0.055
     };
     (srgb * 255.0).round().clamp(0.0, 255.0) as u8
-}
-
-fn contrast_ratio(foreground: [u8; 3], background: [u8; 3]) -> f64 {
-    let foreground = relative_luminance(foreground);
-    let background = relative_luminance(background);
-    let lighter = foreground.max(background);
-    let darker = foreground.min(background);
-    (lighter + 0.05) / (darker + 0.05)
-}
-
-fn relative_luminance([red, green, blue]: [u8; 3]) -> f64 {
-    let [red, green, blue] = [
-        srgb_component(red),
-        srgb_component(green),
-        srgb_component(blue),
-    ];
-    (0.2126 * red) + (0.7152 * green) + (0.0722 * blue)
-}
-
-fn srgb_component(component: u8) -> f64 {
-    let value = f64::from(component) / 255.0;
-    if value <= 0.03928 {
-        value / 12.92
-    } else {
-        ((value + 0.055) / 1.055).powf(2.4)
-    }
 }
