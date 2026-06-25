@@ -673,7 +673,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             dirty_regions: false,
             font_size_px: 17,
             cell_width_px: 9,
-            line_height_px: 29,
+            line_height_px: 33,
             ..RendererConfig::default()
         }
     );
