@@ -15,6 +15,7 @@ use super::pty_bridge::{NativePtySpawner, NativeTerminalRuntimeConfig};
 mod input;
 mod pty;
 mod rendering;
+mod status_overlay;
 
 /// Runtime state owned by the native app after startup.
 pub struct NativeTerminalRuntime<S> {

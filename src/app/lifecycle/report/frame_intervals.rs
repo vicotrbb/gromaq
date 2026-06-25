@@ -100,6 +100,14 @@ impl PresentedFrameIntervals {
         }
         self.last_presented_at = Some(presented_at);
     }
+
+    pub(in crate::app::lifecycle) fn estimated_fps(&self, fallback_fps: u32) -> u32 {
+        if self.avg_ns == 0 {
+            return fallback_fps.max(1);
+        }
+        let fps = NANOS_PER_SECOND.saturating_add(self.avg_ns / 2) / self.avg_ns;
+        fps.clamp(1, 999) as u32
+    }
 }
 
 fn dropped_frames_for_interval(elapsed_ns: u64, target_fps: u32) -> u64 {

@@ -60,11 +60,35 @@ pub fn render_and_present_terminal_glyph_frame_report_with_snapshot<S, B>(
 where
     B: SurfaceBackend + SurfaceFrameBackend,
 {
+    render_and_present_terminal_glyph_frame_report_with_snapshot_and_status_overlay(
+        runtime,
+        renderer,
+        glyph_cache,
+        surface,
+        snapshot_path,
+        None,
+    )
+}
+
+pub(super) fn render_and_present_terminal_glyph_frame_report_with_snapshot_and_status_overlay<
+    S,
+    B,
+>(
+    runtime: &mut NativeTerminalRuntime<S>,
+    renderer: &mut WgpuRenderer,
+    glyph_cache: &mut RasterizedGlyphCache,
+    surface: &mut NativeWindowSurface<B>,
+    snapshot_path: Option<&Path>,
+    status_overlay: Option<&str>,
+) -> Result<NativeGlyphFramePresentation, NativeGlyphFrameError>
+where
+    B: SurfaceBackend + SurfaceFrameBackend,
+{
     // Swapchain frames are not retained. Until native partial-present support exists,
     // every surface presentation must redraw the full visible terminal contents.
     runtime.invalidate_terminal_frame();
     let clear_color = renderer.config().clear_color;
-    if !runtime.render_terminal_frame(renderer)? {
+    if !runtime.render_terminal_frame_with_status_overlay(renderer, status_overlay)? {
         return clear_and_present_report(surface, clear_color);
     }
     let Some(plan) = renderer.last_plan() else {

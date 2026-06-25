@@ -58,6 +58,14 @@ impl NativeAppLifecycle {
         Duration::from_nanos(NANOS_PER_SECOND / u64::from(self.frame_interval_target_fps()))
     }
 
+    pub(in crate::app) fn frame_status_text(&self) -> String {
+        format!(
+            "{:>3} fps",
+            self.frame_intervals
+                .estimated_fps(self.frame_interval_target_fps())
+        )
+    }
+
     fn frame_interval_target_fps(&self) -> u32 {
         self.monitor_refresh_millihertz
             .map(refresh_millihertz_to_fps)

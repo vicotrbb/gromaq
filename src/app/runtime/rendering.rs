@@ -2,6 +2,7 @@ use crate::error::Result as GromaqResult;
 use crate::renderer::GpuRenderer;
 
 use super::NativeTerminalRuntime;
+use super::status_overlay::apply_status_overlay;
 use crate::app::perf::{
     NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot, add_usize_counter,
     average_duration_nanos, dirty_region_cell_count, saturating_duration_nanos,
@@ -38,8 +39,20 @@ impl<S> NativeTerminalRuntime<S> {
     where
         R: GpuRenderer,
     {
+        self.render_terminal_frame_with_status_overlay(renderer, None)
+    }
+
+    /// Render the current terminal frame with an optional visual-only status overlay.
+    pub fn render_terminal_frame_with_status_overlay<R>(
+        &mut self,
+        renderer: &mut R,
+        status_overlay: Option<&str>,
+    ) -> GromaqResult<bool>
+    where
+        R: GpuRenderer,
+    {
         self.perf.render_attempts += 1;
-        let dirty_regions = self.terminal.take_dirty_regions();
+        let mut dirty_regions = self.terminal.take_dirty_regions();
         if dirty_regions.is_empty() {
             self.perf.clean_frame_skips += 1;
             tracing::trace!(
@@ -50,11 +63,14 @@ impl<S> NativeTerminalRuntime<S> {
             return Ok(false);
         }
         let render_started = std::time::Instant::now();
-        if let Err(error) = renderer.render_frame(
-            &self.terminal.dump_grid(),
-            self.terminal.dump_cursor(),
-            &dirty_regions,
-        ) {
+        let cursor = self.terminal.dump_cursor();
+        let mut grid = self.terminal.dump_grid();
+        if let Some(status_overlay) = status_overlay
+            && let Some(region) = apply_status_overlay(&mut grid, cursor, status_overlay)
+        {
+            dirty_regions.push(region);
+        }
+        if let Err(error) = renderer.render_frame(&grid, cursor, &dirty_regions) {
             self.terminal.invalidate_viewport();
             return Err(error);
         }
