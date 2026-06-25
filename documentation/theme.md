@@ -19,7 +19,7 @@ browser-style runtime zoom with Control/Super `+`, Control/Super `-`,
 Control/Super `0`, Control/Super mouse wheel, and dedicated OS/browser
 `ZoomIn` or `ZoomOut` keys when the platform exposes them.
 `cargo run -- --runtime-text-zoom-smoke` verifies that default metrics zoom
-from 34/19/47 px font/cell/line-height to 39/22/54 px, reduce the visible
+from 32/18/44 px font/cell/line-height to 37/21/51 px, reduce the visible
 grid from 59x15 to 52x13, and reset back to the default metrics without a live
 GPU window.
 `cargo run -- --theme-legibility-smoke` verifies the shipped default theme from

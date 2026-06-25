@@ -25,9 +25,9 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("theme preview snapshot: ok"));
     assert!(exit.stdout.contains("preset: gromaq-ghostty"));
-    assert!(exit.stdout.contains("font size px: 34"));
-    assert!(exit.stdout.contains("cell width px: 19"));
-    assert!(exit.stdout.contains("line height px: 47"));
+    assert!(exit.stdout.contains("font size px: 32"));
+    assert!(exit.stdout.contains("cell width px: 18"));
+    assert!(exit.stdout.contains("line height px: 44"));
     assert!(exit.stdout.contains("background opacity percent: 100"));
     assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stdout.contains("cell spacing px: 0"));

@@ -3,8 +3,8 @@ use std::{fs, path::Path};
 use super::support::relative_path;
 
 const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
-    ("README.md", "size_px = 34.0"),
-    ("README.md", "line_height_px = 47.0"),
+    ("README.md", "size_px = 32.0"),
+    ("README.md", "line_height_px = 44.0"),
     ("README.md", "background_opacity = 1.0"),
     ("README.md", "surface_padding_px = 14"),
     ("README.md", "cell_spacing_px = 0"),
@@ -45,8 +45,8 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/theme.md", "gromaq --theme-list"),
     ("documentation/theme.md", "gromaq --theme-export"),
     ("documentation/theme.md", "gromaq --theme-preview-config"),
-    ("documentation/compatibility.md", "34/19/47 px"),
-    ("documentation/compatibility.md", "39/22/54 px"),
+    ("documentation/compatibility.md", "32/18/44 px"),
+    ("documentation/compatibility.md", "37/21/51 px"),
     ("documentation/compatibility.md", "gromaq-ghostty"),
 ];
 

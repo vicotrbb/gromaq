@@ -137,7 +137,7 @@ mod tests {
         assert!(text.contains("Gromaq"));
         assert!(text.contains("native Rust GPU terminal"));
         assert!(text.contains("120x36 cells"));
-        assert!(text.contains("34px font, 47px line, 19px cell"));
+        assert!(text.contains("32px font, 44px line, 18px cell"));
         assert!(text.contains("background opacity 100%"));
         assert!(text.contains("\x1b[48;2;47;59;82m"));
         assert!(text.contains("\x1b[1;38;2;238;244;251mGromaq"));

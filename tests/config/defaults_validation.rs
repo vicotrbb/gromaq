@@ -11,10 +11,10 @@ fn default_config_is_valid() {
 fn default_font_metrics_are_readable_for_native_terminal_windows() {
     let font = GromaqConfig::default().font;
 
-    assert_eq!(font.size_px, 34.0);
-    assert_eq!(font.renderer_font_size_px(), 34);
-    assert_eq!(font.renderer_cell_width_px(), 19);
-    assert_eq!(font.renderer_line_height_px(), 47);
+    assert_eq!(font.size_px, 32.0);
+    assert_eq!(font.renderer_font_size_px(), 32);
+    assert_eq!(font.renderer_cell_width_px(), 18);
+    assert_eq!(font.renderer_line_height_px(), 44);
 
     let width_ratio = f32::from(font.renderer_cell_width_px()) / font.size_px;
     let line_height_ratio = f32::from(font.renderer_line_height_px()) / font.size_px;
