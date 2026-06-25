@@ -16,54 +16,54 @@ pub const MAX_SURFACE_PADDING_PX: u16 = 512;
 pub const MIN_DIM_OPACITY: f32 = 0.1;
 /// Maximum useful opacity for dim text.
 pub const MAX_DIM_OPACITY: f32 = 1.0;
-/// Built-in polished dark theme background.
-pub const DEFAULT_BACKGROUND: &str = "#171b24";
-/// Built-in polished dark theme background as RGB8.
-pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [23, 27, 36];
-/// Built-in polished dark theme foreground.
-pub const DEFAULT_FOREGROUND: &str = "#edf3fb";
-/// Built-in polished dark theme foreground as RGB8.
-pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [237, 243, 251];
-/// Built-in polished dark theme cursor.
+/// Built-in Ghostty-inspired theme background.
+pub const DEFAULT_BACKGROUND: &str = "#101216";
+/// Built-in Ghostty-inspired theme background as RGB8.
+pub const DEFAULT_BACKGROUND_RGB8: [u8; 3] = [16, 18, 22];
+/// Built-in Ghostty-inspired theme foreground.
+pub const DEFAULT_FOREGROUND: &str = "#eef4fb";
+/// Built-in Ghostty-inspired theme foreground as RGB8.
+pub const DEFAULT_FOREGROUND_RGB8: [u8; 3] = [238, 244, 251];
+/// Built-in Ghostty-inspired theme cursor.
 pub const DEFAULT_CURSOR: &str = "#f6c177";
-/// Built-in polished dark theme cursor as RGB8.
+/// Built-in Ghostty-inspired theme cursor as RGB8.
 pub const DEFAULT_CURSOR_RGB8: [u8; 3] = [246, 193, 119];
-/// Built-in polished dark theme selection background.
-pub const DEFAULT_SELECTION: &str = "#33445f";
-/// Built-in polished dark theme selection background as RGB8.
-pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [51, 68, 95];
+/// Built-in Ghostty-inspired theme selection background.
+pub const DEFAULT_SELECTION: &str = "#2f3b52";
+/// Built-in Ghostty-inspired theme selection background as RGB8.
+pub const DEFAULT_SELECTION_RGB8: [u8; 3] = [47, 59, 82];
 /// Number of configurable ANSI palette entries.
 pub const ANSI_COLOR_COUNT: usize = 16;
-/// Built-in polished dark ANSI palette.
+/// Built-in Ghostty-inspired ANSI palette.
 pub const DEFAULT_ANSI_COLORS: [&str; ANSI_COLOR_COUNT] = [
-    "#2a2f3a", "#ff6b7a", "#8bdc8b", "#f6c177", "#8aadf4", "#c6a0f6", "#8bd5ca", "#cad3e3",
-    "#6e7686", "#ff8fa3", "#a6e3a1", "#f9d58a", "#a6c8ff", "#f5bde6", "#9ee7dc", "#f7fbff",
+    "#242933", "#ff6b7a", "#9ece6a", "#e0af68", "#7aa2f7", "#bb9af7", "#7dcfff", "#c8d3e5",
+    "#5f667a", "#ff8fa3", "#b9f27c", "#ffd98a", "#9dbdff", "#d7afff", "#9ee7ff", "#f7fbff",
 ];
-/// Built-in polished dark ANSI palette as RGB8.
+/// Built-in Ghostty-inspired ANSI palette as RGB8.
 pub const DEFAULT_ANSI_COLORS_RGB8: [[u8; 3]; ANSI_COLOR_COUNT] = [
-    [42, 47, 58],
+    [36, 41, 51],
     [255, 107, 122],
-    [139, 220, 139],
-    [246, 193, 119],
-    [138, 173, 244],
-    [198, 160, 246],
-    [139, 213, 202],
-    [202, 211, 227],
-    [110, 118, 134],
+    [158, 206, 106],
+    [224, 175, 104],
+    [122, 162, 247],
+    [187, 154, 247],
+    [125, 207, 255],
+    [200, 211, 229],
+    [95, 102, 122],
     [255, 143, 163],
-    [166, 227, 161],
-    [249, 213, 138],
-    [166, 200, 255],
-    [245, 189, 230],
-    [158, 231, 220],
+    [185, 242, 124],
+    [255, 217, 138],
+    [157, 189, 255],
+    [215, 175, 255],
+    [158, 231, 255],
     [247, 251, 255],
 ];
 /// Built-in visual breathing room around terminal cells.
 pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 /// Built-in opacity for SGR dim text.
-pub const DEFAULT_DIM_OPACITY: f32 = 0.66;
+pub const DEFAULT_DIM_OPACITY: f32 = 0.68;
 /// Name of the built-in default dark theme.
-pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
+pub const DEFAULT_THEME_PRESET: &str = "gromaq-ghostty";
 /// Configurable terminal cursor shape.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]

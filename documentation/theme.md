@@ -1,11 +1,11 @@
 # Theme Configuration
 
-Gromaq ships with `gromaq-dark` as the built-in default theme preset. It is a
-dark, high-contrast baseline tuned for native terminal screenshots and long
-daily sessions. The alternate built-in `gromaq-graphite` preset provides a
-cooler, crisper graphite palette with brighter default text. The
-`gromaq-ghostty` preset provides a Ghostty-inspired dark palette with calm
-contrast and expressive ANSI colors.
+Gromaq ships with `gromaq-ghostty` as the built-in default theme preset. It is
+a Ghostty-inspired dark palette tuned for native terminal screenshots, long
+daily sessions, calm contrast, and expressive ANSI colors. The
+`gromaq-dark` preset keeps the original polished dark palette, and
+`gromaq-graphite` provides a cooler, crisper graphite palette with brighter
+default text.
 
 Built-in presets are guarded by automated contrast tests for foreground text,
 cursor color, selection readability, and the readable ANSI color slots. ANSI
@@ -24,21 +24,21 @@ as-is or override any individual field in TOML:
 ```toml
 [theme]
 # presets: gromaq-dark, gromaq-graphite, gromaq-ghostty
-preset = "gromaq-dark"
-background = "#171b24"
-foreground = "#edf3fb"
+preset = "gromaq-ghostty"
+background = "#101216"
+foreground = "#eef4fb"
 cursor = "#f6c177"
-selection = "#33445f"
+selection = "#2f3b52"
 cursor_style = "block"
 cursor_blinking = true
 ansi = [
-  "#2a2f3a", "#ff6b7a", "#8bdc8b", "#f6c177",
-  "#8aadf4", "#c6a0f6", "#8bd5ca", "#cad3e3",
-  "#6e7686", "#ff8fa3", "#a6e3a1", "#f9d58a",
-  "#a6c8ff", "#f5bde6", "#9ee7dc", "#f7fbff",
+  "#242933", "#ff6b7a", "#9ece6a", "#e0af68",
+  "#7aa2f7", "#bb9af7", "#7dcfff", "#c8d3e5",
+  "#5f667a", "#ff8fa3", "#b9f27c", "#ffd98a",
+  "#9dbdff", "#d7afff", "#9ee7ff", "#f7fbff",
 ]
 surface_padding_px = 14
-dim_opacity = 0.66
+dim_opacity = 0.68
 ```
 
 ## Fields
@@ -61,6 +61,13 @@ Use the default:
 
 ```toml
 [theme]
+preset = "gromaq-ghostty"
+```
+
+Use the original polished dark palette:
+
+```toml
+[theme]
 preset = "gromaq-dark"
 ```
 
@@ -70,13 +77,6 @@ Use the alternate graphite palette while overriding only the cursor:
 [theme]
 preset = "gromaq-graphite"
 cursor = "#ffd166"
-```
-
-Use the Ghostty-inspired palette:
-
-```toml
-[theme]
-preset = "gromaq-ghostty"
 ```
 
 Generate a parseable starter file with:

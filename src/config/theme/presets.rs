@@ -5,9 +5,11 @@ use serde::{Deserialize, Serialize};
 use super::{
     CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_BACKGROUND, DEFAULT_CURSOR,
     DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND, DEFAULT_SELECTION, DEFAULT_SURFACE_PADDING_PX,
-    DEFAULT_THEME_PRESET, ThemeSettings,
+    ThemeSettings,
 };
 
+/// Name of the original polished dark terminal theme.
+pub const DARK_THEME_PRESET: &str = "gromaq-dark";
 /// Name of the alternate high-contrast graphite theme.
 pub const GRAPHITE_THEME_PRESET: &str = "gromaq-graphite";
 /// Name of the Ghostty-inspired dark terminal theme.
@@ -18,11 +20,11 @@ pub const GHOSTTY_THEME_PRESET: &str = "gromaq-ghostty";
 #[serde(rename_all = "kebab-case")]
 pub enum ThemePresetSetting {
     /// Polished dark theme tuned for legibility and native terminal screenshots.
-    #[default]
     GromaqDark,
     /// Cooler graphite theme with a brighter foreground and crisp ANSI colors.
     GromaqGraphite,
     /// Ghostty-inspired dark theme with calm contrast and expressive ANSI colors.
+    #[default]
     GromaqGhostty,
 }
 
@@ -32,18 +34,22 @@ impl ThemeSettings {
         match preset {
             ThemePresetSetting::GromaqDark => Self {
                 preset,
-                background: DEFAULT_BACKGROUND.to_owned(),
-                foreground: DEFAULT_FOREGROUND.to_owned(),
+                background: "#171b24".to_owned(),
+                foreground: "#edf3fb".to_owned(),
                 cursor: DEFAULT_CURSOR.to_owned(),
-                selection: DEFAULT_SELECTION.to_owned(),
+                selection: "#33445f".to_owned(),
                 cursor_style: CursorStyleSetting::default(),
                 cursor_blinking: true,
-                ansi: DEFAULT_ANSI_COLORS
-                    .iter()
-                    .map(|color| (*color).to_owned())
-                    .collect(),
+                ansi: [
+                    "#2a2f3a", "#ff6b7a", "#8bdc8b", "#f6c177", "#8aadf4", "#c6a0f6", "#8bd5ca",
+                    "#cad3e3", "#6e7686", "#ff8fa3", "#a6e3a1", "#f9d58a", "#a6c8ff", "#f5bde6",
+                    "#9ee7dc", "#f7fbff",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
                 surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
-                dim_opacity: DEFAULT_DIM_OPACITY,
+                dim_opacity: 0.66,
             },
             ThemePresetSetting::GromaqGraphite => Self {
                 preset,
@@ -66,22 +72,18 @@ impl ThemeSettings {
             },
             ThemePresetSetting::GromaqGhostty => Self {
                 preset,
-                background: "#101216".to_owned(),
-                foreground: "#eef4fb".to_owned(),
-                cursor: "#f6c177".to_owned(),
-                selection: "#2f3b52".to_owned(),
+                background: DEFAULT_BACKGROUND.to_owned(),
+                foreground: DEFAULT_FOREGROUND.to_owned(),
+                cursor: DEFAULT_CURSOR.to_owned(),
+                selection: DEFAULT_SELECTION.to_owned(),
                 cursor_style: CursorStyleSetting::default(),
                 cursor_blinking: true,
-                ansi: [
-                    "#242933", "#ff6b7a", "#9ece6a", "#e0af68", "#7aa2f7", "#bb9af7", "#7dcfff",
-                    "#c8d3e5", "#5f667a", "#ff8fa3", "#b9f27c", "#ffd98a", "#9dbdff", "#d7afff",
-                    "#9ee7ff", "#f7fbff",
-                ]
-                .into_iter()
-                .map(str::to_owned)
-                .collect(),
+                ansi: DEFAULT_ANSI_COLORS
+                    .iter()
+                    .map(|color| (*color).to_owned())
+                    .collect(),
                 surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
-                dim_opacity: 0.68,
+                dim_opacity: DEFAULT_DIM_OPACITY,
             },
         }
     }
@@ -90,7 +92,7 @@ impl ThemeSettings {
 /// Serialize a theme preset as user-facing TOML text.
 pub fn format_theme_preset(preset: ThemePresetSetting) -> &'static str {
     match preset {
-        ThemePresetSetting::GromaqDark => DEFAULT_THEME_PRESET,
+        ThemePresetSetting::GromaqDark => DARK_THEME_PRESET,
         ThemePresetSetting::GromaqGraphite => GRAPHITE_THEME_PRESET,
         ThemePresetSetting::GromaqGhostty => GHOSTTY_THEME_PRESET,
     }

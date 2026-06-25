@@ -345,13 +345,13 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
         exit.stdout
             .contains("# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty")
     );
-    assert!(exit.stdout.contains("preset = \"gromaq-dark\""));
-    assert!(exit.stdout.contains("selection = \"#33445f\""));
+    assert!(exit.stdout.contains("preset = \"gromaq-ghostty\""));
+    assert!(exit.stdout.contains("selection = \"#2f3b52\""));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
     assert!(exit.stdout.contains("cursor_blinking = true"));
-    assert!(exit.stdout.contains("ansi = [\"#2a2f3a\", \"#ff6b7a\""));
+    assert!(exit.stdout.contains("ansi = [\"#242933\", \"#ff6b7a\""));
     assert!(exit.stdout.contains("surface_padding_px = 14"));
-    assert!(exit.stdout.contains("dim_opacity = 0.66"));
+    assert!(exit.stdout.contains("dim_opacity = 0.68"));
     assert!(exit.stdout.contains("[performance]"));
     let parsed = GromaqConfig::from_toml_str(&exit.stdout).unwrap();
     assert_eq!(parsed, GromaqConfig::default());

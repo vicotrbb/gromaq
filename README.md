@@ -188,30 +188,31 @@ line_height_px = 38.0
 
 [theme]
 # presets: gromaq-dark, gromaq-graphite, gromaq-ghostty
-preset = "gromaq-dark"
-background = "#171b24"
-foreground = "#edf3fb"
+preset = "gromaq-ghostty"
+background = "#101216"
+foreground = "#eef4fb"
 cursor = "#f6c177"
-selection = "#33445f"
+selection = "#2f3b52"
 cursor_style = "block"
 cursor_blinking = true
 ansi = [
-  "#2a2f3a", "#ff6b7a", "#8bdc8b", "#f6c177",
-  "#8aadf4", "#c6a0f6", "#8bd5ca", "#cad3e3",
-  "#6e7686", "#ff8fa3", "#a6e3a1", "#f9d58a",
-  "#a6c8ff", "#f5bde6", "#9ee7dc", "#f7fbff",
+  "#242933", "#ff6b7a", "#9ece6a", "#e0af68",
+  "#7aa2f7", "#bb9af7", "#7dcfff", "#c8d3e5",
+  "#5f667a", "#ff8fa3", "#b9f27c", "#ffd98a",
+  "#9dbdff", "#d7afff", "#9ee7ff", "#f7fbff",
 ]
 surface_padding_px = 14
-dim_opacity = 0.66
+dim_opacity = 0.68
 
 [performance]
 target_fps = 144
 dirty_region_rendering = true
 ```
 
-`gromaq-dark` is the built-in default theme preset, `gromaq-graphite` is an
-alternate high-contrast graphite preset, and `gromaq-ghostty` is a
-Ghostty-inspired dark preset with calm contrast and expressive ANSI colors. A
+`gromaq-ghostty` is the built-in default theme preset, with calm contrast and
+expressive ANSI colors inspired by polished Ghostty setups. `gromaq-dark` keeps
+the original polished dark palette, and `gromaq-graphite` is an alternate
+high-contrast graphite preset. A
 preset provides the baseline background, foreground, cursor, selection, ANSI
 palette, cursor style, cursor blinking, surface padding, and dim text opacity;
 every field in `[theme]` can still be overridden directly in TOML. The theme

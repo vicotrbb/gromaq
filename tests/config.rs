@@ -327,17 +327,37 @@ fn theme_toml_config_accepts_named_default_preset() {
     let config = GromaqConfig::from_toml_str(
         r#"
         [theme]
+        preset = "gromaq-ghostty"
+        "#,
+    )
+    .unwrap();
+
+    assert_eq!(config.theme.preset, ThemePresetSetting::GromaqGhostty);
+    assert_eq!(
+        config.theme.background_rgb8().unwrap(),
+        DEFAULT_BACKGROUND_RGB8
+    );
+    assert_eq!(config.theme, GromaqConfig::default().theme);
+}
+
+#[test]
+fn theme_toml_config_applies_named_dark_preset() {
+    let config = GromaqConfig::from_toml_str(
+        r#"
+        [theme]
         preset = "gromaq-dark"
         "#,
     )
     .unwrap();
 
     assert_eq!(config.theme.preset, ThemePresetSetting::GromaqDark);
-    assert_eq!(
-        config.theme.background_rgb8().unwrap(),
-        DEFAULT_BACKGROUND_RGB8
-    );
-    assert_eq!(config.theme, GromaqConfig::default().theme);
+    assert_eq!(config.theme.background_rgb8().unwrap(), [23, 27, 36]);
+    assert_eq!(config.theme.foreground_rgb8().unwrap(), [237, 243, 251]);
+    assert_eq!(config.theme.cursor_rgb8().unwrap(), [246, 193, 119]);
+    assert_eq!(config.theme.selection_rgb8().unwrap(), [51, 68, 95]);
+    assert_eq!(config.theme.dim_opacity, 0.66);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [42, 47, 58]);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [247, 251, 255]);
 }
 
 #[test]
@@ -674,7 +694,7 @@ fn config_serializes_to_valid_pretty_toml() {
     assert!(toml.contains("[terminal]"));
     assert!(toml.contains("[shell]"));
     assert!(toml.contains("[theme]"));
-    assert!(toml.contains("preset = \"gromaq-dark\""));
+    assert!(toml.contains("preset = \"gromaq-ghostty\""));
     assert_eq!(parsed, config);
 }
 
