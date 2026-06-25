@@ -34,7 +34,7 @@ selection/cursor-color pixels in the generated RGBA frame before writing the
 PPM.
 `cargo run -- --theme-preview-config path/to/gromaq.toml target/theme.ppm`
 uses the same deterministic prepared-frame path for a user config, including
-explicit theme overrides and background opacity.
+explicit theme overrides plus background, cursor, and selection opacity.
 
 The native app also shows a default welcome screen with system, terminal,
 renderer, and theme stats before shell output. It is enabled by default and can

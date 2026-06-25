@@ -34,13 +34,15 @@ pub(super) fn validate_theme_preview_pixels(
     let mut selection_pixels = 0;
     let mut cursor_pixels = 0;
     let background_rgb = [expected[0], expected[1], expected[2]];
+    let visible_selection = composited_on_background(selection_color, background_rgb);
+    let visible_cursor = composited_on_background(cursor_color, background_rgb);
     for pixel in pixels.chunks_exact(4) {
         let rgba = [pixel[0], pixel[1], pixel[2], pixel[3]];
-        if rgba == selection_color {
+        if rgba == visible_selection {
             selection_pixels += 1;
             continue;
         }
-        if rgba == cursor_color {
+        if rgba == visible_cursor {
             cursor_pixels += 1;
             continue;
         }
@@ -71,6 +73,23 @@ pub(super) fn validate_theme_preview_pixels(
     })
 }
 
+fn composited_on_background([red, green, blue, alpha]: [u8; 4], background: [u8; 3]) -> [u8; 4] {
+    let alpha = f32::from(alpha) / 255.0;
+    let inverse = 1.0 - alpha;
+    [
+        blend_channel(red, background[0], alpha, inverse),
+        blend_channel(green, background[1], alpha, inverse),
+        blend_channel(blue, background[2], alpha, inverse),
+        255,
+    ]
+}
+
+fn blend_channel(src: u8, dst: u8, alpha: f32, inverse: f32) -> u8 {
+    ((f32::from(src) * alpha) + (f32::from(dst) * inverse))
+        .round()
+        .clamp(0.0, 255.0) as u8
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,6 +101,8 @@ mod tests {
     const WHITE_TEXT: [u8; 4] = [255, 255, 255, 255];
     const SELECTION: [u8; 4] = [47, 59, 82, 255];
     const CURSOR: [u8; 4] = [246, 193, 119, 255];
+    const TRANSLUCENT_SELECTION: [u8; 4] = [47, 59, 82, 64];
+    const TRANSLUCENT_CURSOR: [u8; 4] = [246, 193, 119, 128];
 
     #[test]
     fn preview_pixel_validation_counts_text_selection_and_cursor_pixels() {
@@ -104,6 +125,29 @@ mod tests {
                 .unwrap();
 
         assert_eq!(report.high_contrast_text_pixels, 64);
+    }
+
+    #[test]
+    fn preview_pixel_validation_counts_translucent_selection_and_cursor_pixels() {
+        let mut pixels = Vec::new();
+        pixels.extend_from_slice(&BACKGROUND);
+        for _ in 0..64 {
+            pixels.extend_from_slice(&WHITE_TEXT);
+        }
+        pixels.extend_from_slice(&composited_on_background(TRANSLUCENT_SELECTION, [0, 0, 0]));
+        pixels.extend_from_slice(&composited_on_background(TRANSLUCENT_CURSOR, [0, 0, 0]));
+
+        let report = validate_theme_preview_pixels(
+            &pixels,
+            8,
+            BLACK_CLEAR,
+            TRANSLUCENT_SELECTION,
+            TRANSLUCENT_CURSOR,
+        )
+        .unwrap();
+
+        assert_eq!(report.selection_pixels, 1);
+        assert_eq!(report.cursor_pixels, 1);
     }
 
     #[test]

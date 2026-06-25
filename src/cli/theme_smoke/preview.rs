@@ -126,6 +126,10 @@ fn theme_preview_snapshot_report(
         cell_width_px: renderer_config.cell_width_px,
         line_height_px: renderer_config.line_height_px,
         background_opacity_percent: opacity_percent(renderer_config.clear_color[3]),
+        cursor_opacity_percent: opacity_percent_from_alpha(renderer_config.cursor_color_rgba8[3]),
+        selection_opacity_percent: opacity_percent_from_alpha(
+            renderer_config.selection_background_rgba8[3],
+        ),
         surface_padding_px: renderer_config.surface_padding_px,
         cell_spacing_px: renderer_config.cell_spacing_px,
         high_contrast_text_pixels: pixel_report.high_contrast_text_pixels,
@@ -140,6 +144,10 @@ fn theme_preview_snapshot_report(
 
 fn opacity_percent(opacity: f64) -> u32 {
     (opacity.clamp(0.0, 1.0) * 100.0).round() as u32
+}
+
+fn opacity_percent_from_alpha(alpha: u8) -> u32 {
+    ((f64::from(alpha) / 255.0) * 100.0).round() as u32
 }
 
 fn theme_preview_ppm_bytes(width: u32, height: u32, pixels: &[u8]) -> Result<Vec<u8>, String> {

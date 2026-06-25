@@ -29,6 +29,8 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("cell width px: 18"));
     assert!(exit.stdout.contains("line height px: 44"));
     assert!(exit.stdout.contains("background opacity percent: 100"));
+    assert!(exit.stdout.contains("cursor opacity percent: 100"));
+    assert!(exit.stdout.contains("selection opacity percent: 100"));
     assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stdout.contains("cell spacing px: 0"));
     assert!(exit.stdout.contains("high contrast text pixels:"));
@@ -73,6 +75,8 @@ fn theme_preview_config_writes_configured_theme_ppm_without_gpu_bootstrap() {
         [theme]
         preset = "gromaq-graphite"
         background_opacity = 0.75
+        cursor_opacity = 0.5
+        selection_opacity = 0.25
         "##,
     )
     .unwrap();
@@ -91,6 +95,8 @@ fn theme_preview_config_writes_configured_theme_ppm_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme preview snapshot: ok"));
     assert!(exit.stdout.contains("preset: gromaq-graphite"));
     assert!(exit.stdout.contains("background opacity percent: 75"));
+    assert!(exit.stdout.contains("cursor opacity percent: 50"));
+    assert!(exit.stdout.contains("selection opacity percent: 25"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 
