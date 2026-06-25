@@ -22,16 +22,14 @@ The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
-On 2026-06-24, `target/debug/gromaq --window-perf-smoke` launched a bounded live
-native window run on the active 120Hz monitor, presented 192 frames with 12
-warmup frames, measured 180 steady-state presented-frame intervals, reported
-monitor refresh 120000 mHz, surface present mode Fifo, physical window size
-2560x1600, scale milliscale 2000, effective frame interval target 120 fps
-(8333333 ns), p95 budget 10000000 ns, average interval 8370921 ns, max interval
-12392750 ns at sample 129, p95 bucket 10000000 ns, exact p95 8932291 ns, zero
-dropped frames, zero intervals over double target, and `frame pacing accepted:
-true`. This is hardware-backed live-window pacing proof for the active 120Hz
-display mode; it is still not a 144Hz-display acceptance pass.
+On 2026-06-24, `cargo run -- --window-perf-smoke` was tightened to fail unless
+the bounded native-window run records an actual terminal glyph-frame
+presentation. The latest local run exited with `window perf smoke failed: no
+glyph frame was presented; frames presented: 192; glyph quads: 0; background
+quads: 0; cursor quads: 0`. Hardware-backed live-window glyph presentation and
+active-monitor frame pacing acceptance therefore remain unproven in the current
+state; the command now prevents stale empty-frame pacing output from being
+misreported as terminal rendering proof.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95
