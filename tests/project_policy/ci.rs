@@ -28,6 +28,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo run -- --runtime-config-reload-smoke",
     "cargo run -- --runtime-text-zoom-smoke",
     "cargo run -- --runtime-repaint-smoke",
+    "cargo run -- --runtime-tool-workflow-smoke",
     "cargo run -- --runtime-focus-smoke",
     "cargo run -- --runtime-mouse-smoke",
     "cargo run -- --runtime-response-smoke",

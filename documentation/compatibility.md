@@ -35,8 +35,8 @@ remaining terminal-core work.
 | Workflow | Current proof | Status |
 | --- | --- | --- |
 | `top`, `htop`, `btop` launch workflows | Real PTY command workflows when available | Conditional on host binaries |
-| `ssh` launch workflow | Real PTY command workflow when available | Conditional on host binary |
-| `kubectl` output workflow | Real PTY command workflow when available | Conditional on host binary |
+| `ssh` launch workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `ssh -V` in a native PTY and requires `OpenSSH` output when the binary is present. On 2026-06-25 this smoke passed on the current host with 31 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
+| `kubectl` output workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `kubectl version --client=true` in a native PTY and requires `Client` output when the binary is present. On 2026-06-25 this smoke passed on the current host with 52 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
 | `cargo test -- --nocapture` output | Real PTY fixture workflow with deterministic large output | Proven when Cargo is available |
 
 ## Terminal Features
@@ -80,5 +80,5 @@ remaining terminal-core work.
 - Add 144Hz hardware proof on a 144Hz-capable monitor.
 - Expand editor/multiplexer interaction beyond launch and current scripted mouse
   workflows.
-- Record pass/fail evidence for `ssh` and `kubectl` scenarios against real but
-  safe targets.
+- Expand `ssh` and `kubectl` beyond current safe local client/version commands
+  into real but safe target scenarios.

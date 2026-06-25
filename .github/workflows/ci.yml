@@ -38,6 +38,7 @@ jobs:
       - run: cargo run -- --runtime-config-reload-smoke
       - run: cargo run -- --runtime-text-zoom-smoke
       - run: cargo run -- --runtime-repaint-smoke
+      - run: cargo run -- --runtime-tool-workflow-smoke
       - run: cargo run -- --runtime-focus-smoke
       - run: cargo run -- --runtime-mouse-smoke
       - run: cargo run -- --runtime-response-smoke

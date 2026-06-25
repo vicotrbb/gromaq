@@ -8,7 +8,8 @@ use super::{MockBackend, run_with_backend, run_with_backend_and_clipboard};
 mod glyph_frame;
 #[path = "runtime_smoke/output_volume.rs"]
 mod output_volume;
-
+#[path = "runtime_smoke/tool_workflow.rs"]
+mod tool_workflow;
 #[test]
 fn runtime_clipboard_paste_smoke_cli_routes_clipboard_text_to_runtime_pty() {
     let backend = MockBackend {
@@ -34,7 +35,6 @@ fn runtime_clipboard_paste_smoke_cli_routes_clipboard_text_to_runtime_pty() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(clipboard.read_text().as_deref(), Some("previous clipboard"));
 }
-
 #[test]
 fn runtime_repaint_smoke_cli_preserves_shell_output_after_prompt_repaint() {
     let backend = MockBackend {

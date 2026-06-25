@@ -69,6 +69,8 @@ pub(super) enum CliCommand<'a> {
     RuntimeTextZoomSmoke,
     /// Runtime full-viewport repaint smoke command.
     RuntimeRepaintSmoke,
+    /// Runtime real PTY external-tool workflow smoke command.
+    RuntimeToolWorkflowSmoke,
     /// Default theme legibility smoke command.
     ThemeLegibilitySmoke,
     /// Built-in theme preset listing command.
@@ -142,6 +144,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-config-reload-smoke" => Some(CliCommand::RuntimeConfigReloadSmoke),
         "--runtime-text-zoom-smoke" => Some(CliCommand::RuntimeTextZoomSmoke),
         "--runtime-repaint-smoke" => Some(CliCommand::RuntimeRepaintSmoke),
+        "--runtime-tool-workflow-smoke" => Some(CliCommand::RuntimeToolWorkflowSmoke),
         "--theme-list" => Some(CliCommand::ThemeList),
         "--theme-export" => Some(CliCommand::ThemeExport),
         "--theme-legibility-smoke" => Some(CliCommand::ThemeLegibilitySmoke),

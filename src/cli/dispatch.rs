@@ -30,6 +30,7 @@ use super::runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use super::runtime_repaint_smoke::runtime_repaint_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
 use super::runtime_text_zoom_smoke::runtime_text_zoom_smoke_exit;
+use super::runtime_tool_workflow_smoke::runtime_tool_workflow_smoke_exit;
 use super::theme_smoke::{theme_legibility_smoke_exit, theme_list_exit};
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
@@ -109,6 +110,7 @@ where
         CliCommand::RuntimeConfigReloadSmoke => runtime_config_reload_smoke_exit(),
         CliCommand::RuntimeTextZoomSmoke => runtime_text_zoom_smoke_exit(),
         CliCommand::RuntimeRepaintSmoke => runtime_repaint_smoke_exit(),
+        CliCommand::RuntimeToolWorkflowSmoke => runtime_tool_workflow_smoke_exit(),
         CliCommand::ThemeList => theme_list_exit(),
         CliCommand::ThemeLegibilitySmoke => theme_legibility_smoke_exit(),
         CliCommand::ThemePreviewSnapshot => unreachable!(),
