@@ -79,9 +79,9 @@ impl Default for FontSettings {
     fn default() -> Self {
         Self {
             family: DEFAULT_FONT_FAMILY.to_owned(),
-            size_px: 24.0,
+            size_px: 28.0,
             cell_width_px: None,
-            line_height_px: 33.0,
+            line_height_px: 38.0,
         }
     }
 }

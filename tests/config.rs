@@ -14,16 +14,16 @@ fn default_config_is_valid() {
 fn default_font_metrics_are_readable_for_native_terminal_windows() {
     let font = GromaqConfig::default().font;
 
-    assert_eq!(font.size_px, 24.0);
-    assert_eq!(font.renderer_font_size_px(), 24);
-    assert_eq!(font.renderer_cell_width_px(), 13);
-    assert_eq!(font.renderer_line_height_px(), 33);
+    assert_eq!(font.size_px, 28.0);
+    assert_eq!(font.renderer_font_size_px(), 28);
+    assert_eq!(font.renderer_cell_width_px(), 16);
+    assert_eq!(font.renderer_line_height_px(), 38);
 
     let width_ratio = f32::from(font.renderer_cell_width_px()) / font.size_px;
     let line_height_ratio = f32::from(font.renderer_line_height_px()) / font.size_px;
 
     assert!(
-        (0.53..=0.56).contains(&width_ratio),
+        (0.56..=0.58).contains(&width_ratio),
         "default terminal cell width ratio {width_ratio:.2} should stay readable without excessive letter spacing"
     );
     assert!(
