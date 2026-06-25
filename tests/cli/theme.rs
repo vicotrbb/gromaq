@@ -65,3 +65,46 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
     assert!(snapshot.windows(4).any(|bytes| bytes == b"\n255"));
     assert!(snapshot.len() > 1024);
 }
+
+#[test]
+fn theme_preview_snapshot_requires_output_path() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--theme-preview-snapshot"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(
+        exit.stderr
+            .contains("missing snapshot path for --theme-preview-snapshot")
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn theme_preview_snapshot_rejects_extra_arguments() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = std::env::temp_dir().join("gromaq-theme-preview-extra.ppm");
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--theme-preview-snapshot",
+            path.to_str().unwrap(),
+            "extra",
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(!path.exists());
+}
