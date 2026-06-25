@@ -60,8 +60,8 @@ remaining terminal-core work.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| Native window startup | `--window-smoke` | Proven on local live window |
-| Native glyph-frame presentation | `--window-perf-smoke` now fails when no glyph frame is presented; latest local run reported no glyph frame | Not yet proven in the current live run |
+| Native window startup | `--window-smoke` now fails when no surface frame is presented; latest local run reported 16 occluded surface acquisitions and no presented frame | Not yet proven in the current live run |
+| Native glyph-frame presentation | `--window-perf-smoke` now fails when no glyph frame is presented; latest local run reported 768 occluded surface acquisitions and no presented frame | Not yet proven in the current live run |
 | Prepared native glyph-frame preview artifact | `--runtime-glyph-frame-snapshot <path>` writes a deterministic PPM from the same owned glyph-frame preparation path used before surface presentation | Proven as CPU-side preview, not a live desktop screenshot |
 | Native-window glyph-frame snapshot artifact | `--window-glyph-frame-snapshot <path>` launches the native window path and writes a deterministic PPM from the prepared frame built for surface presentation; local run wrote a 2556x1586 PPM with 60 glyph quads and 1 cursor quad | Proven as native presentation-path artifact, not an OS compositor screenshot |
 | Active-monitor frame pacing | Requires a passing `--window-perf-smoke` run with terminal glyph-frame presentation | Not yet proven in the current live run |
