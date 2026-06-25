@@ -27,8 +27,9 @@ after 4 redraw attempts with 0 timeouts and 3 occluded acquisitions. The same
 day, `cargo run -- --window-perf-smoke` presented 192 live glyph frames on a
 120000 mHz active monitor using FIFO present mode, reported a 2548x1568 glyph
 frame with 74 glyph quads, 73920 atlas bytes, and 17 occupied atlas slots,
-collected 180 post-warmup frame interval samples, measured exact p95 frame
-interval 9135333 ns against the 10000000 ns active-monitor budget, recorded 0
+collected 180 post-warmup frame interval samples, reported
+`frame interval target limited by monitor: true`, measured exact p95 frame
+interval 8845125 ns against the 10000000 ns active-monitor budget, recorded 0
 dropped frames, and reported `frame pacing accepted: true`. This proves the
 current active-monitor live-window presentation path, not 144Hz hardware
 acceptance or OS compositor screenshot correctness.
