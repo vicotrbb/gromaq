@@ -165,6 +165,7 @@ cargo run -- --theme-list
 cargo run -- --theme-export gromaq-ghostty target/gromaq-theme.toml
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
+cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm
 cargo run -- --runtime-focus-smoke
 cargo run -- --runtime-mouse-smoke
 cargo run -- --runtime-response-smoke
@@ -237,6 +238,8 @@ in TOML. The theme fields are documented in
 Use `gromaq --theme-list` to inspect the built-in presets and their core
 theme tokens. Use `gromaq --theme-export <preset> <path>` to write an
 importable `[theme]` TOML block for a built-in preset.
+Use `gromaq --theme-preview-config <config> <path>` to render a deterministic
+preview snapshot from any TOML config before adopting it.
 
 `[welcome].enabled = true` shows the built-in startup screen with system,
 terminal, renderer, and theme stats before the shell prompt. Set it to `false`

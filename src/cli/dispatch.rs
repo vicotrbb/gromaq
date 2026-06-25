@@ -112,6 +112,7 @@ where
         CliCommand::ThemeList => theme_list_exit(),
         CliCommand::ThemeLegibilitySmoke => theme_legibility_smoke_exit(),
         CliCommand::ThemePreviewSnapshot => unreachable!(),
+        CliCommand::ThemePreviewConfig => unreachable!(),
         CliCommand::RuntimeFocusSmoke => runtime_focus_smoke_exit(),
         CliCommand::RuntimeMouseSmoke => runtime_mouse_smoke_exit(),
         CliCommand::RuntimeResponseSmoke => runtime_response_smoke_exit(),

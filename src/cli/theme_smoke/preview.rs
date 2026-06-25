@@ -29,16 +29,28 @@ const THEME_PREVIEW_TEXT: &str = "\
 output stays readable after prompt repaint\r\n";
 
 pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
-    match theme_preview_snapshot_report(path) {
+    match theme_preview_snapshot_report(&GromaqConfig::default(), path) {
         Ok(report) => theme_preview_snapshot_success(path, &report),
         Err(error) => theme_preview_snapshot_error(error),
     }
 }
 
-fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotReport, String> {
-    let config = GromaqConfig::default();
-    let renderer_config = RendererConfig::from_gromaq_config(&config)
-        .map_err(|error| format!("failed to build default renderer config: {error}"))?;
+pub(in crate::cli) fn theme_preview_config_exit(config_path: &str, snapshot_path: &str) -> CliExit {
+    match GromaqConfig::from_toml_file(config_path)
+        .map_err(|error| error.to_string())
+        .and_then(|config| theme_preview_snapshot_report(&config, snapshot_path))
+    {
+        Ok(report) => theme_preview_snapshot_success(snapshot_path, &report),
+        Err(error) => theme_preview_snapshot_error(error),
+    }
+}
+
+fn theme_preview_snapshot_report(
+    config: &GromaqConfig,
+    path: &str,
+) -> Result<ThemePreviewSnapshotReport, String> {
+    let renderer_config = RendererConfig::from_gromaq_config(config)
+        .map_err(|error| format!("failed to build renderer config: {error}"))?;
     let mut terminal = Terminal::new(
         TerminalConfig::new(THEME_PREVIEW_COLS, THEME_PREVIEW_ROWS)
             .map_err(|error| error.to_string())?,

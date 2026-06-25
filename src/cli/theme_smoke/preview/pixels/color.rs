@@ -3,8 +3,12 @@ pub(super) fn linear_f64_rgba_to_srgb8([red, green, blue, alpha]: [f64; 4]) -> [
         linear_channel_to_srgb8(red),
         linear_channel_to_srgb8(green),
         linear_channel_to_srgb8(blue),
-        linear_channel_to_srgb8(alpha),
+        alpha_channel_to_u8(alpha),
     ]
+}
+
+fn alpha_channel_to_u8(value: f64) -> u8 {
+    (value.clamp(0.0, 1.0) * 255.0).round() as u8
 }
 
 fn linear_channel_to_srgb8(value: f64) -> u8 {

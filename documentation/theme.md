@@ -32,6 +32,9 @@ surface padding without requiring a live GPU window. The smoke also rejects
 blank or low-value snapshots by counting high-contrast text pixels and exact
 selection/cursor-color pixels in the generated RGBA frame before writing the
 PPM.
+`cargo run -- --theme-preview-config path/to/gromaq.toml target/theme.ppm`
+uses the same deterministic prepared-frame path for a user config, including
+explicit theme overrides and background opacity.
 
 The native app also shows a default welcome screen with system, terminal,
 renderer, and theme stats before shell output. It is enabled by default and can
@@ -123,4 +126,10 @@ Export a built-in preset as an importable `[theme]` TOML block with:
 
 ```bash
 gromaq --theme-export gromaq-ghostty gromaq-theme.toml
+```
+
+Render a preview snapshot from a TOML config with:
+
+```bash
+gromaq --theme-preview-config gromaq.toml gromaq-theme.ppm
 ```

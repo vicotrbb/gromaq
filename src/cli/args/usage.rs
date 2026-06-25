@@ -20,6 +20,7 @@ pub(in crate::cli) fn usage() -> String {
         "--runtime-config-reload-smoke|--runtime-text-zoom-smoke|",
         "--runtime-repaint-smoke|--theme-list|--theme-export <preset> <path>|",
         "--theme-legibility-smoke|--theme-preview-snapshot <path>|",
+        "--theme-preview-config <config> <path>|",
         "--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|",
         "--runtime-idle-smoke|--runtime-idle-cpu-smoke|",
         "--frame-scheduler-smoke]\n"

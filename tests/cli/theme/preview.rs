@@ -49,6 +49,59 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
 }
 
 #[test]
+fn theme_preview_config_writes_configured_theme_ppm_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let config_path = std::env::temp_dir().join(format!(
+        "gromaq-theme-preview-config-{}.toml",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let snapshot_path = std::env::temp_dir().join(format!(
+        "gromaq-theme-preview-config-{}.ppm",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    fs::write(
+        &config_path,
+        r##"
+        [theme]
+        preset = "gromaq-graphite"
+        background_opacity = 0.75
+        "##,
+    )
+    .unwrap();
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--theme-preview-config",
+            config_path.to_str().unwrap(),
+            snapshot_path.to_str().unwrap(),
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("theme preview snapshot: ok"));
+    assert!(exit.stdout.contains("preset: gromaq-graphite"));
+    assert!(exit.stdout.contains("background opacity percent: 75"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+
+    let snapshot = fs::read(&snapshot_path).unwrap();
+    fs::remove_file(&config_path).unwrap();
+    fs::remove_file(&snapshot_path).unwrap();
+    assert!(snapshot.starts_with(b"P6\n"));
+    assert!(snapshot.len() > 1024);
+}
+
+#[test]
 fn theme_preview_snapshot_requires_output_path() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
@@ -62,6 +115,35 @@ fn theme_preview_snapshot_requires_output_path() {
     assert!(
         exit.stderr
             .contains("missing snapshot path for --theme-preview-snapshot")
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn theme_preview_config_requires_config_and_output_paths() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let missing_config = run_with_backend(["gromaq", "--theme-preview-config"], &backend);
+    assert_eq!(missing_config.code, 2);
+    assert!(missing_config.stdout.is_empty());
+    assert!(
+        missing_config
+            .stderr
+            .contains("missing config path for --theme-preview-config")
+    );
+
+    let missing_snapshot = run_with_backend(
+        ["gromaq", "--theme-preview-config", "gromaq.toml"],
+        &backend,
+    );
+    assert_eq!(missing_snapshot.code, 2);
+    assert!(missing_snapshot.stdout.is_empty());
+    assert!(
+        missing_snapshot
+            .stderr
+            .contains("missing snapshot path for --theme-preview-config")
     );
     assert!(backend.requests.borrow().is_empty());
 }

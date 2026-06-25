@@ -76,7 +76,9 @@ mod tests {
     use super::*;
 
     const BLACK_CLEAR: [f64; 4] = [0.0, 0.0, 0.0, 1.0];
+    const TRANSLUCENT_BLACK_CLEAR: [f64; 4] = [0.0, 0.0, 0.0, 0.75];
     const BACKGROUND: [u8; 4] = [0, 0, 0, 255];
+    const TRANSLUCENT_BACKGROUND: [u8; 4] = [0, 0, 0, 191];
     const WHITE_TEXT: [u8; 4] = [255, 255, 255, 255];
     const SELECTION: [u8; 4] = [47, 59, 82, 255];
     const CURSOR: [u8; 4] = [246, 193, 119, 255];
@@ -91,6 +93,17 @@ mod tests {
         assert_eq!(report.high_contrast_text_pixels, 64);
         assert_eq!(report.selection_pixels, 1);
         assert_eq!(report.cursor_pixels, 1);
+    }
+
+    #[test]
+    fn preview_pixel_validation_uses_straight_alpha_for_background_opacity() {
+        let pixels = preview_pixels_with_background(TRANSLUCENT_BACKGROUND, 64, true, true);
+
+        let report =
+            validate_theme_preview_pixels(&pixels, 8, TRANSLUCENT_BLACK_CLEAR, SELECTION, CURSOR)
+                .unwrap();
+
+        assert_eq!(report.high_contrast_text_pixels, 64);
     }
 
     #[test]
@@ -134,6 +147,28 @@ mod tests {
     ) -> Vec<u8> {
         let mut pixels = Vec::new();
         pixels.extend_from_slice(&BACKGROUND);
+        append_preview_pixels(&mut pixels, text_pixels, include_selection, include_cursor);
+        pixels
+    }
+
+    fn preview_pixels_with_background(
+        background: [u8; 4],
+        text_pixels: usize,
+        include_selection: bool,
+        include_cursor: bool,
+    ) -> Vec<u8> {
+        let mut pixels = Vec::new();
+        pixels.extend_from_slice(&background);
+        append_preview_pixels(&mut pixels, text_pixels, include_selection, include_cursor);
+        pixels
+    }
+
+    fn append_preview_pixels(
+        pixels: &mut Vec<u8>,
+        text_pixels: usize,
+        include_selection: bool,
+        include_cursor: bool,
+    ) {
         for _ in 0..text_pixels {
             pixels.extend_from_slice(&WHITE_TEXT);
         }
@@ -143,6 +178,5 @@ mod tests {
         if include_cursor {
             pixels.extend_from_slice(&CURSOR);
         }
-        pixels
     }
 }
