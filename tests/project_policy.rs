@@ -74,6 +74,8 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo test --all",
+    "cargo run -- --theme-legibility-smoke",
+    "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm",
     "cargo run -- --runtime-real-shell-perf-budget-smoke",
     "cargo run -- --runtime-real-shell-large-output-smoke",
     "cargo bench --bench parser_throughput -- --list",
@@ -169,6 +171,41 @@ fn cargo_dependencies_do_not_add_webview_or_javascript_runtimes() {
     );
 }
 
+#[test]
+fn cargo_manifest_keeps_public_open_source_metadata() {
+    let manifest_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
+    let manifest = fs::read_to_string(&manifest_path).unwrap();
+    let manifest: Value = toml::from_str(&manifest).unwrap();
+    let package = manifest
+        .get("package")
+        .and_then(Value::as_table)
+        .expect("Cargo.toml must define [package]");
+
+    assert_eq!(
+        package.get("license").and_then(Value::as_str),
+        Some("MIT"),
+        "Cargo package metadata must publish the license"
+    );
+    assert_eq!(
+        package.get("homepage").and_then(Value::as_str),
+        Some("https://gromaq.dev"),
+        "Cargo package metadata must keep the product homepage"
+    );
+    assert_eq!(
+        package.get("repository").and_then(Value::as_str),
+        Some("https://github.com/vicotrbb/gromaq"),
+        "Cargo package metadata must point contributors at the public source repository"
+    );
+    assert_eq!(
+        package.get("readme").and_then(Value::as_str),
+        Some("README.md"),
+        "Cargo package metadata must expose the README"
+    );
+    assert_string_array_contains(package, "keywords", "terminal");
+    assert_string_array_contains(package, "keywords", "wgpu");
+    assert_string_array_contains(package, "categories", "command-line-utilities");
+}
+
 fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Vec<String>) {
     for entry in fs::read_dir(dir).unwrap() {
         let entry = entry.unwrap();
@@ -188,6 +225,17 @@ fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Ve
             violations.push(relative_path(root, &path));
         }
     }
+}
+
+fn assert_string_array_contains(package: &toml::map::Map<String, Value>, field: &str, item: &str) {
+    let values = package
+        .get(field)
+        .and_then(Value::as_array)
+        .unwrap_or_else(|| panic!("Cargo package metadata must define `{field}`"));
+    assert!(
+        values.iter().any(|value| value.as_str() == Some(item)),
+        "Cargo package metadata `{field}` must contain `{item}`"
+    );
 }
 
 fn is_forbidden_frontend_file(path: &Path) -> bool {
