@@ -9,6 +9,13 @@ use super::{
     RUNTIME_OUTPUT_SMOKE_ROWS, runtime_output_smoke_viewport_cells,
 };
 
+mod output;
+
+use output::{
+    RuntimeLargeOutputSmokeReport, runtime_large_output_smoke_error,
+    runtime_large_output_smoke_failure, runtime_large_output_smoke_success,
+};
+
 fn runtime_large_output_payload(lines: usize) -> Vec<u8> {
     let mut payload = Vec::new();
     for line in 0..lines {
@@ -84,37 +91,18 @@ pub(in crate::cli) fn runtime_large_output_smoke_exit() -> CliExit {
             .any(|line| line == "gromaq-runtime-line-000")
         || !visible_text.contains(&last_line)
     {
-        return CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr:
-                "runtime large-output smoke failed: burst did not reach a rendered visible frame\n"
-                    .to_owned(),
-        };
+        return runtime_large_output_smoke_failure("burst did not reach a rendered visible frame");
     }
 
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime large-output smoke: ok\nlines: {}\npumped bytes: {}\nscrollback lines: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nlast visible line: {}\nrender p95 ns: {}\n",
-            RUNTIME_LARGE_OUTPUT_LINES,
-            pumped_bytes,
-            scrollback.lines.len(),
-            metrics.rendered_frames,
-            metrics.rendered_dirty_regions,
-            metrics.rendered_dirty_cells,
-            metrics.rendered_dirty_cells_max,
-            last_line,
-            metrics.render_time_p95_ns
-        ),
-        stderr: String::new(),
-    }
-}
-
-fn runtime_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime large-output smoke failed: {error}\n"),
-    }
+    runtime_large_output_smoke_success(&RuntimeLargeOutputSmokeReport {
+        lines: RUNTIME_LARGE_OUTPUT_LINES,
+        pumped_bytes,
+        scrollback_lines: scrollback.lines.len(),
+        rendered_frames: metrics.rendered_frames,
+        rendered_dirty_regions: metrics.rendered_dirty_regions,
+        rendered_dirty_cells: metrics.rendered_dirty_cells,
+        rendered_dirty_cells_max: metrics.rendered_dirty_cells_max,
+        last_line,
+        render_p95_ns: metrics.render_time_p95_ns,
+    })
 }
