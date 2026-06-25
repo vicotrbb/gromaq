@@ -2,13 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{GromaqError, Result};
-
 mod color;
 mod deserialization;
 mod presets;
-
-use color::parse_hex_rgb;
+mod validation;
 
 pub use presets::{
     GHOSTTY_THEME_PRESET, GRAPHITE_THEME_PRESET, ThemePresetSetting, format_theme_preset,
@@ -115,73 +112,5 @@ pub struct ThemeSettings {
 impl Default for ThemeSettings {
     fn default() -> Self {
         Self::from_preset(ThemePresetSetting::default())
-    }
-}
-
-impl ThemeSettings {
-    /// Validate configured theme colors.
-    pub fn validate(&self) -> Result<()> {
-        self.background_rgb8()?;
-        self.foreground_rgb8()?;
-        self.cursor_rgb8()?;
-        self.selection_rgb8()?;
-        self.ansi_rgb8()?;
-        if self.surface_padding_px > MAX_SURFACE_PADDING_PX {
-            return Err(GromaqError::InvalidThemePadding {
-                maximum: MAX_SURFACE_PADDING_PX,
-                actual: self.surface_padding_px,
-            });
-        }
-        if self.cell_spacing_px > MAX_CELL_SPACING_PX {
-            return Err(GromaqError::InvalidThemeCellSpacing {
-                maximum: MAX_CELL_SPACING_PX,
-                actual: self.cell_spacing_px,
-            });
-        }
-        if !self.dim_opacity.is_finite()
-            || !(MIN_DIM_OPACITY..=MAX_DIM_OPACITY).contains(&self.dim_opacity)
-        {
-            return Err(GromaqError::InvalidThemeDimOpacity {
-                minimum: MIN_DIM_OPACITY,
-                maximum: MAX_DIM_OPACITY,
-                actual: self.dim_opacity,
-            });
-        }
-        Ok(())
-    }
-
-    /// Parsed background color.
-    pub fn background_rgb8(&self) -> Result<[u8; 3]> {
-        parse_hex_rgb("background", &self.background)
-    }
-
-    /// Parsed default foreground color.
-    pub fn foreground_rgb8(&self) -> Result<[u8; 3]> {
-        parse_hex_rgb("foreground", &self.foreground)
-    }
-
-    /// Parsed cursor color.
-    pub fn cursor_rgb8(&self) -> Result<[u8; 3]> {
-        parse_hex_rgb("cursor", &self.cursor)
-    }
-
-    /// Parsed selection background color.
-    pub fn selection_rgb8(&self) -> Result<[u8; 3]> {
-        parse_hex_rgb("selection", &self.selection)
-    }
-
-    /// Parsed ANSI color palette.
-    pub fn ansi_rgb8(&self) -> Result<[[u8; 3]; ANSI_COLOR_COUNT]> {
-        if self.ansi.len() != ANSI_COLOR_COUNT {
-            return Err(GromaqError::InvalidThemeAnsiPaletteLength {
-                expected: ANSI_COLOR_COUNT,
-                actual: self.ansi.len(),
-            });
-        }
-        let mut colors = DEFAULT_ANSI_COLORS_RGB8;
-        for (index, value) in self.ansi.iter().enumerate() {
-            colors[index] = parse_hex_rgb("ansi", value)?;
-        }
-        Ok(colors)
     }
 }
