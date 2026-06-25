@@ -10,6 +10,13 @@ use super::{
     runtime_output_smoke_viewport_cells,
 };
 
+mod output;
+
+use output::{
+    RuntimeBoundedStateSmokeReport, runtime_bounded_state_smoke_error,
+    runtime_bounded_state_smoke_failure, runtime_bounded_state_smoke_success,
+};
+
 fn runtime_bounded_state_payloads() -> Vec<Vec<u8>> {
     (0..RUNTIME_BOUNDED_STATE_BATCHES)
         .map(|batch| {
@@ -117,40 +124,19 @@ pub(in crate::cli) fn runtime_bounded_state_smoke_exit() -> CliExit {
         );
     }
 
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime bounded-state smoke: ok\nbatches: {}\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nscrollback cell rows: {}\nscrollback cells: {}\nscrollback max cells: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells: {}\nrendered dirty cells max: {}\nlast visible line: {}\n",
-            RUNTIME_BOUNDED_STATE_BATCHES,
-            total_lines,
-            pumped_bytes,
-            state.scrollback_limit,
-            state.scrollback_lines,
-            state.scrollback_cell_rows,
-            state.scrollback_cells,
-            state.scrollback_cell_limit,
-            metrics.rendered_frames,
-            metrics.rendered_dirty_regions,
-            metrics.rendered_dirty_cells,
-            metrics.rendered_dirty_cells_max,
-            last_line
-        ),
-        stderr: String::new(),
-    }
-}
-
-fn runtime_bounded_state_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime bounded-state smoke failed: {error}\n"),
-    }
-}
-
-fn runtime_bounded_state_smoke_failure(reason: &str) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime bounded-state smoke failed: {reason}\n"),
-    }
+    runtime_bounded_state_smoke_success(&RuntimeBoundedStateSmokeReport {
+        batches: RUNTIME_BOUNDED_STATE_BATCHES,
+        total_lines,
+        pumped_bytes,
+        scrollback_cap: state.scrollback_limit,
+        scrollback_lines: state.scrollback_lines,
+        scrollback_cell_rows: state.scrollback_cell_rows,
+        scrollback_cells: state.scrollback_cells,
+        scrollback_cell_limit: state.scrollback_cell_limit,
+        rendered_frames: metrics.rendered_frames,
+        rendered_dirty_regions: metrics.rendered_dirty_regions,
+        rendered_dirty_cells: metrics.rendered_dirty_cells,
+        rendered_dirty_cells_max: metrics.rendered_dirty_cells_max,
+        last_line,
+    })
 }
