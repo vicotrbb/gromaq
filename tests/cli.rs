@@ -341,6 +341,10 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("line_height_px = 38"));
     assert!(exit.stdout.contains("# cell_width_px = 16"));
     assert!(exit.stdout.contains("[theme]"));
+    assert!(
+        exit.stdout
+            .contains("# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty")
+    );
     assert!(exit.stdout.contains("preset = \"gromaq-dark\""));
     assert!(exit.stdout.contains("selection = \"#33445f\""));
     assert!(exit.stdout.contains("cursor_style = \"block\""));

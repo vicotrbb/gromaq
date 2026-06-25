@@ -134,7 +134,7 @@ pub(super) fn config_template_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n# cell_width_px = {}\nline_height_px = {}\n\n[theme]\npreset = \"{}\"\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\nselection = \"{}\"\ncursor_style = \"{}\"\ncursor_blinking = {}\nansi = {}\nsurface_padding_px = {}\ndim_opacity = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
+            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n# cell_width_px = {}\nline_height_px = {}\n\n[theme]\n# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty\npreset = \"{}\"\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\nselection = \"{}\"\ncursor_style = \"{}\"\ncursor_blinking = {}\nansi = {}\nsurface_padding_px = {}\ndim_opacity = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
             config.terminal.cols,
             config.terminal.rows,
             config.terminal.scrollback_lines,

@@ -187,6 +187,7 @@ size_px = 28.0
 line_height_px = 38.0
 
 [theme]
+# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty
 preset = "gromaq-dark"
 background = "#171b24"
 foreground = "#edf3fb"
@@ -208,11 +209,13 @@ target_fps = 144
 dirty_region_rendering = true
 ```
 
-`gromaq-dark` is the built-in default theme preset, and `gromaq-graphite` is an
-alternate high-contrast graphite preset. A preset provides the baseline
-background, foreground, cursor, selection, ANSI palette, cursor style, cursor
-blinking, surface padding, and dim text opacity; every field in `[theme]` can
-still be overridden directly in TOML. The theme fields are documented in
+`gromaq-dark` is the built-in default theme preset, `gromaq-graphite` is an
+alternate high-contrast graphite preset, and `gromaq-ghostty` is a
+Ghostty-inspired dark preset with calm contrast and expressive ANSI colors. A
+preset provides the baseline background, foreground, cursor, selection, ANSI
+palette, cursor style, cursor blinking, surface padding, and dim text opacity;
+every field in `[theme]` can still be overridden directly in TOML. The theme
+fields are documented in
 [`documentation/theme.md`](documentation/theme.md).
 
 `font.family = "monospace"` uses Gromaq's automatic mono stack: polished
