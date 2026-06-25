@@ -52,13 +52,13 @@ the executable gate closer to daily shell usage while still remaining distinct
 from live windowed GPU pacing proof. On 2026-06-24,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
-selection background, one cursor quad, a 444x160 frame, a 22176-byte atlas, 33 px
+selection background, one cursor quad, a 540x180 frame, a 29184-byte atlas, 38 px
 line height, and 14 px surface padding through the native glyph-frame path. On
 2026-06-24,
 `cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm`
-wrote a 444x160 binary PPM CPU preview from the same prepared glyph-frame path,
-reported 213135 bytes written, 71040 preview pixels, 16 prepared quads, one
-background quad, one cursor quad, and 22176 atlas bytes. This is an inspectable
+wrote a 540x180 binary PPM CPU preview from the same prepared glyph-frame path,
+reported 291615 bytes written, 97200 preview pixels, 16 prepared quads, one
+background quad, one cursor quad, and 29184 atlas bytes. This is an inspectable
 prepared-frame artifact, not a live desktop screenshot capture. On
 2026-06-23,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
