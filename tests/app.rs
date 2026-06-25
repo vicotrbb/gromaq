@@ -1,6 +1,6 @@
 #[path = "app/config.rs"]
 mod config;
-#[path = "app/input_mapping.rs"]
+#[path = "app/input_mapping/mod.rs"]
 mod input_mapping;
 #[path = "app/lifecycle.rs"]
 mod lifecycle;
