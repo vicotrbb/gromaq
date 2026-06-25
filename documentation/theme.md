@@ -15,7 +15,9 @@ need lower emphasis.
 Default terminal text is intentionally larger than a compact emulator baseline:
 JetBrains Mono Nerd Font when available, 32 px font size, 44 px line height,
 and 18 px automatic cell width. Users can override those metrics in the
-`[font]` section, and the native app supports browser-style runtime zoom with
+`[font]` section. `font.fallback_families` accepts ordered font family names or
+explicit font files that are loaded before the automatic platform emoji
+fallback fonts. The native app supports browser-style runtime zoom with
 Control/Super `+`, Control/Super `-`, Control/Super `0`, Control/Super mouse
 wheel, and dedicated OS/browser `ZoomIn` or `ZoomOut` keys when the platform
 exposes them.

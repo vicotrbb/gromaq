@@ -1,4 +1,4 @@
-use crate::app::resolve_native_font_paths;
+use crate::app::resolve_native_font_paths_with_fallbacks;
 use crate::config::CursorStyleSetting;
 
 pub(super) struct FontResolutionText {
@@ -6,8 +6,11 @@ pub(super) struct FontResolutionText {
     pub(super) fallbacks: String,
 }
 
-pub(super) fn format_font_resolution(font_family: &str) -> FontResolutionText {
-    match resolve_native_font_paths(font_family) {
+pub(super) fn format_font_resolution_with_fallbacks(
+    font_family: &str,
+    fallback_families: &[String],
+) -> FontResolutionText {
+    match resolve_native_font_paths_with_fallbacks(font_family, fallback_families) {
         Ok(resolution) => FontResolutionText {
             primary: resolution.primary_path.display().to_string(),
             fallbacks: if resolution.fallback_paths.is_empty() {

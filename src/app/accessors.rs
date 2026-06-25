@@ -23,6 +23,11 @@ impl NativeTerminalApp {
         &self.font_family
     }
 
+    /// Active configured fallback font families or file paths used by the native glyph cache.
+    pub fn font_fallback_families(&self) -> &[String] {
+        &self.font_fallback_families
+    }
+
     /// Take a startup error captured from the event handler.
     pub fn take_startup_error(&mut self) -> Option<String> {
         self.startup_error.take()

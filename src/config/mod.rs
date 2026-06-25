@@ -28,7 +28,7 @@ pub use theme::{
 
 pub(crate) use settings::validate_terminal_dimensions;
 
-use settings::validate_shell_settings;
+use settings::{validate_font_settings, validate_shell_settings};
 
 /// Top-level Gromaq configuration.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -110,6 +110,7 @@ impl GromaqConfig {
                 actual: self.font.line_height_px,
             });
         }
+        validate_font_settings(&self.font)?;
         if !(1..=MAX_TARGET_FPS).contains(&self.performance.target_fps) {
             return Err(GromaqError::InvalidTargetFps {
                 minimum: 1,

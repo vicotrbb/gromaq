@@ -80,6 +80,9 @@ impl Default for WelcomeSettings {
 pub struct FontSettings {
     /// Font family name.
     pub family: String,
+    /// Optional ordered fallback font family names or explicit font file paths.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fallback_families: Vec<String>,
     /// Font size in pixels.
     pub size_px: f32,
     /// Optional terminal column width in pixels. Defaults to a compact monospace ratio.
@@ -93,6 +96,7 @@ impl Default for FontSettings {
     fn default() -> Self {
         Self {
             family: DEFAULT_FONT_FAMILY.to_owned(),
+            fallback_families: Vec::new(),
             size_px: 32.0,
             cell_width_px: None,
             line_height_px: 44.0,
@@ -154,6 +158,15 @@ pub(super) fn validate_shell_settings(shell: &ShellSettings) -> Result<()> {
     }
     if shell.cwd.as_ref().is_some_and(|cwd| cwd.trim().is_empty()) {
         return Err(GromaqError::InvalidShellCwd);
+    }
+    Ok(())
+}
+
+pub(super) fn validate_font_settings(font: &FontSettings) -> Result<()> {
+    for (index, fallback) in font.fallback_families.iter().enumerate() {
+        if fallback.trim().is_empty() {
+            return Err(GromaqError::InvalidFontFallback { index });
+        }
     }
     Ok(())
 }

@@ -67,13 +67,33 @@ pub fn run_native_app_with_runtime_renderer_font_and_config_file(
     font_family: impl Into<String>,
     config_path: Option<&Path>,
 ) -> Result<NativeAppRunReport, NativeAppError> {
-    let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
-    let event_proxy = event_loop.create_proxy();
-    let mut app = NativeTerminalApp::new_with_runtime_renderer_and_font_config(
+    run_native_app_with_runtime_renderer_font_fallbacks_and_config_file(
         config,
         runtime_config,
         renderer_config,
         font_family,
+        Vec::new(),
+        config_path,
+    )
+}
+
+/// Run the native app loop with explicit runtime, renderer, primary font, fallback fonts, and config reload path.
+pub fn run_native_app_with_runtime_renderer_font_fallbacks_and_config_file(
+    config: NativeAppConfig,
+    runtime_config: NativeTerminalRuntimeConfig,
+    renderer_config: RendererConfig,
+    font_family: impl Into<String>,
+    font_fallback_families: Vec<String>,
+    config_path: Option<&Path>,
+) -> Result<NativeAppRunReport, NativeAppError> {
+    let event_loop = EventLoop::<NativeAppEvent>::with_user_event().build()?;
+    let event_proxy = event_loop.create_proxy();
+    let mut app = NativeTerminalApp::new_with_runtime_renderer_font_and_fallback_config(
+        config,
+        runtime_config,
+        renderer_config,
+        font_family,
+        font_fallback_families,
     )?;
     if let Some(config_path) = config_path {
         app.set_config_reloader(

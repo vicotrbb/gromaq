@@ -36,12 +36,14 @@ mod welcome;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
 pub use fonts::{
     NativeFontResolution, load_default_native_glyph_cache, load_native_glyph_cache,
-    resolve_native_font_paths,
+    load_native_glyph_cache_with_fallbacks, resolve_native_font_paths,
+    resolve_native_font_paths_with_fallbacks,
 };
 pub use launch::{
     run_native_app, run_native_app_with_runtime_and_renderer_config,
     run_native_app_with_runtime_config, run_native_app_with_runtime_renderer_and_config_file,
     run_native_app_with_runtime_renderer_font_and_config_file,
+    run_native_app_with_runtime_renderer_font_fallbacks_and_config_file,
 };
 pub use lifecycle::{
     NativeAppAction, NativeAppConfig, NativeAppEvent, NativeAppEventProxy, NativeAppLifecycle,
@@ -72,6 +74,7 @@ pub struct NativeTerminalApp {
     renderer: WgpuRenderer,
     glyph_cache: RasterizedGlyphCache,
     font_family: String,
+    font_fallback_families: Vec<String>,
     pty_spawner: RealNativePtySpawner,
     gpu_context: Option<NativeGpuContext>,
     surface: Option<NativeWindowSurface<WgpuSurfaceBackend<'static>>>,

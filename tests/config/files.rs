@@ -139,6 +139,7 @@ fn config_serializes_to_valid_pretty_toml() {
     config.shell.args = vec!["-l".to_owned()];
     config.shell.cwd = Some("/tmp".to_owned());
     config.font.family = "Gromaq Mono".to_owned();
+    config.font.fallback_families = vec!["Apple Color Emoji".to_owned()];
 
     let toml = config.to_toml_string().unwrap();
     let parsed = GromaqConfig::from_toml_str(&toml).unwrap();
@@ -146,6 +147,7 @@ fn config_serializes_to_valid_pretty_toml() {
     assert!(toml.contains("[terminal]"));
     assert!(toml.contains("[shell]"));
     assert!(toml.contains("[theme]"));
+    assert!(toml.contains("fallback_families = [\"Apple Color Emoji\"]"));
     assert!(toml.contains("preset = \"gromaq-ghostty\""));
     assert_eq!(parsed, config);
 }

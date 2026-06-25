@@ -65,6 +65,13 @@ pub enum GromaqError {
         actual: f32,
     },
 
+    /// Configured font fallback names must contain usable values.
+    #[error("font fallback at index {index} must not be empty")]
+    InvalidFontFallback {
+        /// Index of the invalid fallback entry.
+        index: usize,
+    },
+
     /// Frame target must stay within supported deterministic pacing bounds.
     #[error("target fps must be between {minimum} and {maximum}, got {actual}")]
     InvalidTargetFps {

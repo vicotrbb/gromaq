@@ -17,13 +17,21 @@ use search::{
 pub struct NativeFontResolution {
     /// Primary mono font file used for ordinary terminal glyphs.
     pub primary_path: PathBuf,
-    /// Existing fallback font files used for symbols and emoji.
+    /// Existing configured and automatic fallback font files used for symbols and emoji.
     pub fallback_paths: Vec<PathBuf>,
 }
 
 /// Build a native glyph cache from a configured font path or the default system monospace font.
 pub fn load_native_glyph_cache(font_family: &str) -> Result<RasterizedGlyphCache, NativeAppError> {
-    let resolution = resolve_native_font_paths(font_family)?;
+    load_native_glyph_cache_with_fallbacks(font_family, &[])
+}
+
+/// Build a native glyph cache from configured primary and fallback font settings.
+pub fn load_native_glyph_cache_with_fallbacks(
+    font_family: &str,
+    fallback_families: &[String],
+) -> Result<RasterizedGlyphCache, NativeAppError> {
+    let resolution = resolve_native_font_paths_with_fallbacks(font_family, fallback_families)?;
     load_glyph_cache_from_resolution(&resolution)
 }
 
@@ -31,25 +39,21 @@ pub fn load_native_glyph_cache(font_family: &str) -> Result<RasterizedGlyphCache
 pub fn resolve_native_font_paths(
     font_family: &str,
 ) -> Result<NativeFontResolution, NativeAppError> {
+    resolve_native_font_paths_with_fallbacks(font_family, &[])
+}
+
+/// Resolve configured primary and fallback native font paths without loading font bytes.
+pub fn resolve_native_font_paths_with_fallbacks(
+    font_family: &str,
+    fallback_families: &[String],
+) -> Result<NativeFontResolution, NativeAppError> {
     let font_family = font_family.trim();
-    if let Some(path) = configured_font_file_path(font_family)? {
-        return Ok(NativeFontResolution {
-            primary_path: path.to_path_buf(),
-            fallback_paths: fallback_font_paths(),
-        });
-    }
-    if is_default_font_family(font_family) {
-        return default_native_font_resolution();
-    }
-    if let Some(path) = resolve_named_font_file_path(font_family) {
-        return Ok(NativeFontResolution {
-            primary_path: path,
-            fallback_paths: fallback_font_paths(),
-        });
-    }
-    Err(NativeAppError::Runtime(format!(
-        "configured font family is not installed or supported by name: {font_family}; use an explicit font file path"
-    )))
+    let primary_path = resolve_font_file_path(font_family)?;
+    let fallback_paths = configured_fallback_font_paths(&primary_path, fallback_families)?;
+    Ok(NativeFontResolution {
+        primary_path,
+        fallback_paths,
+    })
 }
 
 /// Build the default native glyph cache from a system monospace font.
@@ -59,15 +63,24 @@ pub fn load_default_native_glyph_cache() -> Result<RasterizedGlyphCache, NativeA
 }
 
 fn default_native_font_resolution() -> Result<NativeFontResolution, NativeAppError> {
-    if let Some(path) = first_existing_font_path(default_monospace_font_candidate_paths()) {
-        return Ok(NativeFontResolution {
-            primary_path: path,
-            fallback_paths: fallback_font_paths(),
-        });
+    resolve_native_font_paths(DEFAULT_FONT_FAMILY)
+}
+
+fn resolve_font_file_path(font_family: &str) -> Result<PathBuf, NativeAppError> {
+    if let Some(path) = configured_font_file_path(font_family)? {
+        return Ok(path.to_path_buf());
     }
-    Err(NativeAppError::Runtime(
-        "no default monospace system font found".to_owned(),
-    ))
+    if is_default_font_family(font_family) {
+        return first_existing_font_path(default_monospace_font_candidate_paths()).ok_or_else(
+            || NativeAppError::Runtime("no default monospace system font found".to_owned()),
+        );
+    }
+    if let Some(path) = resolve_named_font_file_path(font_family) {
+        return Ok(path);
+    }
+    Err(NativeAppError::Runtime(format!(
+        "configured font family is not installed or supported by name: {font_family}; use an explicit font file path"
+    )))
 }
 
 fn configured_font_file_path(font_family: &str) -> Result<Option<&Path>, NativeAppError> {
@@ -91,6 +104,28 @@ fn is_default_font_family(font_family: &str) -> bool {
 
 fn resolve_named_font_file_path(font_family: &str) -> Option<PathBuf> {
     first_existing_font_path(named_font_candidate_paths(font_family)?)
+}
+
+fn configured_fallback_font_paths(
+    primary_path: &Path,
+    fallback_families: &[String],
+) -> Result<Vec<PathBuf>, NativeAppError> {
+    let mut fallback_paths = Vec::new();
+    for family in fallback_families {
+        let path = resolve_font_file_path(family.trim())?;
+        push_unique_font_path(&mut fallback_paths, primary_path, path);
+    }
+    for path in fallback_font_paths() {
+        push_unique_font_path(&mut fallback_paths, primary_path, path);
+    }
+    Ok(fallback_paths)
+}
+
+fn push_unique_font_path(fallback_paths: &mut Vec<PathBuf>, primary_path: &Path, path: PathBuf) {
+    if path == primary_path || fallback_paths.iter().any(|existing| existing == &path) {
+        return;
+    }
+    fallback_paths.push(path);
 }
 
 fn load_glyph_cache_from_resolution(

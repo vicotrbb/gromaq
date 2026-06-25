@@ -200,6 +200,7 @@ enabled = true
 
 [font]
 family = "JetBrains Mono Nerd Font"
+# fallback_families = ["Apple Color Emoji"]
 size_px = 32.0
 # cell_width_px = 18
 line_height_px = 44.0
@@ -269,6 +270,8 @@ supported. Supported named aliases currently include `JetBrains Mono`,
 `Cascadia Mono`, `CaskaydiaCove Nerd Font`, `Iosevka Term`, `Geist Mono`,
 `Monaspace Neon`, `Fira Code`, `Fira Code Nerd Font`, `Hack`, `Hack Nerd Font`,
 `SF Mono`, and `Menlo`.
+`font.fallback_families = [...]` can add ordered fallback font names or explicit
+font file paths before the automatic symbol and emoji fallback stack.
 `gromaq --config-check <path>` reports the resolved primary font file and
 fallback font files, or an unresolved-font diagnostic if a named family cannot
 be found.

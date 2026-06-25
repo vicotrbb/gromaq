@@ -12,6 +12,7 @@ fn default_font_metrics_are_readable_for_native_terminal_windows() {
     let font = GromaqConfig::default().font;
 
     assert_eq!(font.family, DEFAULT_FONT_FAMILY);
+    assert!(font.fallback_families.is_empty());
     assert_eq!(font.size_px, 32.0);
     assert_eq!(font.renderer_font_size_px(), 32);
     assert_eq!(font.renderer_cell_width_px(), 18);
@@ -28,6 +29,16 @@ fn default_font_metrics_are_readable_for_native_terminal_windows() {
         (1.34..=1.40).contains(&line_height_ratio),
         "default terminal line height ratio {line_height_ratio:.2} should keep dark-theme text legible"
     );
+}
+
+#[test]
+fn invalid_font_fallback_entries_are_rejected() {
+    let mut config = GromaqConfig::default();
+    config.font.fallback_families = vec!["Symbols Nerd Font".to_owned(), "  ".to_owned()];
+
+    let error = config.validate().unwrap_err();
+
+    assert!(error.to_string().contains("font fallback at index 1"));
 }
 
 #[test]

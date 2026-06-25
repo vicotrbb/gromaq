@@ -75,6 +75,27 @@ fn native_app_applies_reloadable_font_file_path_without_restarting_runtime() {
 }
 
 #[test]
+fn native_app_applies_reloadable_font_fallbacks_without_restarting_runtime() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+    )
+    .unwrap();
+    let font_path = system_mono_font_path();
+    let fallback = font_path.to_string_lossy().into_owned();
+    let mut config = GromaqConfig::default();
+    config.font.family = font_path.to_string_lossy().into_owned();
+    config.font.fallback_families = vec![fallback.clone()];
+
+    app.apply_reloadable_gromaq_config(&config).unwrap();
+
+    assert_eq!(app.font_family(), font_path.to_string_lossy());
+    assert_eq!(app.font_fallback_families(), &[fallback]);
+    assert!(!app.runtime().has_shell_session());
+}
+
+#[test]
 fn native_app_applies_reloadable_terminal_config_without_restarting_runtime() {
     let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
         NativeAppConfig::default(),

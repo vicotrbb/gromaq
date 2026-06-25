@@ -3,7 +3,7 @@ use winit::keyboard::ModifiersState;
 use crate::app::{
     NativeAppConfig, NativeAppError, NativeAppLifecycle, NativeMouseButtonTracker,
     NativeResizeGridMapper, NativeTerminalApp, NativeTerminalRuntime, NativeTerminalRuntimeConfig,
-    RealNativePtySpawner, load_native_glyph_cache,
+    RealNativePtySpawner, load_native_glyph_cache_with_fallbacks,
 };
 use crate::config::DEFAULT_FONT_FAMILY;
 use crate::renderer::{RendererConfig, WgpuRenderer};
@@ -45,9 +45,26 @@ impl NativeTerminalApp {
     /// Create a native terminal app with explicit runtime, renderer, and font configuration.
     pub fn new_with_runtime_renderer_and_font_config(
         config: NativeAppConfig,
+        runtime_config: NativeTerminalRuntimeConfig,
+        renderer_config: RendererConfig,
+        font_family: impl Into<String>,
+    ) -> Result<Self, NativeAppError> {
+        Self::new_with_runtime_renderer_font_and_fallback_config(
+            config,
+            runtime_config,
+            renderer_config,
+            font_family,
+            Vec::new(),
+        )
+    }
+
+    /// Create a native terminal app with explicit runtime, renderer, primary font, and fallback fonts.
+    pub fn new_with_runtime_renderer_font_and_fallback_config(
+        config: NativeAppConfig,
         mut runtime_config: NativeTerminalRuntimeConfig,
         renderer_config: RendererConfig,
         font_family: impl Into<String>,
+        font_fallback_families: Vec<String>,
     ) -> Result<Self, NativeAppError> {
         let font_family = font_family.into();
         if config.width == 0 || config.height == 0 {
@@ -82,8 +99,12 @@ impl NativeTerminalApp {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,
             renderer: WgpuRenderer::new(renderer_config)?,
-            glyph_cache: load_native_glyph_cache(&font_family)?,
+            glyph_cache: load_native_glyph_cache_with_fallbacks(
+                &font_family,
+                &font_fallback_families,
+            )?,
             font_family,
+            font_fallback_families,
             pty_spawner: RealNativePtySpawner::default(),
             gpu_context: None,
             surface: None,

@@ -9,6 +9,7 @@ fn partial_toml_config_uses_defaults_and_validates() {
 
         [font]
         family = "JetBrains Mono"
+        fallback_families = ["Apple Color Emoji", "/tmp/fallback.ttf"]
         "#,
     )
     .unwrap();
@@ -20,6 +21,10 @@ fn partial_toml_config_uses_defaults_and_validates() {
         GromaqConfig::default().terminal.scrollback_lines
     );
     assert_eq!(config.font.family, "JetBrains Mono");
+    assert_eq!(
+        config.font.fallback_families,
+        ["Apple Color Emoji", "/tmp/fallback.ttf"]
+    );
     assert_eq!(config.shell, ShellSettings::default());
     assert_eq!(config.welcome, WelcomeSettings::default());
     assert_eq!(

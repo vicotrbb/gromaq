@@ -20,6 +20,10 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
         exit.stdout
             .contains("family = \"JetBrains Mono Nerd Font\"")
     );
+    assert!(
+        exit.stdout
+            .contains("# fallback_families = [\"Apple Color Emoji\"]")
+    );
     assert!(exit.stdout.contains("size_px = 32"));
     assert!(exit.stdout.contains("line_height_px = 44"));
     assert!(exit.stdout.contains("# cell_width_px = 18"));

@@ -86,9 +86,16 @@ impl NativeTerminalApp {
                 self.runtime.set_shell_command(reloaded_shell);
             }
         }
-        if self.font_family != config.font.family {
-            self.glyph_cache = super::load_native_glyph_cache(&config.font.family)?;
+        if self.font_family != config.font.family
+            || self.font_fallback_families != config.font.fallback_families
+        {
+            self.glyph_cache = super::load_native_glyph_cache_with_fallbacks(
+                &config.font.family,
+                &config.font.fallback_families,
+            )?;
             self.font_family.clone_from(&config.font.family);
+            self.font_fallback_families
+                .clone_from(&config.font.fallback_families);
         }
         self.resize_mapper = resize_mapper;
         self.lifecycle.apply_config(app_config);

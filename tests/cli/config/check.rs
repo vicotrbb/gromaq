@@ -16,6 +16,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
 
         [font]
         family = "Gromaq Mono"
+        fallback_families = ["JetBrains Mono Nerd Font", "/tmp/fallback.ttf"]
         size_px = 16.5
         cell_width_px = 11
         line_height_px = 21
@@ -64,6 +65,10 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
     assert!(
         exit.stdout
+            .contains("font configured fallbacks: JetBrains Mono Nerd Font /tmp/fallback.ttf")
+    );
+    assert!(
+        exit.stdout
             .contains("font source: <unresolved: native runtime failed: configured font family is not installed or supported by name: Gromaq Mono; use an explicit font file path>")
     );
     assert!(exit.stdout.contains("font fallbacks: <unknown>"));
@@ -84,6 +89,51 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme dim opacity: 0.42"));
     assert!(exit.stdout.contains("target fps: 120"));
     assert!(exit.stdout.contains("dirty-region rendering: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn config_check_cli_reports_resolved_configured_font_fallbacks() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("font-fallback-config.toml");
+    let font_path = system_mono_font_path();
+    fs::write(
+        &path,
+        format!(
+            r#"
+        [font]
+        family = "{}"
+        fallback_families = ["{}"]
+        "#,
+            font_path.display(),
+            font_path.display()
+        ),
+    )
+    .unwrap();
+
+    let path_arg = path.to_string_lossy().into_owned();
+    let exit = run_with_backend(["gromaq", "--config-check", path_arg.as_str()], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(
+        exit.stdout
+            .contains(&format!("font source: {}", font_path.display()))
+    );
+    assert!(exit.stdout.contains(&format!(
+        "font configured fallbacks: {}",
+        font_path.display()
+    )));
+    let font_fallbacks = exit
+        .stdout
+        .lines()
+        .find(|line| line.starts_with("font fallbacks:"))
+        .unwrap();
+    assert_ne!(font_fallbacks, "font fallbacks: <unknown>");
+    assert!(!font_fallbacks.contains(&font_path.display().to_string()));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
     let _ = fs::remove_file(path);

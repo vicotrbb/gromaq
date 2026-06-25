@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::app::{
     NativeAppConfig, NativeAppRunReport, NativeTerminalRuntimeConfig,
-    run_native_app_with_runtime_renderer_font_and_config_file,
+    run_native_app_with_runtime_renderer_font_fallbacks_and_config_file,
 };
 use crate::config::{DEFAULT_FONT_FAMILY, GromaqConfig, ShellSettings};
 use crate::pty::ShellCommand;
@@ -39,6 +39,8 @@ pub struct NativeAppLaunchConfig {
     pub renderer: RendererConfig,
     /// Font family name or explicit font file path for native glyph rasterization.
     pub font_family: String,
+    /// Ordered fallback font family names or explicit font file paths.
+    pub font_fallback_families: Vec<String>,
     /// Optional TOML config path to poll for reloadable changes after launch.
     pub config_path: Option<PathBuf>,
 }
@@ -50,6 +52,7 @@ impl Default for NativeAppLaunchConfig {
             runtime: NativeTerminalRuntimeConfig::default(),
             renderer: RendererConfig::default(),
             font_family: DEFAULT_FONT_FAMILY.to_owned(),
+            font_fallback_families: Vec::new(),
             config_path: None,
         }
     }
@@ -70,6 +73,7 @@ impl NativeAppLaunchConfig {
             runtime,
             renderer,
             font_family: config.font.family.clone(),
+            font_fallback_families: config.font.fallback_families.clone(),
             config_path: None,
         })
     }
@@ -93,11 +97,12 @@ impl NativeAppLauncher for RealNativeAppLauncher {
         &self,
         config: NativeAppLaunchConfig,
     ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
-        run_native_app_with_runtime_renderer_font_and_config_file(
+        run_native_app_with_runtime_renderer_font_fallbacks_and_config_file(
             config.app,
             config.runtime,
             config.renderer,
             config.font_family,
+            config.font_fallback_families,
             config.config_path.as_deref(),
         )
         .map_err(|error| NativeAppLaunchError::new(error.to_string()))

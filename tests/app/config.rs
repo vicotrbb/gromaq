@@ -234,3 +234,21 @@ fn native_app_can_start_with_configured_font_file_path() {
 
     assert_eq!(app.font_family(), font_path.to_string_lossy());
 }
+
+#[test]
+fn native_app_can_start_with_configured_font_fallback_paths() {
+    let font_path = system_mono_font_path();
+    let fallback = font_path.to_string_lossy().into_owned();
+
+    let app = NativeTerminalApp::new_with_runtime_renderer_font_and_fallback_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig::default(),
+        RendererConfig::default(),
+        font_path.to_string_lossy(),
+        vec![fallback.clone()],
+    )
+    .unwrap();
+
+    assert_eq!(app.font_family(), font_path.to_string_lossy());
+    assert_eq!(app.font_fallback_families(), &[fallback]);
+}

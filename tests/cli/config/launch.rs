@@ -49,6 +49,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
 
         [font]
         family = "{}"
+        fallback_families = ["{}"]
         size_px = 16.5
 
         [shell]
@@ -59,6 +60,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         [welcome]
         enabled = false
         "#,
+            font_path.display(),
             font_path.display()
         ),
     )
@@ -112,6 +114,10 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         }
     );
     assert_eq!(launches[0].font_family, font_path.to_string_lossy());
+    assert_eq!(
+        launches[0].font_fallback_families,
+        vec![font_path.to_string_lossy().into_owned()]
+    );
     assert_eq!(launches[0].config_path.as_deref(), Some(path.as_path()));
     let _ = fs::remove_file(path);
 }

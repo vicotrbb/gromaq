@@ -7,7 +7,8 @@ mod formatting;
 mod launch;
 
 use formatting::{
-    format_config_list, format_cursor_style, format_font_resolution, format_toml_string_array,
+    format_config_list, format_cursor_style, format_font_resolution_with_fallbacks,
+    format_toml_string_array,
 };
 pub use launch::{
     NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,
@@ -64,11 +65,14 @@ where
 pub(super) fn config_check_exit(path: &str) -> CliExit {
     match GromaqConfig::from_toml_file(path) {
         Ok(config) => {
-            let font_resolution = format_font_resolution(&config.font.family);
+            let font_resolution = format_font_resolution_with_fallbacks(
+                &config.font.family,
+                &config.font.fallback_families,
+            );
             CliExit {
                 code: 0,
                 stdout: format!(
-                    "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nwelcome enabled: {}\nfont: {} {}px\nfont source: {}\nfont fallbacks: {}\ncell width: {}px\nline height: {}px\ntheme preset: {}\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntheme selection: {}\ntheme background opacity: {}\ntheme cursor opacity: {}\ntheme selection opacity: {}\ntheme cursor style: {}\ntheme cursor blinking: {}\ntheme surface padding px: {}\ntheme cell spacing px: {}\ntheme dim opacity: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
+                    "config check: ok\npath: {}\nterminal: {}x{}\nscrollback lines: {}\nshell: {}\nshell args: {}\nshell cwd: {}\nwelcome enabled: {}\nfont: {} {}px\nfont configured fallbacks: {}\nfont source: {}\nfont fallbacks: {}\ncell width: {}px\nline height: {}px\ntheme preset: {}\ntheme background: {}\ntheme foreground: {}\ntheme cursor: {}\ntheme selection: {}\ntheme background opacity: {}\ntheme cursor opacity: {}\ntheme selection opacity: {}\ntheme cursor style: {}\ntheme cursor blinking: {}\ntheme surface padding px: {}\ntheme cell spacing px: {}\ntheme dim opacity: {}\ntarget fps: {}\ndirty-region rendering: {}\n",
                     path,
                     config.terminal.cols,
                     config.terminal.rows,
@@ -79,6 +83,7 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
                     config.welcome.enabled,
                     config.font.family,
                     config.font.size_px,
+                    format_config_list(&config.font.fallback_families),
                     font_resolution.primary,
                     font_resolution.fallbacks,
                     config.font.renderer_cell_width_px(),
@@ -115,7 +120,7 @@ pub(super) fn config_template_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[welcome]\nenabled = {}\n\n[font]\nfamily = \"{}\"\nsize_px = {}\n# cell_width_px = {}\nline_height_px = {}\n\n[theme]\n# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty\npreset = \"{}\"\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\nselection = \"{}\"\nbackground_opacity = {}\ncursor_opacity = {}\nselection_opacity = {}\ncursor_style = \"{}\"\ncursor_blinking = {}\nansi = {}\nsurface_padding_px = {}\ncell_spacing_px = {}\ndim_opacity = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
+            "# Gromaq configuration template\n\n[terminal]\ncols = {}\nrows = {}\nscrollback_lines = {}\n\n[shell]\n# program = \"/bin/zsh\"\n# args = [\"-l\"]\n# cwd = \"/tmp\"\n\n[welcome]\nenabled = {}\n\n[font]\nfamily = \"{}\"\n# fallback_families = [\"Apple Color Emoji\"]\nsize_px = {}\n# cell_width_px = {}\nline_height_px = {}\n\n[theme]\n# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty\npreset = \"{}\"\nbackground = \"{}\"\nforeground = \"{}\"\ncursor = \"{}\"\nselection = \"{}\"\nbackground_opacity = {}\ncursor_opacity = {}\nselection_opacity = {}\ncursor_style = \"{}\"\ncursor_blinking = {}\nansi = {}\nsurface_padding_px = {}\ncell_spacing_px = {}\ndim_opacity = {}\n\n[performance]\ntarget_fps = {}\ndirty_region_rendering = {}\n",
             config.terminal.cols,
             config.terminal.rows,
             config.terminal.scrollback_lines,
