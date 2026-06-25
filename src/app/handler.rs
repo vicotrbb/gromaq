@@ -151,6 +151,12 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     event_loop.exit();
                 }
             }
+            WindowEvent::Occluded(false) => {
+                if let Some(window) = &self.window {
+                    window.request_redraw();
+                }
+            }
+            WindowEvent::Occluded(true) => {}
             WindowEvent::MouseInput { state, button, .. } => {
                 if let Some(button) = native_mouse_button(button) {
                     let kind = if state == ElementState::Pressed {
