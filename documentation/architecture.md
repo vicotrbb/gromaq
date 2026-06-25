@@ -21,7 +21,8 @@ handoff, and validation tooling.
 - `renderer`: CPU-side render planning, glyph atlas metadata, quad generation,
   prepared surface frames, surface lifecycle planning, and `wgpu` surface-frame
   drawing. Prepared-frame preview color conversion and blending live in a
-  focused child module.
+  focused child module, and surface configuration choice/error policy lives in
+  a dedicated planner child module.
 - `native_gpu`: GPU bootstrap, offscreen smoke paths, surface creation, upload
   and draw/readback helpers, and structured GPU reports.
 - `app`: native `winit` app wiring, lifecycle state, launch wrappers, config
