@@ -99,6 +99,53 @@ fn runtime_glyph_frame_snapshot_cli_writes_preview_without_gpu_bootstrap() {
 }
 
 #[test]
+fn runtime_glyph_frame_snapshot_cli_requires_output_path() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-glyph-frame-snapshot"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(
+        exit.stderr
+            .contains("missing snapshot path for --runtime-glyph-frame-snapshot")
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn runtime_glyph_frame_snapshot_cli_rejects_extra_arguments() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = std::env::temp_dir().join(format!(
+        "gromaq-runtime-glyph-frame-extra-{}.ppm",
+        std::process::id()
+    ));
+    let _ = fs::remove_file(&path);
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--runtime-glyph-frame-snapshot",
+            path.to_str().unwrap(),
+            "extra",
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(!path.exists());
+}
+
+#[test]
 fn runtime_repaint_smoke_cli_preserves_shell_output_after_prompt_repaint() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
