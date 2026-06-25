@@ -73,10 +73,10 @@ fn font_search_roots() -> Vec<PathBuf> {
 }
 
 const DEFAULT_PREFERRED_MONO_FONT_FILES: &[&str] = &[
+    "MesloLGS NF Regular.ttf",
     "JetBrainsMonoNerdFont-Regular.ttf",
     "JetBrainsMonoNLNerdFont-Regular.ttf",
     "JetBrainsMono-Regular.ttf",
-    "MesloLGS NF Regular.ttf",
     "CaskaydiaCoveNerdFont-Regular.ttf",
     "CascadiaMono.ttf",
     "IosevkaTerm-Regular.ttf",

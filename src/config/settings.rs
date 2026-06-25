@@ -20,8 +20,8 @@ pub const MIN_LINE_HEIGHT_PX: f32 = 6.0;
 pub const MAX_LINE_HEIGHT_PX: f32 = 1024.0;
 /// Maximum supported target refresh rate for deterministic frame pacing.
 pub const MAX_TARGET_FPS: u32 = 1_000;
-/// Built-in automatic monospace font stack.
-pub const DEFAULT_FONT_FAMILY: &str = "monospace";
+/// Built-in automatic terminal font preference.
+pub const DEFAULT_FONT_FAMILY: &str = "MesloLGS NF";
 
 /// Terminal section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

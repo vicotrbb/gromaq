@@ -6,8 +6,8 @@ fn default_font_stack_prefers_polished_user_fonts_before_system_fallbacks() {
     let names = candidate_file_names(&candidates);
 
     let sf_mono_index = file_name_index(&names, "SFNSMono.ttf");
+    assert_eq!(file_name_index(&names, "MesloLGS NF Regular.ttf"), 0);
     assert!(file_name_index(&names, "JetBrainsMonoNerdFont-Regular.ttf") < sf_mono_index);
-    assert!(file_name_index(&names, "MesloLGS NF Regular.ttf") < sf_mono_index);
     assert!(file_name_index(&names, "GeistMonoNerdFont-Regular.otf") < sf_mono_index);
     assert!(file_name_index(&names, "MonaspaceNeon-Regular.otf") < sf_mono_index);
     assert!(file_name_index(&names, "FiraCodeNerdFont-Regular.ttf") < sf_mono_index);

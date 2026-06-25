@@ -6,6 +6,7 @@ use crate::renderer::RendererConfig;
 const AVATAR_EDGE_WIDTH: usize = 4;
 const AVATAR_BODY_WIDTH: usize = 10;
 const AVATAR_ACCENT_WIDTH: usize = 4;
+const SECTION_LABEL: &str = "  --";
 
 pub(super) fn default_welcome_text(
     app: &NativeAppConfig,
@@ -14,49 +15,43 @@ pub(super) fn default_welcome_text(
     font_family: &str,
 ) -> String {
     let stats = [
-        ("Gromaq", "native Rust GPU terminal".to_owned()),
-        (
+        WelcomeLine::section("Gromaq"),
+        WelcomeLine::metric("Build", "native Rust GPU terminal"),
+        WelcomeLine::metric(
             "System",
             format!("{}/{}", std::env::consts::OS, std::env::consts::ARCH),
         ),
-        (
+        WelcomeLine::section("Session"),
+        WelcomeLine::metric(
             "Terminal",
             format!("{}x{} cells", runtime.terminal_cols, runtime.terminal_rows),
         ),
-        ("Scrollback", format!("{} lines", runtime.scrollback_lines)),
-        (
-            "Renderer",
+        WelcomeLine::metric("Scrollback", format!("{} lines", runtime.scrollback_lines)),
+        WelcomeLine::metric("Shell", runtime.shell.program.to_string_lossy()),
+        WelcomeLine::section("Renderer"),
+        WelcomeLine::metric(
+            "Font",
             format!(
-                "{}px font, {}px line, {}px cell",
-                renderer.font_size_px, renderer.line_height_px, renderer.cell_width_px
+                "{}  {}px / {}px line",
+                font_family, renderer.font_size_px, renderer.line_height_px
             ),
         ),
-        ("Frame", format!("target {} fps", app.target_fps)),
-        (
+        WelcomeLine::metric("Cell", format!("{}px wide", renderer.cell_width_px)),
+        WelcomeLine::metric(
+            "Frame",
+            format!("target {} fps, dirty regions", app.target_fps),
+        ),
+        WelcomeLine::section("Theme"),
+        WelcomeLine::metric(
             "Surface",
             format!(
-                "{}px padding, {}px spacing",
-                renderer.surface_padding_px, renderer.cell_spacing_px
-            ),
-        ),
-        (
-            "Theme",
-            format!(
-                "background opacity {}%",
+                "{}px padding, opacity {}%",
+                renderer.surface_padding_px,
                 opacity_percent(renderer.clear_color[3])
             ),
         ),
-        ("Palette", "truecolor ANSI + dim text".to_owned()),
-        (
-            "Shell",
-            runtime.shell.program.to_string_lossy().into_owned(),
-        ),
-        ("Font", font_family.to_owned()),
-        ("Input", "keyboard, mouse, paste, zoom".to_owned()),
-        ("Clipboard", "native copy/paste + OSC 52".to_owned()),
-        ("Status", "ready".to_owned()),
-        ("", String::new()),
-        ("", String::new()),
+        WelcomeLine::metric("Palette", "truecolor ANSI + dim text"),
+        WelcomeLine::metric("Input", "keyboard, mouse, paste, zoom"),
     ];
 
     let style = WelcomeStyle::from_renderer(renderer);
@@ -64,15 +59,24 @@ pub(super) fn default_welcome_text(
     for (row, avatar) in style.avatar_rows.iter().enumerate() {
         text.push_str(&avatar_row(*avatar));
         text.push_str("  ");
-        let (label, value) = &stats[row];
-        if !label.is_empty() {
-            text.push_str(&bold_foreground(style.title));
-            text.push_str(label);
-            text.push_str("\x1b[0m");
-            text.push_str("  ");
-            text.push_str(&foreground(style.value));
-            text.push_str(value);
-            text.push_str("\x1b[0m");
+        match &stats[row] {
+            WelcomeLine::Metric { label, value } => {
+                text.push_str(&bold_foreground(style.title));
+                text.push_str(label);
+                text.push_str("\x1b[0m");
+                text.push_str("  ");
+                text.push_str(&foreground(style.value));
+                text.push_str(value);
+                text.push_str("\x1b[0m");
+            }
+            WelcomeLine::Section(label) => {
+                text.push_str(&foreground(style.section));
+                text.push_str(SECTION_LABEL);
+                text.push(' ');
+                text.push_str(label);
+                text.push_str(" --------------------------------");
+                text.push_str("\x1b[0m");
+            }
         }
         text.push_str("\r\n");
     }
@@ -83,7 +87,27 @@ pub(super) fn default_welcome_text(
 struct WelcomeStyle {
     title: [u8; 3],
     value: [u8; 3],
-    avatar_rows: [AvatarRow; 16],
+    section: [u8; 3],
+    avatar_rows: [AvatarRow; 15],
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum WelcomeLine {
+    Metric { label: &'static str, value: String },
+    Section(&'static str),
+}
+
+impl WelcomeLine {
+    fn metric(label: &'static str, value: impl ToString) -> Self {
+        Self::Metric {
+            label,
+            value: value.to_string(),
+        }
+    }
+
+    const fn section(label: &'static str) -> Self {
+        Self::Section(label)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -109,6 +133,7 @@ impl WelcomeStyle {
         Self {
             title: renderer.default_foreground_rgb8,
             value: ansi[14],
+            section: ansi[8],
             avatar_rows: [
                 AvatarRow::new(base, selection, ansi[4]),
                 AvatarRow::new(base, ansi[4], ansi[12]),
@@ -125,7 +150,6 @@ impl WelcomeStyle {
                 AvatarRow::new(ansi[12], ansi[13], ansi[5]),
                 AvatarRow::new(ansi[13], muted, ansi[8]),
                 AvatarRow::new(muted, selection, base),
-                AvatarRow::new(base, muted, selection),
             ],
         }
     }

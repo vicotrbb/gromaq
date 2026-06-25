@@ -84,7 +84,9 @@ fn configured_font_file_path(font_family: &str) -> Result<Option<&Path>, NativeA
 }
 
 fn is_default_font_family(font_family: &str) -> bool {
-    font_family.is_empty() || font_family.eq_ignore_ascii_case(DEFAULT_FONT_FAMILY)
+    font_family.is_empty()
+        || font_family.eq_ignore_ascii_case(DEFAULT_FONT_FAMILY)
+        || font_family.eq_ignore_ascii_case("monospace")
 }
 
 fn resolve_named_font_file_path(font_family: &str) -> Option<PathBuf> {

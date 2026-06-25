@@ -29,7 +29,8 @@ fn native_terminal_app_new_writes_default_welcome_screen() {
     let app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
     let visible = visible_runtime_text(&app);
 
-    assert!(visible.contains("Gromaq"));
+    assert!(visible.contains("Build"));
+    assert!(visible.contains("Session"));
     assert!(visible.contains("native Rust GPU terminal"));
     assert!(visible.contains("System"));
     assert!(visible.contains("Terminal"));
