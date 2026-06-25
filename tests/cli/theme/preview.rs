@@ -149,6 +149,66 @@ fn theme_preview_config_requires_config_and_output_paths() {
 }
 
 #[test]
+fn theme_preview_config_rejects_invalid_config_without_writing_snapshot() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let config_path = std::env::temp_dir().join(format!(
+        "gromaq-theme-preview-invalid-{}.toml",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let snapshot_path = std::env::temp_dir().join("gromaq-theme-preview-invalid.ppm");
+    fs::write(&config_path, "[theme]\nbackground_opacity = 2.0\n").unwrap();
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--theme-preview-config",
+            config_path.to_str().unwrap(),
+            snapshot_path.to_str().unwrap(),
+        ],
+        &backend,
+    );
+
+    fs::remove_file(&config_path).unwrap();
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.contains("theme preview snapshot failed:"));
+    assert!(exit.stderr.contains("background opacity"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(!snapshot_path.exists());
+}
+
+#[test]
+fn theme_preview_config_rejects_extra_arguments() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let snapshot_path = std::env::temp_dir().join("gromaq-theme-preview-config-extra.ppm");
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--theme-preview-config",
+            "gromaq.toml",
+            snapshot_path.to_str().unwrap(),
+            "extra",
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(!snapshot_path.exists());
+}
+
+#[test]
 fn theme_preview_snapshot_rejects_extra_arguments() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
