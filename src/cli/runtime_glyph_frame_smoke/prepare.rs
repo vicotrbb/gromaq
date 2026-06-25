@@ -27,6 +27,7 @@ pub(super) struct PreparedRuntimeGlyphFrameSmoke {
     pub(super) reused_glyphs: usize,
     pub(super) line_height_px: u16,
     pub(super) surface_padding_px: u16,
+    pub(super) cell_spacing_px: u16,
     pub(super) expected_selection: [u8; 4],
     pub(super) prepared: PreparedSurfaceGlyphFrame,
 }
@@ -154,6 +155,7 @@ pub(super) fn prepare_runtime_glyph_frame_smoke() -> Result<PreparedRuntimeGlyph
         reused_glyphs: glyphs.reused,
         line_height_px: renderer.config().line_height_px,
         surface_padding_px: renderer.config().surface_padding_px,
+        cell_spacing_px: renderer.config().cell_spacing_px,
         expected_selection: renderer.config().selection_background_rgba8,
         prepared,
     })

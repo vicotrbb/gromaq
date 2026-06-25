@@ -24,7 +24,7 @@ pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
         Ok(report) => CliExit {
             code: 0,
             stdout: format!(
-                "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nsurface padding px: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
+                "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nsurface padding px: {}\ncell spacing px: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
                 report.bytes_written,
                 report.width,
                 report.height,
@@ -33,6 +33,7 @@ pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
                 report.cell_width_px,
                 report.line_height_px,
                 report.surface_padding_px,
+                report.cell_spacing_px,
                 report.prepared_quads,
                 report.background_quads,
                 report.cursor_quads,
@@ -58,6 +59,7 @@ struct ThemePreviewSnapshotReport {
     cell_width_px: u16,
     line_height_px: u16,
     surface_padding_px: u16,
+    cell_spacing_px: u16,
     prepared_quads: usize,
     background_quads: usize,
     cursor_quads: usize,
@@ -134,6 +136,7 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
         cell_width_px: renderer_config.cell_width_px,
         line_height_px: renderer_config.line_height_px,
         surface_padding_px: renderer_config.surface_padding_px,
+        cell_spacing_px: renderer_config.cell_spacing_px,
         prepared_quads: frame.batch.quads.len(),
         background_quads: frame.background_batch.quads.len(),
         cursor_quads: frame.cursor_batch.quads.len(),

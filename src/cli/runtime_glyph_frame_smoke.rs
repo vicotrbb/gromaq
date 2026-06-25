@@ -39,7 +39,7 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nselection backgrounds: {}\nrenderer atlas hits: {}\nrenderer atlas misses: {}\nrenderer atlas entries: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\nframe size: {}x{}\nline height px: {}\nsurface padding px: {}\n",
+            "runtime glyph frame smoke: ok\npumped bytes: {}\nplanned glyphs: {}\nselection backgrounds: {}\nrenderer atlas hits: {}\nrenderer atlas misses: {}\nrenderer atlas entries: {}\nrasterized glyphs: {}\nreused glyphs: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\nframe size: {}x{}\nline height px: {}\nsurface padding px: {}\ncell spacing px: {}\n",
             prepared.pumped_bytes,
             prepared.planned_glyphs,
             prepared.selection_backgrounds,
@@ -55,7 +55,8 @@ pub(super) fn runtime_glyph_frame_smoke_exit() -> CliExit {
             surface_frame.width,
             surface_frame.height,
             prepared.line_height_px,
-            prepared.surface_padding_px
+            prepared.surface_padding_px,
+            prepared.cell_spacing_px
         ),
         stderr: String::new(),
     }
