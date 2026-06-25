@@ -3,6 +3,7 @@
 mod export;
 mod legibility;
 mod list;
+mod pixels;
 mod ppm;
 mod preview;
 mod welcome;

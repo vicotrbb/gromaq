@@ -13,13 +13,12 @@ use crate::{Terminal, TerminalConfig};
 use super::super::CliExit;
 
 mod output;
-mod pixels;
 
+use super::pixels::validate_theme_preview_pixels;
 use super::ppm::ppm_bytes;
 use output::{
     ThemePreviewSnapshotReport, theme_preview_snapshot_error, theme_preview_snapshot_success,
 };
-use pixels::validate_theme_preview_pixels;
 
 const THEME_PREVIEW_COLS: u16 = 56;
 const THEME_PREVIEW_ROWS: u16 = 6;

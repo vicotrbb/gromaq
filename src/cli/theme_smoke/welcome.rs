@@ -13,6 +13,7 @@ use crate::renderer::{
 use crate::{Terminal, TerminalConfig};
 
 use super::super::CliExit;
+use super::pixels::validate_welcome_preview_pixels;
 use super::ppm::ppm_bytes;
 
 const WELCOME_PREVIEW_COLS: u16 = 80;
@@ -23,6 +24,7 @@ struct WelcomePreviewReport {
     bytes_written: usize,
     width: u32,
     height: u32,
+    high_contrast_text_pixels: usize,
     glyph_quads: usize,
     cursor_quads: usize,
     atlas_bytes: usize,
@@ -107,6 +109,8 @@ fn welcome_preview_snapshot_report(path: &str) -> Result<WelcomePreviewReport, S
     let preview = prepared
         .preview_rgba8()
         .map_err(|error| error.to_string())?;
+    let pixel_report =
+        validate_welcome_preview_pixels(&preview.rgba, preview.width, renderer_config.clear_color)?;
     let snapshot = ppm_bytes(preview.width, preview.height, &preview.rgba)?;
     fs::write(Path::new(path), &snapshot)
         .map_err(|error| format!("failed to write welcome preview snapshot: {error}"))?;
@@ -115,6 +119,7 @@ fn welcome_preview_snapshot_report(path: &str) -> Result<WelcomePreviewReport, S
         bytes_written: snapshot.len(),
         width: preview.width,
         height: preview.height,
+        high_contrast_text_pixels: pixel_report.high_contrast_text_pixels,
         glyph_quads: frame.batch.quads.len(),
         cursor_quads: frame.cursor_batch.quads.len(),
         atlas_bytes: frame.atlas.rgba.len(),
@@ -129,13 +134,14 @@ fn welcome_preview_snapshot_success(path: &str, report: &WelcomePreviewReport) -
     CliExit {
         code: 0,
         stdout: format!(
-            "welcome preview snapshot: ok\npath: {path}\npreset: {}\nbytes written: {}\nframe size: {}x{}\nterminal cells: {}x{}\nglyph quads: {}\ncursor quads: {}\natlas bytes: {}\n",
+            "welcome preview snapshot: ok\npath: {path}\npreset: {}\nbytes written: {}\nframe size: {}x{}\nterminal cells: {}x{}\nhigh contrast text pixels: {}\nglyph quads: {}\ncursor quads: {}\natlas bytes: {}\n",
             format_theme_preset(GromaqConfig::default().theme.preset),
             report.bytes_written,
             report.width,
             report.height,
             WELCOME_PREVIEW_COLS,
             WELCOME_PREVIEW_ROWS,
+            report.high_contrast_text_pixels,
             report.glyph_quads,
             report.cursor_quads,
             report.atlas_bytes
