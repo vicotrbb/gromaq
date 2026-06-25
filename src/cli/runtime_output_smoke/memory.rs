@@ -10,10 +10,15 @@ use super::{
     RUNTIME_OUTPUT_SMOKE_COLS, RUNTIME_OUTPUT_SMOKE_ROWS, runtime_output_smoke_viewport_cells,
 };
 
+mod output;
 mod rss;
 #[cfg(test)]
 mod tests;
 
+use output::{
+    RuntimeMemorySmokeReport, runtime_memory_smoke_error, runtime_memory_smoke_failure,
+    runtime_memory_smoke_success,
+};
 use rss::current_process_rss_kib;
 
 const RUNTIME_MEMORY_SMOKE_WARMUP_BATCHES: usize = 1;
@@ -153,42 +158,21 @@ fn runtime_memory_smoke_exit_with_sampler(
         );
     }
 
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime memory smoke: ok\nwarmup batches: {}\nmeasured batches: {}\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nscrollback cells: {}\nscrollback max cells: {}\nrendered frames: {}\nrendered dirty cells max: {}\nrss baseline kib: {}\nrss peak kib: {}\nrss growth kib: {}\nrss growth cap kib: {}\nlast visible line: {}\n",
-            RUNTIME_MEMORY_SMOKE_WARMUP_BATCHES,
-            RUNTIME_MEMORY_SMOKE_MEASURED_BATCHES,
-            total_lines,
-            pumped_bytes,
-            state.scrollback_limit,
-            state.scrollback_lines,
-            state.scrollback_cells,
-            state.scrollback_cell_limit,
-            metrics.rendered_frames,
-            metrics.rendered_dirty_cells_max,
-            baseline_rss_kib,
-            peak_rss_kib,
-            rss_growth_kib,
-            RUNTIME_MEMORY_SMOKE_RSS_GROWTH_LIMIT_KIB,
-            last_line
-        ),
-        stderr: String::new(),
-    }
-}
-
-fn runtime_memory_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime memory smoke failed: {error}\n"),
-    }
-}
-
-fn runtime_memory_smoke_failure(reason: &str) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime memory smoke failed: {reason}\n"),
-    }
+    runtime_memory_smoke_success(&RuntimeMemorySmokeReport {
+        warmup_batches: RUNTIME_MEMORY_SMOKE_WARMUP_BATCHES,
+        measured_batches: RUNTIME_MEMORY_SMOKE_MEASURED_BATCHES,
+        total_lines,
+        pumped_bytes,
+        scrollback_cap: state.scrollback_limit,
+        scrollback_lines: state.scrollback_lines,
+        scrollback_cells: state.scrollback_cells,
+        scrollback_cell_limit: state.scrollback_cell_limit,
+        rendered_frames: metrics.rendered_frames,
+        rendered_dirty_cells_max: metrics.rendered_dirty_cells_max,
+        baseline_rss_kib,
+        peak_rss_kib,
+        rss_growth_kib,
+        rss_growth_cap_kib: RUNTIME_MEMORY_SMOKE_RSS_GROWTH_LIMIT_KIB,
+        last_line,
+    })
 }
