@@ -242,7 +242,8 @@ Use `gromaq --theme-list` to inspect the built-in presets and their core
 theme tokens. Use `gromaq --theme-export <preset> <path>` to write an
 importable `[theme]` TOML block for a built-in preset.
 Use `gromaq --theme-preview-config <config> <path>` to render a deterministic
-preview snapshot from any TOML config before adopting it.
+preview snapshot from any TOML config, including background, cursor, and
+selection opacity, before adopting it.
 
 `[welcome].enabled = true` shows the built-in startup screen with system,
 terminal, renderer, and theme stats before the shell prompt. Set it to `false`

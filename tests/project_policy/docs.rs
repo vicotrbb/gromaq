@@ -20,6 +20,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm",
     ),
     ("README.md", "cargo run -- --theme-preview-config"),
+    ("README.md", "selection opacity, before adopting it"),
     ("documentation/theme.md", "32 px font size"),
     ("documentation/theme.md", "44 px line height"),
     ("documentation/theme.md", "18 px automatic cell width"),
