@@ -49,6 +49,27 @@ fn test_api_encodes_keys_without_mutating_grid() {
 }
 
 #[test]
+fn test_api_dumps_title_and_clipboard_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+
+    TerminalTestApi::paste_text(
+        &mut terminal,
+        "\x1b]2;Gromaq API\x07\x1b]52;c;YXBpIGNvcHk=\x07",
+    )
+    .unwrap();
+
+    assert_eq!(
+        TerminalTestApi::dump_title(&terminal).as_deref(),
+        Some("Gromaq API")
+    );
+    assert_eq!(
+        TerminalTestApi::dump_clipboard_text(&terminal).as_deref(),
+        Some("api copy")
+    );
+    assert_eq!(TerminalTestApi::dump_grid(&terminal).line_text(0), "");
+}
+
+#[test]
 fn test_api_screenshot_captures_text_and_cursor_pixels() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
     TerminalTestApi::paste_text(&mut terminal, "A").unwrap();

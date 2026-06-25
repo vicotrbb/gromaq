@@ -22,6 +22,10 @@ pub trait TerminalTestApi {
     fn dump_cursor(&self) -> CursorSnapshot;
     /// Dump performance counters.
     fn dump_perf_metrics(&self) -> PerfSnapshot;
+    /// Dump the current OSC window title, when one has been set.
+    fn dump_title(&self) -> Option<String>;
+    /// Dump clipboard text accepted from OSC 52, when one has been set.
+    fn dump_clipboard_text(&self) -> Option<String>;
     /// Capture a screenshot.
     fn screenshot(&self) -> Screenshot;
 }
@@ -53,6 +57,14 @@ impl TerminalTestApi for Terminal {
 
     fn dump_perf_metrics(&self) -> PerfSnapshot {
         Terminal::dump_perf_metrics(self)
+    }
+
+    fn dump_title(&self) -> Option<String> {
+        Terminal::dump_title(self)
+    }
+
+    fn dump_clipboard_text(&self) -> Option<String> {
+        Terminal::dump_clipboard_text(self)
     }
 
     fn screenshot(&self) -> Screenshot {
