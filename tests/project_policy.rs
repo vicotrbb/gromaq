@@ -75,6 +75,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo test --all",
     "cargo run -- --runtime-real-shell-perf-budget-smoke",
+    "cargo run -- --runtime-real-shell-large-output-smoke",
     "cargo bench --bench parser_throughput -- --list",
 ];
 
