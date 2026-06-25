@@ -1,4 +1,4 @@
-use gromaq::{GromaqConfig, TerminalConfig};
+use gromaq::{DEFAULT_FONT_FAMILY, GromaqConfig, TerminalConfig};
 
 #[test]
 fn default_config_is_valid() {
@@ -11,6 +11,7 @@ fn default_config_is_valid() {
 fn default_font_metrics_are_readable_for_native_terminal_windows() {
     let font = GromaqConfig::default().font;
 
+    assert_eq!(font.family, DEFAULT_FONT_FAMILY);
     assert_eq!(font.size_px, 32.0);
     assert_eq!(font.renderer_font_size_px(), 32);
     assert_eq!(font.renderer_cell_width_px(), 18);
