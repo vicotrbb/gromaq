@@ -114,6 +114,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "surface_padding_px = 14"),
     ("README.md", "cell_spacing_px = 0"),
     ("README.md", "preset = \"gromaq-ghostty\""),
+    ("README.md", "cargo run -- --theme-list"),
     ("README.md", "cargo run -- --runtime-text-zoom-smoke"),
     ("README.md", "cargo run -- --theme-legibility-smoke"),
     (
@@ -140,6 +141,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/theme.md",
         "`cargo run -- --theme-preview-snapshot",
     ),
+    ("documentation/theme.md", "gromaq --theme-list"),
     ("documentation/compatibility.md", "34/19/47 px"),
     ("documentation/compatibility.md", "39/22/54 px"),
     ("documentation/compatibility.md", "gromaq-ghostty"),
