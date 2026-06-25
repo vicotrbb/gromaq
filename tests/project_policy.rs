@@ -36,6 +36,7 @@ const FORBIDDEN_DEPENDENCIES: &[&str] = &[
 
 const UNSAFE_FORBIDDEN_CRATE_ROOTS: &[&str] = &["src/lib.rs", "src/main.rs"];
 const MAX_SOURCE_FILE_LINES: usize = 214;
+const MAX_CLI_TEST_FILE_LINES: usize = 285;
 
 const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "README.md",
@@ -299,6 +300,21 @@ fn source_modules_stay_small_enough_to_review() {
     );
 }
 
+#[test]
+fn cli_test_modules_stay_small_enough_to_review() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let cli_tests = root.join("tests/cli");
+    let mut violations = Vec::new();
+
+    collect_line_limit_violations(root, &cli_tests, MAX_CLI_TEST_FILE_LINES, &mut violations);
+    violations.sort();
+
+    assert!(
+        violations.is_empty(),
+        "CLI test files must stay under {MAX_CLI_TEST_FILE_LINES} lines for reviewable behavior groups: {violations:#?}"
+    );
+}
+
 fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Vec<String>) {
     for entry in fs::read_dir(dir).unwrap() {
         let entry = entry.unwrap();
@@ -321,12 +337,21 @@ fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Ve
 }
 
 fn collect_source_line_limit_violations(root: &Path, dir: &Path, violations: &mut Vec<String>) {
+    collect_line_limit_violations(root, dir, MAX_SOURCE_FILE_LINES, violations);
+}
+
+fn collect_line_limit_violations(
+    root: &Path,
+    dir: &Path,
+    maximum_lines: usize,
+    violations: &mut Vec<String>,
+) {
     for entry in fs::read_dir(dir).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
 
         if path.is_dir() {
-            collect_source_line_limit_violations(root, &path, violations);
+            collect_line_limit_violations(root, &path, maximum_lines, violations);
             continue;
         }
 
@@ -336,7 +361,7 @@ fn collect_source_line_limit_violations(root: &Path, dir: &Path, violations: &mu
 
         let source = fs::read_to_string(&path).unwrap();
         let line_count = source.lines().count();
-        if line_count > MAX_SOURCE_FILE_LINES {
+        if line_count > maximum_lines {
             violations.push(format!(
                 "{} has {line_count} lines",
                 relative_path(root, &path)
