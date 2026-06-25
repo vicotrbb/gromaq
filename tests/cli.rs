@@ -23,7 +23,7 @@ mod runtime_smoke;
 mod support;
 #[path = "cli/theme.rs"]
 mod theme;
-#[path = "cli/window.rs"]
+#[path = "cli/window/mod.rs"]
 mod window;
 
 pub(crate) use support::{
