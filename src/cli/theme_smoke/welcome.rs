@@ -61,6 +61,9 @@ fn welcome_preview_snapshot_report(path: &str) -> Result<WelcomePreviewReport, S
     terminal
         .write_str(&text)
         .map_err(|error| error.to_string())?;
+    terminal
+        .write_str("\x1b[?25l")
+        .map_err(|error| error.to_string())?;
     let dirty_regions = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(512).map_err(|error| error.to_string())?);
     let mut planner = RenderPlanner::with_visual_theme(
