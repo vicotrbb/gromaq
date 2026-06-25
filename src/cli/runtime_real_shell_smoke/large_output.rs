@@ -13,16 +13,25 @@ use super::{
     REAL_SHELL_SMOKE_POLL_INTERVAL, REAL_SHELL_SMOKE_ROWS, REAL_SHELL_SMOKE_TIMEOUT,
 };
 
+const REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS: u64 = 6_940_000;
+
 pub(in crate::cli) fn runtime_real_shell_large_output_smoke_exit() -> CliExit {
     let probe = match run_runtime_real_shell_large_output_smoke() {
         Ok(probe) => probe,
         Err(error) => return runtime_real_shell_large_output_smoke_error(error),
     };
+    if let Some(failure) = real_shell_large_output_budget_failure(&probe) {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!("runtime real-shell large-output smoke failed: {failure}\n"),
+        };
+    }
 
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime real-shell large-output smoke: ok\nshell: /bin/sh\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells max: {}\nfirst line evicted: {}\nlast line observed: {}\nrender p95 ns: {}\n",
+            "runtime real-shell large-output smoke: ok\nshell: /bin/sh\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells max: {}\nfirst line evicted: {}\nlast line observed: {}\nrender p95 ns: {}\nrender p95 budget ns: {}\n",
             REAL_SHELL_LARGE_OUTPUT_LINES,
             probe.pumped_bytes,
             REAL_SHELL_LARGE_OUTPUT_SCROLLBACK_LINES,
@@ -32,7 +41,8 @@ pub(in crate::cli) fn runtime_real_shell_large_output_smoke_exit() -> CliExit {
             probe.rendered_dirty_cells_max,
             probe.first_line_evicted,
             probe.last_line_observed,
-            probe.render_p95_ns
+            probe.render_p95_ns,
+            REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS
         ),
         stderr: String::new(),
     }
@@ -123,10 +133,57 @@ fn run_runtime_real_shell_large_output_smoke() -> RuntimeRealShellLargeOutputRes
     }
 }
 
+fn real_shell_large_output_budget_failure(
+    probe: &RuntimeRealShellLargeOutputSmokeProbe,
+) -> Option<&'static str> {
+    if probe.render_p95_ns > REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS {
+        return Some("real-shell large-output render p95 exceeded 144Hz frame budget");
+    }
+    None
+}
+
 fn runtime_real_shell_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
     CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("runtime real-shell large-output smoke failed: {error}\n"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn probe(render_p95_ns: u64) -> RuntimeRealShellLargeOutputSmokeProbe {
+        RuntimeRealShellLargeOutputSmokeProbe {
+            pumped_bytes: 1,
+            scrollback_lines: REAL_SHELL_LARGE_OUTPUT_SCROLLBACK_LINES,
+            rendered_frames: 1,
+            rendered_dirty_regions: 1,
+            rendered_dirty_cells_max: 1,
+            first_line_evicted: true,
+            last_line_observed: true,
+            render_p95_ns,
+        }
+    }
+
+    #[test]
+    fn real_shell_large_output_budget_accepts_render_p95_at_limit() {
+        assert_eq!(
+            real_shell_large_output_budget_failure(&probe(
+                REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS
+            )),
+            None
+        );
+    }
+
+    #[test]
+    fn real_shell_large_output_budget_rejects_render_p95_over_limit() {
+        assert_eq!(
+            real_shell_large_output_budget_failure(&probe(
+                REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS + 1
+            )),
+            Some("real-shell large-output render p95 exceeded 144Hz frame budget")
+        );
     }
 }

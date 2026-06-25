@@ -82,6 +82,7 @@ Implemented and tested:
 - Repeated deterministic runtime p95 smoke with `--runtime-perf-p95-smoke`, collecting 16 CPU-side input-echo render/input-to-render samples against the same budgets
 - Real `/bin/sh` runtime performance-budget smoke with `--runtime-real-shell-perf-budget-smoke`, enforcing the same render and input-to-render p95 budgets on a real PTY transcript
 - Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
+- Real `/bin/sh` large-output smoke with `--runtime-real-shell-large-output-smoke`, enforcing render p95 within the 6.94ms 144Hz frame budget while proving bounded scrollback eviction
 - Deterministic runtime state-footprint snapshot and bounded-state smoke with `--runtime-bounded-state-smoke`, including capped scrollback lines, styled cell rows, retained cell count, and retained-cell cap
 - Deterministic runtime process-memory smoke with `--runtime-memory-smoke`, including warmup RSS sampling, repeated long-output batches, capped scrollback state, and bounded RSS growth
 - Deterministic runtime continuous-output smoke with `--runtime-continuous-output-smoke`

@@ -65,6 +65,11 @@ prepared-frame artifact, not a live desktop screenshot capture. On
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
 reported viewport-capped rendered dirty-region work, verified
 `gromaq-runtime-line-511` in the render plan, and reported render p95 500000 ns.
+`cargo run -- --runtime-real-shell-large-output-smoke` enforces the 6940000 ns
+render p95 budget for a real `/bin/sh` large-output transcript while proving
+bounded scrollback eviction. On this machine it pumped 7168 bytes, rendered one
+dirty frame, retained the 64-line scrollback cap, evicted the first line,
+observed the last line, and reported render p95 1000000 ns.
 On the same date, `cargo run -- --runtime-bounded-state-smoke`
 pumped 51200 bytes from 2048 lines across 4 batches, retained 128 scrollback
 lines and 128 styled scrollback cell rows, used the runtime state snapshot to

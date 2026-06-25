@@ -85,6 +85,7 @@ fn runtime_real_shell_large_output_smoke_cli_renders_real_shell_burst() {
     assert!(exit.stdout.contains("first line evicted: true"));
     assert!(exit.stdout.contains("last line observed: true"));
     assert!(exit.stdout.contains("render p95 ns:"));
+    assert!(exit.stdout.contains("render p95 budget ns: 6940000"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
