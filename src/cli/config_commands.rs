@@ -1,11 +1,14 @@
 use std::path::PathBuf;
 
 use super::CliExit;
-use crate::app::resolve_native_font_paths;
-use crate::config::{CursorStyleSetting, GromaqConfig, format_theme_preset};
+use crate::config::{GromaqConfig, format_theme_preset};
 
+mod formatting;
 mod launch;
 
+use formatting::{
+    format_config_list, format_cursor_style, format_font_resolution, format_toml_string_array,
+};
 pub use launch::{
     NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,
 };
@@ -103,33 +106,6 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
     }
 }
 
-struct FontResolutionText {
-    primary: String,
-    fallbacks: String,
-}
-
-fn format_font_resolution(font_family: &str) -> FontResolutionText {
-    match resolve_native_font_paths(font_family) {
-        Ok(resolution) => FontResolutionText {
-            primary: resolution.primary_path.display().to_string(),
-            fallbacks: if resolution.fallback_paths.is_empty() {
-                "<none>".to_owned()
-            } else {
-                resolution
-                    .fallback_paths
-                    .iter()
-                    .map(|path| path.display().to_string())
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            },
-        },
-        Err(error) => FontResolutionText {
-            primary: format!("<unresolved: {error}>"),
-            fallbacks: "<unknown>".to_owned(),
-        },
-    }
-}
-
 pub(super) fn config_template_exit() -> CliExit {
     let config = GromaqConfig::default();
     CliExit {
@@ -159,29 +135,4 @@ pub(super) fn config_template_exit() -> CliExit {
         ),
         stderr: String::new(),
     }
-}
-
-fn format_cursor_style(style: CursorStyleSetting) -> &'static str {
-    match style {
-        CursorStyleSetting::Block => "block",
-        CursorStyleSetting::Underline => "underline",
-        CursorStyleSetting::Bar => "bar",
-    }
-}
-
-fn format_config_list(values: &[String]) -> String {
-    if values.is_empty() {
-        "<none>".to_owned()
-    } else {
-        values.join(" ")
-    }
-}
-
-fn format_toml_string_array(values: &[String]) -> String {
-    let entries = values
-        .iter()
-        .map(|value| format!("\"{value}\""))
-        .collect::<Vec<_>>()
-        .join(", ");
-    format!("[{entries}]")
 }
