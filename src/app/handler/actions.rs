@@ -39,6 +39,11 @@ impl NativeTerminalApp {
         if let Some(window) = &self.window {
             window.pre_present_notify();
         }
+        if let Err(error) = self.runtime.pump_pty_output() {
+            self.startup_error = Some(error.to_string());
+            event_loop.exit();
+            return;
+        }
         match self.present_redraw_frame() {
             Ok(report) => self.lifecycle.record_glyph_frame_presentation(report),
             Err(error) => match error {
@@ -52,7 +57,8 @@ impl NativeTerminalApp {
                     | SurfaceFrameError::InvalidFrame(_),
                 )
                 | NativeGlyphFrameError::Font(_)
-                | NativeGlyphFrameError::Renderer(_) => {
+                | NativeGlyphFrameError::Renderer(_)
+                | NativeGlyphFrameError::Snapshot(_) => {
                     self.startup_error = Some(error.to_string());
                     event_loop.exit();
                 }

@@ -41,6 +41,14 @@ pub struct NativeAppRunReport {
     pub glyph_frame_atlas_bytes: usize,
     /// Occupied glyph atlas slots in the last presented terminal glyph frame.
     pub glyph_frame_atlas_occupied_slots: usize,
+    /// Whether a prepared native glyph-frame snapshot artifact was written.
+    pub glyph_frame_snapshot_written: bool,
+    /// Bytes written for the prepared native glyph-frame snapshot artifact.
+    pub glyph_frame_snapshot_bytes: usize,
+    /// Width of the prepared native glyph-frame snapshot artifact.
+    pub glyph_frame_snapshot_width: u32,
+    /// Height of the prepared native glyph-frame snapshot artifact.
+    pub glyph_frame_snapshot_height: u32,
     /// Effective FPS target used for presented-frame interval accounting.
     pub frame_interval_target_fps: u32,
     /// Number of initial presented frames excluded from interval metrics.
@@ -90,6 +98,10 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) glyph_frame_cursor_quads: usize,
     pub(super) glyph_frame_atlas_bytes: usize,
     pub(super) glyph_frame_atlas_occupied_slots: usize,
+    pub(super) glyph_frame_snapshot_written: bool,
+    pub(super) glyph_frame_snapshot_bytes: usize,
+    pub(super) glyph_frame_snapshot_width: u32,
+    pub(super) glyph_frame_snapshot_height: u32,
     pub(super) frame_interval_target_fps: u32,
     pub(super) frame_interval_warmup_frames: u64,
 }

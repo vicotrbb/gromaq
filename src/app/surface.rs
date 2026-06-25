@@ -1,3 +1,6 @@
+use std::fs;
+use std::path::Path;
+
 use crate::font::RasterizedGlyphCache;
 use crate::native_gpu::NativeGpuWindowSurface;
 use crate::renderer::{
@@ -33,6 +36,14 @@ pub struct NativeGlyphFramePresentation {
     pub atlas_bytes: usize,
     /// Occupied glyph atlas slots.
     pub atlas_occupied_slots: usize,
+    /// Whether a prepared glyph-frame snapshot artifact was written.
+    pub snapshot_written: bool,
+    /// Bytes written for the prepared glyph-frame snapshot artifact.
+    pub snapshot_bytes: usize,
+    /// Snapshot artifact width in pixels.
+    pub snapshot_width: u32,
+    /// Snapshot artifact height in pixels.
+    pub snapshot_height: u32,
 }
 
 /// Native window surface state owned by the app after a `wgpu` surface exists.
@@ -162,6 +173,26 @@ pub fn render_and_present_terminal_glyph_frame_report<S, B>(
 where
     B: SurfaceFrameBackend,
 {
+    render_and_present_terminal_glyph_frame_report_with_snapshot(
+        runtime,
+        renderer,
+        glyph_cache,
+        surface,
+        None,
+    )
+}
+
+/// Render, present, and optionally export a PPM preview of the prepared native glyph frame.
+pub fn render_and_present_terminal_glyph_frame_report_with_snapshot<S, B>(
+    runtime: &mut NativeTerminalRuntime<S>,
+    renderer: &mut WgpuRenderer,
+    glyph_cache: &mut RasterizedGlyphCache,
+    surface: &mut NativeWindowSurface<B>,
+    snapshot_path: Option<&Path>,
+) -> Result<NativeGlyphFramePresentation, NativeGlyphFrameError>
+where
+    B: SurfaceFrameBackend,
+{
     // Swapchain frames are not retained. Until native partial-present support exists,
     // every surface presentation must redraw the full visible terminal contents.
     runtime.invalidate_terminal_frame();
@@ -186,9 +217,17 @@ where
         renderer.config().surface_padding_px,
     )?;
     let frame = prepared.as_surface_glyph_frame();
-    let report = NativeGlyphFramePresentation {
+    let snapshot = match snapshot_path {
+        Some(path) => {
+            let preview = prepared.preview_rgba8()?;
+            let bytes = prepared_frame_ppm_bytes(preview.width, preview.height, &preview.rgba)?;
+            Some((path, preview.width, preview.height, bytes))
+        }
+        None => None,
+    };
+    let mut report = NativeGlyphFramePresentation {
         rendered: true,
-        glyph_frame_presented: true,
+        glyph_frame_presented: false,
         clear_presented: false,
         width: frame.width,
         height: frame.height,
@@ -198,7 +237,68 @@ where
         cursor_quads: frame.cursor_batch.quads.len(),
         atlas_bytes: frame.atlas.rgba.len(),
         atlas_occupied_slots: frame.atlas.occupied_slots,
+        snapshot_written: false,
+        snapshot_bytes: 0,
+        snapshot_width: 0,
+        snapshot_height: 0,
     };
-    surface.present_glyph_frame(frame)?;
+    if let Some((path, width, height, bytes)) = snapshot {
+        fs::write(path, &bytes).map_err(|error| {
+            NativeGlyphFrameError::Snapshot(format!(
+                "failed to write native glyph frame snapshot: {error}"
+            ))
+        })?;
+        report.snapshot_written = true;
+        report.snapshot_bytes = bytes.len();
+        report.snapshot_width = width;
+        report.snapshot_height = height;
+    }
+    match surface.present_glyph_frame(frame) {
+        Ok(()) => {
+            report.glyph_frame_presented = true;
+        }
+        Err(SurfaceFrameError::Timeout | SurfaceFrameError::Occluded)
+            if report.snapshot_written =>
+        {
+            return Ok(report);
+        }
+        Err(error) => return Err(error.into()),
+    }
     Ok(report)
+}
+
+fn prepared_frame_ppm_bytes(
+    width: u32,
+    height: u32,
+    pixels: &[u8],
+) -> Result<Vec<u8>, NativeGlyphFrameError> {
+    let expected_rgba_len =
+        usize::try_from(u64::from(width) * u64::from(height) * 4).map_err(|_| {
+            NativeGlyphFrameError::Snapshot("native glyph frame snapshot is too large".to_owned())
+        })?;
+    if pixels.len() != expected_rgba_len {
+        return Err(NativeGlyphFrameError::Snapshot(format!(
+            "native glyph frame snapshot expected {expected_rgba_len} RGBA bytes, got {}",
+            pixels.len()
+        )));
+    }
+    let rgb_len = usize::try_from(u64::from(width) * u64::from(height) * 3).map_err(|_| {
+        NativeGlyphFrameError::Snapshot(
+            "native glyph frame snapshot RGB buffer is too large".to_owned(),
+        )
+    })?;
+    let header = format!("P6\n{width} {height}\n255\n");
+    let mut snapshot = Vec::new();
+    snapshot
+        .try_reserve_exact(header.len() + rgb_len)
+        .map_err(|_| {
+            NativeGlyphFrameError::Snapshot(
+                "native glyph frame snapshot allocation failed".to_owned(),
+            )
+        })?;
+    snapshot.extend_from_slice(header.as_bytes());
+    for pixel in pixels.chunks_exact(4) {
+        snapshot.extend_from_slice(&pixel[..3]);
+    }
+    Ok(snapshot)
 }

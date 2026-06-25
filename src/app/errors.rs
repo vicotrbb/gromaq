@@ -35,6 +35,9 @@ pub enum NativeGlyphFrameError {
     /// CPU-side render planning failed before presentation.
     #[error("native glyph render planning failed: {0}")]
     Renderer(#[from] GromaqError),
+    /// Prepared glyph-frame snapshot export failed.
+    #[error("native glyph snapshot failed: {0}")]
+    Snapshot(String),
 }
 
 impl From<OsError> for NativeAppError {
@@ -85,6 +88,7 @@ impl From<NativeGlyphFrameError> for NativeAppError {
             NativeGlyphFrameError::Font(error) => Self::Runtime(error.to_string()),
             NativeGlyphFrameError::Surface(error) => Self::Gpu(error.to_string()),
             NativeGlyphFrameError::Renderer(error) => Self::Runtime(error.to_string()),
+            NativeGlyphFrameError::Snapshot(error) => Self::Runtime(error),
         }
     }
 }

@@ -29,7 +29,7 @@ use super::runtime_real_shell_smoke::{
 };
 use super::runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
-use super::window_smoke::window_smoke_exit;
+use super::window_smoke::{window_glyph_frame_snapshot_exit, window_smoke_exit};
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
 use crate::native_gpu::GpuBootstrapBackend;
@@ -135,6 +135,26 @@ where
         }
         return runtime_glyph_frame_snapshot_exit(path.as_ref());
     }
+    if command == CliCommand::WindowGlyphFrameSnapshot {
+        let Some(path) = args.next() else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!(
+                    "{}missing snapshot path for --window-glyph-frame-snapshot\n",
+                    usage()
+                ),
+            };
+        };
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        return window_glyph_frame_snapshot_exit(path.as_ref(), app_launcher);
+    }
     if matches!(
         command,
         CliCommand::WindowSmoke | CliCommand::WindowPerfSmoke
@@ -214,6 +234,7 @@ where
         | CliCommand::ConfigCheck
         | CliCommand::ConfigTemplate
         | CliCommand::WindowSmoke
-        | CliCommand::WindowPerfSmoke => unreachable!(),
+        | CliCommand::WindowPerfSmoke
+        | CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
     }
 }

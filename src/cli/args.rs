@@ -19,6 +19,8 @@ pub(super) enum CliCommand<'a> {
     WindowSmoke,
     /// Bounded native window multi-frame timing smoke command.
     WindowPerfSmoke,
+    /// Bounded native window glyph-frame snapshot export command.
+    WindowGlyphFrameSnapshot,
     /// OSC 52 clipboard smoke command.
     Osc52ClipboardSmoke,
     /// Runtime clipboard paste smoke command.
@@ -87,6 +89,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--config-template" => Some(CliCommand::ConfigTemplate),
         "--window-smoke" => Some(CliCommand::WindowSmoke),
         "--window-perf-smoke" => Some(CliCommand::WindowPerfSmoke),
+        "--window-glyph-frame-snapshot" => Some(CliCommand::WindowGlyphFrameSnapshot),
         "--osc52-clipboard-smoke" => Some(CliCommand::Osc52ClipboardSmoke),
         "--runtime-clipboard-paste-smoke" => Some(CliCommand::RuntimeClipboardPasteSmoke),
         "--runtime-glyph-frame-smoke" => Some(CliCommand::RuntimeGlyphFrameSmoke),
@@ -119,5 +122,5 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
 
 /// User-facing usage text.
 pub(super) fn usage() -> String {
-    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-glyph-frame-snapshot <path>|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\n".to_owned()
+    "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--window-glyph-frame-snapshot <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-glyph-frame-snapshot <path>|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\n".to_owned()
 }

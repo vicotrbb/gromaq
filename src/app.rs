@@ -53,6 +53,7 @@ pub use runtime::NativeTerminalRuntime;
 pub use surface::{
     NativeGlyphFramePresentation, NativeWindowSurface, render_and_present_terminal_glyph_frame,
     render_and_present_terminal_glyph_frame_report,
+    render_and_present_terminal_glyph_frame_report_with_snapshot,
 };
 use text_zoom::renderer_config_for_text_zoom;
 
@@ -135,7 +136,10 @@ impl NativeTerminalApp {
             runtime_config.pixel_width = resize.pixel_width;
             runtime_config.pixel_height = resize.pixel_height;
         }
-        let runtime = NativeTerminalRuntime::new(runtime_config)?;
+        let mut runtime = NativeTerminalRuntime::new(runtime_config)?;
+        if let Some(startup_text) = config.startup_text.as_deref() {
+            runtime.write_startup_text(startup_text)?;
+        }
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,

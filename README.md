@@ -75,6 +75,7 @@ Implemented and tested:
 - Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
 - Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
 - Deterministic runtime glyph-frame CPU preview snapshot export with `--runtime-glyph-frame-snapshot <path>` for inspecting prepared native glyph frames before surface presentation
+- Native-window glyph-frame snapshot export with `--window-glyph-frame-snapshot <path>`, writing a PPM from the prepared frame built by the native window presentation path
 - Deterministic runtime local scrollback navigation smoke with `--runtime-scrollback-smoke`
 - Deterministic runtime performance smoke with `--runtime-perf-smoke`
 - Deterministic runtime performance-budget smoke with `--runtime-perf-budget-smoke`, enforcing render p95 within 6.94ms and input-to-render p95 within 10ms for the CPU-side input-echo path
@@ -139,6 +140,7 @@ cargo run -- --osc52-clipboard-smoke
 cargo run -- --runtime-clipboard-paste-smoke
 cargo run -- --runtime-glyph-frame-smoke
 cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm
+cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame.ppm
 cargo run -- --runtime-scrollback-smoke
 cargo run -- --runtime-perf-smoke
 cargo run -- --runtime-perf-budget-smoke

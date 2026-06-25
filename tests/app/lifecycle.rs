@@ -234,6 +234,10 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
         cursor_quads: 1,
         atlas_bytes: 4096,
         atlas_occupied_slots: 8,
+        snapshot_written: true,
+        snapshot_bytes: 42,
+        snapshot_width: 80,
+        snapshot_height: 24,
     });
 
     let report = lifecycle.run_report();
@@ -247,6 +251,10 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
     assert_eq!(report.glyph_frame_cursor_quads, 1);
     assert_eq!(report.glyph_frame_atlas_bytes, 4096);
     assert_eq!(report.glyph_frame_atlas_occupied_slots, 8);
+    assert!(report.glyph_frame_snapshot_written);
+    assert_eq!(report.glyph_frame_snapshot_bytes, 42);
+    assert_eq!(report.glyph_frame_snapshot_width, 80);
+    assert_eq!(report.glyph_frame_snapshot_height, 24);
 }
 
 #[test]

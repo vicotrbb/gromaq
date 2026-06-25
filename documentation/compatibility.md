@@ -58,6 +58,7 @@ remaining terminal-core work.
 | Native window startup | `--window-smoke` | Proven on local live window |
 | Native glyph-frame presentation | `--window-perf-smoke` reports glyph frame dimensions, quads, atlas bytes, and occupied slots | Proven on local live window |
 | Prepared native glyph-frame preview artifact | `--runtime-glyph-frame-snapshot <path>` writes a deterministic PPM from the same owned glyph-frame preparation path used before surface presentation | Proven as CPU-side preview, not a live desktop screenshot |
+| Native-window glyph-frame snapshot artifact | `--window-glyph-frame-snapshot <path>` launches the native window path and writes a deterministic PPM from the prepared frame built for surface presentation | Proven as native presentation-path artifact, not an OS compositor screenshot |
 | Active-monitor frame pacing | `--window-perf-smoke` warmup-excluded 120Hz run with zero dropped frames and accepted p95 budget | Proven on the current 120Hz display |
 | 144Hz display pacing | Requires live proof on 144Hz-capable hardware | Not yet proven |
 | Desktop screenshot of windowed glyph output | Requires live screenshot proof | Not yet proven |

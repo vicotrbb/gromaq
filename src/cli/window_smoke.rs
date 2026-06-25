@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::time::Instant;
 
 use super::args::{CliCommand, usage};
@@ -31,6 +32,7 @@ where
             launch_config.app.frame_interval_warmup_frames = WINDOW_PERF_SMOKE_WARMUP_FRAMES;
             WINDOW_PERF_SMOKE_FRAME_LIMIT + WINDOW_PERF_SMOKE_WARMUP_FRAMES
         }
+        CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
         _ => unreachable!(),
     };
     launch_config.app.exit_after_presented_frames = Some(frame_limit);
@@ -115,6 +117,69 @@ where
     }
 }
 
+pub(super) fn window_glyph_frame_snapshot_exit<A>(path: &str, app_launcher: Option<&A>) -> CliExit
+where
+    A: NativeAppLauncher,
+{
+    let Some(app_launcher) = app_launcher else {
+        return CliExit {
+            code: 2,
+            stdout: String::new(),
+            stderr: format!(
+                "{}native app launch unavailable for --window-glyph-frame-snapshot\n",
+                usage()
+            ),
+        };
+    };
+
+    let mut launch_config = NativeAppLaunchConfig::default();
+    launch_config.app.exit_after_presented_frames = Some(60);
+    launch_config.app.redraw_until_presented_frame_limit = true;
+    launch_config.app.glyph_frame_snapshot_path = Some(PathBuf::from(path));
+    launch_config.app.startup_text = Some("gromaq window glyph frame snapshot\n".to_owned());
+    launch_config.runtime.shell = ShellCommand {
+        program: "/bin/sh".into(),
+        args: vec![
+            "-lc".into(),
+            "printf 'gromaq window glyph frame snapshot\\n'".into(),
+        ],
+        cwd: None,
+    };
+    match app_launcher.launch(launch_config) {
+        Ok(report) if report.glyph_frame_snapshot_written => CliExit {
+            code: 0,
+            stdout: format!(
+                "window glyph frame snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
+                report.glyph_frame_snapshot_bytes,
+                report.glyph_frame_snapshot_width,
+                report.glyph_frame_snapshot_height,
+                report.glyph_frame_presented,
+                report.glyph_frame_glyph_quads,
+                report.glyph_frame_background_quads,
+                report.glyph_frame_cursor_quads,
+            ),
+            stderr: String::new(),
+        },
+        Ok(report) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!(
+                "window glyph frame snapshot failed: no snapshot was written; frames presented: {}; glyph frame presented: {}; glyph quads: {}; background quads: {}; cursor quads: {}\n",
+                report.frames_presented,
+                report.glyph_frame_presented,
+                report.glyph_frame_glyph_quads,
+                report.glyph_frame_background_quads,
+                report.glyph_frame_cursor_quads,
+            ),
+        },
+        Err(error) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!("{error}\n"),
+        },
+    }
+}
+
 fn format_window_size(width: Option<u32>, height: Option<u32>) -> String {
     match (width, height) {
         (Some(width), Some(height)) => format!("{width}x{height}"),
@@ -144,6 +209,7 @@ fn window_smoke_command_name(command: CliCommand<'_>) -> &'static str {
     match command {
         CliCommand::WindowSmoke => "--window-smoke",
         CliCommand::WindowPerfSmoke => "--window-perf-smoke",
+        CliCommand::WindowGlyphFrameSnapshot => "--window-glyph-frame-snapshot",
         _ => unreachable!(),
     }
 }

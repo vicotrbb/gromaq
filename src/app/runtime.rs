@@ -57,6 +57,13 @@ impl<S> NativeTerminalRuntime<S> {
         &self.terminal
     }
 
+    /// Write deterministic startup text into the terminal before the native app presents.
+    pub fn write_startup_text(&mut self, text: &str) -> Result<(), NativeAppError> {
+        self.terminal
+            .write_str(text)
+            .map_err(|error| NativeAppError::Runtime(error.to_string()))
+    }
+
     /// Access runtime configuration.
     pub fn config(&self) -> &NativeTerminalRuntimeConfig {
         &self.config

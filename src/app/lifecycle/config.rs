@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::time::Duration;
 
 use winit::dpi::LogicalSize;
@@ -26,6 +27,10 @@ pub struct NativeAppConfig {
     pub redraw_until_presented_frame_limit: bool,
     /// Number of initial presented frames excluded from frame-interval performance metrics.
     pub frame_interval_warmup_frames: u64,
+    /// Optional PPM artifact path for the first presented native glyph frame.
+    pub glyph_frame_snapshot_path: Option<PathBuf>,
+    /// Optional deterministic terminal text written before the native window presents.
+    pub startup_text: Option<String>,
 }
 
 impl Default for NativeAppConfig {
@@ -38,6 +43,8 @@ impl Default for NativeAppConfig {
             exit_after_presented_frames: None,
             redraw_until_presented_frame_limit: false,
             frame_interval_warmup_frames: 0,
+            glyph_frame_snapshot_path: None,
+            startup_text: None,
         }
     }
 }

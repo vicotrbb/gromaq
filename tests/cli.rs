@@ -82,6 +82,15 @@ impl NativeAppLauncher for MockAppLauncher {
         let frames_presented = config.app.exit_after_presented_frames.unwrap_or_default();
         let warmup_frames = config.app.frame_interval_warmup_frames;
         let frame_interval_samples = frames_presented.saturating_sub(warmup_frames);
+        let snapshot_bytes = b"P6\n1 1\n255\n\x17\x1b$";
+        let snapshot_written = match &config.app.glyph_frame_snapshot_path {
+            Some(path) => {
+                fs::write(path, snapshot_bytes)
+                    .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
+                true
+            }
+            None => false,
+        };
         self.launches.borrow_mut().push(config);
         Ok(NativeAppRunReport {
             frames_presented,
@@ -99,6 +108,14 @@ impl NativeAppLauncher for MockAppLauncher {
             glyph_frame_cursor_quads: 1,
             glyph_frame_atlas_bytes: 4096,
             glyph_frame_atlas_occupied_slots: 8,
+            glyph_frame_snapshot_written: snapshot_written,
+            glyph_frame_snapshot_bytes: if snapshot_written {
+                snapshot_bytes.len()
+            } else {
+                0
+            },
+            glyph_frame_snapshot_width: if snapshot_written { 1 } else { 0 },
+            glyph_frame_snapshot_height: if snapshot_written { 1 } else { 0 },
             frame_interval_target_fps: 60,
             frame_interval_warmup_frames: warmup_frames,
             frame_interval_samples,
@@ -277,7 +294,7 @@ fn unknown_cli_argument_returns_usage_error() {
         CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-glyph-frame-snapshot <path>|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
+            stderr: "usage: gromaq [--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|--window-glyph-frame-snapshot <path>|--osc52-clipboard-smoke|--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|--runtime-glyph-frame-snapshot <path>|--runtime-scrollback-smoke|--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|--runtime-large-output-smoke|--runtime-bounded-state-smoke|--runtime-memory-smoke|--runtime-continuous-output-smoke|--runtime-real-shell-smoke|--runtime-real-shell-large-output-smoke|--runtime-real-shell-reflow-smoke|--runtime-alternate-screen-smoke|--runtime-reflow-smoke|--runtime-config-reload-smoke|--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|--frame-scheduler-smoke]\nunknown argument: --wat\n".to_owned(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
@@ -558,6 +575,58 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     );
     assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
     assert_eq!(launch.config_path, None);
+}
+
+#[test]
+fn window_glyph_frame_snapshot_smoke_writes_artifact() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("window-glyph-frame.ppm");
+
+    let exit = run_with_backend_and_app(
+        [
+            "gromaq",
+            "--window-glyph-frame-snapshot",
+            &path.to_string_lossy(),
+        ],
+        &backend,
+        &app,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stderr.is_empty());
+    assert!(exit.stdout.contains("window glyph frame snapshot: ok"));
+    assert!(exit.stdout.contains("bytes written: 14"));
+    assert!(exit.stdout.contains("frame size: 1x1"));
+    assert!(exit.stdout.contains("glyph frame presented: true"));
+    let bytes = fs::read(&path).unwrap();
+    let _ = fs::remove_file(&path);
+    assert_eq!(bytes, b"P6\n1 1\n255\n\x17\x1b$");
+    assert!(backend.requests.borrow().is_empty());
+    assert_eq!(app.launches.borrow().len(), 1);
+    let launch = &app.launches.borrow()[0];
+    assert_eq!(launch.app.exit_after_presented_frames, Some(60));
+    assert!(launch.app.redraw_until_presented_frame_limit);
+    assert_eq!(
+        launch.app.glyph_frame_snapshot_path.as_deref(),
+        Some(path.as_path())
+    );
+    assert_eq!(
+        launch.app.startup_text.as_deref(),
+        Some("gromaq window glyph frame snapshot\n")
+    );
+    assert_eq!(launch.runtime.shell.program, "/bin/sh");
+    assert_eq!(
+        launch.runtime.shell.args,
+        vec![
+            OsString::from("-lc"),
+            OsString::from("printf 'gromaq window glyph frame snapshot\\n'")
+        ]
+    );
 }
 
 #[test]

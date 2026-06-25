@@ -167,7 +167,7 @@ impl NativeAppLifecycle {
 
     /// Record the latest native terminal glyph-frame presentation metrics.
     pub fn record_glyph_frame_presentation(&mut self, report: NativeGlyphFramePresentation) {
-        if report.glyph_frame_presented {
+        if report.glyph_frame_presented || report.snapshot_written {
             self.last_glyph_frame_presentation = report;
         }
     }
@@ -264,6 +264,10 @@ impl NativeAppLifecycle {
             glyph_frame_atlas_occupied_slots: self
                 .last_glyph_frame_presentation
                 .atlas_occupied_slots,
+            glyph_frame_snapshot_written: self.last_glyph_frame_presentation.snapshot_written,
+            glyph_frame_snapshot_bytes: self.last_glyph_frame_presentation.snapshot_bytes,
+            glyph_frame_snapshot_width: self.last_glyph_frame_presentation.snapshot_width,
+            glyph_frame_snapshot_height: self.last_glyph_frame_presentation.snapshot_height,
             frame_interval_target_fps: self.frame_interval_target_fps(),
             frame_interval_warmup_frames: self.config.frame_interval_warmup_frames,
         })
