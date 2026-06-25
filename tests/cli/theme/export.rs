@@ -35,6 +35,8 @@ fn theme_export_cli_writes_parseable_theme_toml_without_gpu_bootstrap() {
     assert!(exported.starts_with("[theme]\n"));
     assert!(exported.contains("preset = \"gromaq-graphite\""));
     assert!(exported.contains("background_opacity = 1"));
+    assert!(exported.contains("cursor_opacity = 1"));
+    assert!(exported.contains("selection_opacity = 1"));
     let parsed = GromaqConfig::from_toml_str(&exported).unwrap();
     assert_eq!(
         parsed.theme,

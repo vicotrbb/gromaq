@@ -128,6 +128,19 @@ pub enum GromaqError {
         actual: f32,
     },
 
+    /// Theme opacity values must stay visible and bounded.
+    #[error("theme {field} must be finite and between {minimum} and {maximum}, got {actual}")]
+    InvalidThemeOpacity {
+        /// User-facing opacity field name.
+        field: &'static str,
+        /// Inclusive lower bound.
+        minimum: f32,
+        /// Inclusive upper bound.
+        maximum: f32,
+        /// Actual invalid value.
+        actual: f32,
+    },
+
     /// Theme background opacity must stay bounded.
     #[error(
         "theme background opacity must be finite and between {minimum} and {maximum}, got {actual}"

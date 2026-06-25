@@ -114,6 +114,34 @@ fn invalid_theme_background_opacity_is_rejected() {
 }
 
 #[test]
+fn invalid_theme_cursor_and_selection_opacity_are_rejected() {
+    for (field, invalid_opacity) in [
+        ("cursor_opacity", 0.09),
+        ("cursor_opacity", f32::NAN),
+        ("cursor_opacity", f32::INFINITY),
+        ("cursor_opacity", 1.01),
+        ("selection_opacity", 0.09),
+        ("selection_opacity", f32::NAN),
+        ("selection_opacity", f32::INFINITY),
+        ("selection_opacity", 1.01),
+    ] {
+        let mut config = GromaqConfig::default();
+        if field == "cursor_opacity" {
+            config.theme.cursor_opacity = invalid_opacity;
+        } else {
+            config.theme.selection_opacity = invalid_opacity;
+        }
+
+        let error = config.validate().unwrap_err();
+
+        assert!(
+            error.to_string().contains(&field.replace('_', " ")),
+            "{error} did not mention {field}"
+        );
+    }
+}
+
+#[test]
 fn invalid_theme_ansi_palette_length_is_rejected() {
     let error = GromaqConfig::from_toml_str(
         r##"

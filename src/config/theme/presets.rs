@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_OPACITY,
-    DEFAULT_CELL_SPACING_PX, DEFAULT_CURSOR, DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND,
-    DEFAULT_SELECTION, DEFAULT_SURFACE_PADDING_PX, ThemeSettings,
+    DEFAULT_CELL_SPACING_PX, DEFAULT_CURSOR, DEFAULT_CURSOR_OPACITY, DEFAULT_DIM_OPACITY,
+    DEFAULT_FOREGROUND, DEFAULT_SELECTION, DEFAULT_SELECTION_OPACITY, DEFAULT_SURFACE_PADDING_PX,
+    ThemeSettings,
 };
 
 /// Name of the original polished dark terminal theme.
@@ -38,6 +39,8 @@ impl ThemeSettings {
                 foreground: "#edf3fb".to_owned(),
                 cursor: DEFAULT_CURSOR.to_owned(),
                 selection: "#33445f".to_owned(),
+                cursor_opacity: DEFAULT_CURSOR_OPACITY,
+                selection_opacity: DEFAULT_SELECTION_OPACITY,
                 background_opacity: DEFAULT_BACKGROUND_OPACITY,
                 cursor_style: CursorStyleSetting::default(),
                 cursor_blinking: true,
@@ -59,6 +62,8 @@ impl ThemeSettings {
                 foreground: "#f3f6fb".to_owned(),
                 cursor: "#ffd166".to_owned(),
                 selection: "#26445f".to_owned(),
+                cursor_opacity: DEFAULT_CURSOR_OPACITY,
+                selection_opacity: DEFAULT_SELECTION_OPACITY,
                 background_opacity: DEFAULT_BACKGROUND_OPACITY,
                 cursor_style: CursorStyleSetting::default(),
                 cursor_blinking: true,
@@ -80,6 +85,8 @@ impl ThemeSettings {
                 foreground: DEFAULT_FOREGROUND.to_owned(),
                 cursor: DEFAULT_CURSOR.to_owned(),
                 selection: DEFAULT_SELECTION.to_owned(),
+                cursor_opacity: DEFAULT_CURSOR_OPACITY,
+                selection_opacity: DEFAULT_SELECTION_OPACITY,
                 background_opacity: DEFAULT_BACKGROUND_OPACITY,
                 cursor_style: CursorStyleSetting::default(),
                 cursor_blinking: true,

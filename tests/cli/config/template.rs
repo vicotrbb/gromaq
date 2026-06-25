@@ -27,6 +27,8 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("preset = \"gromaq-ghostty\""));
     assert!(exit.stdout.contains("selection = \"#2f3b52\""));
     assert!(exit.stdout.contains("background_opacity = 1"));
+    assert!(exit.stdout.contains("cursor_opacity = 1"));
+    assert!(exit.stdout.contains("selection_opacity = 1"));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
     assert!(exit.stdout.contains("cursor_blinking = true"));
     assert!(exit.stdout.contains("ansi = [\"#242933\", \"#ff6b7a\""));

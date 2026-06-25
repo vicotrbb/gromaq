@@ -35,6 +35,8 @@ impl ThemeSettings {
                 actual: self.background_opacity,
             });
         }
+        validate_visible_opacity("cursor opacity", self.cursor_opacity)?;
+        validate_visible_opacity("selection opacity", self.selection_opacity)?;
         if !self.dim_opacity.is_finite()
             || !(MIN_DIM_OPACITY..=MAX_DIM_OPACITY).contains(&self.dim_opacity)
         {
@@ -81,4 +83,16 @@ impl ThemeSettings {
         }
         Ok(colors)
     }
+}
+
+fn validate_visible_opacity(field: &'static str, opacity: f32) -> Result<()> {
+    if !opacity.is_finite() || !(MIN_DIM_OPACITY..=MAX_DIM_OPACITY).contains(&opacity) {
+        return Err(GromaqError::InvalidThemeOpacity {
+            field,
+            minimum: MIN_DIM_OPACITY,
+            maximum: MAX_DIM_OPACITY,
+            actual: opacity,
+        });
+    }
+    Ok(())
 }

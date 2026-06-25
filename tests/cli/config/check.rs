@@ -27,6 +27,8 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         cursor = "#f4c06a"
         selection = "#26364f"
         background_opacity = 0.42
+        cursor_opacity = 0.5
+        selection_opacity = 0.25
         cursor_style = "underline"
         cursor_blinking = false
         surface_padding_px = 18
@@ -73,6 +75,8 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme cursor: #f4c06a"));
     assert!(exit.stdout.contains("theme selection: #26364f"));
     assert!(exit.stdout.contains("theme background opacity: 0.42"));
+    assert!(exit.stdout.contains("theme cursor opacity: 0.5"));
+    assert!(exit.stdout.contains("theme selection opacity: 0.25"));
     assert!(exit.stdout.contains("theme cursor style: underline"));
     assert!(exit.stdout.contains("theme cursor blinking: false"));
     assert!(exit.stdout.contains("theme surface padding px: 18"));

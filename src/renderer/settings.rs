@@ -55,8 +55,8 @@ impl Default for RendererConfig {
             ),
             default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
             ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
-            cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8),
-            selection_background_rgba8: rgb8_to_rgba8(DEFAULT_SELECTION_RGB8),
+            cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8, 1.0),
+            selection_background_rgba8: rgb8_to_rgba8(DEFAULT_SELECTION_RGB8, 1.0),
             surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
             cell_spacing_px: DEFAULT_CELL_SPACING_PX,
             dim_opacity: DEFAULT_DIM_OPACITY,
@@ -80,8 +80,14 @@ impl RendererConfig {
             ),
             default_foreground_rgb8: config.theme.foreground_rgb8()?,
             ansi_colors_rgb8: config.theme.ansi_rgb8()?,
-            cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),
-            selection_background_rgba8: rgb8_to_rgba8(config.theme.selection_rgb8()?),
+            cursor_color_rgba8: rgb8_to_rgba8(
+                config.theme.cursor_rgb8()?,
+                config.theme.cursor_opacity,
+            ),
+            selection_background_rgba8: rgb8_to_rgba8(
+                config.theme.selection_rgb8()?,
+                config.theme.selection_opacity,
+            ),
             surface_padding_px: config.theme.surface_padding_px,
             cell_spacing_px: config.theme.cell_spacing_px,
             dim_opacity: config.theme.dim_opacity,
@@ -89,6 +95,10 @@ impl RendererConfig {
     }
 }
 
-fn rgb8_to_rgba8([red, green, blue]: [u8; 3]) -> [u8; 4] {
-    [red, green, blue, 255]
+fn rgb8_to_rgba8([red, green, blue]: [u8; 3], opacity: f32) -> [u8; 4] {
+    [red, green, blue, alpha8(opacity)]
+}
+
+fn alpha8(opacity: f32) -> u8 {
+    (opacity.clamp(0.0, 1.0) * 255.0).round() as u8
 }

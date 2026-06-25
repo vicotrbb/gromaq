@@ -74,6 +74,10 @@ pub const DEFAULT_CELL_SPACING_PX: u16 = 0;
 pub const DEFAULT_DIM_OPACITY: f32 = 0.68;
 /// Built-in terminal background opacity.
 pub const DEFAULT_BACKGROUND_OPACITY: f32 = 1.0;
+/// Built-in terminal cursor opacity.
+pub const DEFAULT_CURSOR_OPACITY: f32 = 1.0;
+/// Built-in selected-cell background opacity.
+pub const DEFAULT_SELECTION_OPACITY: f32 = 1.0;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-ghostty";
 /// Configurable terminal cursor shape.
@@ -102,6 +106,10 @@ pub struct ThemeSettings {
     pub cursor: String,
     /// Selection background color as `#RRGGBB`.
     pub selection: String,
+    /// Cursor opacity multiplier.
+    pub cursor_opacity: f32,
+    /// Selected-cell background opacity multiplier.
+    pub selection_opacity: f32,
     /// Terminal background opacity multiplier.
     pub background_opacity: f32,
     /// Default cursor shape before shell escape sequences override it.

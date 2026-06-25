@@ -13,7 +13,7 @@ black and bright black remain intentionally subdued for terminal UI roles that
 need lower emphasis.
 
 Default terminal text is intentionally larger than a compact emulator baseline:
-34 px font size, 47 px line height, and 19 px automatic cell width. Users can
+32 px font size, 44 px line height, and 18 px automatic cell width. Users can
 override those metrics in the `[font]` section, and the native app supports
 browser-style runtime zoom with Control/Super `+`, Control/Super `-`,
 Control/Super `0`, Control/Super mouse wheel, and dedicated OS/browser
@@ -53,6 +53,8 @@ foreground = "#eef4fb"
 cursor = "#f6c177"
 selection = "#2f3b52"
 background_opacity = 1.0
+cursor_opacity = 1.0
+selection_opacity = 1.0
 cursor_style = "block"
 cursor_blinking = true
 ansi = [
@@ -76,6 +78,10 @@ dim_opacity = 0.68
 - `selection`: selected cell background color as `#RRGGBB`.
 - `background_opacity`: terminal surface opacity from `0.0` to `1.0`. The
   built-in default is `1.0` for a fully opaque window.
+- `cursor_opacity`: cursor opacity from `0.1` to `1.0`. The built-in default
+  is `1.0` for a fully visible cursor.
+- `selection_opacity`: selected-cell background opacity from `0.1` to `1.0`.
+  The built-in default is `1.0` for a clearly readable selection layer.
 - `cursor_style`: one of `block`, `underline`, or `bar`.
 - `cursor_blinking`: whether the default cursor requests blinking.
 - `ansi`: exactly sixteen normal and bright ANSI colors as `#RRGGBB`.

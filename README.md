@@ -209,6 +209,8 @@ foreground = "#eef4fb"
 cursor = "#f6c177"
 selection = "#2f3b52"
 background_opacity = 1.0
+cursor_opacity = 1.0
+selection_opacity = 1.0
 cursor_style = "block"
 cursor_blinking = true
 ansi = [
@@ -231,9 +233,10 @@ expressive ANSI colors inspired by polished Ghostty setups. `gromaq-dark` keeps
 the original polished dark palette, and `gromaq-graphite` is an alternate
 high-contrast graphite preset. A
 preset provides the baseline background, foreground, cursor, selection, ANSI
-palette, cursor style, cursor blinking, surface padding, optional cell spacing,
-and dim text opacity; every field in `[theme]` can still be overridden directly
-in TOML. The theme fields are documented in
+palette, cursor style, cursor blinking, background/cursor/selection opacity,
+surface padding, optional cell spacing, and dim text opacity; every field in
+`[theme]` can still be overridden directly in TOML. The theme fields are
+documented in
 [`documentation/theme.md`](documentation/theme.md).
 Use `gromaq --theme-list` to inspect the built-in presets and their core
 theme tokens. Use `gromaq --theme-export <preset> <path>` to write an
