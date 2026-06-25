@@ -129,6 +129,53 @@ fn gpu_terminal_text_snapshot_cli_writes_ppm_artifact() {
 }
 
 #[test]
+fn gpu_terminal_text_snapshot_cli_requires_output_path() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--gpu-terminal-text-snapshot"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(
+        exit.stderr
+            .contains("missing snapshot path for --gpu-terminal-text-snapshot")
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn gpu_terminal_text_snapshot_cli_rejects_extra_arguments() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = std::env::temp_dir().join(format!(
+        "gromaq-cli-{}-terminal-text-extra.ppm",
+        std::process::id()
+    ));
+    let _ = fs::remove_file(&path);
+
+    let exit = run_with_backend(
+        [
+            "gromaq",
+            "--gpu-terminal-text-snapshot",
+            path.to_str().unwrap(),
+            "extra",
+        ],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(!path.exists());
+}
+
+#[test]
 fn gpu_smoke_cli_reports_readback_result() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
