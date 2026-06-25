@@ -1,4 +1,6 @@
 use std::cell::RefCell;
+use std::fs;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use gromaq::cli::run_with_backend;
 
@@ -24,4 +26,42 @@ fn theme_legibility_smoke_reports_default_visual_gates_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("readable ansi min contrast x100:"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let path = std::env::temp_dir().join(format!(
+        "gromaq-theme-preview-{}.ppm",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+
+    let exit = run_with_backend(
+        ["gromaq", "--theme-preview-snapshot", path.to_str().unwrap()],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("theme preview snapshot: ok"));
+    assert!(exit.stdout.contains("font size px: 37"));
+    assert!(exit.stdout.contains("cell width px: 21"));
+    assert!(exit.stdout.contains("line height px: 51"));
+    assert!(exit.stdout.contains("surface padding px: 14"));
+    assert!(exit.stdout.contains("prepared quads:"));
+    assert!(exit.stdout.contains("background quads:"));
+    assert!(exit.stdout.contains("cursor quads:"));
+    assert!(exit.stdout.contains("atlas bytes:"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+
+    let snapshot = fs::read(&path).unwrap();
+    fs::remove_file(&path).unwrap();
+    assert!(snapshot.starts_with(b"P6\n"));
+    assert!(snapshot.windows(4).any(|bytes| bytes == b"\n255"));
+    assert!(snapshot.len() > 1024);
 }

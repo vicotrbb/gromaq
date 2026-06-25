@@ -32,7 +32,7 @@ use super::runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use super::runtime_repaint_smoke::runtime_repaint_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
 use super::runtime_text_zoom_smoke::runtime_text_zoom_smoke_exit;
-use super::theme_smoke::theme_legibility_smoke_exit;
+use super::theme_smoke::{theme_legibility_smoke_exit, theme_preview_snapshot_exit};
 use super::window_smoke::{window_glyph_frame_snapshot_exit, window_smoke_exit};
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
@@ -139,6 +139,26 @@ where
         }
         return runtime_glyph_frame_snapshot_exit(path.as_ref());
     }
+    if command == CliCommand::ThemePreviewSnapshot {
+        let Some(path) = args.next() else {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!(
+                    "{}missing snapshot path for --theme-preview-snapshot\n",
+                    usage()
+                ),
+            };
+        };
+        if let Some(extra) = args.next() {
+            return CliExit {
+                code: 2,
+                stdout: String::new(),
+                stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            };
+        }
+        return theme_preview_snapshot_exit(path.as_ref());
+    }
     if command == CliCommand::WindowGlyphFrameSnapshot {
         let Some(path) = args.next() else {
             return CliExit {
@@ -235,6 +255,7 @@ where
         CliCommand::RuntimeTextZoomSmoke => runtime_text_zoom_smoke_exit(),
         CliCommand::RuntimeRepaintSmoke => runtime_repaint_smoke_exit(),
         CliCommand::ThemeLegibilitySmoke => theme_legibility_smoke_exit(),
+        CliCommand::ThemePreviewSnapshot => unreachable!(),
         CliCommand::RuntimeFocusSmoke => runtime_focus_smoke_exit(),
         CliCommand::RuntimeMouseSmoke => runtime_mouse_smoke_exit(),
         CliCommand::RuntimeResponseSmoke => runtime_response_smoke_exit(),

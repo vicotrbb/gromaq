@@ -93,6 +93,7 @@ Implemented and tested:
 - Deterministic runtime config reload smoke with `--runtime-config-reload-smoke`
 - Deterministic runtime text zoom smoke with `--runtime-text-zoom-smoke`
 - Deterministic default theme legibility smoke with `--theme-legibility-smoke`, reporting the built-in preset, default font metrics, foreground/background, selection, cursor, and readable ANSI contrast gates
+- Deterministic default theme preview snapshot export with `--theme-preview-snapshot <path>`, writing a PPM artifact from the native glyph-frame preparation path without launching a GPU window
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
@@ -159,6 +160,8 @@ cargo run -- --runtime-alternate-screen-smoke
 cargo run -- --runtime-reflow-smoke
 cargo run -- --runtime-config-reload-smoke
 cargo run -- --runtime-text-zoom-smoke
+cargo run -- --theme-legibility-smoke
+cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --runtime-focus-smoke
 cargo run -- --runtime-mouse-smoke
 cargo run -- --runtime-response-smoke
