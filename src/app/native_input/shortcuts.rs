@@ -67,6 +67,16 @@ pub fn native_text_zoom_action(
     key: &Key,
     modifiers: ModifiersState,
 ) -> Option<NativeTextZoomAction> {
+    match key {
+        Key::Named(NamedKey::ZoomIn) if modifiers.is_empty() => {
+            return Some(NativeTextZoomAction::Increase);
+        }
+        Key::Named(NamedKey::ZoomOut) if modifiers.is_empty() => {
+            return Some(NativeTextZoomAction::Decrease);
+        }
+        _ => {}
+    }
+
     let command_modifier = modifiers.control_key() ^ modifiers.super_key();
     if !command_modifier || modifiers.alt_key() {
         return None;

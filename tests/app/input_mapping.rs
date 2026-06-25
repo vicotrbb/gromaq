@@ -305,6 +305,13 @@ fn native_text_zoom_shortcuts_match_browser_controls() {
         Some(NativeTextZoomAction::Increase)
     );
     assert_eq!(
+        native_text_zoom_action(
+            &Key::Character("+".into()),
+            ModifiersState::SUPER | ModifiersState::SHIFT
+        ),
+        Some(NativeTextZoomAction::Increase)
+    );
+    assert_eq!(
         native_text_zoom_action(&Key::Character("=".into()), ModifiersState::CONTROL),
         Some(NativeTextZoomAction::Increase)
     );
@@ -315,6 +322,14 @@ fn native_text_zoom_shortcuts_match_browser_controls() {
     assert_eq!(
         native_text_zoom_action(&Key::Character("0".into()), ModifiersState::CONTROL),
         Some(NativeTextZoomAction::Reset)
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Named(NamedKey::ZoomIn), ModifiersState::empty()),
+        Some(NativeTextZoomAction::Increase)
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Named(NamedKey::ZoomOut), ModifiersState::empty()),
+        Some(NativeTextZoomAction::Decrease)
     );
     assert_eq!(
         native_text_zoom_action(&Key::Character("+".into()), ModifiersState::empty()),
@@ -332,6 +347,10 @@ fn native_text_zoom_shortcuts_match_browser_controls() {
             &Key::Character("+".into()),
             ModifiersState::CONTROL | ModifiersState::ALT
         ),
+        None
+    );
+    assert_eq!(
+        native_text_zoom_action(&Key::Named(NamedKey::ZoomIn), ModifiersState::CONTROL),
         None
     );
 }
