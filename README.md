@@ -301,6 +301,7 @@ Use the structured test API for deterministic validation:
 - `dump_perf_metrics`
 - `dump_title`
 - `dump_clipboard_text`
+- `take_pending_response_bytes`
 - `screenshot`
 
 `screenshot` returns a deterministic one-pixel-per-cell RGBA capture of terminal grid state for test assertions. Live GPU/window screenshot proof is still tracked separately.

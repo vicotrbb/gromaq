@@ -70,6 +70,19 @@ fn test_api_dumps_title_and_clipboard_state() {
 }
 
 #[test]
+fn test_api_drains_terminal_generated_response_bytes() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+
+    TerminalTestApi::paste_text(&mut terminal, "api\x1b[6n").unwrap();
+
+    assert_eq!(
+        TerminalTestApi::take_pending_response_bytes(&mut terminal),
+        b"\x1b[1;4R"
+    );
+    assert!(TerminalTestApi::take_pending_response_bytes(&mut terminal).is_empty());
+}
+
+#[test]
 fn test_api_screenshot_captures_text_and_cursor_pixels() {
     let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
     TerminalTestApi::paste_text(&mut terminal, "A").unwrap();
