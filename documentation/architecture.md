@@ -20,14 +20,16 @@ handoff, and validation tooling.
   and rasterized glyph caching.
 - `renderer`: CPU-side render planning, glyph atlas metadata, quad generation,
   prepared surface frames, surface lifecycle planning, and `wgpu` surface-frame
-  drawing.
+  drawing. Prepared-frame preview color conversion and blending live in a
+  focused child module.
 - `native_gpu`: GPU bootstrap, offscreen smoke paths, surface creation, upload
   and draw/readback helpers, and structured GPU reports.
 - `app`: native `winit` app wiring, lifecycle state, launch wrappers, config
   reload application, PTY bridge, input mapping, text zoom, font discovery,
   runtime rendering, and native window surface presentation. Handler actions,
-  shortcut policy, lifecycle run-report data, and frame-interval accounting live
-  in focused child modules.
+  shortcut policy, resize mapping, lifecycle run-report data, frame-interval
+  accounting, snapshot artifact helpers, and native font search policy live in
+  focused child modules.
 - `cli`: executable smoke commands, config utilities, GPU reports, runtime
   validation commands, and bounded live-window probes. GPU command context
   traits are isolated from GPU CLI output formatting, and config launch
