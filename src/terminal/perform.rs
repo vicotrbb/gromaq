@@ -2,52 +2,22 @@
 
 use vte::{Params, Perform};
 
+use super::Terminal;
 use super::params::{first_value, first_values};
-use super::state::{CharacterSet, DcsHandler};
+use super::state::CharacterSet;
 use super::width::map_dec_special_graphics;
-use super::{MAX_DCS_PAYLOAD_BYTES, Terminal};
 
 impl Perform for Terminal {
     fn hook(&mut self, _params: &Params, intermediates: &[u8], ignore: bool, action: char) {
-        self.dcs_payload.clear();
-        self.dcs_payload_overflowed = false;
-        self.dcs_handler = if !ignore && intermediates == b"$" && action == 'q' {
-            Some(DcsHandler::Decrqss)
-        } else {
-            None
-        };
+        self.start_dcs_handler(_params, intermediates, ignore, action);
     }
 
     fn put(&mut self, byte: u8) {
-        if self.dcs_handler.is_none() {
-            self.dcs_payload.clear();
-            return;
-        }
-        if self.dcs_payload_overflowed {
-            return;
-        }
-        if self.dcs_payload.len() == MAX_DCS_PAYLOAD_BYTES {
-            self.dcs_payload_overflowed = true;
-            self.dcs_payload.clear();
-            return;
-        }
-        self.dcs_payload.push(byte);
+        self.push_dcs_byte(byte);
     }
 
     fn unhook(&mut self) {
-        let Some(DcsHandler::Decrqss) = self.dcs_handler.take() else {
-            self.dcs_payload.clear();
-            self.dcs_payload_overflowed = false;
-            return;
-        };
-        if self.dcs_payload_overflowed {
-            self.dcs_payload.clear();
-            self.dcs_payload_overflowed = false;
-            self.report_decrqss(&[]);
-        } else {
-            let request = std::mem::take(&mut self.dcs_payload);
-            self.report_decrqss(&request);
-        }
+        self.finish_dcs_handler();
     }
 
     fn print(&mut self, c: char) {

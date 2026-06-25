@@ -11,6 +11,7 @@ use crate::selection::SelectionRange;
 
 mod cursor;
 mod damage;
+mod dcs;
 mod edit;
 mod io;
 mod modes;
