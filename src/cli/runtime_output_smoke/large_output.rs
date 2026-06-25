@@ -10,19 +10,13 @@ use super::{
 };
 
 mod output;
+mod payload;
 
 use output::{
     RuntimeLargeOutputSmokeReport, runtime_large_output_smoke_error,
     runtime_large_output_smoke_failure, runtime_large_output_smoke_success,
 };
-
-fn runtime_large_output_payload(lines: usize) -> Vec<u8> {
-    let mut payload = Vec::new();
-    for line in 0..lines {
-        payload.extend_from_slice(format!("gromaq-runtime-line-{line:03}\n").as_bytes());
-    }
-    payload
-}
+use payload::runtime_large_output_payload;
 
 pub(in crate::cli) fn runtime_large_output_smoke_exit() -> CliExit {
     let payload = runtime_large_output_payload(RUNTIME_LARGE_OUTPUT_LINES);
