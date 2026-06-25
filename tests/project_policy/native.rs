@@ -21,6 +21,12 @@ const FORBIDDEN_FRONTEND_FILES: &[&str] = &[
 const FORBIDDEN_FRONTEND_EXTENSIONS: &[&str] =
     &["cjs", "cts", "js", "jsx", "mjs", "mts", "ts", "tsx"];
 
+const ALLOWED_IMAGE_TOOLING_FILES: &[&str] = &[
+    "images/avatar/generate.mjs",
+    "images/logos/generate.mjs",
+    "images/tools/gromaq-image-assets.mjs",
+];
+
 const FORBIDDEN_DEPENDENCIES: &[&str] = &[
     "boa_engine",
     "deno_core",
@@ -108,6 +114,11 @@ fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Ve
 }
 
 fn is_forbidden_frontend_file(path: &Path) -> bool {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    if ALLOWED_IMAGE_TOOLING_FILES.contains(&relative_path(root, path).as_str()) {
+        return false;
+    }
+
     let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else {
         return false;
     };
