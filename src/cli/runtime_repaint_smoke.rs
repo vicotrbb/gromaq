@@ -1,17 +1,17 @@
 //! Runtime repaint CLI smoke command.
 
-use std::collections::VecDeque;
 use std::ffi::OsString;
 
-use crate::app::{
-    NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
-};
+use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
 use crate::dirty::DirtyRegion;
-use crate::pty::{PtyConfig, PtyError, ShellCommand};
+use crate::pty::ShellCommand;
 use crate::renderer::{RendererConfig, WgpuRenderer};
 
 use super::CliExit;
+
+mod pty;
+
+use pty::RepaintSmokePtySpawner;
 
 const REPAINT_COLS: u16 = 80;
 const REPAINT_ROWS: u16 = 8;
@@ -135,44 +135,4 @@ fn zsh_repaint_payload() -> Vec<u8> {
       \x1b[A~/Daedalus/gromaq ................................ rb 2.7.5 15:11\r\n\
       \x1b[2K\x1b[1G\x1b[38;5;76m>\x1b[39m \x1b[K\x1b[?2004h"
         .to_vec()
-}
-
-#[derive(Debug, Clone)]
-struct RepaintSmokePtySpawner {
-    payloads: Vec<Vec<u8>>,
-}
-
-#[derive(Debug)]
-struct RepaintSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-}
-
-impl RepaintSmokePtySpawner {
-    fn new(payloads: Vec<Vec<u8>>) -> Self {
-        Self { payloads }
-    }
-}
-
-impl NativePtySpawner for RepaintSmokePtySpawner {
-    type Session = RepaintSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RepaintSmokePtySession {
-            output: VecDeque::from(self.payloads.clone()),
-        })
-    }
-}
-
-impl NativePtySessionIo for RepaintSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
 }
