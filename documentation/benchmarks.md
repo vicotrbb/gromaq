@@ -60,6 +60,13 @@ wrote a 540x180 binary PPM CPU preview from the same prepared glyph-frame path,
 reported 291615 bytes written, 97200 preview pixels, 16 prepared quads, one
 background quad, one cursor quad, and 29184 atlas bytes. This is an inspectable
 prepared-frame artifact, not a live desktop screenshot capture. On
+2026-06-24,
+`cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame.ppm`
+launched the bounded native-window path and wrote a 2556x1586 binary PPM with
+12161465 bytes, 60 glyph quads, 0 background quads, and 1 cursor quad from the
+prepared glyph-frame snapshot path; it reported `glyph frame presented: false`
+because this command captures the prepared artifact and is not an OS compositor
+screenshot. On
 2026-06-23,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,
 reported 128 retained scrollback lines, rendered 1 CPU-side dirty frame,
