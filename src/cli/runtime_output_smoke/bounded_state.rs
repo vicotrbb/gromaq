@@ -11,25 +11,13 @@ use super::{
 };
 
 mod output;
+mod payload;
 
 use output::{
     RuntimeBoundedStateSmokeReport, runtime_bounded_state_smoke_error,
     runtime_bounded_state_smoke_failure, runtime_bounded_state_smoke_success,
 };
-
-fn runtime_bounded_state_payloads() -> Vec<Vec<u8>> {
-    (0..RUNTIME_BOUNDED_STATE_BATCHES)
-        .map(|batch| {
-            let start = batch * RUNTIME_LARGE_OUTPUT_LINES;
-            let end = start + RUNTIME_LARGE_OUTPUT_LINES;
-            let mut payload = Vec::new();
-            for line in start..end {
-                payload.extend_from_slice(format!("gromaq-bounded-line-{line:04}\n").as_bytes());
-            }
-            payload
-        })
-        .collect()
-}
+use payload::runtime_bounded_state_payloads;
 
 pub(in crate::cli) fn runtime_bounded_state_smoke_exit() -> CliExit {
     let payloads = runtime_bounded_state_payloads();
