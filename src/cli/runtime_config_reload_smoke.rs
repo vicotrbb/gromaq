@@ -1,52 +1,34 @@
 use std::{fs, path::PathBuf};
 
-use super::CliExit;
 use crate::app::{NativeAppConfig, NativeTerminalApp, NativeTerminalRuntimeConfig};
 use crate::config::ConfigFileReloader;
 use crate::renderer::RendererConfig;
 
+mod output;
+
+use super::CliExit;
+use output::{runtime_config_reload_smoke_error, runtime_config_reload_smoke_success};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct RuntimeConfigReloadSmokeReport {
-    unchanged_poll_changed: bool,
-    changed_poll_changed: bool,
-    cols: u16,
-    rows: u16,
-    scrollback_lines: usize,
-    target_fps: u32,
-    dirty_regions: bool,
-    font_size_px: u16,
-    cell_width_px: u16,
-    line_height_px: u16,
-    cell_spacing_px: u16,
-    shell_program: String,
+pub(super) struct RuntimeConfigReloadSmokeReport {
+    pub(super) unchanged_poll_changed: bool,
+    pub(super) changed_poll_changed: bool,
+    pub(super) cols: u16,
+    pub(super) rows: u16,
+    pub(super) scrollback_lines: usize,
+    pub(super) target_fps: u32,
+    pub(super) dirty_regions: bool,
+    pub(super) font_size_px: u16,
+    pub(super) cell_width_px: u16,
+    pub(super) line_height_px: u16,
+    pub(super) cell_spacing_px: u16,
+    pub(super) shell_program: String,
 }
 
 pub(super) fn runtime_config_reload_smoke_exit() -> CliExit {
     match run_runtime_config_reload_smoke() {
-        Ok(report) => CliExit {
-            code: 0,
-            stdout: format!(
-                "runtime config reload smoke: ok\nunchanged poll changed: {}\nchanged poll changed: {}\nterminal: {}x{}\nscrollback lines: {}\ntarget fps: {}\ndirty-region rendering: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\ncell spacing px: {}\nshell: {}\n",
-                report.unchanged_poll_changed,
-                report.changed_poll_changed,
-                report.cols,
-                report.rows,
-                report.scrollback_lines,
-                report.target_fps,
-                report.dirty_regions,
-                report.font_size_px,
-                report.cell_width_px,
-                report.line_height_px,
-                report.cell_spacing_px,
-                report.shell_program,
-            ),
-            stderr: String::new(),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("runtime config reload smoke failed: {error}\n"),
-        },
+        Ok(report) => runtime_config_reload_smoke_success(&report),
+        Err(error) => runtime_config_reload_smoke_error(error),
     }
 }
 
