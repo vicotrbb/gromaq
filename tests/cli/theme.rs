@@ -18,6 +18,7 @@ fn theme_legibility_smoke_reports_default_visual_gates_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("font size px: 34"));
     assert!(exit.stdout.contains("cell width px: 19"));
     assert!(exit.stdout.contains("line height px: 47"));
+    assert!(exit.stdout.contains("background opacity percent: 100"));
     assert!(exit.stdout.contains("foreground/background contrast x100:"));
     assert!(exit.stdout.contains("foreground/selection contrast x100:"));
     assert!(exit.stdout.contains("cursor/background contrast x100:"));
@@ -49,6 +50,7 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("font size px: 34"));
     assert!(exit.stdout.contains("cell width px: 19"));
     assert!(exit.stdout.contains("line height px: 47"));
+    assert!(exit.stdout.contains("background opacity percent: 100"));
     assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stdout.contains("cell spacing px: 0"));
     assert!(exit.stdout.contains("high contrast text pixels:"));

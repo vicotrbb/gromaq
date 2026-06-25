@@ -9,6 +9,7 @@ pub(super) struct ThemePreviewSnapshotReport {
     pub(super) font_size_px: u16,
     pub(super) cell_width_px: u16,
     pub(super) line_height_px: u16,
+    pub(super) background_opacity_percent: u32,
     pub(super) surface_padding_px: u16,
     pub(super) cell_spacing_px: u16,
     pub(super) high_contrast_text_pixels: usize,
@@ -27,7 +28,7 @@ pub(super) fn theme_preview_snapshot_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nsurface padding px: {}\ncell spacing px: {}\nhigh contrast text pixels: {}\nselection pixels: {}\ncursor pixels: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
+            "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nbackground opacity percent: {}\nsurface padding px: {}\ncell spacing px: {}\nhigh contrast text pixels: {}\nselection pixels: {}\ncursor pixels: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
             report.bytes_written,
             report.width,
             report.height,
@@ -35,6 +36,7 @@ pub(super) fn theme_preview_snapshot_success(
             report.font_size_px,
             report.cell_width_px,
             report.line_height_px,
+            report.background_opacity_percent,
             report.surface_padding_px,
             report.cell_spacing_px,
             report.high_contrast_text_pixels,

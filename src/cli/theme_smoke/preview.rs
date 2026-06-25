@@ -109,6 +109,7 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
         font_size_px: renderer_config.font_size_px,
         cell_width_px: renderer_config.cell_width_px,
         line_height_px: renderer_config.line_height_px,
+        background_opacity_percent: opacity_percent(renderer_config.clear_color[3]),
         surface_padding_px: renderer_config.surface_padding_px,
         cell_spacing_px: renderer_config.cell_spacing_px,
         high_contrast_text_pixels: pixel_report.high_contrast_text_pixels,
@@ -119,6 +120,10 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
         cursor_quads: frame.cursor_batch.quads.len(),
         atlas_bytes: frame.atlas.rgba.len(),
     })
+}
+
+fn opacity_percent(opacity: f64) -> u32 {
+    (opacity.clamp(0.0, 1.0) * 100.0).round() as u32
 }
 
 fn theme_preview_ppm_bytes(width: u32, height: u32, pixels: &[u8]) -> Result<Vec<u8>, String> {

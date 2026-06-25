@@ -16,11 +16,12 @@ pub(in crate::cli) fn theme_legibility_smoke_exit() -> CliExit {
         Ok(report) => CliExit {
             code: 0,
             stdout: format!(
-                "theme legibility smoke: ok\npreset: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nforeground/background contrast x100: {}\nforeground/selection contrast x100: {}\ncursor/background contrast x100: {}\nreadable ansi min contrast x100: {}\n",
+                "theme legibility smoke: ok\npreset: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nbackground opacity percent: {}\nforeground/background contrast x100: {}\nforeground/selection contrast x100: {}\ncursor/background contrast x100: {}\nreadable ansi min contrast x100: {}\n",
                 report.preset,
                 report.font_size_px,
                 report.cell_width_px,
                 report.line_height_px,
+                report.background_opacity_percent,
                 report.foreground_background_contrast_x100,
                 report.foreground_selection_contrast_x100,
                 report.cursor_background_contrast_x100,
@@ -42,6 +43,7 @@ struct ThemeLegibilityReport {
     font_size_px: u16,
     cell_width_px: u16,
     line_height_px: u16,
+    background_opacity_percent: u32,
     foreground_background_contrast_x100: u64,
     foreground_selection_contrast_x100: u64,
     cursor_background_contrast_x100: u64,
@@ -85,6 +87,7 @@ fn theme_legibility_report() -> Result<ThemeLegibilityReport, String> {
         font_size_px: config.font.renderer_font_size_px(),
         cell_width_px: config.font.renderer_cell_width_px(),
         line_height_px: config.font.renderer_line_height_px(),
+        background_opacity_percent: opacity_percent(config.theme.background_opacity),
         foreground_background_contrast_x100: contrast_ratio_x100(foreground, background),
         foreground_selection_contrast_x100: contrast_ratio_x100(foreground, selection),
         cursor_background_contrast_x100: contrast_ratio_x100(cursor, background),
@@ -108,6 +111,10 @@ fn theme_legibility_report() -> Result<ThemeLegibilityReport, String> {
 
 fn contrast_ratio_x100(foreground: [u8; 3], background: [u8; 3]) -> u64 {
     (contrast_ratio(foreground, background) * 100.0).round() as u64
+}
+
+fn opacity_percent(opacity: f32) -> u32 {
+    (opacity.clamp(0.0, 1.0) * 100.0).round() as u32
 }
 
 fn contrast_ratio(foreground: [u8; 3], background: [u8; 3]) -> f64 {
