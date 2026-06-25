@@ -54,13 +54,13 @@ the executable gate closer to daily shell usage while still remaining distinct
 from live windowed GPU pacing proof. On 2026-06-24,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
-selection background, one cursor quad, a 540x180 frame, a 31008-byte atlas, 38 px
+selection background, one cursor quad, a 604x204 frame, a 40128-byte atlas, 44 px
 line height, and 14 px surface padding through the native glyph-frame path. On
 2026-06-24,
 `cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm`
-wrote a 540x180 binary PPM CPU preview from the same prepared glyph-frame path,
-reported 291615 bytes written, 97200 preview pixels, 16 prepared quads, one
-background quad, one cursor quad, and 31008 atlas bytes. This is an inspectable
+wrote a 604x204 binary PPM CPU preview from the same prepared glyph-frame path,
+reported 369663 bytes written, 123216 preview pixels, 16 prepared quads, one
+background quad, one cursor quad, and 40128 atlas bytes. This is an inspectable
 prepared-frame artifact, not a live desktop screenshot capture. On
 2026-06-24,
 `cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame.ppm`
@@ -118,18 +118,18 @@ target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
 frames. On 2026-06-24, `cargo run -- --gpu-terminal-text-smoke` drew a 144x36
 offscreen terminal frame with 4 glyphs, 4 glyph quads, 1 background quad, 1
 decoration quad, 1 cursor quad, 3 rasterized glyphs, 1 reused glyph, 1523 drawn
-pixels, a sampled background pixel of `[2, 3, 4, 255]`, a sampled glyph pixel of
-`[254, 253, 214, 254]`, and a contrast ratio of 1989 x100 against the 700 x100
+pixels, a sampled background pixel of `[1, 2, 2, 255]`, a sampled glyph pixel of
+`[254, 253, 214, 254]`, and a contrast ratio of 2002 x100 against the 700 x100
 minimum smoke gate. On the same date,
 `cargo run -- --gpu-terminal-text-perf-smoke` measured 16 repeated offscreen
 terminal text GPU draw/readback frames at 144x36 pixels, reported 1523 drawn
 pixels on the final frame, and reported min/avg/max/p95 draw/readback timings of
-6208500/6777023/10447750/10447750 ns. On the same date,
-`cargo run -- --gpu-terminal-text-snapshot target/gromaq-terminal-text-smoke.ppm`
+5867417/6755039/11309667/11309667 ns. On the same date,
+`cargo run -- --gpu-terminal-text-snapshot target/gromaq-gpu-terminal-text.ppm`
 wrote a 144x36 binary PPM artifact of the same contrast-gated terminal-text
 smoke frame, reported 15566 bytes written, 4 glyphs, 1523 drawn pixels, sampled
-background `[2, 3, 4, 255]`, sampled glyph `[254, 253, 214, 254]`, cursor
-`[200, 200, 200, 255]`, and the same 1989 x100 contrast ratio. These are
+background `[1, 2, 2, 255]`, sampled glyph `[254, 253, 214, 254]`, cursor
+`[200, 200, 200, 255]`, and the same 2002 x100 contrast ratio. These are
 deterministic smoke results, an inspectable offscreen snapshot artifact, and
 offscreen GPU draw/readback timing results, not live hardware acceptance
 measurements.
