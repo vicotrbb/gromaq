@@ -297,6 +297,60 @@ fn window_glyph_frame_snapshot_smoke_writes_artifact() {
 }
 
 #[test]
+fn window_glyph_frame_snapshot_smoke_requires_output_path() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+
+    let exit =
+        run_with_backend_and_app(["gromaq", "--window-glyph-frame-snapshot"], &backend, &app);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(
+        exit.stderr
+            .contains("missing snapshot path for --window-glyph-frame-snapshot")
+    );
+    assert!(backend.requests.borrow().is_empty());
+    assert!(app.launches.borrow().is_empty());
+}
+
+#[test]
+fn window_glyph_frame_snapshot_smoke_rejects_extra_arguments() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+    let path = test_cli_config_path("window-glyph-frame-extra.ppm");
+    let _ = fs::remove_file(&path);
+
+    let exit = run_with_backend_and_app(
+        [
+            "gromaq",
+            "--window-glyph-frame-snapshot",
+            &path.to_string_lossy(),
+            "extra",
+        ],
+        &backend,
+        &app,
+    );
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.starts_with("usage: gromaq ["));
+    assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(backend.requests.borrow().is_empty());
+    assert!(app.launches.borrow().is_empty());
+    assert!(!path.exists());
+}
+
+#[test]
 fn window_smoke_reports_unavailable_native_app_launcher() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
