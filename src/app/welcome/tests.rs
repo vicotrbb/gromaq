@@ -6,7 +6,7 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
         &NativeAppConfig::default(),
         &NativeTerminalRuntimeConfig::default(),
         &RendererConfig::default(),
-        "MesloLGS NF",
+        "JetBrains Mono Nerd Font",
     );
 
     assert!(text.contains("-- Gromaq"));
@@ -16,7 +16,7 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
     assert!(text.contains("native Rust GPU terminal"));
     assert!(text.contains("120x36 cells"));
     assert!(text.contains("10000 lines"));
-    assert!(text.contains("MesloLGS NF  32px / 44px line"));
+    assert!(text.contains("JetBrains Mono Nerd Font  32px / 44px line"));
     assert!(text.contains("18px wide"));
     assert!(text.contains("14px padding, opacity 100%"));
     assert!(text.contains("truecolor ANSI + dim text"));
@@ -39,7 +39,7 @@ fn default_welcome_text_uses_renderer_theme_colors() {
         &NativeAppConfig::default(),
         &NativeTerminalRuntimeConfig::default(),
         &renderer,
-        "MesloLGS NF",
+        "JetBrains Mono Nerd Font",
     );
 
     assert!(text.contains("\x1b[48;2;7;8;9m"));
