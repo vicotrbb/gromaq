@@ -1,57 +1,22 @@
 //! Runtime scrollback CLI smoke command.
 
-use std::collections::VecDeque;
-
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use super::CliExit;
-use crate::app::{
-    NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
-};
-use crate::pty::{PtyConfig, PtyError, ShellCommand};
+use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
+use crate::pty::ShellCommand;
 use crate::renderer::{RendererConfig, WgpuRenderer};
 
 mod output;
+mod pty;
 
 use output::{
     RuntimeScrollbackSmokeReport, runtime_scrollback_smoke_error, runtime_scrollback_smoke_failure,
     runtime_scrollback_smoke_success,
 };
+use pty::{RuntimeScrollbackSmokePtySession, RuntimeScrollbackSmokePtySpawner};
 
 const RUNTIME_SCROLLBACK_SMOKE_TEXT: &str = "one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix";
-
-#[derive(Debug, Clone, Copy, Default)]
-struct RuntimeScrollbackSmokePtySpawner;
-
-#[derive(Debug)]
-struct RuntimeScrollbackSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-}
-
-impl NativePtySpawner for RuntimeScrollbackSmokePtySpawner {
-    type Session = RuntimeScrollbackSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeScrollbackSmokePtySession {
-            output: VecDeque::from([RUNTIME_SCROLLBACK_SMOKE_TEXT.as_bytes().to_vec()]),
-        })
-    }
-}
-
-impl NativePtySessionIo for RuntimeScrollbackSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
-        Ok(())
-    }
-
-    fn resize(&mut self, _size: NativePtyResize) -> Result<(), PtyError> {
-        Ok(())
-    }
-}
 
 pub(super) fn runtime_scrollback_smoke_exit() -> CliExit {
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
