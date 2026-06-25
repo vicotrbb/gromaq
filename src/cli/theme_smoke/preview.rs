@@ -24,7 +24,7 @@ pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
         Ok(report) => CliExit {
             code: 0,
             stdout: format!(
-                "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nsurface padding px: {}\ncell spacing px: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
+                "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nsurface padding px: {}\ncell spacing px: {}\nhigh contrast text pixels: {}\nselection pixels: {}\ncursor pixels: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
                 report.bytes_written,
                 report.width,
                 report.height,
@@ -34,6 +34,9 @@ pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
                 report.line_height_px,
                 report.surface_padding_px,
                 report.cell_spacing_px,
+                report.high_contrast_text_pixels,
+                report.selection_pixels,
+                report.cursor_pixels,
                 report.prepared_quads,
                 report.background_quads,
                 report.cursor_quads,
@@ -60,6 +63,9 @@ struct ThemePreviewSnapshotReport {
     line_height_px: u16,
     surface_padding_px: u16,
     cell_spacing_px: u16,
+    high_contrast_text_pixels: usize,
+    selection_pixels: usize,
+    cursor_pixels: usize,
     prepared_quads: usize,
     background_quads: usize,
     cursor_quads: usize,
@@ -122,7 +128,13 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
     let preview = prepared
         .preview_rgba8()
         .map_err(|error| error.to_string())?;
-    validate_theme_preview_background(&preview.rgba, preview.width, renderer_config.clear_color)?;
+    let pixel_report = validate_theme_preview_pixels(
+        &preview.rgba,
+        preview.width,
+        renderer_config.clear_color,
+        renderer_config.selection_background_rgba8,
+        renderer_config.cursor_color_rgba8,
+    )?;
     let snapshot = theme_preview_ppm_bytes(preview.width, preview.height, &preview.rgba)?;
     fs::write(Path::new(path), &snapshot)
         .map_err(|error| format!("failed to write theme preview snapshot: {error}"))?;
@@ -137,6 +149,9 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
         line_height_px: renderer_config.line_height_px,
         surface_padding_px: renderer_config.surface_padding_px,
         cell_spacing_px: renderer_config.cell_spacing_px,
+        high_contrast_text_pixels: pixel_report.high_contrast_text_pixels,
+        selection_pixels: pixel_report.selection_pixels,
+        cursor_pixels: pixel_report.cursor_pixels,
         prepared_quads: frame.batch.quads.len(),
         background_quads: frame.background_batch.quads.len(),
         cursor_quads: frame.cursor_batch.quads.len(),
@@ -144,11 +159,20 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
     })
 }
 
-fn validate_theme_preview_background(
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ThemePreviewPixelReport {
+    high_contrast_text_pixels: usize,
+    selection_pixels: usize,
+    cursor_pixels: usize,
+}
+
+fn validate_theme_preview_pixels(
     pixels: &[u8],
     width: u32,
     clear_color: [f64; 4],
-) -> Result<(), String> {
+    selection_color: [u8; 4],
+    cursor_color: [u8; 4],
+) -> Result<ThemePreviewPixelReport, String> {
     let expected = linear_f64_rgba_to_srgb8(clear_color);
     let Some(pixel) = pixels.get(0..4) else {
         return Err("theme preview did not contain any pixels".to_owned());
@@ -159,7 +183,44 @@ fn validate_theme_preview_background(
             pixel, expected
         ));
     }
-    Ok(())
+    let mut high_contrast_text_pixels = 0;
+    let mut selection_pixels = 0;
+    let mut cursor_pixels = 0;
+    let background_rgb = [expected[0], expected[1], expected[2]];
+    for pixel in pixels.chunks_exact(4) {
+        let rgba = [pixel[0], pixel[1], pixel[2], pixel[3]];
+        if rgba == selection_color {
+            selection_pixels += 1;
+            continue;
+        }
+        if rgba == cursor_color {
+            cursor_pixels += 1;
+            continue;
+        }
+        if rgba == expected {
+            continue;
+        }
+        let rgb = [rgba[0], rgba[1], rgba[2]];
+        if contrast_ratio_x100(rgb, background_rgb) >= 700 {
+            high_contrast_text_pixels += 1;
+        }
+    }
+    if high_contrast_text_pixels < 64 {
+        return Err(format!(
+            "theme preview rendered too few high-contrast text pixels: {high_contrast_text_pixels}"
+        ));
+    }
+    if selection_pixels == 0 {
+        return Err("theme preview did not contain selection-color pixels".to_owned());
+    }
+    if cursor_pixels == 0 {
+        return Err("theme preview did not contain cursor-color pixels".to_owned());
+    }
+    Ok(ThemePreviewPixelReport {
+        high_contrast_text_pixels,
+        selection_pixels,
+        cursor_pixels,
+    })
 }
 
 fn theme_preview_ppm_bytes(width: u32, height: u32, pixels: &[u8]) -> Result<Vec<u8>, String> {
@@ -202,4 +263,30 @@ fn linear_channel_to_srgb8(value: f64) -> u8 {
         (1.055 * value.powf(1.0 / 2.4)) - 0.055
     };
     (srgb * 255.0).round().clamp(0.0, 255.0) as u8
+}
+
+fn contrast_ratio_x100(foreground: [u8; 3], background: [u8; 3]) -> u64 {
+    let foreground = relative_luminance(foreground);
+    let background = relative_luminance(background);
+    let lighter = foreground.max(background);
+    let darker = foreground.min(background);
+    (((lighter + 0.05) / (darker + 0.05)) * 100.0).round() as u64
+}
+
+fn relative_luminance([red, green, blue]: [u8; 3]) -> f64 {
+    let [red, green, blue] = [
+        srgb_component(red),
+        srgb_component(green),
+        srgb_component(blue),
+    ];
+    (0.2126 * red) + (0.7152 * green) + (0.0722 * blue)
+}
+
+fn srgb_component(value: u8) -> f64 {
+    let value = f64::from(value) / 255.0;
+    if value <= 0.039_28 {
+        value / 12.92
+    } else {
+        ((value + 0.055) / 1.055).powf(2.4)
+    }
 }

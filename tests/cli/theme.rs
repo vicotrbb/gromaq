@@ -51,6 +51,9 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("line height px: 51"));
     assert!(exit.stdout.contains("surface padding px: 14"));
     assert!(exit.stdout.contains("cell spacing px: 0"));
+    assert!(exit.stdout.contains("high contrast text pixels:"));
+    assert!(exit.stdout.contains("selection pixels:"));
+    assert!(exit.stdout.contains("cursor pixels:"));
     assert!(exit.stdout.contains("prepared quads:"));
     assert!(exit.stdout.contains("background quads:"));
     assert!(exit.stdout.contains("cursor quads:"));
