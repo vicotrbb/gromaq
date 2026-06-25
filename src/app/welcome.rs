@@ -5,6 +5,7 @@ use crate::renderer::RendererConfig;
 
 const SECTION_RULE_WIDTH: usize = 36;
 const WELCOME_AVATAR_ANSI: &str = include_str!("../../images/avatar/avatar-welcome.ansi");
+const WELCOME_GAP_WIDTH: usize = 2;
 
 pub(crate) fn default_welcome_text(
     app: &NativeAppConfig,
@@ -56,24 +57,18 @@ pub(crate) fn default_welcome_text(
     let mut text = String::from("\x1b[2J\x1b[H");
     for (row, avatar) in WELCOME_AVATAR_ANSI.lines().enumerate() {
         text.push_str(avatar);
-        text.push_str("  ");
-        match &stats[row] {
-            WelcomeLine::Metric { label, value } => {
-                text.push_str("    ");
-                text.push_str(&bold_foreground(style.title));
-                text.push_str(label);
-                text.push_str("\x1b[0m");
-                text.push_str("  ");
-                text.push_str(&foreground(style.value));
-                text.push_str(value);
-                text.push_str("\x1b[0m");
-            }
-            WelcomeLine::Section(label) => {
-                text.push_str(&foreground(style.section));
-                text.push_str(&section_header(label));
-                text.push_str("\x1b[0m");
-            }
+        let stat_budget = stat_budget(runtime.terminal_cols, avatar);
+        if stat_budget == 0 {
+            text.push_str("\r\n");
+            continue;
         }
+        text.push_str(&" ".repeat(WELCOME_GAP_WIDTH.min(stat_budget)));
+        let stat_budget = stat_budget.saturating_sub(WELCOME_GAP_WIDTH);
+        let stat = match &stats[row] {
+            WelcomeLine::Metric { label, value } => metric_line(style, label, value, stat_budget),
+            WelcomeLine::Section(label) => section_line(style, label, stat_budget),
+        };
+        push_ansi_clipped(&mut text, &stat, stat_budget);
         text.push_str("\r\n");
     }
     text
@@ -116,10 +111,82 @@ impl WelcomeStyle {
     }
 }
 
-fn section_header(label: &str) -> String {
+fn stat_budget(cols: u16, avatar: &str) -> usize {
+    usize::from(cols).saturating_sub(ansi_visible_width(avatar))
+}
+
+fn metric_line(style: WelcomeStyle, label: &str, value: &str, max_width: usize) -> String {
+    let prefix_width = 4 + label.len() + 2;
+    let value = clipped_plain(value, max_width.saturating_sub(prefix_width));
+    format!(
+        "    {}{label}\x1b[0m  {}{value}\x1b[0m",
+        bold_foreground(style.title),
+        foreground(style.value)
+    )
+}
+
+fn section_line(style: WelcomeStyle, label: &str, max_width: usize) -> String {
+    format!(
+        "{}{}\x1b[0m",
+        foreground(style.section),
+        section_header(label, max_width)
+    )
+}
+
+fn section_header(label: &str, max_width: usize) -> String {
     let title = format!("  [ {label} ] ");
-    let rule_width = SECTION_RULE_WIDTH.saturating_sub(title.len()).max(4);
+    if max_width <= title.len() {
+        return clipped_plain(&title, max_width);
+    }
+    let rule_width = SECTION_RULE_WIDTH
+        .min(max_width)
+        .saturating_sub(title.len())
+        .max(4);
     format!("{title}{}", "-".repeat(rule_width))
+}
+
+fn push_ansi_clipped(output: &mut String, value: &str, max_width: usize) {
+    let mut visible = 0;
+    let mut chars = value.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\x1b' {
+            output.push(ch);
+            for next in chars.by_ref() {
+                output.push(next);
+                if next.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+            continue;
+        }
+        if visible >= max_width {
+            break;
+        }
+        output.push(ch);
+        visible += 1;
+    }
+    output.push_str("\x1b[0m");
+}
+
+fn clipped_plain(value: &str, max_width: usize) -> String {
+    value.chars().take(max_width).collect()
+}
+
+fn ansi_visible_width(value: &str) -> usize {
+    let mut width = 0;
+    let mut chars = value.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\x1b' {
+            for next in chars.by_ref() {
+                if next.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        } else {
+            width += 1;
+        }
+    }
+    width
 }
 
 fn foreground([red, green, blue]: [u8; 3]) -> String {

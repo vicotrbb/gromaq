@@ -47,3 +47,28 @@ fn default_welcome_text_uses_renderer_theme_colors() {
     assert!(text.contains("\x1b[1;38;2;1;2;3mBuild"));
     assert!(text.contains("\x1b[38;2;10;11;12mnative Rust GPU terminal"));
 }
+
+#[test]
+fn default_welcome_text_does_not_wrap_at_narrow_runtime_width() {
+    let runtime = NativeTerminalRuntimeConfig {
+        terminal_cols: 69,
+        terminal_rows: 17,
+        ..NativeTerminalRuntimeConfig::default()
+    };
+    let text = default_welcome_text(
+        &NativeAppConfig::default(),
+        &runtime,
+        &RendererConfig::default(),
+        "JetBrains Mono Nerd Font",
+    );
+
+    let lines: Vec<_> = text.split("\r\n").filter(|line| !line.is_empty()).collect();
+    assert_eq!(lines.len(), 15);
+    assert!(lines.iter().all(|line| ansi_visible_width(line) <= 69));
+    assert!(text.contains("69x17 cells"));
+}
+
+#[test]
+fn ansi_visible_width_ignores_color_sequences() {
+    assert_eq!(ansi_visible_width("\x1b[38;2;158;231;255mGromaq\x1b[0m"), 6);
+}
