@@ -48,13 +48,13 @@ bytes, rendered 16 CPU-side frames, reported render p95 2000000 ns against the
 windowed GPU frame pacing acceptance proof. On 2026-06-24,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
-selection background, one cursor quad, a 412x144 frame, a 16704-byte atlas, 29 px
+selection background, one cursor quad, a 444x160 frame, a 22176-byte atlas, 33 px
 line height, and 14 px surface padding through the native glyph-frame path. On
 2026-06-24,
 `cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm`
-wrote a 412x144 binary PPM CPU preview from the same prepared glyph-frame path,
-reported 177999 bytes written, 59328 preview pixels, 16 prepared quads, one
-background quad, one cursor quad, and 16704 atlas bytes. This is an inspectable
+wrote a 444x160 binary PPM CPU preview from the same prepared glyph-frame path,
+reported 213135 bytes written, 71040 preview pixels, 16 prepared quads, one
+background quad, one cursor quad, and 22176 atlas bytes. This is an inspectable
 prepared-frame artifact, not a live desktop screenshot capture. On
 2026-06-23,
 `cargo run -- --runtime-large-output-smoke` pumped 12288 bytes from 512 lines,

@@ -297,9 +297,9 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("[shell]"));
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
-    assert!(exit.stdout.contains("size_px = 21"));
-    assert!(exit.stdout.contains("line_height_px = 29"));
-    assert!(exit.stdout.contains("# cell_width_px = 12"));
+    assert!(exit.stdout.contains("size_px = 24"));
+    assert!(exit.stdout.contains("line_height_px = 33"));
+    assert!(exit.stdout.contains("# cell_width_px = 13"));
     assert!(exit.stdout.contains("[theme]"));
     assert!(exit.stdout.contains("preset = \"gromaq-dark\""));
     assert!(exit.stdout.contains("selection = \"#33445f\""));
