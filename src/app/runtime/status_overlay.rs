@@ -21,6 +21,9 @@ pub(super) fn apply_status_overlay(
         .cols
         .saturating_sub(required_cols)
         .min(grid.cols.saturating_sub(status_width));
+    if !overlay_target_is_blank(grid, row, col, status_width) {
+        return None;
+    }
     let style = status_overlay_style();
     for (offset, ch) in status.chars().enumerate() {
         let offset = u16::try_from(offset).ok()?;
@@ -39,6 +42,10 @@ pub(super) fn apply_status_overlay(
         rows: 1,
         cols: status_width,
     })
+}
+
+fn overlay_target_is_blank(grid: &GridSnapshot, row: u16, col: u16, width: u16) -> bool {
+    (0..width).all(|offset| grid.cell(row, col + offset).text.trim().is_empty())
 }
 
 fn status_overlay_row(grid: &GridSnapshot, cursor: CursorSnapshot) -> u16 {
@@ -104,5 +111,17 @@ mod tests {
 
         assert!(region.is_none());
         assert_eq!(grid.line_text(0), ">");
+    }
+
+    #[test]
+    fn status_overlay_does_not_overwrite_shell_right_prompt() {
+        let mut terminal = Terminal::new(TerminalConfig::new(24, 4).unwrap());
+        terminal.write_str("left          12:34:56\r\n> ").unwrap();
+        let mut grid = terminal.dump_grid();
+
+        let region = apply_status_overlay(&mut grid, terminal.dump_cursor(), "144 fps");
+
+        assert!(region.is_none());
+        assert_eq!(grid.line_text(0), "left          12:34:56");
     }
 }
