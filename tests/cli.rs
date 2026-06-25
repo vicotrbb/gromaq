@@ -470,6 +470,7 @@ fn frame_scheduler_smoke_cli_reports_144hz_timeline_without_gpu_bootstrap() {
 
 #[test]
 fn runtime_real_shell_command_output_smoke_preserves_output_after_prompt_redraw() {
+    let _guard = real_shell::real_shell_test_guard();
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
     };

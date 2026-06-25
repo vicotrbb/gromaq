@@ -3,11 +3,11 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use super::{MockBackend, run_with_backend};
 
-fn real_shell_test_guard() -> MutexGuard<'static, ()> {
+pub(super) fn real_shell_test_guard() -> MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
     LOCK.get_or_init(|| Mutex::new(()))
         .lock()
-        .expect("real shell CLI test lock should not be poisoned")
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 #[test]
