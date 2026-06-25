@@ -15,6 +15,7 @@ use super::super::CliExit;
 mod output;
 mod pixels;
 
+use super::ppm::ppm_bytes;
 use output::{
     ThemePreviewSnapshotReport, theme_preview_snapshot_error, theme_preview_snapshot_success,
 };
@@ -112,7 +113,7 @@ fn theme_preview_snapshot_report(
         renderer_config.selection_background_rgba8,
         renderer_config.cursor_color_rgba8,
     )?;
-    let snapshot = theme_preview_ppm_bytes(preview.width, preview.height, &preview.rgba)?;
+    let snapshot = ppm_bytes(preview.width, preview.height, &preview.rgba)?;
     fs::write(Path::new(path), &snapshot)
         .map_err(|error| format!("failed to write theme preview snapshot: {error}"))?;
     let frame = prepared.as_surface_glyph_frame();
@@ -148,27 +149,4 @@ fn opacity_percent(opacity: f64) -> u32 {
 
 fn opacity_percent_from_alpha(alpha: u8) -> u32 {
     ((f64::from(alpha) / 255.0) * 100.0).round() as u32
-}
-
-fn theme_preview_ppm_bytes(width: u32, height: u32, pixels: &[u8]) -> Result<Vec<u8>, String> {
-    let expected_rgba_len = usize::try_from(u64::from(width) * u64::from(height) * 4)
-        .map_err(|_| "theme preview snapshot is too large".to_owned())?;
-    if pixels.len() != expected_rgba_len {
-        return Err(format!(
-            "theme preview snapshot expected {expected_rgba_len} RGBA bytes, got {}",
-            pixels.len()
-        ));
-    }
-    let rgb_len = usize::try_from(u64::from(width) * u64::from(height) * 3)
-        .map_err(|_| "theme preview snapshot RGB buffer is too large".to_owned())?;
-    let header = format!("P6\n{width} {height}\n255\n");
-    let mut snapshot = Vec::new();
-    snapshot
-        .try_reserve_exact(header.len() + rgb_len)
-        .map_err(|_| "theme preview snapshot allocation failed".to_owned())?;
-    snapshot.extend_from_slice(header.as_bytes());
-    for pixel in pixels.chunks_exact(4) {
-        snapshot.extend_from_slice(&pixel[..3]);
-    }
-    Ok(snapshot)
 }

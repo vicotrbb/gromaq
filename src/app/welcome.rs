@@ -8,7 +8,7 @@ const AVATAR_BODY_WIDTH: usize = 10;
 const AVATAR_ACCENT_WIDTH: usize = 4;
 const SECTION_RULE_WIDTH: usize = 36;
 
-pub(super) fn default_welcome_text(
+pub(crate) fn default_welcome_text(
     app: &NativeAppConfig,
     runtime: &NativeTerminalRuntimeConfig,
     renderer: &RendererConfig,

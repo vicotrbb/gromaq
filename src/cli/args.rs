@@ -79,6 +79,8 @@ pub(super) enum CliCommand<'a> {
     ThemePreviewSnapshot,
     /// Config-file theme rendered preview snapshot command.
     ThemePreviewConfig,
+    /// Default welcome screen rendered preview snapshot command.
+    WelcomePreviewSnapshot,
     /// Runtime focus smoke command.
     RuntimeFocusSmoke,
     /// Runtime mouse smoke command.
@@ -145,6 +147,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--theme-legibility-smoke" => Some(CliCommand::ThemeLegibilitySmoke),
         "--theme-preview-snapshot" => Some(CliCommand::ThemePreviewSnapshot),
         "--theme-preview-config" => Some(CliCommand::ThemePreviewConfig),
+        "--welcome-preview-snapshot" => Some(CliCommand::WelcomePreviewSnapshot),
         "--runtime-focus-smoke" => Some(CliCommand::RuntimeFocusSmoke),
         "--runtime-mouse-smoke" => Some(CliCommand::RuntimeMouseSmoke),
         "--runtime-response-smoke" => Some(CliCommand::RuntimeResponseSmoke),

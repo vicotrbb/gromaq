@@ -11,7 +11,8 @@ use crate::native_gpu::GpuBootstrapBackend;
 use config::{config_check_command, config_file_command, config_template_command};
 use snapshots::{
     gpu_terminal_text_snapshot_command, runtime_glyph_frame_snapshot_command,
-    theme_preview_snapshot_command, window_glyph_frame_snapshot_command,
+    theme_preview_snapshot_command, welcome_preview_snapshot_command,
+    window_glyph_frame_snapshot_command,
 };
 
 pub(super) fn run_argument_command<I, S, B, A>(
@@ -35,6 +36,7 @@ where
         }
         CliCommand::RuntimeGlyphFrameSnapshot => Some(runtime_glyph_frame_snapshot_command(args)),
         CliCommand::ThemePreviewSnapshot => Some(theme_preview_snapshot_command(args)),
+        CliCommand::WelcomePreviewSnapshot => Some(welcome_preview_snapshot_command(args)),
         CliCommand::ThemePreviewConfig => Some(theme_preview_config_command(args)),
         CliCommand::ThemeExport => Some(theme_export_command(args)),
         CliCommand::WindowGlyphFrameSnapshot => {

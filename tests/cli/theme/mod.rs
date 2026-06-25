@@ -4,6 +4,7 @@ mod export;
 mod legibility;
 mod list;
 mod preview;
+mod welcome;
 
 fn temp_theme_path(prefix: &str) -> std::path::PathBuf {
     std::env::temp_dir().join(format!(
