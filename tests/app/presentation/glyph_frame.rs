@@ -1,0 +1,169 @@
+use std::fs;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use gromaq::app::{
+    NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowSurface,
+    render_and_present_terminal_glyph_frame_report,
+    render_and_present_terminal_glyph_frame_report_with_snapshot,
+};
+use gromaq::font::RasterizedGlyphCache;
+use gromaq::pty::ShellCommand;
+use gromaq::renderer::{RendererConfig, WgpuRenderer};
+
+use crate::support::{
+    MockPtySession, MockPtySpawner, MockSurfaceBackend, supported_surface_capabilities,
+    system_mono_font,
+};
+
+#[test]
+fn native_redraw_presents_dirty_runtime_frame_as_glyph_frame() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime.pump_pty_output().unwrap();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
+    let mut glyph_cache = RasterizedGlyphCache::from_bytes(system_mono_font()).unwrap();
+    let backend = MockSurfaceBackend::default();
+    let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());
+    surface.configure_initial(1280, 800).unwrap();
+
+    let report = render_and_present_terminal_glyph_frame_report(
+        &mut runtime,
+        &mut renderer,
+        &mut glyph_cache,
+        &mut surface,
+    )
+    .unwrap();
+
+    assert!(surface.backend().presented_clear_colors.borrow().is_empty());
+    let presented_frames = surface.backend().presented_glyph_frames.borrow();
+    assert_eq!(presented_frames.len(), 1);
+    assert_eq!(presented_frames[0].quads, 5);
+    assert!(presented_frames[0].width > 0);
+    assert!(presented_frames[0].height > 0);
+    assert!(presented_frames[0].atlas_pixels > 0);
+    assert!(report.rendered);
+    assert!(report.glyph_frame_presented);
+    assert!(!report.clear_presented);
+    assert_eq!(report.width, presented_frames[0].width);
+    assert_eq!(report.height, presented_frames[0].height);
+    assert_eq!(report.glyph_quads, presented_frames[0].quads);
+    assert_eq!(report.atlas_bytes / 4, presented_frames[0].atlas_pixels);
+    assert_eq!(report.background_quads, 0);
+    assert_eq!(report.decoration_quads, 0);
+    assert!(report.atlas_occupied_slots > 0);
+}
+
+#[test]
+fn native_redraw_exports_presented_glyph_frame_snapshot() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime.pump_pty_output().unwrap();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
+    let mut glyph_cache = RasterizedGlyphCache::from_bytes(system_mono_font()).unwrap();
+    let backend = MockSurfaceBackend::default();
+    let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());
+    surface.configure_initial(1280, 800).unwrap();
+    let path = test_snapshot_path("native-redraw-glyph-frame.ppm");
+
+    let report = render_and_present_terminal_glyph_frame_report_with_snapshot(
+        &mut runtime,
+        &mut renderer,
+        &mut glyph_cache,
+        &mut surface,
+        Some(&path),
+    )
+    .unwrap();
+
+    let bytes = fs::read(&path).unwrap();
+    let _ = fs::remove_file(path);
+    assert!(report.glyph_frame_presented);
+    assert!(report.snapshot_written);
+    assert_eq!(report.snapshot_bytes, bytes.len());
+    assert_eq!(report.snapshot_width, report.width);
+    assert_eq!(report.snapshot_height, report.height);
+    assert!(bytes.starts_with(format!("P6\n{} {}\n255\n", report.width, report.height).as_bytes()));
+    assert!(bytes.len() > 32);
+}
+
+#[test]
+fn native_redraw_presents_blank_runtime_cursor_frame_without_clear_only_fallback() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
+    let mut glyph_cache = RasterizedGlyphCache::from_bytes(system_mono_font()).unwrap();
+    let backend = MockSurfaceBackend::default();
+    let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());
+    surface.configure_initial(1280, 800).unwrap();
+
+    let report = render_and_present_terminal_glyph_frame_report(
+        &mut runtime,
+        &mut renderer,
+        &mut glyph_cache,
+        &mut surface,
+    )
+    .unwrap();
+
+    assert!(surface.backend().presented_clear_colors.borrow().is_empty());
+    assert_eq!(surface.backend().presented_glyph_frames.borrow().len(), 1);
+    assert!(report.rendered);
+    assert!(report.glyph_frame_presented);
+    assert!(!report.clear_presented);
+    assert_eq!(report.glyph_quads, 0);
+    assert_eq!(report.cursor_quads, 1);
+    assert_eq!(report.atlas_occupied_slots, 0);
+    assert!(report.atlas_bytes > 0);
+}
+
+fn test_snapshot_path(name: &str) -> std::path::PathBuf {
+    std::env::temp_dir().join(format!(
+        "gromaq-{}-{}",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos(),
+        name
+    ))
+}
