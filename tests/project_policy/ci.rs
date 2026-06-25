@@ -10,6 +10,8 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo run -- --theme-legibility-smoke",
     "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm",
     "cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm",
+    "cursor_opacity = 0.5",
+    "selection_opacity = 0.25",
     "cargo run -- --runtime-clipboard-paste-smoke",
     "cargo run -- --runtime-glyph-frame-smoke",
     "cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm",

@@ -20,7 +20,7 @@ jobs:
       - run: cargo run -- --theme-legibility-smoke
       - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
       - run: |
-          printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' > target/gromaq-theme-preview-config-ci.toml
+          printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' 'cursor_opacity = 0.5' 'selection_opacity = 0.25' > target/gromaq-theme-preview-config-ci.toml
           cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm
       - run: cargo run -- --runtime-clipboard-paste-smoke
       - run: cargo run -- --runtime-glyph-frame-smoke
