@@ -1,51 +1,13 @@
-use std::collections::VecDeque;
-
 use super::CliExit;
-use crate::app::{
-    NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
-};
-use crate::pty::{PtyConfig, PtyError, ShellCommand};
+use crate::app::{NativePtyResize, NativeTerminalRuntime, NativeTerminalRuntimeConfig};
+use crate::pty::ShellCommand;
 use crate::renderer::{RendererConfig, WgpuRenderer};
 
+mod pty;
+
+use pty::RuntimeReflowSmokePtySpawner;
+
 const RUNTIME_REFLOW_SMOKE_LINK: &str = "https://gromaq.dev";
-
-#[derive(Debug, Clone)]
-struct RuntimeReflowSmokePtySpawner {
-    payload: Vec<u8>,
-}
-
-#[derive(Debug)]
-struct RuntimeReflowSmokePtySession {
-    output: VecDeque<Vec<u8>>,
-    resizes: Vec<NativePtyResize>,
-}
-
-impl NativePtySpawner for RuntimeReflowSmokePtySpawner {
-    type Session = RuntimeReflowSmokePtySession;
-
-    fn spawn(&self, _config: PtyConfig) -> Result<Self::Session, PtyError> {
-        Ok(RuntimeReflowSmokePtySession {
-            output: VecDeque::from([self.payload.clone()]),
-            resizes: Vec::new(),
-        })
-    }
-}
-
-impl NativePtySessionIo for RuntimeReflowSmokePtySession {
-    fn drain_output(&mut self) -> Result<Vec<u8>, PtyError> {
-        Ok(self.output.pop_front().unwrap_or_default())
-    }
-
-    fn write_input(&mut self, _bytes: &[u8]) -> Result<(), PtyError> {
-        Ok(())
-    }
-
-    fn resize(&mut self, size: NativePtyResize) -> Result<(), PtyError> {
-        self.resizes.push(size);
-        Ok(())
-    }
-}
 
 fn runtime_reflow_smoke_payload() -> Vec<u8> {
     format!(
@@ -57,7 +19,7 @@ fn runtime_reflow_smoke_payload() -> Vec<u8> {
 pub(super) fn runtime_reflow_smoke_exit() -> CliExit {
     let payload = runtime_reflow_smoke_payload();
     let expected_bytes = payload.len();
-    let spawner = RuntimeReflowSmokePtySpawner { payload };
+    let spawner = RuntimeReflowSmokePtySpawner::new(payload);
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 10,
         terminal_rows: 2,
