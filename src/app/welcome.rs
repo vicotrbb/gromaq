@@ -6,7 +6,7 @@ use crate::renderer::RendererConfig;
 const AVATAR_EDGE_WIDTH: usize = 4;
 const AVATAR_BODY_WIDTH: usize = 10;
 const AVATAR_ACCENT_WIDTH: usize = 4;
-const SECTION_LABEL: &str = "  --";
+const SECTION_RULE_WIDTH: usize = 36;
 
 pub(super) fn default_welcome_text(
     app: &NativeAppConfig,
@@ -61,6 +61,7 @@ pub(super) fn default_welcome_text(
         text.push_str("  ");
         match &stats[row] {
             WelcomeLine::Metric { label, value } => {
+                text.push_str("    ");
                 text.push_str(&bold_foreground(style.title));
                 text.push_str(label);
                 text.push_str("\x1b[0m");
@@ -71,10 +72,7 @@ pub(super) fn default_welcome_text(
             }
             WelcomeLine::Section(label) => {
                 text.push_str(&foreground(style.section));
-                text.push_str(SECTION_LABEL);
-                text.push(' ');
-                text.push_str(label);
-                text.push_str(" --------------------------------");
+                text.push_str(&section_header(label));
                 text.push_str("\x1b[0m");
             }
         }
@@ -166,6 +164,12 @@ fn avatar_row(row: AvatarRow) -> String {
 
 fn background_segment([red, green, blue]: [u8; 3], width: usize) -> String {
     format!("\x1b[48;2;{red};{green};{blue}m{}", " ".repeat(width))
+}
+
+fn section_header(label: &str) -> String {
+    let title = format!("  [ {label} ] ");
+    let rule_width = SECTION_RULE_WIDTH.saturating_sub(title.len()).max(4);
+    format!("{title}{}", "-".repeat(rule_width))
 }
 
 fn foreground([red, green, blue]: [u8; 3]) -> String {

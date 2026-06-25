@@ -9,10 +9,10 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
         "JetBrains Mono Nerd Font",
     );
 
-    assert!(text.contains("-- Gromaq"));
-    assert!(text.contains("-- Session"));
-    assert!(text.contains("-- Renderer"));
-    assert!(text.contains("-- Theme"));
+    assert!(text.contains("[ Gromaq ]"));
+    assert!(text.contains("[ Session ]"));
+    assert!(text.contains("[ Renderer ]"));
+    assert!(text.contains("[ Theme ]"));
     assert!(text.contains("native Rust GPU terminal"));
     assert!(text.contains("120x36 cells"));
     assert!(text.contains("10000 lines"));
@@ -21,7 +21,8 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
     assert!(text.contains("14px padding, opacity 100%"));
     assert!(text.contains("truecolor ANSI + dim text"));
     assert!(text.contains("\x1b[48;2;47;59;82m"));
-    assert!(text.contains("  -- Gromaq"));
+    assert!(text.contains("  [ Gromaq ]"));
+    assert!(text.contains("    \x1b[1;38;2;238;244;251mBuild"));
     assert!(text.contains("\x1b[38;2;158;231;255mnative Rust GPU terminal"));
     assert_eq!(text.matches("\r\n").count(), 15);
 }

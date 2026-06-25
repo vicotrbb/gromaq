@@ -13,11 +13,12 @@ black and bright black remain intentionally subdued for terminal UI roles that
 need lower emphasis.
 
 Default terminal text is intentionally larger than a compact emulator baseline:
-32 px font size, 44 px line height, and 18 px automatic cell width. Users can
-override those metrics in the `[font]` section, and the native app supports
-browser-style runtime zoom with Control/Super `+`, Control/Super `-`,
-Control/Super `0`, Control/Super mouse wheel, and dedicated OS/browser
-`ZoomIn` or `ZoomOut` keys when the platform exposes them.
+JetBrains Mono Nerd Font when available, 32 px font size, 44 px line height,
+and 18 px automatic cell width. Users can override those metrics in the
+`[font]` section, and the native app supports browser-style runtime zoom with
+Control/Super `+`, Control/Super `-`, Control/Super `0`, Control/Super mouse
+wheel, and dedicated OS/browser `ZoomIn` or `ZoomOut` keys when the platform
+exposes them.
 `cargo run -- --runtime-text-zoom-smoke` verifies that default metrics zoom
 from 32/18/44 px font/cell/line-height to 37/21/51 px, reduce the visible
 grid from 59x15 to 52x13, and reset back to the default metrics without a live
