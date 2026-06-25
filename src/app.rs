@@ -23,6 +23,7 @@ mod perf;
 mod presentation;
 mod pty_bridge;
 mod runtime;
+mod snapshot;
 mod surface;
 mod text_zoom;
 pub use errors::{NativeAppError, NativeGlyphFrameError};
