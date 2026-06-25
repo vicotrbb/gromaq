@@ -11,6 +11,7 @@ use super::{
 };
 
 mod output;
+mod payload;
 mod rss;
 #[cfg(test)]
 mod tests;
@@ -19,24 +20,8 @@ use output::{
     RuntimeMemorySmokeReport, runtime_memory_smoke_error, runtime_memory_smoke_failure,
     runtime_memory_smoke_success,
 };
+use payload::{RUNTIME_MEMORY_SMOKE_WARMUP_BATCHES, runtime_memory_payloads};
 use rss::current_process_rss_kib;
-
-const RUNTIME_MEMORY_SMOKE_WARMUP_BATCHES: usize = 1;
-
-fn runtime_memory_payloads() -> Vec<Vec<u8>> {
-    let total_batches = RUNTIME_MEMORY_SMOKE_WARMUP_BATCHES + RUNTIME_MEMORY_SMOKE_MEASURED_BATCHES;
-    (0..total_batches)
-        .map(|batch| {
-            let start = batch * RUNTIME_LARGE_OUTPUT_LINES;
-            let end = start + RUNTIME_LARGE_OUTPUT_LINES;
-            let mut payload = Vec::new();
-            for line in start..end {
-                payload.extend_from_slice(format!("gromaq-memory-line-{line:04}\n").as_bytes());
-            }
-            payload
-        })
-        .collect()
-}
 
 pub(in crate::cli) fn runtime_memory_smoke_exit() -> CliExit {
     runtime_memory_smoke_exit_with_sampler(current_process_rss_kib)
