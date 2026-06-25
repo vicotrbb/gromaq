@@ -1,6 +1,6 @@
 //! Theme configuration and color parsing.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::error::{GromaqError, Result};
 
@@ -58,6 +58,8 @@ pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 pub const DEFAULT_DIM_OPACITY: f32 = 0.66;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-dark";
+/// Name of the alternate high-contrast graphite theme.
+pub const GRAPHITE_THEME_PRESET: &str = "gromaq-graphite";
 
 /// Named built-in terminal theme preset.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -66,6 +68,8 @@ pub enum ThemePresetSetting {
     /// Polished dark theme tuned for legibility and native terminal screenshots.
     #[default]
     GromaqDark,
+    /// Cooler graphite theme with a brighter foreground and crisp ANSI colors.
+    GromaqGraphite,
 }
 
 /// Configurable terminal cursor shape.
@@ -82,8 +86,7 @@ pub enum CursorStyleSetting {
 }
 
 /// Theme section of the configuration file.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ThemeSettings {
     /// Named built-in theme preset used as the baseline for explicit overrides.
     pub preset: ThemePresetSetting,
@@ -109,25 +112,51 @@ pub struct ThemeSettings {
 
 impl Default for ThemeSettings {
     fn default() -> Self {
-        Self {
-            preset: ThemePresetSetting::default(),
-            background: DEFAULT_BACKGROUND.to_owned(),
-            foreground: DEFAULT_FOREGROUND.to_owned(),
-            cursor: DEFAULT_CURSOR.to_owned(),
-            selection: DEFAULT_SELECTION.to_owned(),
-            cursor_style: CursorStyleSetting::default(),
-            cursor_blinking: true,
-            ansi: DEFAULT_ANSI_COLORS
-                .iter()
-                .map(|color| (*color).to_owned())
-                .collect(),
-            surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
-            dim_opacity: DEFAULT_DIM_OPACITY,
-        }
+        Self::from_preset(ThemePresetSetting::default())
     }
 }
 
 impl ThemeSettings {
+    /// Return the complete built-in theme represented by a named preset.
+    pub fn from_preset(preset: ThemePresetSetting) -> Self {
+        match preset {
+            ThemePresetSetting::GromaqDark => Self {
+                preset,
+                background: DEFAULT_BACKGROUND.to_owned(),
+                foreground: DEFAULT_FOREGROUND.to_owned(),
+                cursor: DEFAULT_CURSOR.to_owned(),
+                selection: DEFAULT_SELECTION.to_owned(),
+                cursor_style: CursorStyleSetting::default(),
+                cursor_blinking: true,
+                ansi: DEFAULT_ANSI_COLORS
+                    .iter()
+                    .map(|color| (*color).to_owned())
+                    .collect(),
+                surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+                dim_opacity: DEFAULT_DIM_OPACITY,
+            },
+            ThemePresetSetting::GromaqGraphite => Self {
+                preset,
+                background: "#0b0f14".to_owned(),
+                foreground: "#f3f6fb".to_owned(),
+                cursor: "#ffd166".to_owned(),
+                selection: "#26445f".to_owned(),
+                cursor_style: CursorStyleSetting::default(),
+                cursor_blinking: true,
+                ansi: [
+                    "#1f2630", "#ff6b7a", "#8fd694", "#ffd166", "#8ab4ff", "#cba6f7", "#7dd3c7",
+                    "#d7deea", "#6b7280", "#ff8fa3", "#a7e3a1", "#ffe08a", "#b6ccff", "#f5bde6",
+                    "#9be4d8", "#ffffff",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+                surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+                dim_opacity: 0.7,
+            },
+        }
+    }
+
     /// Validate configured theme colors.
     pub fn validate(&self) -> Result<()> {
         self.background_rgb8()?;
@@ -193,7 +222,61 @@ impl ThemeSettings {
 pub fn format_theme_preset(preset: ThemePresetSetting) -> &'static str {
     match preset {
         ThemePresetSetting::GromaqDark => DEFAULT_THEME_PRESET,
+        ThemePresetSetting::GromaqGraphite => GRAPHITE_THEME_PRESET,
     }
+}
+
+impl<'de> Deserialize<'de> for ThemeSettings {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = RawThemeSettings::deserialize(deserializer)?;
+        let mut settings = ThemeSettings::from_preset(raw.preset);
+        if let Some(background) = raw.background {
+            settings.background = background;
+        }
+        if let Some(foreground) = raw.foreground {
+            settings.foreground = foreground;
+        }
+        if let Some(cursor) = raw.cursor {
+            settings.cursor = cursor;
+        }
+        if let Some(selection) = raw.selection {
+            settings.selection = selection;
+        }
+        if let Some(cursor_style) = raw.cursor_style {
+            settings.cursor_style = cursor_style;
+        }
+        if let Some(cursor_blinking) = raw.cursor_blinking {
+            settings.cursor_blinking = cursor_blinking;
+        }
+        if let Some(ansi) = raw.ansi {
+            settings.ansi = ansi;
+        }
+        if let Some(surface_padding_px) = raw.surface_padding_px {
+            settings.surface_padding_px = surface_padding_px;
+        }
+        if let Some(dim_opacity) = raw.dim_opacity {
+            settings.dim_opacity = dim_opacity;
+        }
+        Ok(settings)
+    }
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default)]
+struct RawThemeSettings {
+    preset: ThemePresetSetting,
+    background: Option<String>,
+    foreground: Option<String>,
+    cursor: Option<String>,
+    selection: Option<String>,
+    cursor_style: Option<CursorStyleSetting>,
+    cursor_blinking: Option<bool>,
+    ansi: Option<Vec<String>>,
+    surface_padding_px: Option<u16>,
+    dim_opacity: Option<f32>,
 }
 
 fn parse_hex_rgb(field: &'static str, value: &str) -> Result<[u8; 3]> {

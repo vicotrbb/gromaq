@@ -204,7 +204,8 @@ target_fps = 144
 dirty_region_rendering = true
 ```
 
-`gromaq-dark` is the built-in default theme preset. It provides the baseline
+`gromaq-dark` is the built-in default theme preset, and `gromaq-graphite` is an
+alternate high-contrast graphite preset. A preset provides the baseline
 background, foreground, cursor, selection, ANSI palette, cursor style, cursor
 blinking, surface padding, and dim text opacity; every field in `[theme]` can
 still be overridden directly in TOML. The theme fields are documented in

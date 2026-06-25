@@ -297,6 +297,46 @@ fn theme_toml_config_accepts_named_default_preset() {
 }
 
 #[test]
+fn theme_toml_config_applies_named_graphite_preset() {
+    let config = GromaqConfig::from_toml_str(
+        r#"
+        [theme]
+        preset = "gromaq-graphite"
+        "#,
+    )
+    .unwrap();
+
+    assert_eq!(config.theme.preset, ThemePresetSetting::GromaqGraphite);
+    assert_eq!(config.theme.background_rgb8().unwrap(), [11, 15, 20]);
+    assert_eq!(config.theme.foreground_rgb8().unwrap(), [243, 246, 251]);
+    assert_eq!(config.theme.cursor_rgb8().unwrap(), [255, 209, 102]);
+    assert_eq!(config.theme.selection_rgb8().unwrap(), [38, 68, 95]);
+    assert_eq!(config.theme.dim_opacity, 0.7);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [31, 38, 48]);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [255, 255, 255]);
+}
+
+#[test]
+fn theme_toml_config_preserves_explicit_overrides_on_named_preset() {
+    let config = GromaqConfig::from_toml_str(
+        r##"
+        [theme]
+        preset = "gromaq-graphite"
+        background = "#101820"
+        cursor_blinking = false
+        surface_padding_px = 20
+        "##,
+    )
+    .unwrap();
+
+    assert_eq!(config.theme.preset, ThemePresetSetting::GromaqGraphite);
+    assert_eq!(config.theme.background_rgb8().unwrap(), [16, 24, 32]);
+    assert_eq!(config.theme.foreground_rgb8().unwrap(), [243, 246, 251]);
+    assert!(!config.theme.cursor_blinking);
+    assert_eq!(config.theme.surface_padding_px, 20);
+}
+
+#[test]
 fn invalid_theme_colors_are_rejected() {
     let invalid_cases = [
         (

@@ -2,10 +2,11 @@
 
 Gromaq ships with `gromaq-dark` as the built-in default theme preset. It is a
 dark, high-contrast baseline tuned for native terminal screenshots and long
-daily sessions.
+daily sessions. The alternate built-in `gromaq-graphite` preset provides a
+cooler, crisper graphite palette with brighter default text.
 
-The preset is the starting point for the theme. Users can keep it as-is or
-override any individual field in TOML:
+The selected preset is the starting point for the theme. Users can keep it
+as-is or override any individual field in TOML:
 
 ```toml
 [theme]
@@ -28,7 +29,8 @@ dim_opacity = 0.66
 
 ## Fields
 
-- `preset`: named built-in theme baseline. Current value: `gromaq-dark`.
+- `preset`: named built-in theme baseline. Current values: `gromaq-dark` and
+  `gromaq-graphite`.
 - `background`: terminal surface color as `#RRGGBB`.
 - `foreground`: default text color as `#RRGGBB`.
 - `cursor`: cursor color as `#RRGGBB`.
@@ -38,6 +40,23 @@ dim_opacity = 0.66
 - `ansi`: exactly sixteen normal and bright ANSI colors as `#RRGGBB`.
 - `surface_padding_px`: empty space around rendered cells in physical pixels.
 - `dim_opacity`: opacity multiplier for SGR dim text, from `0.1` to `1.0`.
+
+## Presets
+
+Use the default:
+
+```toml
+[theme]
+preset = "gromaq-dark"
+```
+
+Use the alternate graphite palette while overriding only the cursor:
+
+```toml
+[theme]
+preset = "gromaq-graphite"
+cursor = "#ffd166"
+```
 
 Generate a parseable starter file with:
 
