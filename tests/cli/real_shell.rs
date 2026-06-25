@@ -2,12 +2,21 @@ use std::cell::RefCell;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use super::{MockBackend, run_with_backend};
+use gromaq::cli::CliExit;
 
 pub(super) fn real_shell_test_guard() -> MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
     LOCK.get_or_init(|| Mutex::new(()))
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+fn assert_cli_success(exit: &CliExit) {
+    assert_eq!(
+        exit.code, 0,
+        "stdout:\n{}\nstderr:\n{}",
+        exit.stdout, exit.stderr
+    );
 }
 
 #[test]
@@ -19,7 +28,7 @@ fn runtime_real_shell_smoke_cli_drives_real_shell_through_runtime() {
 
     let exit = run_with_backend(["gromaq", "--runtime-real-shell-smoke"], &backend);
 
-    assert_eq!(exit.code, 0);
+    assert_cli_success(&exit);
     assert!(exit.stdout.contains("runtime real-shell smoke: ok"));
     assert!(exit.stdout.contains("shell: /bin/sh"));
     assert!(exit.stdout.contains("pumped bytes:"));
@@ -49,7 +58,7 @@ fn runtime_real_shell_perf_budget_smoke_cli_enforces_real_shell_latency_budgets(
         &backend,
     );
 
-    assert_eq!(exit.code, 0);
+    assert_cli_success(&exit);
     assert!(
         exit.stdout
             .contains("runtime real-shell perf budget smoke: ok")
@@ -80,7 +89,7 @@ fn runtime_real_shell_large_output_smoke_cli_renders_real_shell_burst() {
         &backend,
     );
 
-    assert_eq!(exit.code, 0);
+    assert_cli_success(&exit);
     assert!(
         exit.stdout
             .contains("runtime real-shell large-output smoke: ok")
@@ -110,7 +119,7 @@ fn runtime_real_shell_reflow_smoke_cli_resizes_real_shell_output() {
 
     let exit = run_with_backend(["gromaq", "--runtime-real-shell-reflow-smoke"], &backend);
 
-    assert_eq!(exit.code, 0);
+    assert_cli_success(&exit);
     assert!(exit.stdout.contains("runtime real-shell reflow smoke: ok"));
     assert!(exit.stdout.contains("shell: /bin/sh"));
     assert!(exit.stdout.contains("pumped bytes:"));
