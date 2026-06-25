@@ -35,7 +35,7 @@ const FORBIDDEN_DEPENDENCIES: &[&str] = &[
 ];
 
 const UNSAFE_FORBIDDEN_CRATE_ROOTS: &[&str] = &["src/lib.rs", "src/main.rs"];
-const MAX_SOURCE_FILE_LINES: usize = 400;
+const MAX_SOURCE_FILE_LINES: usize = 300;
 
 const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "README.md",
