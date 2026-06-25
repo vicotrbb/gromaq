@@ -109,6 +109,7 @@ fn renderer_config_maps_validated_gromaq_settings() {
     config.theme.foreground = "#e8e2d6".to_owned();
     config.theme.cursor = "#f4c06a".to_owned();
     config.theme.selection = "#26364f".to_owned();
+    config.theme.background_opacity = 0.42;
     config.theme.ansi[1] = "#010203".to_owned();
     config.theme.surface_padding_px = 18;
     config.theme.cell_spacing_px = 2;
@@ -121,7 +122,9 @@ fn renderer_config_maps_validated_gromaq_settings() {
     assert_eq!(renderer_config.font_size_px, 17);
     assert_eq!(renderer_config.cell_width_px, 10);
     assert_eq!(renderer_config.line_height_px, 21);
-    assert_eq!(renderer_config.clear_color, linear_clear_color(31, 32, 40));
+    let mut expected_clear = linear_clear_color(31, 32, 40);
+    expected_clear[3] = f64::from(0.42f32);
+    assert_eq!(renderer_config.clear_color, expected_clear);
     assert_eq!(renderer_config.default_foreground_rgb8, [232, 226, 214]);
     assert_eq!(renderer_config.ansi_colors_rgb8[1], [1, 2, 3]);
     assert_eq!(renderer_config.cursor_color_rgba8, [244, 192, 106, 255]);

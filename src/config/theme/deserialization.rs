@@ -21,6 +21,9 @@ impl<'de> Deserialize<'de> for ThemeSettings {
         if let Some(selection) = raw.selection {
             settings.selection = selection;
         }
+        if let Some(background_opacity) = raw.background_opacity {
+            settings.background_opacity = background_opacity;
+        }
         if let Some(cursor_style) = raw.cursor_style {
             settings.cursor_style = cursor_style;
         }
@@ -51,6 +54,7 @@ struct RawThemeSettings {
     foreground: Option<String>,
     cursor: Option<String>,
     selection: Option<String>,
+    background_opacity: Option<f32>,
     cursor_style: Option<CursorStyleSetting>,
     cursor_blinking: Option<bool>,
     ansi: Option<Vec<String>>,

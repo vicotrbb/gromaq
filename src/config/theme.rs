@@ -19,6 +19,10 @@ pub const MAX_CELL_SPACING_PX: u16 = 32;
 pub const MIN_DIM_OPACITY: f32 = 0.1;
 /// Maximum useful opacity for dim text.
 pub const MAX_DIM_OPACITY: f32 = 1.0;
+/// Minimum supported terminal background opacity.
+pub const MIN_BACKGROUND_OPACITY: f32 = 0.0;
+/// Maximum supported terminal background opacity.
+pub const MAX_BACKGROUND_OPACITY: f32 = 1.0;
 /// Built-in Ghostty-inspired theme background.
 pub const DEFAULT_BACKGROUND: &str = "#101216";
 /// Built-in Ghostty-inspired theme background as RGB8.
@@ -67,6 +71,8 @@ pub const DEFAULT_SURFACE_PADDING_PX: u16 = 14;
 pub const DEFAULT_CELL_SPACING_PX: u16 = 0;
 /// Built-in opacity for SGR dim text.
 pub const DEFAULT_DIM_OPACITY: f32 = 0.68;
+/// Built-in terminal background opacity.
+pub const DEFAULT_BACKGROUND_OPACITY: f32 = 1.0;
 /// Name of the built-in default dark theme.
 pub const DEFAULT_THEME_PRESET: &str = "gromaq-ghostty";
 /// Configurable terminal cursor shape.
@@ -95,6 +101,8 @@ pub struct ThemeSettings {
     pub cursor: String,
     /// Selection background color as `#RRGGBB`.
     pub selection: String,
+    /// Terminal background opacity multiplier.
+    pub background_opacity: f32,
     /// Default cursor shape before shell escape sequences override it.
     pub cursor_style: CursorStyleSetting,
     /// Whether the default cursor requests blinking.

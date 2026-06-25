@@ -109,6 +109,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
 const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "size_px = 34.0"),
     ("README.md", "line_height_px = 47.0"),
+    ("README.md", "background_opacity = 1.0"),
     ("README.md", "surface_padding_px = 14"),
     ("README.md", "cell_spacing_px = 0"),
     ("README.md", "preset = \"gromaq-ghostty\""),
@@ -121,6 +122,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/theme.md", "34 px font size"),
     ("documentation/theme.md", "47 px line height"),
     ("documentation/theme.md", "19 px automatic cell width"),
+    ("documentation/theme.md", "background_opacity"),
     ("documentation/theme.md", "built-in default is `14`"),
     ("documentation/theme.md", "cell_spacing_px"),
     ("documentation/theme.md", "Control/Super `+`"),

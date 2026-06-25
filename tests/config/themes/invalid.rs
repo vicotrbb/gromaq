@@ -99,6 +99,21 @@ fn invalid_theme_dim_opacity_is_rejected() {
 }
 
 #[test]
+fn invalid_theme_background_opacity_is_rejected() {
+    for background_opacity in [-0.01, f32::NAN, f32::INFINITY, 1.01] {
+        let mut config = GromaqConfig::default();
+        config.theme.background_opacity = background_opacity;
+
+        let error = config.validate().unwrap_err();
+
+        assert!(
+            error.to_string().contains("background opacity"),
+            "{error} did not mention background opacity"
+        );
+    }
+}
+
+#[test]
 fn invalid_theme_ansi_palette_length_is_rejected() {
     let error = GromaqConfig::from_toml_str(
         r##"

@@ -44,6 +44,7 @@ background = "#101216"
 foreground = "#eef4fb"
 cursor = "#f6c177"
 selection = "#2f3b52"
+background_opacity = 1.0
 cursor_style = "block"
 cursor_blinking = true
 ansi = [
@@ -65,6 +66,8 @@ dim_opacity = 0.68
 - `foreground`: default text color as `#RRGGBB`.
 - `cursor`: cursor color as `#RRGGBB`.
 - `selection`: selected cell background color as `#RRGGBB`.
+- `background_opacity`: terminal surface opacity from `0.0` to `1.0`. The
+  built-in default is `1.0` for a fully opaque window.
 - `cursor_style`: one of `block`, `underline`, or `bar`.
 - `cursor_blinking`: whether the default cursor requests blinking.
 - `ansi`: exactly sixteen normal and bright ANSI colors as `#RRGGBB`.

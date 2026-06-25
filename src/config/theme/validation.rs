@@ -1,7 +1,8 @@
 use super::color::parse_hex_rgb;
 use super::{
-    ANSI_COLOR_COUNT, DEFAULT_ANSI_COLORS_RGB8, MAX_CELL_SPACING_PX, MAX_DIM_OPACITY,
-    MAX_SURFACE_PADDING_PX, MIN_DIM_OPACITY, ThemeSettings,
+    ANSI_COLOR_COUNT, DEFAULT_ANSI_COLORS_RGB8, MAX_BACKGROUND_OPACITY, MAX_CELL_SPACING_PX,
+    MAX_DIM_OPACITY, MAX_SURFACE_PADDING_PX, MIN_BACKGROUND_OPACITY, MIN_DIM_OPACITY,
+    ThemeSettings,
 };
 use crate::error::{GromaqError, Result};
 
@@ -23,6 +24,15 @@ impl ThemeSettings {
             return Err(GromaqError::InvalidThemeCellSpacing {
                 maximum: MAX_CELL_SPACING_PX,
                 actual: self.cell_spacing_px,
+            });
+        }
+        if !self.background_opacity.is_finite()
+            || !(MIN_BACKGROUND_OPACITY..=MAX_BACKGROUND_OPACITY).contains(&self.background_opacity)
+        {
+            return Err(GromaqError::InvalidThemeBackgroundOpacity {
+                minimum: MIN_BACKGROUND_OPACITY,
+                maximum: MAX_BACKGROUND_OPACITY,
+                actual: self.background_opacity,
             });
         }
         if !self.dim_opacity.is_finite()

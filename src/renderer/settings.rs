@@ -1,7 +1,7 @@
 use crate::config::{
-    DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_RGB8, DEFAULT_CELL_SPACING_PX,
-    DEFAULT_CURSOR_RGB8, DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION_RGB8,
-    DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
+    DEFAULT_ANSI_COLORS_RGB8, DEFAULT_BACKGROUND_OPACITY, DEFAULT_BACKGROUND_RGB8,
+    DEFAULT_CELL_SPACING_PX, DEFAULT_CURSOR_RGB8, DEFAULT_DIM_OPACITY, DEFAULT_FOREGROUND_RGB8,
+    DEFAULT_SELECTION_RGB8, DEFAULT_SURFACE_PADDING_PX, GromaqConfig,
 };
 use crate::error::Result;
 
@@ -49,7 +49,10 @@ impl Default for RendererConfig {
             font_size_px: DEFAULT_RENDERER_FONT_SIZE_PX,
             cell_width_px: DEFAULT_RENDERER_CELL_WIDTH_PX,
             line_height_px: 47,
-            clear_color: rgb8_to_linear_clear_color(DEFAULT_BACKGROUND_RGB8),
+            clear_color: rgb8_to_linear_clear_color(
+                DEFAULT_BACKGROUND_RGB8,
+                DEFAULT_BACKGROUND_OPACITY,
+            ),
             default_foreground_rgb8: DEFAULT_FOREGROUND_RGB8,
             ansi_colors_rgb8: DEFAULT_ANSI_COLORS_RGB8,
             cursor_color_rgba8: rgb8_to_rgba8(DEFAULT_CURSOR_RGB8),
@@ -71,7 +74,10 @@ impl RendererConfig {
             font_size_px: config.font.renderer_font_size_px(),
             cell_width_px: config.font.renderer_cell_width_px(),
             line_height_px: config.font.renderer_line_height_px(),
-            clear_color: rgb8_to_linear_clear_color(config.theme.background_rgb8()?),
+            clear_color: rgb8_to_linear_clear_color(
+                config.theme.background_rgb8()?,
+                config.theme.background_opacity,
+            ),
             default_foreground_rgb8: config.theme.foreground_rgb8()?,
             ansi_colors_rgb8: config.theme.ansi_rgb8()?,
             cursor_color_rgba8: rgb8_to_rgba8(config.theme.cursor_rgb8()?),

@@ -35,6 +35,7 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     );
     assert!(exit.stdout.contains("preset = \"gromaq-ghostty\""));
     assert!(exit.stdout.contains("selection = \"#2f3b52\""));
+    assert!(exit.stdout.contains("background_opacity = 1"));
     assert!(exit.stdout.contains("cursor_style = \"block\""));
     assert!(exit.stdout.contains("cursor_blinking = true"));
     assert!(exit.stdout.contains("ansi = [\"#242933\", \"#ff6b7a\""));
@@ -73,6 +74,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         foreground = "#e8e2d6"
         cursor = "#f4c06a"
         selection = "#26364f"
+        background_opacity = 0.42
         cursor_style = "underline"
         cursor_blinking = false
         surface_padding_px = 18
@@ -114,6 +116,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("theme foreground: #e8e2d6"));
     assert!(exit.stdout.contains("theme cursor: #f4c06a"));
     assert!(exit.stdout.contains("theme selection: #26364f"));
+    assert!(exit.stdout.contains("theme background opacity: 0.42"));
     assert!(exit.stdout.contains("theme cursor style: underline"));
     assert!(exit.stdout.contains("theme cursor blinking: false"));
     assert!(exit.stdout.contains("theme surface padding px: 18"));

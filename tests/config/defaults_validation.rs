@@ -33,6 +33,7 @@ fn default_theme_metrics_keep_terminal_content_away_from_window_edges() {
 
     assert_eq!(theme.surface_padding_px, 14);
     assert_eq!(theme.cell_spacing_px, 0);
+    assert_eq!(theme.background_opacity, 1.0);
     assert_eq!(theme.background, "#101216");
     assert_eq!(theme.foreground, "#eef4fb");
 }

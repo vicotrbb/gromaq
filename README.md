@@ -202,6 +202,7 @@ background = "#101216"
 foreground = "#eef4fb"
 cursor = "#f6c177"
 selection = "#2f3b52"
+background_opacity = 1.0
 cursor_style = "block"
 cursor_blinking = true
 ansi = [

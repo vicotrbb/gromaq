@@ -128,6 +128,19 @@ pub enum GromaqError {
         actual: f32,
     },
 
+    /// Theme background opacity must stay bounded.
+    #[error(
+        "theme background opacity must be finite and between {minimum} and {maximum}, got {actual}"
+    )]
+    InvalidThemeBackgroundOpacity {
+        /// Inclusive lower bound.
+        minimum: f32,
+        /// Inclusive upper bound.
+        maximum: f32,
+        /// Actual invalid value.
+        actual: f32,
+    },
+
     /// Configured shell program must contain a usable command.
     #[error("shell program must not be empty")]
     InvalidShellProgram,

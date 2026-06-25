@@ -69,12 +69,12 @@ pub(super) fn rgba8_to_linear_normalized([red, green, blue, alpha]: [u8; 4]) -> 
     ]
 }
 
-pub(super) fn rgb8_to_linear_clear_color([red, green, blue]: [u8; 3]) -> [f64; 4] {
+pub(super) fn rgb8_to_linear_clear_color([red, green, blue]: [u8; 3], opacity: f32) -> [f64; 4] {
     [
         f64::from(srgb8_to_linear_f32(red)),
         f64::from(srgb8_to_linear_f32(green)),
         f64::from(srgb8_to_linear_f32(blue)),
-        1.0,
+        f64::from(opacity),
     ]
 }
 
@@ -139,11 +139,18 @@ mod tests {
 
     #[test]
     fn rgb8_to_linear_clear_color_keeps_dark_theme_background_visually_dark() {
-        let clear = rgb8_to_linear_clear_color([11, 15, 20]);
+        let clear = rgb8_to_linear_clear_color([11, 15, 20], 1.0);
 
         assert!(clear[0] < 0.004);
         assert!(clear[1] < 0.005);
         assert!(clear[2] < 0.008);
         assert_eq!(clear[3], 1.0);
+    }
+
+    #[test]
+    fn rgb8_to_linear_clear_color_preserves_configured_opacity() {
+        let clear = rgb8_to_linear_clear_color([11, 15, 20], 0.42);
+
+        assert_eq!(clear[3], f64::from(0.42f32));
     }
 }
