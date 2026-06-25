@@ -13,6 +13,13 @@ use super::{
     REAL_SHELL_SMOKE_POLL_INTERVAL, REAL_SHELL_SMOKE_ROWS, REAL_SHELL_SMOKE_TIMEOUT,
 };
 
+mod output;
+
+use output::{
+    RuntimeRealShellLargeOutputReport, runtime_real_shell_large_output_smoke_error,
+    runtime_real_shell_large_output_smoke_failure, runtime_real_shell_large_output_smoke_success,
+};
+
 const REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS: u64 = 6_940_000;
 
 pub(in crate::cli) fn runtime_real_shell_large_output_smoke_exit() -> CliExit {
@@ -21,31 +28,22 @@ pub(in crate::cli) fn runtime_real_shell_large_output_smoke_exit() -> CliExit {
         Err(error) => return runtime_real_shell_large_output_smoke_error(error),
     };
     if let Some(failure) = real_shell_large_output_budget_failure(&probe) {
-        return CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("runtime real-shell large-output smoke failed: {failure}\n"),
-        };
+        return runtime_real_shell_large_output_smoke_failure(failure);
     }
 
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime real-shell large-output smoke: ok\nshell: /bin/sh\nlines: {}\npumped bytes: {}\nscrollback cap: {}\nscrollback lines: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells max: {}\nfirst line evicted: {}\nlast line observed: {}\nrender p95 ns: {}\nrender p95 budget ns: {}\n",
-            REAL_SHELL_LARGE_OUTPUT_LINES,
-            probe.pumped_bytes,
-            REAL_SHELL_LARGE_OUTPUT_SCROLLBACK_LINES,
-            probe.scrollback_lines,
-            probe.rendered_frames,
-            probe.rendered_dirty_regions,
-            probe.rendered_dirty_cells_max,
-            probe.first_line_evicted,
-            probe.last_line_observed,
-            probe.render_p95_ns,
-            REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS
-        ),
-        stderr: String::new(),
-    }
+    runtime_real_shell_large_output_smoke_success(&RuntimeRealShellLargeOutputReport {
+        lines: REAL_SHELL_LARGE_OUTPUT_LINES,
+        pumped_bytes: probe.pumped_bytes,
+        scrollback_cap: REAL_SHELL_LARGE_OUTPUT_SCROLLBACK_LINES,
+        scrollback_lines: probe.scrollback_lines,
+        rendered_frames: probe.rendered_frames,
+        rendered_dirty_regions: probe.rendered_dirty_regions,
+        rendered_dirty_cells_max: probe.rendered_dirty_cells_max,
+        first_line_evicted: probe.first_line_evicted,
+        last_line_observed: probe.last_line_observed,
+        render_p95_ns: probe.render_p95_ns,
+        render_p95_budget_ns: REAL_SHELL_LARGE_OUTPUT_RENDER_P95_BUDGET_NS,
+    })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -140,14 +138,6 @@ fn real_shell_large_output_budget_failure(
         return Some("real-shell large-output render p95 exceeded 144Hz frame budget");
     }
     None
-}
-
-fn runtime_real_shell_large_output_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime real-shell large-output smoke failed: {error}\n"),
-    }
 }
 
 #[cfg(test)]
