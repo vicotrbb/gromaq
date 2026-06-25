@@ -19,9 +19,30 @@ jobs:
       - run: cargo test --all
       - run: cargo run -- --theme-legibility-smoke
       - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
+      - run: cargo run -- --runtime-clipboard-paste-smoke
+      - run: cargo run -- --runtime-glyph-frame-smoke
+      - run: cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm
+      - run: cargo run -- --runtime-scrollback-smoke
+      - run: cargo run -- --runtime-perf-smoke
+      - run: cargo run -- --runtime-perf-budget-smoke
+      - run: cargo run -- --runtime-perf-p95-smoke
+      - run: cargo run -- --runtime-large-output-smoke
+      - run: cargo run -- --runtime-bounded-state-smoke
+      - run: cargo run -- --runtime-memory-smoke
+      - run: cargo run -- --runtime-continuous-output-smoke
+      - run: cargo run -- --runtime-alternate-screen-smoke
+      - run: cargo run -- --runtime-reflow-smoke
+      - run: cargo run -- --runtime-config-reload-smoke
       - run: cargo run -- --runtime-text-zoom-smoke
       - run: cargo run -- --runtime-repaint-smoke
+      - run: cargo run -- --runtime-focus-smoke
+      - run: cargo run -- --runtime-mouse-smoke
+      - run: cargo run -- --runtime-response-smoke
+      - run: cargo run -- --runtime-idle-smoke
+      - run: cargo run -- --runtime-idle-cpu-smoke
+      - run: cargo run -- --runtime-real-shell-smoke
       - run: cargo run -- --runtime-real-shell-command-output-smoke
       - run: cargo run -- --runtime-real-shell-perf-budget-smoke
       - run: cargo run -- --runtime-real-shell-large-output-smoke
+      - run: cargo run -- --runtime-real-shell-reflow-smoke
       - run: cargo bench --bench parser_throughput -- --list
