@@ -103,3 +103,13 @@ pub fn format_theme_preset(preset: ThemePresetSetting) -> &'static str {
         ThemePresetSetting::GromaqGhostty => GHOSTTY_THEME_PRESET,
     }
 }
+
+/// Parse a user-facing TOML theme preset name.
+pub fn parse_theme_preset(value: &str) -> Option<ThemePresetSetting> {
+    match value {
+        DARK_THEME_PRESET => Some(ThemePresetSetting::GromaqDark),
+        GRAPHITE_THEME_PRESET => Some(ThemePresetSetting::GromaqGraphite),
+        GHOSTTY_THEME_PRESET => Some(ThemePresetSetting::GromaqGhostty),
+        _ => None,
+    }
+}

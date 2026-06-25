@@ -23,7 +23,7 @@ pub use theme::{
     DEFAULT_FOREGROUND, DEFAULT_FOREGROUND_RGB8, DEFAULT_SELECTION, DEFAULT_SELECTION_RGB8,
     DEFAULT_SURFACE_PADDING_PX, DEFAULT_THEME_PRESET, GHOSTTY_THEME_PRESET, GRAPHITE_THEME_PRESET,
     MAX_BACKGROUND_OPACITY, MAX_CELL_SPACING_PX, MAX_DIM_OPACITY, MIN_BACKGROUND_OPACITY,
-    MIN_DIM_OPACITY, ThemePresetSetting, ThemeSettings, format_theme_preset,
+    MIN_DIM_OPACITY, ThemePresetSetting, ThemeSettings, format_theme_preset, parse_theme_preset,
 };
 
 pub(crate) use settings::validate_terminal_dimensions;

@@ -73,6 +73,8 @@ pub(super) enum CliCommand<'a> {
     ThemeLegibilitySmoke,
     /// Built-in theme preset listing command.
     ThemeList,
+    /// Built-in theme preset TOML export command.
+    ThemeExport,
     /// Default theme rendered preview snapshot command.
     ThemePreviewSnapshot,
     /// Runtime focus smoke command.
@@ -137,6 +139,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-text-zoom-smoke" => Some(CliCommand::RuntimeTextZoomSmoke),
         "--runtime-repaint-smoke" => Some(CliCommand::RuntimeRepaintSmoke),
         "--theme-list" => Some(CliCommand::ThemeList),
+        "--theme-export" => Some(CliCommand::ThemeExport),
         "--theme-legibility-smoke" => Some(CliCommand::ThemeLegibilitySmoke),
         "--theme-preview-snapshot" => Some(CliCommand::ThemePreviewSnapshot),
         "--runtime-focus-smoke" => Some(CliCommand::RuntimeFocusSmoke),

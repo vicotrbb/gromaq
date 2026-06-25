@@ -2,8 +2,9 @@ mod config;
 mod snapshots;
 
 use super::arguments::reject_extra_args;
-use crate::cli::args::CliCommand;
+use crate::cli::args::{CliCommand, usage};
 use crate::cli::gpu::GpuCommandContext;
+use crate::cli::theme_smoke::theme_export_exit;
 use crate::cli::window_smoke::window_smoke_exit;
 use crate::cli::{CliExit, NativeAppLauncher};
 use crate::native_gpu::GpuBootstrapBackend;
@@ -34,6 +35,7 @@ where
         }
         CliCommand::RuntimeGlyphFrameSnapshot => Some(runtime_glyph_frame_snapshot_command(args)),
         CliCommand::ThemePreviewSnapshot => Some(theme_preview_snapshot_command(args)),
+        CliCommand::ThemeExport => Some(theme_export_command(args)),
         CliCommand::WindowGlyphFrameSnapshot => {
             Some(window_glyph_frame_snapshot_command(args, app_launcher))
         }
@@ -43,6 +45,31 @@ where
         CliCommand::Config => Some(config_file_command(args, app_launcher)),
         _ => None,
     }
+}
+
+fn theme_export_command<I, S>(args: &mut I) -> CliExit
+where
+    I: Iterator<Item = S>,
+    S: AsRef<str>,
+{
+    let Some(preset) = args.next() else {
+        return CliExit {
+            code: 2,
+            stdout: String::new(),
+            stderr: format!("{}missing theme preset for --theme-export\n", usage()),
+        };
+    };
+    let Some(path) = args.next() else {
+        return CliExit {
+            code: 2,
+            stdout: String::new(),
+            stderr: format!("{}missing export path for --theme-export\n", usage()),
+        };
+    };
+    if let Err(exit) = reject_extra_args(args) {
+        return exit;
+    }
+    theme_export_exit(preset.as_ref(), path.as_ref())
 }
 
 fn window_smoke_command<I, S, A>(

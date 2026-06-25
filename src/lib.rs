@@ -33,6 +33,7 @@ pub use config::{
     MAX_CELL_WIDTH_PX, MAX_DIM_OPACITY, MAX_LINE_HEIGHT_PX, MIN_BACKGROUND_OPACITY,
     MIN_CELL_WIDTH_PX, MIN_DIM_OPACITY, MIN_LINE_HEIGHT_PX, PerformanceSettings, ShellSettings,
     TerminalSettings, ThemePresetSetting, ThemeSettings, WelcomeSettings, format_theme_preset,
+    parse_theme_preset,
 };
 pub use dirty::{DirtyRegion, DirtyTracker};
 pub use error::{GromaqError, Result};

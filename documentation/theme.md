@@ -118,3 +118,9 @@ List built-in presets and their core theme tokens with:
 ```bash
 gromaq --theme-list
 ```
+
+Export a built-in preset as an importable `[theme]` TOML block with:
+
+```bash
+gromaq --theme-export gromaq-ghostty gromaq-theme.toml
+```

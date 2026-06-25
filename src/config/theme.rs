@@ -9,6 +9,7 @@ mod validation;
 
 pub use presets::{
     GHOSTTY_THEME_PRESET, GRAPHITE_THEME_PRESET, ThemePresetSetting, format_theme_preset,
+    parse_theme_preset,
 };
 
 /// Maximum supported visual surface padding in physical pixels.

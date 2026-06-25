@@ -121,6 +121,7 @@ where
         CliCommand::Config
         | CliCommand::ConfigCheck
         | CliCommand::ConfigTemplate
+        | CliCommand::ThemeExport
         | CliCommand::WindowSmoke
         | CliCommand::WindowPerfSmoke
         | CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
