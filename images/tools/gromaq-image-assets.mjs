@@ -19,7 +19,15 @@ const OUTPUTS = {
   ],
 };
 
-export async function generateAssetSet({ kind, folder = kind, source, terminalColumns, terminalRows }) {
+export async function generateAssetSet({
+  kind,
+  folder = kind,
+  source,
+  terminalColumns,
+  terminalRows,
+  terminalCrop,
+  terminalArt,
+}) {
   const dir = join(ROOT, folder);
   const sourcePath = join(dir, source);
   if (!existsSync(sourcePath)) {
@@ -43,7 +51,10 @@ export async function generateAssetSet({ kind, folder = kind, source, terminalCo
     console.log(`wrote ${name} ${image.width}x${image.height}`);
   }
 
-  const terminal = terminalAnsi(trimmed, terminalColumns, terminalRows);
+  const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
+  const terminal = terminalArt === 'plaque'
+    ? avatarPlaqueAnsi(terminalColumns, terminalRows)
+    : terminalAnsi(terminalSource, terminalColumns, terminalRows);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';
   writeFileSync(join(outputDir, ansiName), terminal, 'utf8');
   console.log(`wrote ${ansiName} ${terminalColumns}x${terminalRows} cells`);
@@ -203,13 +214,16 @@ function chromaKey(image) {
     const blue = rgba[i + 2];
     const distance = colorDistance([red, green, blue], key);
     const dominance = green - Math.max(red, blue);
-    const background = dominance > 70 && distance < 95;
-    const edge = dominance > 26 && distance < 165;
+    const greenScreen = green > 70 && dominance > 24 && green > red * 1.12 && green > blue * 1.12;
+    const background = greenScreen && (dominance > 44 || distance < 130);
+    const edge = greenScreen || (dominance > 26 && distance < 165);
 
     if (background) {
       rgba[i + 3] = 0;
     } else if (edge) {
-      const alpha = clamp(Math.round(((distance - 65) / 100) * 255), 0, 255);
+      const distanceAlpha = ((distance - 65) / 100) * 255;
+      const dominanceAlpha = ((44 - dominance) / 20) * 255;
+      const alpha = clamp(Math.round(Math.min(distanceAlpha, dominanceAlpha)), 0, 255);
       rgba[i + 3] = Math.min(rgba[i + 3], alpha);
       rgba[i + 1] = Math.min(green, Math.max(red, blue) + 18);
     }
@@ -261,6 +275,20 @@ function trimTransparent(image, threshold, padding) {
   return { width, height, rgba };
 }
 
+function cropFraction(image, crop) {
+  const left = clamp(Math.floor(image.width * crop.left), 0, image.width - 1);
+  const top = clamp(Math.floor(image.height * crop.top), 0, image.height - 1);
+  const width = clamp(Math.floor(image.width * crop.width), 1, image.width - left);
+  const height = clamp(Math.floor(image.height * crop.height), 1, image.height - top);
+  const rgba = Buffer.alloc(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    const src = ((top + y) * image.width + left) * 4;
+    const dst = y * width * 4;
+    image.rgba.copy(rgba, dst, src, src + width * 4);
+  }
+  return { width, height, rgba };
+}
+
 function contain(image, width, height) {
   const scale = Math.min(width / image.width, height / image.height);
   const resized = resize(image, Math.max(1, Math.round(image.width * scale)), Math.max(1, Math.round(image.height * scale)));
@@ -298,29 +326,113 @@ function sampleBilinear(image, x, y, out, offset) {
 }
 
 function terminalAnsi(image, columns, rows) {
-  const sampled = contain(image, columns, rows * 2);
+  const sampled = contain(image, columns * 3, rows * 4);
   const lines = [];
   for (let row = 0; row < rows; row++) {
     let line = '';
     for (let col = 0; col < columns; col++) {
-      const top = pixel(sampled, col, row * 2);
-      const bottom = pixel(sampled, col, row * 2 + 1);
-      line += terminalCell(top, bottom);
+      line += terminalAsciiCell(sampled, col * 3, row * 4);
     }
     lines.push(`${line}\x1b[0m`);
   }
   return `${lines.join('\n')}\n`;
 }
 
-function terminalCell(top, bottom) {
-  const topVisible = top[3] > 36;
-  const bottomVisible = bottom[3] > 36;
-  if (topVisible && bottomVisible) {
-    return `${fg(top)}${bg(bottom)}▀`;
+function avatarPlaqueAnsi(columns, rows) {
+  const lines = [
+    ['muted', '      /\\          '],
+    ['purple', '     /##\\         '],
+    ['purple', '    /####\\        '],
+    ['cyan', '   /#/  \\#\\       '],
+    ['purple', '  /#/ GMQ \\#\\     '],
+    ['cyan', ' /##\\  >_ /##\\    '],
+    ['purple', ' \\###\\__/###/    '],
+    ['purple', '  \\########/     '],
+    ['muted', '   \\######/      '],
+    ['cyan', '    \\####/       '],
+    ['purple', '     \\##/        '],
+    ['purple', '      \\/         '],
+    ['muted', '   TERMINAL      '],
+    ['cyan', '    REBORN       '],
+    ['muted', '                  '],
+  ];
+  return `${lines
+    .slice(0, rows)
+    .map(([tone, line]) => `${fg(plaqueColor(tone))}${line.slice(0, columns).padEnd(columns)}\x1b[0m`)
+    .join('\n')}\n`;
+}
+
+function plaqueColor(tone) {
+  if (tone === 'cyan') return [158, 231, 255];
+  if (tone === 'purple') return [172, 92, 255];
+  return [104, 117, 148];
+}
+
+function terminalAsciiCell(image, left, top) {
+  const colors = [];
+  let energy = 0;
+  for (let dy = 0; dy < 4; dy++) {
+    for (let dx = 0; dx < 3; dx++) {
+      const sample = pixel(image, left + dx, top + dy);
+      if (!isTerminalVisible(sample)) continue;
+      colors.push(sample);
+      energy += visibleEnergy(sample);
+    }
   }
-  if (topVisible) return `${fg(top)}▀`;
-  if (bottomVisible) return `${fg(bottom)}▄`;
-  return ' ';
+  if (colors.length === 0) return ' ';
+  const density = energy / 12;
+  return `${fg(averageVisibleColor(colors))}${densityGlyph(density)}`;
+}
+
+function isTerminalVisible(pixel) {
+  const [red, green, blue, alpha] = pixel;
+  const dominance = green - Math.max(red, blue);
+  const greenScreen = green > 55 && dominance > 18 && green > red * 1.08 && green > blue * 1.08;
+  return alpha > 18 && !greenScreen;
+}
+
+function averageVisibleColor(colors) {
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+  let weight = 0;
+  for (const color of colors) {
+    const colorWeight = Math.max(1, color[3]);
+    red += color[0] * colorWeight;
+    green += color[1] * colorWeight;
+    blue += color[2] * colorWeight;
+    weight += colorWeight;
+  }
+  return boostTerminalColor([
+    clamp(Math.round(red / weight), 0, 255),
+    clamp(Math.round(green / weight), 0, 255),
+    clamp(Math.round(blue / weight), 0, 255),
+  ]);
+}
+
+function visibleEnergy([red, green, blue, alpha]) {
+  const brightness = Math.max(red, green, blue) / 255;
+  return Math.min(1, (alpha / 255) * 0.82 + brightness * 0.34);
+}
+
+function densityGlyph(density) {
+  const ramp = ' .:-=+*#%@';
+  const index = clamp(Math.round(density * (ramp.length - 1)), 0, ramp.length - 1);
+  return ramp[index];
+}
+
+function boostTerminalColor([red, green, blue]) {
+  const boosted = [
+    red * 1.15 + 18,
+    green * 0.72,
+    blue * 1.35 + 36,
+  ];
+  const max = Math.max(...boosted);
+  if (max < 96) {
+    const scale = 96 / Math.max(1, max);
+    return boosted.map((channel) => clamp(Math.round(channel * scale), 0, 255));
+  }
+  return boosted.map((channel) => clamp(Math.round(channel), 0, 255));
 }
 
 function compositeOnBackground(image, background) {

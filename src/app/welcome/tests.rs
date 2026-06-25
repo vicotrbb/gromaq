@@ -20,7 +20,7 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
     assert!(text.contains("18px wide"));
     assert!(text.contains("14px padding, opacity 100%"));
     assert!(text.contains("truecolor ANSI + dim text"));
-    assert!(text.contains("\x1b[48;2;47;59;82m"));
+    assert!(text.contains(WELCOME_AVATAR_ANSI.lines().nth(2).unwrap()));
     assert!(text.contains("  [ Gromaq ]"));
     assert!(text.contains("    \x1b[1;38;2;238;244;251mBuild"));
     assert!(text.contains("\x1b[38;2;158;231;255mnative Rust GPU terminal"));
@@ -43,7 +43,7 @@ fn default_welcome_text_uses_renderer_theme_colors() {
         "JetBrains Mono Nerd Font",
     );
 
-    assert!(text.contains("\x1b[48;2;7;8;9m"));
+    assert!(text.contains(WELCOME_AVATAR_ANSI.lines().nth(2).unwrap()));
     assert!(text.contains("\x1b[1;38;2;1;2;3mBuild"));
     assert!(text.contains("\x1b[38;2;10;11;12mnative Rust GPU terminal"));
 }
