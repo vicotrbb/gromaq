@@ -16,6 +16,7 @@ jobs:
       - run: sh -n scripts/install.sh
       - run: sh -n scripts/package-macos-app.sh
       - run: sh -n scripts/package-linux-tarball.sh
+      - run: sh -n scripts/capture-macos-window-proof.sh
       - run: cargo fmt --check
       - run: git diff --check
       - run: cargo clippy --all-targets --all-features -- -D warnings

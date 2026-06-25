@@ -18,6 +18,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/install.sh",
     "scripts/package-macos-app.sh",
     "scripts/package-linux-tarball.sh",
+    "scripts/capture-macos-window-proof.sh",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
     "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",
     "documentation/benchmarks.md",
@@ -112,6 +113,8 @@ fn distribution_assets_keep_desktop_identity() {
     let install_script = fs::read_to_string(root.join("scripts/install.sh")).unwrap();
     let macos_script = fs::read_to_string(root.join("scripts/package-macos-app.sh")).unwrap();
     let linux_script = fs::read_to_string(root.join("scripts/package-linux-tarball.sh")).unwrap();
+    let screenshot_script =
+        fs::read_to_string(root.join("scripts/capture-macos-window-proof.sh")).unwrap();
     let desktop =
         fs::read_to_string(root.join("packaging/linux/dev.gromaq.Gromaq.desktop")).unwrap();
     let metainfo =
@@ -124,6 +127,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(linux_script.contains("logo-icon-256.png"));
     assert!(linux_script.contains(".tar.gz"));
+    assert!(screenshot_script.contains("--window-perf-smoke"));
+    assert!(screenshot_script.contains("screencapture -x"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));

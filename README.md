@@ -129,6 +129,17 @@ cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-prev
 cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
 ```
 
+Manual live-window screenshot proof on macOS:
+
+```bash
+scripts/capture-macos-window-proof.sh target/gromaq-live-window-proof.png
+```
+
+The screenshot script launches bounded `--window-perf-smoke`, captures a local
+desktop screenshot artifact under `target/`, and waits for the app process to
+exit. It is intentionally manual because desktop screenshots can include local
+user state.
+
 Full local verification:
 
 ```bash

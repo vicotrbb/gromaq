@@ -6,6 +6,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/install.sh",
     "sh -n scripts/package-macos-app.sh",
     "sh -n scripts/package-linux-tarball.sh",
+    "sh -n scripts/capture-macos-window-proof.sh",
     "cargo fmt --check",
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
