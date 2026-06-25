@@ -33,6 +33,11 @@ blank or low-value snapshots by counting high-contrast text pixels and exact
 selection/cursor-color pixels in the generated RGBA frame before writing the
 PPM.
 
+The native app also shows a default welcome screen with system, terminal,
+renderer, and theme stats before shell output. It is enabled by default and can
+be disabled with `[welcome] enabled = false` when users prefer a blank
+shell-first launch.
+
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:
 

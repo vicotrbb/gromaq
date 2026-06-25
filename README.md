@@ -189,6 +189,9 @@ program = "/bin/zsh"
 args = ["-l"]
 cwd = "/tmp"
 
+[welcome]
+enabled = true
+
 [font]
 family = "monospace"
 size_px = 34.0
@@ -229,6 +232,10 @@ palette, cursor style, cursor blinking, surface padding, optional cell spacing,
 and dim text opacity; every field in `[theme]` can still be overridden directly
 in TOML. The theme fields are documented in
 [`documentation/theme.md`](documentation/theme.md).
+
+`[welcome].enabled = true` shows the built-in startup screen with system,
+terminal, renderer, and theme stats before the shell prompt. Set it to `false`
+for a blank shell-first startup.
 
 `font.family = "monospace"` uses Gromaq's automatic mono stack: polished
 user-installed terminal fonts such as JetBrains Mono Nerd Font, MesloLGS Nerd

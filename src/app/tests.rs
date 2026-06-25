@@ -51,6 +51,19 @@ fn native_terminal_app_new_uses_explicit_startup_text_over_default_welcome() {
 }
 
 #[test]
+fn native_terminal_app_new_can_disable_default_welcome_screen() {
+    let app = NativeTerminalApp::new(NativeAppConfig {
+        welcome_screen: false,
+        ..NativeAppConfig::default()
+    })
+    .unwrap();
+    let visible = visible_runtime_text(&app);
+
+    assert!(!visible.contains("Gromaq"));
+    assert!(!visible.contains("native Rust GPU terminal"));
+}
+
+#[test]
 fn native_terminal_app_can_sync_runtime_to_actual_window_pixels() {
     let mut app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
     let expected_resize = app.resize_mapper.resize_for_window(2560, 1600).unwrap();

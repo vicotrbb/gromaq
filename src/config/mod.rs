@@ -14,7 +14,7 @@ pub use reload::{ConfigFileReloader, ConfigReload};
 pub use settings::{
     DEFAULT_FONT_FAMILY, FontSettings, MAX_CELL_WIDTH_PX, MAX_FONT_SIZE_PX, MAX_LINE_HEIGHT_PX,
     MAX_TARGET_FPS, MAX_TERMINAL_CELLS, MIN_CELL_WIDTH_PX, MIN_FONT_SIZE_PX, MIN_LINE_HEIGHT_PX,
-    PerformanceSettings, ShellSettings, TerminalSettings,
+    PerformanceSettings, ShellSettings, TerminalSettings, WelcomeSettings,
 };
 pub use theme::{
     ANSI_COLOR_COUNT, CursorStyleSetting, DEFAULT_ANSI_COLORS, DEFAULT_ANSI_COLORS_RGB8,
@@ -38,6 +38,8 @@ pub struct GromaqConfig {
     pub terminal: TerminalSettings,
     /// Shell command configuration.
     pub shell: ShellSettings,
+    /// Startup welcome screen configuration.
+    pub welcome: WelcomeSettings,
     /// Font configuration.
     pub font: FontSettings,
     /// Visual theme colors.

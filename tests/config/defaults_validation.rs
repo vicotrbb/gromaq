@@ -2,7 +2,9 @@ use gromaq::{GromaqConfig, TerminalConfig};
 
 #[test]
 fn default_config_is_valid() {
-    GromaqConfig::default().validate().unwrap();
+    let config = GromaqConfig::default();
+    config.validate().unwrap();
+    assert!(config.welcome.enabled);
 }
 
 #[test]

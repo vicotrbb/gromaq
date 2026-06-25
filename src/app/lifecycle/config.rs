@@ -33,6 +33,8 @@ pub struct NativeAppConfig {
     pub glyph_frame_snapshot_path: Option<PathBuf>,
     /// Optional deterministic terminal text written before the native window presents.
     pub startup_text: Option<String>,
+    /// Whether the built-in welcome screen is written when no explicit startup text exists.
+    pub welcome_screen: bool,
 }
 
 impl Default for NativeAppConfig {
@@ -48,6 +50,7 @@ impl Default for NativeAppConfig {
             frame_interval_warmup_frames: 0,
             glyph_frame_snapshot_path: None,
             startup_text: None,
+            welcome_screen: true,
         }
     }
 }
@@ -60,6 +63,7 @@ impl NativeAppConfig {
             .map_err(|error| NativeAppError::Runtime(error.to_string()))?;
         Ok(Self {
             target_fps: config.performance.target_fps,
+            welcome_screen: config.welcome.enabled,
             ..Self::default()
         })
     }

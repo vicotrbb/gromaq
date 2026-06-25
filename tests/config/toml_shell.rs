@@ -1,4 +1,4 @@
-use gromaq::{GromaqConfig, GromaqError, ShellSettings};
+use gromaq::{GromaqConfig, GromaqError, ShellSettings, WelcomeSettings};
 
 #[test]
 fn partial_toml_config_uses_defaults_and_validates() {
@@ -21,6 +21,7 @@ fn partial_toml_config_uses_defaults_and_validates() {
     );
     assert_eq!(config.font.family, "JetBrains Mono");
     assert_eq!(config.shell, ShellSettings::default());
+    assert_eq!(config.welcome, WelcomeSettings::default());
     assert_eq!(
         config.performance.target_fps,
         GromaqConfig::default().performance.target_fps
@@ -45,6 +46,19 @@ fn toml_config_validation_rejects_invalid_values() {
             ..
         }
     ));
+}
+
+#[test]
+fn welcome_toml_config_accepts_disabled_default_startup_screen() {
+    let config = GromaqConfig::from_toml_str(
+        r#"
+        [welcome]
+        enabled = false
+        "#,
+    )
+    .unwrap();
+
+    assert!(!config.welcome.enabled);
 }
 
 #[test]

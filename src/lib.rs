@@ -32,7 +32,7 @@ pub use config::{
     GHOSTTY_THEME_PRESET, GRAPHITE_THEME_PRESET, GromaqConfig, MAX_BACKGROUND_OPACITY,
     MAX_CELL_WIDTH_PX, MAX_DIM_OPACITY, MAX_LINE_HEIGHT_PX, MIN_BACKGROUND_OPACITY,
     MIN_CELL_WIDTH_PX, MIN_DIM_OPACITY, MIN_LINE_HEIGHT_PX, PerformanceSettings, ShellSettings,
-    TerminalSettings, ThemePresetSetting, ThemeSettings, format_theme_preset,
+    TerminalSettings, ThemePresetSetting, ThemeSettings, WelcomeSettings, format_theme_preset,
 };
 pub use dirty::{DirtyRegion, DirtyTracker};
 pub use error::{GromaqError, Result};

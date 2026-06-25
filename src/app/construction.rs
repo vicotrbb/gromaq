@@ -71,10 +71,13 @@ impl NativeTerminalApp {
             runtime_config.pixel_height = resize.pixel_height;
         }
         let mut runtime = NativeTerminalRuntime::new(runtime_config)?;
-        let startup_text = config.startup_text.clone().unwrap_or_else(|| {
-            default_welcome_text(&config, runtime.config(), &renderer_config, &font_family)
-        });
-        runtime.write_startup_text(&startup_text)?;
+        if let Some(startup_text) = config.startup_text.as_deref() {
+            runtime.write_startup_text(startup_text)?;
+        } else if config.welcome_screen {
+            let startup_text =
+                default_welcome_text(&config, runtime.config(), &renderer_config, &font_family);
+            runtime.write_startup_text(&startup_text)?;
+        }
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,

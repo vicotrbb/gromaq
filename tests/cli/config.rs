@@ -24,6 +24,8 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("[terminal]"));
     assert!(exit.stdout.contains("[shell]"));
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
+    assert!(exit.stdout.contains("[welcome]"));
+    assert!(exit.stdout.contains("enabled = true"));
     assert!(exit.stdout.contains("[font]"));
     assert!(exit.stdout.contains("size_px = 34"));
     assert!(exit.stdout.contains("line_height_px = 47"));
@@ -89,6 +91,9 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
         program = "/bin/zsh"
         args = ["-l"]
         cwd = "/tmp"
+
+        [welcome]
+        enabled = false
         "##,
     )
     .unwrap();
@@ -103,6 +108,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("shell: /bin/zsh"));
     assert!(exit.stdout.contains("shell args: -l"));
     assert!(exit.stdout.contains("shell cwd: /tmp"));
+    assert!(exit.stdout.contains("welcome enabled: false"));
     assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
     assert!(
         exit.stdout
@@ -217,6 +223,9 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         program = "/bin/zsh"
         args = ["-l", "-i"]
         cwd = "/tmp"
+
+        [welcome]
+        enabled = false
         "#,
             font_path.display()
         ),
@@ -241,6 +250,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
         launches[0].app,
         NativeAppConfig {
             target_fps: 120,
+            welcome_screen: false,
             ..NativeAppConfig::default()
         }
     );

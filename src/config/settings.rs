@@ -60,6 +60,20 @@ pub struct ShellSettings {
     pub cwd: Option<String>,
 }
 
+/// Welcome screen section of the configuration file.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WelcomeSettings {
+    /// Whether Gromaq renders the default startup welcome screen before shell output.
+    pub enabled: bool,
+}
+
+impl Default for WelcomeSettings {
+    fn default() -> Self {
+        Self { enabled: true }
+    }
+}
+
 /// Font section of the configuration file.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
