@@ -96,7 +96,7 @@ Implemented and tested:
 - Deterministic default theme preview snapshot export with `--theme-preview-snapshot <path>`, writing a PPM artifact from the native glyph-frame preparation path without launching a GPU window
 - Pixel-level default theme preview gates for high-contrast text, selection color, and cursor color before snapshot export
 - Sectioned default welcome screen with terminal, renderer, theme, and system stats before shell output
-- Visual-only FPS status overlay rendered at the frame boundary without mutating terminal-owned grid state or shell scrollback
+- Visual-only FPS status overlay rendered at the frame boundary without mutating terminal-owned grid state or shell scrollback, and skipped when a shell right prompt already owns the target cells
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
@@ -251,7 +251,9 @@ selection opacity, before adopting it.
 `[welcome].enabled = true` shows the built-in startup screen with sectioned
 system, terminal, renderer, and theme stats before the shell prompt. Set it to
 `false` for a blank shell-first startup. The native frame status text, such as
-FPS, is rendered as a presentation overlay and is not written into shell output
+FPS, is rendered as a presentation overlay and is not written into shell output.
+The overlay only draws into blank cells so right-aligned shell prompts are not
+overwritten.
 or scrollback. Use `gromaq --welcome-preview-snapshot <path>` to render a
 deterministic PPM artifact of the default welcome screen through the prepared
 glyph-frame path without launching a native GPU window.
