@@ -1,9 +1,7 @@
 use std::cell::RefCell;
 use std::fs;
 
-use gromaq::cli::run_with_backend;
-
-use super::MockBackend;
+use super::{MockBackend, run_with_backend};
 
 #[test]
 fn gpu_text_atlas_smoke_cli_reports_font_backed_atlas_upload_result() {

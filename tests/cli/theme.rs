@@ -2,9 +2,7 @@ use std::cell::RefCell;
 use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use gromaq::cli::run_with_backend;
-
-use super::MockBackend;
+use super::{MockBackend, run_with_backend};
 
 #[test]
 fn theme_legibility_smoke_reports_default_visual_gates_without_gpu_bootstrap() {

@@ -1,6 +1,13 @@
 use std::cell::RefCell;
+use std::sync::{Mutex, OnceLock};
 
-use gromaq::cli::{run_with_backend, run_with_backend_and_clipboard};
+use gromaq::HostClipboard;
+use gromaq::cli::{
+    CliExit, GpuCommandContext, NativeAppLauncher, run_with_backend as gromaq_run_with_backend,
+    run_with_backend_and_app as gromaq_run_with_backend_and_app,
+    run_with_backend_and_clipboard as gromaq_run_with_backend_and_clipboard,
+};
+use gromaq::native_gpu::GpuBootstrapBackend;
 
 #[path = "cli/clipboard.rs"]
 mod clipboard;
@@ -22,6 +29,48 @@ mod window;
 pub(crate) use support::{
     MockAppLauncher, MockBackend, ReadOnlyClipboard, system_mono_font_path, test_cli_config_path,
 };
+
+fn run_with_backend<I, S, B>(args: I, backend: &B) -> CliExit
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+    B: GpuBootstrapBackend,
+    B::Context: GpuCommandContext,
+{
+    let _guard = cli_invocation_guard();
+    gromaq_run_with_backend(args, backend)
+}
+
+fn run_with_backend_and_clipboard<I, S, B, C>(args: I, backend: &B, clipboard: &mut C) -> CliExit
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+    B: GpuBootstrapBackend,
+    B::Context: GpuCommandContext,
+    C: HostClipboard,
+{
+    let _guard = cli_invocation_guard();
+    gromaq_run_with_backend_and_clipboard(args, backend, clipboard)
+}
+
+fn run_with_backend_and_app<I, S, B, A>(args: I, backend: &B, app_launcher: &A) -> CliExit
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+    B: GpuBootstrapBackend,
+    B::Context: GpuCommandContext,
+    A: NativeAppLauncher,
+{
+    let _guard = cli_invocation_guard();
+    gromaq_run_with_backend_and_app(args, backend, app_launcher)
+}
+
+fn cli_invocation_guard() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 #[test]
 fn gpu_info_cli_reports_adapter_metadata() {

@@ -3,10 +3,13 @@ use std::fs;
 
 use gromaq::GromaqConfig;
 use gromaq::app::{NativeAppConfig, NativeTerminalRuntimeConfig};
-use gromaq::cli::{CliExit, NativeAppLaunchConfig, run_with_backend, run_with_backend_and_app};
+use gromaq::cli::{CliExit, NativeAppLaunchConfig};
 use gromaq::renderer::RendererConfig;
 
-use super::{MockAppLauncher, MockBackend, system_mono_font_path, test_cli_config_path};
+use super::{
+    MockAppLauncher, MockBackend, run_with_backend, run_with_backend_and_app,
+    system_mono_font_path, test_cli_config_path,
+};
 
 #[test]
 fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {

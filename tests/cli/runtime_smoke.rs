@@ -1,9 +1,8 @@
 use std::cell::RefCell;
 
 use gromaq::MemoryClipboard;
-use gromaq::cli::{run_with_backend, run_with_backend_and_clipboard};
 
-use super::MockBackend;
+use super::{MockBackend, run_with_backend, run_with_backend_and_clipboard};
 
 #[path = "runtime_smoke/glyph_frame.rs"]
 mod glyph_frame;

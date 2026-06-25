@@ -3,12 +3,11 @@ use std::ffi::OsString;
 use std::fs;
 
 use gromaq::app::NativeAppRunReport;
-use gromaq::cli::{
-    CliExit, NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, run_with_backend,
-    run_with_backend_and_app,
-};
+use gromaq::cli::{CliExit, NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher};
 
-use super::{MockAppLauncher, MockBackend, test_cli_config_path};
+use super::{
+    MockAppLauncher, MockBackend, run_with_backend, run_with_backend_and_app, test_cli_config_path,
+};
 
 #[derive(Debug)]
 struct NoGlyphFrameAppLauncher;

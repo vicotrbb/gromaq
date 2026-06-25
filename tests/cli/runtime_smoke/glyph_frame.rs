@@ -2,9 +2,7 @@ use std::cell::RefCell;
 use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use gromaq::cli::run_with_backend;
-
-use crate::MockBackend;
+use crate::{MockBackend, run_with_backend};
 
 #[test]
 fn runtime_glyph_frame_smoke_cli_reports_prepared_frame_without_gpu_bootstrap() {

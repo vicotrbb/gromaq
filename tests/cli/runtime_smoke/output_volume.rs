@@ -1,8 +1,6 @@
 use std::cell::RefCell;
 
-use gromaq::cli::run_with_backend;
-
-use crate::MockBackend;
+use crate::{MockBackend, run_with_backend};
 
 #[test]
 fn runtime_large_output_smoke_cli_reports_rendered_burst_without_gpu_bootstrap() {
