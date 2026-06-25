@@ -63,6 +63,23 @@ fn test_api_screenshot_captures_text_and_cursor_pixels() {
     assert_eq!(pixel(&screenshot, 2, 0), [0, 0, 0, 255]);
 }
 
+#[test]
+fn test_api_screenshot_tracks_resized_grid_dimensions() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    TerminalTestApi::resize(&mut terminal, 6, 3).unwrap();
+    TerminalTestApi::paste_text(&mut terminal, "xy").unwrap();
+
+    let screenshot = TerminalTestApi::screenshot(&terminal);
+
+    assert_eq!(screenshot.width, 6);
+    assert_eq!(screenshot.height, 3);
+    assert_eq!(screenshot.rgba.len(), 6 * 3 * 4);
+    assert_eq!(pixel(&screenshot, 0, 0), [255, 255, 255, 255]);
+    assert_eq!(pixel(&screenshot, 1, 0), [255, 255, 255, 255]);
+    assert_eq!(TerminalTestApi::dump_perf_metrics(&terminal).resizes, 1);
+}
+
 fn pixel(screenshot: &gromaq::terminal::Screenshot, x: u32, y: u32) -> [u8; 4] {
     let index = usize::try_from((y * screenshot.width + x) * 4).unwrap();
     [
