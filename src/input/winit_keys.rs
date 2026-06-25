@@ -1,13 +1,13 @@
 //! `winit` keyboard event encoding.
 
-use winit::keyboard::{Key, ModifiersState, NamedKey, PhysicalKey};
+mod named;
+
+use winit::keyboard::{Key, ModifiersState, PhysicalKey};
 
 use super::keypad::encode_winit_keypad_key;
 use super::test_key::encode_keys_with_application_cursor_mode;
-use super::{
-    KeyModifiers, TestKey, encode_alt_prefixed_key, encode_function_key, encode_modified_csi_final,
-    encode_shifted_function_key, encode_tilde_key, push_char,
-};
+use super::{KeyModifiers, TestKey, push_char};
+use named::{EncodedNamedKey, encode_named_key};
 
 /// Encode a `winit` logical key plus active modifiers into terminal input bytes.
 pub fn encode_winit_key(key: &Key, modifiers: ModifiersState) -> Option<Vec<u8>> {
@@ -61,89 +61,12 @@ pub(crate) fn encode_winit_key_with_terminal_modes(
                 modifiers: key_modifiers,
             }
         }
-        Key::Named(NamedKey::Enter) => return Some(encode_alt_prefixed_key(b"\r", key_modifiers)),
-        Key::Named(NamedKey::Backspace) => {
-            return Some(encode_alt_prefixed_key(b"\x7f", key_modifiers));
-        }
-        Key::Named(NamedKey::Escape) => {
-            return Some(encode_alt_prefixed_key(b"\x1b", key_modifiers));
-        }
-        Key::Named(NamedKey::Space) => TestKey::ModifiedChar {
-            ch: ' ',
-            modifiers: key_modifiers,
+        Key::Named(named_key) => match encode_named_key(named_key, key_modifiers) {
+            EncodedNamedKey::Bytes(bytes) => return Some(bytes),
+            EncodedNamedKey::TestKey(key) => key,
+            EncodedNamedKey::Ignored => return None,
         },
-        Key::Named(NamedKey::ArrowUp) => {
-            if let Some(bytes) = encode_modified_csi_final(b'A', key_modifiers) {
-                return Some(bytes);
-            }
-            TestKey::ArrowUp
-        }
-        Key::Named(NamedKey::ArrowDown) => {
-            if let Some(bytes) = encode_modified_csi_final(b'B', key_modifiers) {
-                return Some(bytes);
-            }
-            TestKey::ArrowDown
-        }
-        Key::Named(NamedKey::ArrowRight) => {
-            if let Some(bytes) = encode_modified_csi_final(b'C', key_modifiers) {
-                return Some(bytes);
-            }
-            TestKey::ArrowRight
-        }
-        Key::Named(NamedKey::ArrowLeft) => {
-            if let Some(bytes) = encode_modified_csi_final(b'D', key_modifiers) {
-                return Some(bytes);
-            }
-            TestKey::ArrowLeft
-        }
-        Key::Named(NamedKey::Tab) if key_modifiers == KeyModifiers::SHIFT => {
-            return Some(b"\x1b[Z".to_vec());
-        }
-        Key::Named(NamedKey::Tab) if key_modifiers.contains(KeyModifiers::SHIFT) => {
-            return encode_modified_csi_final(b'Z', key_modifiers);
-        }
-        Key::Named(NamedKey::Tab) => TestKey::Tab,
-        Key::Named(NamedKey::Home) => {
-            return Some(
-                encode_modified_csi_final(b'H', key_modifiers)
-                    .unwrap_or_else(|| b"\x1b[H".to_vec()),
-            );
-        }
-        Key::Named(NamedKey::End) => {
-            return Some(
-                encode_modified_csi_final(b'F', key_modifiers)
-                    .unwrap_or_else(|| b"\x1b[F".to_vec()),
-            );
-        }
-        Key::Named(NamedKey::Insert) => return Some(encode_tilde_key(2, key_modifiers)),
-        Key::Named(NamedKey::Delete) => return Some(encode_tilde_key(3, key_modifiers)),
-        Key::Named(NamedKey::PageUp) => return Some(encode_tilde_key(5, key_modifiers)),
-        Key::Named(NamedKey::PageDown) => return Some(encode_tilde_key(6, key_modifiers)),
-        Key::Named(NamedKey::F1) => return Some(encode_function_key(b'P', 1, key_modifiers)),
-        Key::Named(NamedKey::F2) => return Some(encode_function_key(b'Q', 1, key_modifiers)),
-        Key::Named(NamedKey::F3) => return Some(encode_function_key(b'R', 1, key_modifiers)),
-        Key::Named(NamedKey::F4) => return Some(encode_function_key(b'S', 1, key_modifiers)),
-        Key::Named(NamedKey::F5) => return Some(encode_tilde_key(15, key_modifiers)),
-        Key::Named(NamedKey::F6) => return Some(encode_tilde_key(17, key_modifiers)),
-        Key::Named(NamedKey::F7) => return Some(encode_tilde_key(18, key_modifiers)),
-        Key::Named(NamedKey::F8) => return Some(encode_tilde_key(19, key_modifiers)),
-        Key::Named(NamedKey::F9) => return Some(encode_tilde_key(20, key_modifiers)),
-        Key::Named(NamedKey::F10) => return Some(encode_tilde_key(21, key_modifiers)),
-        Key::Named(NamedKey::F11) => return Some(encode_tilde_key(23, key_modifiers)),
-        Key::Named(NamedKey::F12) => return Some(encode_tilde_key(24, key_modifiers)),
-        Key::Named(NamedKey::F13) => return encode_shifted_function_key(1, key_modifiers),
-        Key::Named(NamedKey::F14) => return encode_shifted_function_key(2, key_modifiers),
-        Key::Named(NamedKey::F15) => return encode_shifted_function_key(3, key_modifiers),
-        Key::Named(NamedKey::F16) => return encode_shifted_function_key(4, key_modifiers),
-        Key::Named(NamedKey::F17) => return encode_shifted_function_key(5, key_modifiers),
-        Key::Named(NamedKey::F18) => return encode_shifted_function_key(6, key_modifiers),
-        Key::Named(NamedKey::F19) => return encode_shifted_function_key(7, key_modifiers),
-        Key::Named(NamedKey::F20) => return encode_shifted_function_key(8, key_modifiers),
-        Key::Named(NamedKey::F21) => return encode_shifted_function_key(9, key_modifiers),
-        Key::Named(NamedKey::F22) => return encode_shifted_function_key(10, key_modifiers),
-        Key::Named(NamedKey::F23) => return encode_shifted_function_key(11, key_modifiers),
-        Key::Named(NamedKey::F24) => return encode_shifted_function_key(12, key_modifiers),
-        Key::Named(_) | Key::Unidentified(_) | Key::Dead(_) => return None,
+        Key::Unidentified(_) | Key::Dead(_) => return None,
     };
     Some(encode_keys_with_application_cursor_mode(
         &[key],
