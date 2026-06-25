@@ -48,7 +48,7 @@ fn status_overlay_row(grid: &GridSnapshot, cursor: CursorSnapshot) -> u16 {
 
 fn status_overlay_style() -> Style {
     Style {
-        foreground: Color::Rgb(155, 214, 232),
+        foreground: Color::Ansi(14),
         bold: true,
         ..Style::default()
     }
@@ -71,6 +71,7 @@ mod tests {
         assert_eq!(region.row, 0);
         assert_eq!(region.col, 16);
         assert_eq!(grid.line_text(0), "one             144 fps");
+        assert_eq!(grid.cell(0, 16).style.foreground, Color::Ansi(14));
         assert_eq!(grid.line_text(1), ">");
     }
 
