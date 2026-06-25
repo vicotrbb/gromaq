@@ -11,6 +11,7 @@ use crate::mouse::MouseEventKind;
 mod actions;
 mod mouse;
 mod resume;
+mod surface;
 mod window_metadata;
 
 impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
