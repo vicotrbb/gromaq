@@ -48,6 +48,8 @@ remaining terminal-core work.
 | Selection/copy and OSC 52 clipboard | Unit tests and native clipboard smoke paths | Proven for covered paths |
 | Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, and native shortcuts, including dedicated Paste, Shift+Insert, Control+V, and Super+V paste routing | Proven for covered keys |
 | Mouse reporting modes | Runtime mouse smoke and alternate-screen mouse tests | Proven for default and SGR covered paths |
+| Theme color propagation | Renderer config mapping plus prepared-frame tests for background, ANSI foreground, selection, and cursor colors | Proven for covered paths |
+| Default terminal font stack | Native font resolver tests for polished user fonts, including JetBrains Mono Nerd Font and MesloLGS Nerd Font, before system fallbacks | Proven for covered paths |
 
 ## Live Native Window Proof
 
