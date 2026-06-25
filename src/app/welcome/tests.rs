@@ -1,3 +1,4 @@
+use super::layout::ansi_visible_width;
 use super::*;
 
 #[test]
