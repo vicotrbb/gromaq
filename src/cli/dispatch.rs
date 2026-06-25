@@ -1,21 +1,17 @@
 //! CLI command dispatch.
 
+mod argument_commands;
 mod arguments;
 
 use super::args::{CliCommand, command_for, usage};
 use super::clipboard_smoke::{clipboard_smoke_exit, osc52_clipboard_smoke_exit};
-use super::config_commands::{
-    NativeAppLaunchConfig, config_check_exit, config_template_exit, launch_config_file_exit,
-    launch_native_app_exit,
-};
+use super::config_commands::{NativeAppLaunchConfig, launch_native_app_exit};
 use super::frame_scheduler_smoke::frame_scheduler_smoke_exit;
-use super::gpu::{GpuCommandContext, gpu_command_exit, gpu_terminal_text_snapshot_exit};
+use super::gpu::{GpuCommandContext, gpu_command_exit};
 use super::runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
 use super::runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use super::runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
-use super::runtime_glyph_frame_smoke::{
-    runtime_glyph_frame_smoke_exit, runtime_glyph_frame_snapshot_exit,
-};
+use super::runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
 use super::runtime_input_smoke::{
     runtime_focus_smoke_exit, runtime_idle_cpu_smoke_exit, runtime_idle_smoke_exit,
     runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit, runtime_perf_p95_smoke_exit,
@@ -34,12 +30,11 @@ use super::runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use super::runtime_repaint_smoke::runtime_repaint_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
 use super::runtime_text_zoom_smoke::runtime_text_zoom_smoke_exit;
-use super::theme_smoke::{theme_legibility_smoke_exit, theme_preview_snapshot_exit};
-use super::window_smoke::{window_glyph_frame_snapshot_exit, window_smoke_exit};
+use super::theme_smoke::theme_legibility_smoke_exit;
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
 use crate::native_gpu::GpuBootstrapBackend;
-use arguments::{reject_extra_args, required_path_arg, required_snapshot_path_arg};
+use arguments::reject_extra_args;
 
 pub(super) fn run_with_optional_app_and_clipboard<I, S, B, A, C>(
     args: I,
@@ -75,87 +70,10 @@ where
             stderr: format!("{}unknown argument: {arg}\n", usage()),
         };
     };
-    if command == CliCommand::ConfigCheck {
-        let path = match required_path_arg(&mut args, "--config-check") {
-            Ok(path) => path,
-            Err(exit) => return exit,
-        };
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return config_check_exit(path.as_ref());
-    }
-    if command == CliCommand::ConfigTemplate {
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return config_template_exit();
-    }
-    if command == CliCommand::GpuTerminalTextSnapshot {
-        let path = match required_snapshot_path_arg(&mut args, "--gpu-terminal-text-snapshot") {
-            Ok(path) => path,
-            Err(exit) => return exit,
-        };
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return gpu_terminal_text_snapshot_exit(path.as_ref(), backend);
-    }
-    if command == CliCommand::RuntimeGlyphFrameSnapshot {
-        let path = match required_snapshot_path_arg(&mut args, "--runtime-glyph-frame-snapshot") {
-            Ok(path) => path,
-            Err(exit) => return exit,
-        };
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return runtime_glyph_frame_snapshot_exit(path.as_ref());
-    }
-    if command == CliCommand::ThemePreviewSnapshot {
-        let path = match required_snapshot_path_arg(&mut args, "--theme-preview-snapshot") {
-            Ok(path) => path,
-            Err(exit) => return exit,
-        };
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return theme_preview_snapshot_exit(path.as_ref());
-    }
-    if command == CliCommand::WindowGlyphFrameSnapshot {
-        let path = match required_snapshot_path_arg(&mut args, "--window-glyph-frame-snapshot") {
-            Ok(path) => path,
-            Err(exit) => return exit,
-        };
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return window_glyph_frame_snapshot_exit(path.as_ref(), app_launcher);
-    }
-    if matches!(
-        command,
-        CliCommand::WindowSmoke | CliCommand::WindowPerfSmoke
-    ) {
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        return window_smoke_exit(command, app_launcher);
-    }
-    if command == CliCommand::Config {
-        let path = match required_path_arg(&mut args, "--config") {
-            Ok(path) => path,
-            Err(exit) => return exit,
-        };
-        if let Err(exit) = reject_extra_args(&mut args) {
-            return exit;
-        }
-        let Some(app_launcher) = app_launcher else {
-            return CliExit {
-                code: 2,
-                stdout: String::new(),
-                stderr: format!("{}native app launch unavailable for --config\n", usage()),
-            };
-        };
-        return launch_config_file_exit(path.as_ref(), app_launcher);
+    if let Some(exit) =
+        argument_commands::run_argument_command(command, &mut args, backend, app_launcher)
+    {
+        return exit;
     }
     if let Err(exit) = reject_extra_args(&mut args) {
         return exit;
