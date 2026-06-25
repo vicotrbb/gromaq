@@ -113,12 +113,9 @@ pixels, a sampled background pixel of `[2, 3, 4, 255]`, a sampled glyph pixel of
 `[254, 253, 214, 254]`, and a contrast ratio of 1989 x100 against the 700 x100
 minimum smoke gate. On the same date,
 `cargo run -- --gpu-terminal-text-perf-smoke` measured 16 repeated offscreen
-terminal text GPU draw/readback frames at 144x36 pixels, reported 1452 drawn
+terminal text GPU draw/readback frames at 144x36 pixels, reported 1476 drawn
 pixels on the final frame, and reported min/avg/max/p95 draw/readback timings of
-6093125/6624872/9264000/9264000 ns. After the contrast-gated default-theme
-fixture update, a targeted rerun reported 1476 drawn pixels and
-min/avg/max/p95 draw/readback timings of 6312709/7511208/12016584/12016584 ns.
-On the same date,
+6168000/6790822/10163500/10163500 ns. On the same date,
 `cargo run -- --gpu-terminal-text-snapshot target/gromaq-terminal-text-smoke.ppm`
 wrote a 144x36 binary PPM artifact of the same contrast-gated terminal-text
 smoke frame, reported 15566 bytes written, 4 glyphs, 1476 drawn pixels, sampled
