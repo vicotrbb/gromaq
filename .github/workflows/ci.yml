@@ -54,3 +54,14 @@ jobs:
       - run: cargo run -- --runtime-real-shell-large-output-smoke
       - run: cargo run -- --runtime-real-shell-reflow-smoke
       - run: cargo bench --bench parser_throughput -- --list
+
+  linux-packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: sh -n scripts/install.sh
+      - run: sh -n scripts/package-linux-tarball.sh
+      - run: cargo test --test project_policy
+      - run: scripts/package-linux-tarball.sh

@@ -77,6 +77,8 @@ scripts/package-macos-app.sh
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball and a zipped macOS `.app` bundle.
+CI also runs a focused Ubuntu packaging job for repository policy and Linux
+tarball assembly.
 
 ## Status
 

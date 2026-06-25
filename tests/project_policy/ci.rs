@@ -54,6 +54,13 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "target/dist/Gromaq-macos-app.zip",
 ];
 
+const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
+    "linux-packaging:",
+    "runs-on: ubuntu-latest",
+    "cargo test --test project_policy",
+    "scripts/package-linux-tarball.sh",
+];
+
 #[test]
 fn ci_workflow_runs_required_root_checks() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
@@ -77,6 +84,20 @@ fn release_workflow_builds_distribution_artifacts() {
         assert!(
             workflow.contains(command),
             "{} must run or upload `{command}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
+}
+
+#[test]
+fn ci_runs_linux_distribution_checks() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for marker in REQUIRED_LINUX_PACKAGING_CI_MARKERS {
+        assert!(
+            workflow.contains(marker),
+            "{} must include Linux packaging marker `{marker}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
         );
     }
