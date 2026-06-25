@@ -53,7 +53,7 @@ remaining terminal-core work.
 | Browser-style terminal text zoom | Native shortcut mapping tests plus native app renderer/grid reconfiguration tests for increase, decrease, reset, and modifier-wheel zoom policy | Proven for covered controls |
 | Mouse reporting modes | Runtime mouse smoke and alternate-screen mouse tests | Proven for default and SGR covered paths |
 | Theme color propagation | Renderer config mapping plus prepared-frame tests for background, ANSI foreground, selection, and cursor colors | Proven for covered paths |
-| Built-in theme legibility | Config contrast tests for foreground, cursor, selection, and readable ANSI slots across shipped presets | Proven for shipped presets |
+| Built-in theme legibility | Config contrast tests for foreground, cursor, selection, and readable ANSI slots across shipped presets, plus prepared-frame preview pixel tests for default padding, foreground glyph coverage, cursor color, and unclipped cell edges | Proven for shipped presets and default prepared-frame path |
 | Default terminal font stack | Native font resolver tests for polished user fonts, including JetBrains Mono Nerd Font and MesloLGS Nerd Font, before system fallbacks | Proven for covered paths |
 
 ## Live Native Window Proof
