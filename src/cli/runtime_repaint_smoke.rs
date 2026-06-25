@@ -9,8 +9,10 @@ use crate::renderer::{RendererConfig, WgpuRenderer};
 
 use super::CliExit;
 
+mod output;
 mod pty;
 
+use output::{runtime_repaint_smoke_error, runtime_repaint_smoke_success};
 use pty::RepaintSmokePtySpawner;
 
 const REPAINT_COLS: u16 = 80;
@@ -18,27 +20,8 @@ const REPAINT_ROWS: u16 = 8;
 
 pub(super) fn runtime_repaint_smoke_exit() -> CliExit {
     match runtime_repaint_smoke_report() {
-        Ok(report) => CliExit {
-            code: 0,
-            stdout: format!(
-                "runtime repaint smoke: ok\npumped bytes: {}\nrendered: {}\nfull viewport repainted: {}\ncommand preserved: {}\nfirst output row preserved: {}\nsecond output row preserved: {}\nprompt preserved: {}\nplanned glyphs: {}\nclear regions: {}\n",
-                report.pumped_bytes,
-                report.rendered,
-                report.full_viewport_repainted,
-                report.command_preserved,
-                report.first_output_row_preserved,
-                report.second_output_row_preserved,
-                report.prompt_preserved,
-                report.planned_glyphs,
-                report.clear_regions
-            ),
-            stderr: String::new(),
-        },
-        Err(error) => CliExit {
-            code: 1,
-            stdout: String::new(),
-            stderr: format!("runtime repaint smoke failed: {error}\n"),
-        },
+        Ok(report) => runtime_repaint_smoke_success(&report),
+        Err(error) => runtime_repaint_smoke_error(error),
     }
 }
 
