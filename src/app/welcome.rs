@@ -58,9 +58,10 @@ pub(crate) fn default_welcome_text(
     let style = WelcomeStyle::from_renderer(renderer);
     let mut text = String::from("\x1b[2J\x1b[H");
     for (row, avatar) in WELCOME_AVATAR_ANSI.lines().enumerate() {
-        let entry = match &stats[row] {
-            WelcomeLine::Metric { label, value } => WelcomeEntry::Metric { label, value },
-            WelcomeLine::Section(label) => WelcomeEntry::Section(label),
+        let entry = match stats.get(row) {
+            Some(WelcomeLine::Metric { label, value }) => WelcomeEntry::Metric { label, value },
+            Some(WelcomeLine::Section(label)) => WelcomeEntry::Section(label),
+            None => WelcomeEntry::Empty,
         };
         push_welcome_row(&mut text, runtime.terminal_cols, avatar, entry, style);
     }

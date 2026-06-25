@@ -22,10 +22,16 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
     assert!(text.contains("14px padding, opacity 100%"));
     assert!(text.contains("truecolor ANSI + dim text"));
     assert!(text.contains(WELCOME_AVATAR_ANSI.lines().nth(2).unwrap()));
+    assert!(!text.contains("GMQ"));
+    assert!(!text.contains("TERMINAL"));
+    assert!(!text.contains("REBORN"));
     assert!(text.contains("  [ Gromaq ]"));
     assert!(text.contains("    \x1b[1;38;2;238;244;251mBuild"));
     assert!(text.contains("\x1b[38;2;158;231;255mnative Rust GPU terminal"));
-    assert_eq!(text.matches("\r\n").count(), 15);
+    assert_eq!(
+        text.matches("\r\n").count(),
+        WELCOME_AVATAR_ANSI.lines().count()
+    );
 }
 
 #[test]
@@ -64,7 +70,7 @@ fn default_welcome_text_does_not_wrap_at_narrow_runtime_width() {
     );
 
     let lines: Vec<_> = text.split("\r\n").filter(|line| !line.is_empty()).collect();
-    assert_eq!(lines.len(), 15);
+    assert_eq!(lines.len(), WELCOME_AVATAR_ANSI.lines().count());
     assert!(lines.iter().all(|line| ansi_visible_width(line) <= 69));
     assert!(text.contains("69x17 cells"));
 }

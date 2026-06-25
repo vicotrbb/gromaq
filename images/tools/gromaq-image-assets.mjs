@@ -26,7 +26,6 @@ export async function generateAssetSet({
   terminalColumns,
   terminalRows,
   terminalCrop,
-  terminalArt,
 }) {
   const dir = join(ROOT, folder);
   const sourcePath = join(dir, source);
@@ -52,9 +51,7 @@ export async function generateAssetSet({
   }
 
   const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
-  const terminal = terminalArt === 'plaque'
-    ? avatarPlaqueAnsi(terminalColumns, terminalRows)
-    : terminalAnsi(terminalSource, terminalColumns, terminalRows);
+  const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';
   writeFileSync(join(outputDir, ansiName), terminal, 'utf8');
   console.log(`wrote ${ansiName} ${terminalColumns}x${terminalRows} cells`);
@@ -326,62 +323,28 @@ function sampleBilinear(image, x, y, out, offset) {
 }
 
 function terminalAnsi(image, columns, rows) {
-  const sampled = contain(image, columns * 3, rows * 4);
+  const sampled = contain(image, columns * 4, rows * 8);
   const lines = [];
   for (let row = 0; row < rows; row++) {
     let line = '';
     for (let col = 0; col < columns; col++) {
-      line += terminalAsciiCell(sampled, col * 3, row * 4);
+      line += terminalHalfBlockCell(sampled, col * 4, row * 8);
     }
     lines.push(`${line}\x1b[0m`);
   }
   return `${lines.join('\n')}\n`;
 }
 
-function avatarPlaqueAnsi(columns, rows) {
-  const lines = [
-    ['muted', '      /\\          '],
-    ['purple', '     /##\\         '],
-    ['purple', '    /####\\        '],
-    ['cyan', '   /#/  \\#\\       '],
-    ['purple', '  /#/ GMQ \\#\\     '],
-    ['cyan', ' /##\\  >_ /##\\    '],
-    ['purple', ' \\###\\__/###/    '],
-    ['purple', '  \\########/     '],
-    ['muted', '   \\######/      '],
-    ['cyan', '    \\####/       '],
-    ['purple', '     \\##/        '],
-    ['purple', '      \\/         '],
-    ['muted', '   TERMINAL      '],
-    ['cyan', '    REBORN       '],
-    ['muted', '                  '],
-  ];
-  return `${lines
-    .slice(0, rows)
-    .map(([tone, line]) => `${fg(plaqueColor(tone))}${line.slice(0, columns).padEnd(columns)}\x1b[0m`)
-    .join('\n')}\n`;
-}
+function terminalHalfBlockCell(image, left, top) {
+  const topSample = terminalBlockSample(image, left, top, 4, 4);
+  const bottomSample = terminalBlockSample(image, left, top + 4, 4, 4);
 
-function plaqueColor(tone) {
-  if (tone === 'cyan') return [158, 231, 255];
-  if (tone === 'purple') return [172, 92, 255];
-  return [104, 117, 148];
-}
-
-function terminalAsciiCell(image, left, top) {
-  const colors = [];
-  let energy = 0;
-  for (let dy = 0; dy < 4; dy++) {
-    for (let dx = 0; dx < 3; dx++) {
-      const sample = pixel(image, left + dx, top + dy);
-      if (!isTerminalVisible(sample)) continue;
-      colors.push(sample);
-      energy += visibleEnergy(sample);
-    }
+  if (!topSample.visible && !bottomSample.visible) return ' ';
+  if (topSample.visible && bottomSample.visible) {
+    return `${fg(topSample.color)}${bg(bottomSample.color)}▀`;
   }
-  if (colors.length === 0) return ' ';
-  const density = energy / 12;
-  return `${fg(averageVisibleColor(colors))}${densityGlyph(density)}`;
+  if (topSample.visible) return `${fg(topSample.color)}▀`;
+  return `${fg(bottomSample.color)}▄`;
 }
 
 function isTerminalVisible(pixel) {
@@ -389,6 +352,29 @@ function isTerminalVisible(pixel) {
   const dominance = green - Math.max(red, blue);
   const greenScreen = green > 55 && dominance > 18 && green > red * 1.08 && green > blue * 1.08;
   return alpha > 18 && !greenScreen;
+}
+
+function terminalBlockSample(image, left, top, width, height) {
+  const colors = [];
+  let coverage = 0;
+  for (let dy = 0; dy < height; dy++) {
+    for (let dx = 0; dx < width; dx++) {
+      const sample = pixel(image, left + dx, top + dy);
+      if (!isTerminalVisible(sample)) continue;
+      colors.push(sample);
+      coverage += sample[3] / 255;
+    }
+  }
+
+  const coverageRatio = coverage / (width * height);
+  if (coverageRatio < 0.08) {
+    return { visible: false, color: [0, 0, 0] };
+  }
+
+  return {
+    visible: true,
+    color: boostTerminalColor(averageVisibleColor(colors), coverageRatio),
+  };
 }
 
 function averageVisibleColor(colors) {
@@ -403,29 +389,19 @@ function averageVisibleColor(colors) {
     blue += color[2] * colorWeight;
     weight += colorWeight;
   }
-  return boostTerminalColor([
+  return [
     clamp(Math.round(red / weight), 0, 255),
     clamp(Math.round(green / weight), 0, 255),
     clamp(Math.round(blue / weight), 0, 255),
-  ]);
+  ];
 }
 
-function visibleEnergy([red, green, blue, alpha]) {
-  const brightness = Math.max(red, green, blue) / 255;
-  return Math.min(1, (alpha / 255) * 0.82 + brightness * 0.34);
-}
-
-function densityGlyph(density) {
-  const ramp = ' .:-=+*#%@';
-  const index = clamp(Math.round(density * (ramp.length - 1)), 0, ramp.length - 1);
-  return ramp[index];
-}
-
-function boostTerminalColor([red, green, blue]) {
+function boostTerminalColor([red, green, blue], coverageRatio = 1) {
+  const edgeLift = coverageRatio < 0.32 ? 1.18 : 1;
   const boosted = [
-    red * 1.15 + 18,
-    green * 0.72,
-    blue * 1.35 + 36,
+    red * 1.2 * edgeLift + 20,
+    green * 0.72 * edgeLift,
+    blue * 1.42 * edgeLift + 42,
   ];
   const max = Math.max(...boosted);
   if (max < 96) {

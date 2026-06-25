@@ -11,6 +11,7 @@ pub(super) struct WelcomeStyle {
 pub(super) enum WelcomeEntry<'a> {
     Metric { label: &'static str, value: &'a str },
     Section(&'static str),
+    Empty,
 }
 
 pub(super) fn push_welcome_row(
@@ -31,6 +32,7 @@ pub(super) fn push_welcome_row(
     let stat = match entry {
         WelcomeEntry::Metric { label, value } => metric_line(style, label, value, stat_budget),
         WelcomeEntry::Section(label) => section_line(style, label, stat_budget),
+        WelcomeEntry::Empty => String::new(),
     };
     push_ansi_clipped(output, &stat, stat_budget);
     output.push_str("\r\n");
