@@ -10,6 +10,12 @@ cursor color, selection readability, and the readable ANSI color slots. ANSI
 black and bright black remain intentionally subdued for terminal UI roles that
 need lower emphasis.
 
+Default terminal text is intentionally larger than a compact emulator baseline:
+28 px font size, 38 px line height, and 16 px automatic cell width. Users can
+override those metrics in the `[font]` section, and the native app supports
+browser-style runtime zoom with Control/Super `+`, Control/Super `-`,
+Control/Super `0`, and Control/Super mouse wheel.
+
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:
 
