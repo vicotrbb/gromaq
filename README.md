@@ -1,190 +1,133 @@
 # Gromaq
 
-Gromaq is a native Rust terminal emulator foundation for `gromaq.dev`.
+![Gromaq logo](images/logos/logo-on-graphite.png)
 
-The project goal is a GPU-rendered, performance-first terminal emulator that is correct enough for daily use. This repository is currently at the foundation stage: deterministic terminal state, ANSI parsing, scrollback, resize preservation, input encoding, clipboard boundaries, configuration validation, a structured test API, a PTY boundary, native GPU adapter/device bootstrap, a GPU renderer planning boundary, and benchmarks.
+Gromaq is a native Rust GPU terminal emulator for `gromaq.dev`.
 
-## Current Status
+The project is intentionally native: Rust, `winit`, `wgpu`, real PTYs, and no
+Electron, webview, React, or browser UI runtime. It is currently in an alpha
+foundation stage. The core terminal state, PTY boundary, theme system, font
+rasterization, GPU presentation path, performance smokes, and compatibility
+tests are under active development, but broader daily-driver proof across
+machines and workflows is still in progress.
 
-Implemented and tested:
+## Install
 
-- Terminal grid/state engine
-- ANSI SGR colors/text attributes including semicolon and colon-form extended colors, colon truecolor with optional color-space slots, bold, dim, italic, inverse video, slow/rapid blink, hidden, framed, encircled, overline, strikethrough, colon-form underline styles, and SGR underline color/reset; cursor movement, erase-line, erase-display, DEC autowrap/origin modes, RIS full reset handling, and DECSTR soft reset handling
-- VT editing/navigation subset: default and configurable tab stops, C0 LF/VT/FF column-preserving linefeed controls, ANSI linefeed/newline mode, C1 8-bit IND/NEL/HTS/RI/DECID equivalents, DEC special graphics G0/G1 box-drawing charsets with SI/SO shifting, DECPAM/DECPNM keypad mode, DECALN screen alignment pattern, cursor forward/backward tabs, insert/delete/erase/repeat characters, insert/replace mode, insert/delete lines with scroll-margin bounds, viewport scroll up/down including the ECMA-48 scroll-down alias with scroll-margin bounds, DECSTBM linefeed, index/next-line, and reverse-index scroll margins, cursor absolute/relative row and column positioning including DEC origin mode, cursor next/previous line movement, cursor visibility/blink mode and DECSCUSR shape/blink state, DEC cursor/rendition save/restore, and SCO/private-mode cursor/rendition save/restore
-- Terminal-generated Primary/Secondary DA, DECID, regular and DEC private DSR cursor-position/status replies, ANSI/DEC private mode-state replies including alternate-screen state, DECRQSS SGR/scroll-margin/cursor-shape status replies, and xterm window-state/window-position/pixel-size/text-area/screen size/icon-label/title reports with native PTY write-back
-- Bounded OSC icon-label/title handling, bounded OSC 8 hyperlink cell metadata, and bounded OSC 52 clipboard-text decoding
-- File-backed golden terminal-state fixtures covering ANSI styling, OSC 8 hyperlink metadata, OSC title/icon-label and clipboard state, terminal-generated status/capability responses, wide-cell state, scrollback, cursor state, performance counters, and alternate-screen restoration, with update guidance in `tests/fixtures/README.md`
-- Bracketed paste mode encoding
-- Unicode wide-cell handling, including combining marks attached to wide glyphs, emoji presentation/keycap clusters, emoji-modifier clusters, regional-indicator pairs, emoji ZWJ clusters, and ZWJ clusters with internal emoji variation selectors
-- Bounded scrollback
-- Core scrollback viewport navigation for displaying retained history through the grid and screenshot snapshot APIs
-- Long-output scrollback eviction capped to the configured scrollback limit
-- Scrollback clearing via erase-display mode 3
-- Visible-grid resize reflow for soft wraps, hard newlines, styled cells, and wide cells
-- Styled scrollback row reflow during resize
-- Dirty-region tracking for renderer scheduling
-- Native `winit` app lifecycle boundary and window attributes
-- Keyboard input encoding for common keys, navigation keys, named Space, modified named keys including Alt-modified Enter/Backspace/Escape, F1-F24 keys, Shift+Tab plus modified BackTab, control-punctuation bytes, physical numpad keys including Alt-modified numpad Enter and Alt-modified application-keypad sequences, application cursor-key mode, application keypad mode via DEC private mode and DECPAM/DECPNM, focus reports, committed platform text, paste payloads, native clipboard copy/paste shortcuts including Control+Insert, Shift+Insert, and dedicated OS clipboard keys, local Shift+PageUp/PageDown scrollback navigation, mouse reports, and native `winit` key events
-- Configuration validation, including bounded visible-grid area before allocation, bounded finite font sizes, shell program/args/cwd validation, TOML config parsing from strings/files, defaulted partial config sections, validation after load, pretty TOML serialization, deterministic config-file reload checks that preserve the last valid config on invalid changes, native app/runtime/renderer config mapping, live config-file polling for reloadable native terminal/frame/render/shell settings, and config-file native app launch
-- Structured `TerminalTestApi`
-- Deterministic performance counters for parser bytes, dirty cells, dirty-region batches, scrolls, resizes, rendered dirty-region/cell work, measured native render durations, and app-input-to-render latency
-- Structured native runtime tracing for startup, PTY pump/input, render, and clean-frame skip diagnostics
-- Deterministic one-pixel-per-cell test API screenshot capture
-- Alternate-screen enter/leave restoration including `1049` cursor/rendition save and restore
-- Visible-grid selection and copy, including displayed scrollback viewport rows
-- Host clipboard abstraction with deterministic in-memory and native OS text adapters plus a native read/write smoke command
-- Xterm default and SGR mouse reporting modes with press/release/wheel/drag/motion event encoding, plus local scrollback navigation for non-reporting wheel input and Shift+PageUp/PageDown
-- PTY boundary plus a real shell-command lifecycle test
-- Interactive `/bin/sh` PTY input/output workflow through the native PTY writer and background reader
-- Real PTY command workflow tests for available `bash` and `zsh`
-- Real PTY command lifecycle checks for available `fish`, `nushell`, `vim`, `nvim`, `tmux`, `less`, `top`, `htop`, `btop`, `ssh`, `kubectl`, and `cargo test`
-- Real PTY `cargo test -- --nocapture` fixture workflow with deterministic large output
-- Scripted interactive PTY workflow checks for available `bash`, `zsh`, `fish`, and `nushell`
-- Scripted interactive PTY workflow checks for available `vim`, `nvim`, `tmux`, and `less`
-- Real PTY `less` alternate-screen enter/exit workflow when `less` is available
-- Real PTY Vim SGR mouse-click split-window selection workflow when `vim` is available
-- Real PTY tmux SGR mouse-click pane selection workflow when `tmux` is available
-- Real PTY background-reader large-output burst drain test
-- No-argument binary dispatch to the native terminal app loop
-- Launched native app runtime starts and retains a shell PTY session
-- Non-blocking PTY output drain into terminal state and PTY input writes
-- Raw PTY byte ingestion into the terminal parser without lossy string conversion on the pump hot path
-- Native runtime terminal resize with retained PTY resize notification
-- Native window resize mapping to terminal dimensions with redraw request
-- Native keyboard, application cursor-key, application keypad, focus-report, committed text, clipboard paste, terminal paste, and default/SGR terminal mouse-report bytes written to the retained PTY session
-- OSC 52 clipboard payload write-through to the host clipboard abstraction plus a native OSC 52 clipboard smoke command
-- Native window mouse coordinates mapped to terminal grid mouse press/release/drag/motion reports
-- Native runtime alternate-screen SGR mouse press, release, drag, wheel, and any-motion reports written to the retained PTY session
-- Timed native event-loop PTY polling with output-driven redraw requests
-- PTY background-reader output-ready notifications through native event-loop user events
-- Native redraw events render dirty terminal snapshots through the renderer boundary
-- Swash-backed real-font glyph rasterization to RGBA8 atlas bitmaps
-- Renderer-side rasterized glyph cache that populates distinct planned atlas entries once and returns cached bitmaps for repeated frames
-- Native `wgpu` adapter/device bootstrap with `--gpu-info`
-- Offscreen GPU render-pass clear and readback smoke test with `--gpu-smoke`
-- GPU texture upload/readback smoke test with `--gpu-upload-smoke`
-- Deterministic glyph atlas image packing and GPU upload/readback smoke test with `--gpu-glyph-atlas-smoke`
-- Font-backed terminal text atlas packing and GPU upload/readback smoke test with `--gpu-text-atlas-smoke`
-- TOML config template output with `--config-template`
-- TOML config validation command with `--config-check <path>`
-- TOML config native app launch with `--config <path>`
-- Offscreen textured-quad GPU draw/readback smoke test with `--gpu-textured-quad-smoke`
-- Offscreen terminal text GPU draw/readback smoke test with a contrast-gated default-theme glyph sample, solid background, text-decoration, and cursor output via `--gpu-terminal-text-smoke`
-- Repeated offscreen terminal text GPU draw/readback timing smoke with `--gpu-terminal-text-perf-smoke`
-- Offscreen terminal text GPU snapshot export with `--gpu-terminal-text-snapshot <path>` for visual inspection of the default-theme smoke frame
-- Deterministic runtime clipboard paste smoke with `--runtime-clipboard-paste-smoke`
-- Deterministic runtime glyph-frame preparation smoke with `--runtime-glyph-frame-smoke`
-- Deterministic runtime glyph-frame CPU preview snapshot export with `--runtime-glyph-frame-snapshot <path>` for inspecting prepared native glyph frames before surface presentation
-- Native-window glyph-frame snapshot export with `--window-glyph-frame-snapshot <path>`, writing a PPM from the prepared frame built by the native window presentation path
-- Deterministic runtime local scrollback navigation smoke with `--runtime-scrollback-smoke`
-- Deterministic runtime performance smoke with `--runtime-perf-smoke`
-- Deterministic runtime performance-budget smoke with `--runtime-perf-budget-smoke`, enforcing render p95 within 6.94ms and input-to-render p95 within 10ms for the CPU-side input-echo path
-- Repeated deterministic runtime p95 smoke with `--runtime-perf-p95-smoke`, collecting 16 CPU-side input-echo render/input-to-render samples against the same budgets
-- Real `/bin/sh` runtime performance-budget smoke with `--runtime-real-shell-perf-budget-smoke`, enforcing the same render and input-to-render p95 budgets on a real PTY transcript
-- Real `/bin/sh` command-output redraw smoke with `--runtime-real-shell-command-output-smoke`, proving command output remains in the render plan after a post-command prompt redraw
-- Deterministic shell repaint smoke with `--runtime-repaint-smoke`, proving zsh-style prompt repaint sequences keep the command, output rows, and prompt in a full-viewport render plan
-- Real PTY external-tool workflow smoke with `--runtime-tool-workflow-smoke`, passing available `ssh -V` and `kubectl version --client=true` client/output checks and reporting absent tools as skips
-- Deterministic runtime large-output smoke with `--runtime-large-output-smoke`
-- Real `/bin/sh` large-output smoke with `--runtime-real-shell-large-output-smoke`, enforcing render p95 within the 6.94ms 144Hz frame budget while proving bounded scrollback eviction
-- Deterministic runtime state-footprint snapshot and bounded-state smoke with `--runtime-bounded-state-smoke`, including capped scrollback lines, styled cell rows, retained cell count, and retained-cell cap
-- Deterministic runtime process-memory smoke with `--runtime-memory-smoke`, including warmup RSS sampling, repeated long-output batches, capped scrollback state, and bounded RSS growth
-- Deterministic runtime continuous-output smoke with `--runtime-continuous-output-smoke`
-- Deterministic runtime alternate-screen smoke with `--runtime-alternate-screen-smoke`
-- Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
-- Deterministic runtime config reload smoke with `--runtime-config-reload-smoke`
-- Deterministic runtime text zoom smoke with `--runtime-text-zoom-smoke`
-- Deterministic default theme legibility smoke with `--theme-legibility-smoke`, reporting the built-in preset, default font metrics, foreground/background, selection, cursor, and readable ANSI contrast gates
-- Deterministic default theme preview snapshot export with `--theme-preview-snapshot <path>`, writing a PPM artifact from the native glyph-frame preparation path without launching a GPU window
-- Pixel-level default theme preview gates for high-contrast text, selection color, and cursor color before snapshot export
-- Sectioned default welcome screen with terminal, renderer, theme, and system stats before shell output
-- Visual-only FPS status overlay rendered at the frame boundary without mutating terminal-owned grid state or shell scrollback, and skipped when a shell right prompt already owns the target cells
-- Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
-- Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
-- Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
-- Deterministic runtime clean-frame idle smoke with `--runtime-idle-smoke`
-- Deterministic runtime idle CPU smoke with `--runtime-idle-cpu-smoke`, sampling process CPU while clean frames are suppressed
-- Deterministic 144Hz frame-scheduler smoke with `--frame-scheduler-smoke`
-- GPU renderer boundary with deterministic render-plan and glyph-quad generation
-- Owned surface glyph-frame preparation from render plans and rasterized glyph bitmaps
-- Deterministic `wgpu` surface configuration planner
-- Deterministic `wgpu` surface lifecycle state for configure, resize, and zero-size deferral
-- Surface configuration controller that applies configure/reconfigure actions to a surface backend
-- App-owned native window surface state for initial configuration, resize, and zero-size suspension
-- Safe `wgpu` window surface creation from `NativeGpuContext` for app handoff
-- Presentable `wgpu` surface backend path for clear-pass frame acquisition, queue submission, and present
-- Presentable `wgpu` surface backend path for supplied terminal background, glyph atlas, glyph, and cursor batches
-- Native app wiring that creates, configures, resizes, and presents prepared terminal glyph frames to the window surface
-- Bounded live native-window smoke paths for one-frame startup and multi-frame presentation timing, including warmup-excluded frame pacing diagnostics and acceptance at the active monitor refresh budget
-- Default native monospace font discovery for app-owned glyph rasterization cache
-- Deterministic 144Hz frame scheduler foundation
-- Deterministic glyph atlas cache with hit/miss/eviction metrics
-- Criterion benchmark harness
+The current installer builds from source with Cargo. It works on normal macOS
+and Linux development machines that already have Rust stable installed.
 
-Not yet complete:
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh
+```
 
-- Live desktop OS paste menu smoke
-- Hardware-backed 144Hz frame pacing proof on a 144Hz-capable display
-- Live desktop screenshot proof of windowed terminal glyph drawing
-- Broader alternate-screen mouse workflows beyond scripted Vim and tmux proof paths
-- Full VT compatibility coverage for editors, multiplexers, and pagers beyond scripted PTY workflows
-- Expanded compatibility matrix proof against shells, editors, `tmux`, `ssh`, and large-output workflows across more hosts
-- Live performance acceptance proof for 144Hz, frame time, input latency, idle CPU, and real-session memory growth
+Manual install:
 
-## Development
+```bash
+git clone https://github.com/vicotrbb/gromaq.git
+cd gromaq
+cargo install --path . --locked
+```
+
+Run:
+
+```bash
+gromaq
+```
+
+Requirements:
+
+- Rust stable with Cargo
+- macOS or a Linux desktop session with GPU drivers available to `wgpu`
+- A login shell such as `zsh`, `bash`, or another configured shell
+
+The one-command installer is deliberately small and auditable. It does not
+install Rust or system packages for you; if Cargo is missing, install Rust from
+your package manager or `https://rustup.rs`, then run the command again.
+
+## Status
+
+Implemented and covered by automated tests or deterministic smoke commands:
+
+- terminal grid/state, scrollback, resize reflow, alternate screen, selection,
+  clipboard boundaries, OSC title/label/8/52 handling, and terminal-generated
+  responses
+- broad ANSI/VT parsing coverage including SGR colors and attributes, DEC modes,
+  cursor movement, tab stops, editing commands, mouse reporting, focus reports,
+  bracketed paste, and Unicode wide/emoji cluster handling
+- native PTY runtime with shell startup, input/output pump, resize propagation,
+  large-output handling, command-output redraw proof, and external-tool workflow
+  smoke coverage for available `ssh` and `kubectl`
+- native `winit` app lifecycle, keyboard/mouse mapping, clipboard paste/copy,
+  scrollback navigation, live config reload, text zoom, frame scheduling, FPS
+  overlay, and startup welcome screen
+- Swash-backed font rasterization, glyph atlas packing/cache, `wgpu` adapter and
+  device bootstrap, offscreen GPU smokes, and presentable window-surface glyph
+  frame path
+- theme presets, opacity controls, deterministic theme snapshots, and default
+  theme legibility gates
+- Criterion benchmark harness and repository policy tests for native-only Rust,
+  public metadata, docs, CI commands, and module-size discipline
+
+Not yet proven enough to call complete:
+
+- live desktop OS paste-menu workflow
+- hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display
+- live desktop screenshot proof across supported platforms
+- wider compatibility matrix coverage across shells, editors, multiplexers,
+  pagers, remote workflows, and multiple hosts
+- release packaging beyond source install
+
+Current proof details live in
+[`documentation/compatibility.md`](documentation/compatibility.md).
+
+## Quick Start
+
+Developer run:
 
 ```bash
 cargo run
+```
+
+Useful smoke commands:
+
+```bash
 cargo run -- --gpu-info
 cargo run -- --gpu-smoke
-cargo run -- --gpu-upload-smoke
-cargo run -- --gpu-glyph-atlas-smoke
-cargo run -- --gpu-text-atlas-smoke
-cargo run -- --gpu-textured-quad-smoke
 cargo run -- --gpu-terminal-text-smoke
-cargo run -- --gpu-terminal-text-perf-smoke
-cargo run -- --gpu-terminal-text-snapshot target/gromaq-terminal-text.ppm
-cargo run -- --clipboard-smoke
-cargo run -- --config path/to/gromaq.toml
-cargo run -- --config-check path/to/gromaq.toml
-cargo run -- --config-template
-cargo run -- --osc52-clipboard-smoke
-cargo run -- --runtime-clipboard-paste-smoke
-cargo run -- --runtime-glyph-frame-smoke
-cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm
-cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame.ppm
-cargo run -- --runtime-scrollback-smoke
-cargo run -- --runtime-perf-smoke
-cargo run -- --runtime-perf-budget-smoke
-cargo run -- --runtime-perf-p95-smoke
-cargo run -- --runtime-large-output-smoke
-cargo run -- --runtime-bounded-state-smoke
-cargo run -- --runtime-memory-smoke
-cargo run -- --runtime-continuous-output-smoke
-cargo run -- --runtime-alternate-screen-smoke
-cargo run -- --runtime-reflow-smoke
-cargo run -- --runtime-config-reload-smoke
-cargo run -- --runtime-text-zoom-smoke
+cargo run -- --runtime-real-shell-smoke
+cargo run -- --runtime-real-shell-command-output-smoke
 cargo run -- --runtime-tool-workflow-smoke
-cargo run -- --theme-list
-cargo run -- --theme-export gromaq-ghostty target/gromaq-theme.toml
+cargo run -- --runtime-text-zoom-smoke
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm
 cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
-cargo run -- --runtime-focus-smoke
-cargo run -- --runtime-mouse-smoke
-cargo run -- --runtime-response-smoke
-cargo run -- --runtime-idle-smoke
-cargo run -- --runtime-idle-cpu-smoke
-cargo run -- --frame-scheduler-smoke
+```
+
+Full local verification:
+
+```bash
 cargo fmt --check
+git diff --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 cargo bench --bench parser_throughput -- --list
-cargo bench
 ```
 
-Example config:
+Run `cargo bench` when changing parser, PTY pump, render planning, glyph cache,
+rasterization, frame preparation, or other measured hot paths.
+
+## Configuration
+
+Generate a full starter config:
+
+```bash
+gromaq --config-template > gromaq.toml
+gromaq --config-check gromaq.toml
+gromaq --config gromaq.toml
+```
+
+Example:
 
 ```toml
 [terminal]
@@ -237,29 +180,29 @@ dirty_region_rendering = true
 `gromaq-ghostty` is the built-in default theme preset, with calm contrast and
 expressive ANSI colors inspired by polished Ghostty setups. `gromaq-dark` keeps
 the original polished dark palette, and `gromaq-graphite` is an alternate
-high-contrast graphite preset. A
-preset provides the baseline background, foreground, cursor, selection, ANSI
+high-contrast graphite preset.
+
+Use these commands to inspect and export themes:
+
+```bash
+cargo run -- --theme-list
+cargo run -- --theme-export gromaq-ghostty target/gromaq-theme.toml
+```
+
+A preset provides the baseline background, foreground, cursor, selection, ANSI
 palette, cursor style, cursor blinking, background/cursor/selection opacity,
 surface padding, optional cell spacing, and dim text opacity; every field in
-`[theme]` can still be overridden directly in TOML. The theme fields are
-documented in
-[`documentation/theme.md`](documentation/theme.md).
-Use `gromaq --theme-list` to inspect the built-in presets and their core
-theme tokens. Use `gromaq --theme-export <preset> <path>` to write an
-importable `[theme]` TOML block for a built-in preset.
-Use `gromaq --theme-preview-config <config> <path>` to render a deterministic
+`[theme]` can still be overridden directly in TOML. Use
+`gromaq --theme-preview-config <config> <path>` to render a deterministic
 preview snapshot from any TOML config, including background, cursor, and
 selection opacity, before adopting it.
 
 `[welcome].enabled = true` shows the built-in startup screen with sectioned
 system, terminal, renderer, and theme stats before the shell prompt. Set it to
 `false` for a blank shell-first startup. The native frame status text, such as
-FPS, is rendered as a presentation overlay and is not written into shell output.
-The overlay only draws into blank cells so right-aligned shell prompts are not
-overwritten.
-or scrollback. Use `gromaq --welcome-preview-snapshot <path>` to render a
-deterministic PPM artifact of the default welcome screen through the prepared
-glyph-frame path without launching a native GPU window.
+FPS, is rendered as a presentation overlay and is not written into shell output
+or scrollback. The overlay only draws into blank cells so right-aligned shell
+prompts are not overwritten.
 
 `font.family = "JetBrains Mono Nerd Font"` is the default preference. The
 special value `"monospace"` remains an automatic mono-stack alias: polished
@@ -267,48 +210,47 @@ user-installed terminal fonts such as JetBrains Mono Nerd Font, MesloLGS Nerd
 Font, Cascadia Mono, Iosevka Term, Geist Mono, Monaspace Neon, Fira Code, and
 Hack are preferred when present, then the app falls back to SF Mono, Menlo, and
 common Linux mono fonts. Explicit `.ttf`, `.ttc`, and `.otf` file paths are also
-supported. Supported named aliases currently include `JetBrains Mono`,
-`JetBrains Mono Nerd Font`, `MesloLGS NF`, `MesloLGS Nerd Font`,
-`Cascadia Mono`, `CaskaydiaCove Nerd Font`, `Iosevka Term`, `Geist Mono`,
-`Monaspace Neon`, `Fira Code`, `Fira Code Nerd Font`, `Hack`, `Hack Nerd Font`,
-`SF Mono`, and `Menlo`.
-`font.fallback_families = [...]` can add ordered fallback font names or explicit
-font file paths before the automatic symbol and emoji fallback stack.
-`gromaq --config-check <path>` reports the resolved primary font file and
-fallback font files, or an unresolved-font diagnostic if a named family cannot
-be found.
+supported. `font.fallback_families = [...]` can add ordered fallback font names
+or explicit font file paths before the automatic symbol and emoji fallback
+stack.
 
 Terminal text can be zoomed at runtime with browser-style shortcuts:
 Control/Super `+`, Control/Super `-`, Control/Super `0`, and Control/Super
 mouse wheel. Dedicated OS/browser `ZoomIn` and `ZoomOut` keys are also handled
 when the platform exposes them.
 
-Benchmark coverage, expected benchmark names, reproducible local run steps, and
-Criterion regression handling are documented in
-[`documentation/benchmarks.md`](documentation/benchmarks.md).
-The current module boundaries and organization rules are documented in
-[`documentation/architecture.md`](documentation/architecture.md).
-Current compatibility proof boundaries are tracked in
-[`documentation/compatibility.md`](documentation/compatibility.md).
-Test fixture conventions and live-proof boundaries are documented in
-[`TESTING.md`](TESTING.md).
+More theme details are in [`documentation/theme.md`](documentation/theme.md).
 
-Clippy warnings are treated as failures. The codebase forbids `unsafe` in the crate.
+## Documentation
 
-## Debugging
+- [`documentation/architecture.md`](documentation/architecture.md): module
+  boundaries, organization rules, and native-app architecture
+- [`documentation/benchmarks.md`](documentation/benchmarks.md): benchmark names,
+  reproducible runs, and regression handling
+- [`documentation/compatibility.md`](documentation/compatibility.md): current
+  compatibility proof and gaps
+- [`documentation/theme.md`](documentation/theme.md): theme, font, opacity, and
+  welcome-screen contract
+- [`TESTING.md`](TESTING.md): fixture conventions and live-proof boundaries
+- [`DEBUGGING.md`](DEBUGGING.md): failure investigation workflow
+- [`ROADMAP.md`](ROADMAP.md): open work toward daily-driver quality
 
-Use the structured test API for deterministic validation:
+The repository keeps one documentation tree under `documentation/` for project
+docs that do not belong at the root.
 
-- `send_keys`
-- `paste_text`
-- `resize`
-- `dump_grid`
-- `dump_scrollback`
-- `dump_cursor`
-- `dump_perf_metrics`
-- `dump_title`
-- `dump_clipboard_text`
-- `take_pending_response_bytes`
-- `screenshot`
+## Contributing
 
-`screenshot` returns a deterministic one-pixel-per-cell RGBA capture of terminal grid state for test assertions. Live GPU/window screenshot proof is still tracked separately.
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
+
+Important project rules:
+
+- native Rust only
+- no `unsafe` in the crate
+- no Electron, webview, React, or JavaScript frontend runtime
+- Clippy warnings are failures
+- behavior changes need tests and, where relevant, benchmark or smoke evidence
+- unproven compatibility or performance claims must be documented as unproven
+
+## License
+
+Gromaq is licensed under the MIT License. See [`LICENSE`](LICENSE).

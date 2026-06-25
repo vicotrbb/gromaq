@@ -3,6 +3,7 @@ use std::{fs, path::Path};
 use super::support::relative_path;
 
 const REQUIRED_CI_COMMANDS: &[&str] = &[
+    "sh -n scripts/install.sh",
     "cargo fmt --check",
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",

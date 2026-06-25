@@ -15,6 +15,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "TESTING.md",
     "DEBUGGING.md",
     "GOOD_FIRST_ISSUES.md",
+    "scripts/install.sh",
     "documentation/benchmarks.md",
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",
