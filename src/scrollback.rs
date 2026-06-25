@@ -4,7 +4,14 @@ use std::collections::VecDeque;
 
 use unicode_width::UnicodeWidthChar;
 
-use crate::cell::{CellSnapshot, Color, Style};
+use crate::cell::{CellSnapshot, Style};
+
+mod line;
+mod snapshot;
+
+use line::{ScrollbackLine, cell_width, last_visible_cell, line_width, push_reflow_cell};
+pub use snapshot::ScrollbackSnapshot;
+use snapshot::logical_line_ids_for;
 
 /// Bounded line scrollback.
 #[derive(Debug, Clone)]
@@ -152,105 +159,4 @@ impl Scrollback {
             self.push_cells_with_hard_break(current, hard_break);
         }
     }
-}
-
-#[derive(Debug, Clone)]
-struct ScrollbackLine {
-    cells: Vec<CellSnapshot>,
-    hard_break: bool,
-}
-
-impl ScrollbackLine {
-    fn text(&self) -> String {
-        line_text(&self.cells)
-    }
-}
-
-fn push_reflow_cell(target: &mut Vec<CellSnapshot>, cell: &CellSnapshot, width: usize) {
-    let mut leading = cell.clone();
-    leading.is_wide_leading = width == 2;
-    leading.is_wide_trailing = false;
-    target.push(leading);
-    if width == 2 {
-        target.push(CellSnapshot {
-            text: String::new(),
-            style: cell.style,
-            hyperlink_id: cell.hyperlink_id,
-            is_wide_leading: false,
-            is_wide_trailing: true,
-        });
-    }
-}
-
-fn line_width(line: &[CellSnapshot]) -> usize {
-    line.iter()
-        .filter(|cell| !cell.is_wide_trailing)
-        .map(cell_width)
-        .sum()
-}
-
-fn line_text(cells: &[CellSnapshot]) -> String {
-    let mut output = String::new();
-    for cell in cells {
-        if cell.is_wide_trailing {
-            continue;
-        }
-        if cell.text.is_empty() {
-            output.push(' ');
-        } else {
-            output.push_str(&cell.text);
-        }
-    }
-    output.trim_end().to_owned()
-}
-
-fn cell_width(cell: &CellSnapshot) -> usize {
-    if cell.is_wide_leading {
-        2
-    } else if cell.text.is_empty() {
-        1
-    } else {
-        line_text_width(&cell.text).clamp(1, 2)
-    }
-}
-
-fn line_text_width(text: &str) -> usize {
-    text.chars()
-        .map(|ch| UnicodeWidthChar::width(ch).unwrap_or(0).min(2))
-        .sum()
-}
-
-fn last_visible_cell(cells: &[CellSnapshot]) -> Option<usize> {
-    cells
-        .iter()
-        .rposition(|cell| !cell.text.is_empty() && !cell.is_wide_trailing)
-}
-
-fn logical_line_ids_for(hard_breaks: &[bool]) -> Vec<usize> {
-    let mut current_id = 0;
-    let mut ids = Vec::with_capacity(hard_breaks.len());
-    for hard_break in hard_breaks {
-        ids.push(current_id);
-        if *hard_break {
-            current_id += 1;
-        }
-    }
-    ids
-}
-
-/// Immutable scrollback snapshot used by tests and debug tooling.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScrollbackSnapshot {
-    /// Scrollback lines from oldest to newest.
-    pub lines: Vec<String>,
-    /// Whether each scrollback row ended a hard line break instead of a soft wrap.
-    pub hard_breaks: Vec<bool>,
-    /// Stable logical-line group for each retained physical scrollback row.
-    pub logical_line_ids: Vec<usize>,
-    /// OSC 8 hyperlink URI table indexed by non-zero cell hyperlink identifiers.
-    pub hyperlinks: Vec<String>,
-    /// Underline color table indexed by non-zero style underline color identifiers.
-    pub underline_colors: Vec<Color>,
-    /// Styled scrollback cells from oldest to newest row.
-    pub cells: Vec<Vec<CellSnapshot>>,
 }
