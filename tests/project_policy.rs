@@ -109,6 +109,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
 const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "size_px = 37.0"),
     ("README.md", "line_height_px = 51.0"),
+    ("README.md", "surface_padding_px = 14"),
     ("README.md", "cell_spacing_px = 0"),
     ("README.md", "preset = \"gromaq-ghostty\""),
     ("README.md", "cargo run -- --runtime-text-zoom-smoke"),
@@ -120,6 +121,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/theme.md", "37 px font size"),
     ("documentation/theme.md", "51 px line height"),
     ("documentation/theme.md", "21 px automatic cell width"),
+    ("documentation/theme.md", "built-in default is `14`"),
     ("documentation/theme.md", "cell_spacing_px"),
     ("documentation/theme.md", "Control/Super `+`"),
     ("documentation/theme.md", "Control/Super `0`"),
