@@ -95,6 +95,8 @@ Implemented and tested:
 - Deterministic default theme legibility smoke with `--theme-legibility-smoke`, reporting the built-in preset, default font metrics, foreground/background, selection, cursor, and readable ANSI contrast gates
 - Deterministic default theme preview snapshot export with `--theme-preview-snapshot <path>`, writing a PPM artifact from the native glyph-frame preparation path without launching a GPU window
 - Pixel-level default theme preview gates for high-contrast text, selection color, and cursor color before snapshot export
+- Sectioned default welcome screen with terminal, renderer, theme, and system stats before shell output
+- Visual-only FPS status overlay rendered at the frame boundary without mutating terminal-owned grid state or shell scrollback
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
@@ -196,7 +198,7 @@ cwd = "/tmp"
 enabled = true
 
 [font]
-family = "monospace"
+family = "JetBrains Mono Nerd Font"
 size_px = 32.0
 # cell_width_px = 18
 line_height_px = 44.0
@@ -245,11 +247,14 @@ Use `gromaq --theme-preview-config <config> <path>` to render a deterministic
 preview snapshot from any TOML config, including background, cursor, and
 selection opacity, before adopting it.
 
-`[welcome].enabled = true` shows the built-in startup screen with system,
-terminal, renderer, and theme stats before the shell prompt. Set it to `false`
-for a blank shell-first startup.
+`[welcome].enabled = true` shows the built-in startup screen with sectioned
+system, terminal, renderer, and theme stats before the shell prompt. Set it to
+`false` for a blank shell-first startup. The native frame status text, such as
+FPS, is rendered as a presentation overlay and is not written into shell output
+or scrollback.
 
-`font.family = "monospace"` uses Gromaq's automatic mono stack: polished
+`font.family = "JetBrains Mono Nerd Font"` is the default preference. The
+special value `"monospace"` remains an automatic mono-stack alias: polished
 user-installed terminal fonts such as JetBrains Mono Nerd Font, MesloLGS Nerd
 Font, Cascadia Mono, Iosevka Term, Geist Mono, Monaspace Neon, Fira Code, and
 Hack are preferred when present, then the app falls back to SF Mono, Menlo, and
