@@ -5,6 +5,11 @@ dark, high-contrast baseline tuned for native terminal screenshots and long
 daily sessions. The alternate built-in `gromaq-graphite` preset provides a
 cooler, crisper graphite palette with brighter default text.
 
+Built-in presets are guarded by automated contrast tests for foreground text,
+cursor color, selection readability, and the readable ANSI color slots. ANSI
+black and bright black remain intentionally subdued for terminal UI roles that
+need lower emphasis.
+
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:
 
