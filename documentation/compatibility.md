@@ -60,11 +60,11 @@ remaining terminal-core work.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| Native window startup | `--window-smoke` now fails when no surface frame is presented; latest local run reported 16 occluded surface acquisitions and no presented frame | Not yet proven in the current live run |
-| Native glyph-frame presentation | `--window-perf-smoke` now fails when no glyph frame is presented; latest local run reported 768 occluded surface acquisitions and no presented frame | Not yet proven in the current live run |
+| Native window startup | `cargo run -- --window-smoke` on 2026-06-25 presented one native surface frame after 4 redraw attempts with 0 timeouts and 3 occluded acquisitions | Proven in current live run |
+| Native glyph-frame presentation | `cargo run -- --window-perf-smoke` on 2026-06-25 presented 192 live glyph frames with a 2548x1568 glyph frame, 74 glyph quads, 73920 atlas bytes, and 17 occupied atlas slots | Proven in current live run |
 | Prepared native glyph-frame preview artifact | `--runtime-glyph-frame-snapshot <path>` writes a deterministic PPM from the same owned glyph-frame preparation path used before surface presentation | Proven as CPU-side preview, not a live desktop screenshot |
-| Native-window glyph-frame snapshot artifact | `--window-glyph-frame-snapshot <path>` launches the native window path and writes a deterministic PPM from the prepared frame built for surface presentation; local run wrote a 2556x1586 PPM with 60 glyph quads and 1 cursor quad | Proven as native presentation-path artifact, not an OS compositor screenshot |
-| Active-monitor frame pacing | Requires a passing `--window-perf-smoke` run with terminal glyph-frame presentation | Not yet proven in the current live run |
+| Native-window glyph-frame snapshot artifact | `cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame-current.ppm` on 2026-06-25 wrote a 2548x1568 PPM with 11985809 bytes, 60 glyph quads, and 1 cursor quad from the prepared native-window frame path | Proven as native presentation-path artifact, not an OS compositor screenshot |
+| Active-monitor frame pacing | `cargo run -- --window-perf-smoke` on 2026-06-25 collected 180 post-warmup samples on a 120000 mHz monitor, measured exact p95 9135333 ns against the 10000000 ns active-monitor budget, recorded 0 dropped frames, and reported `frame pacing accepted: true` | Proven for current 120Hz active monitor |
 | 144Hz display pacing | Requires live proof on 144Hz-capable hardware | Not yet proven |
 | Desktop screenshot of windowed glyph output | Requires live screenshot proof | Not yet proven |
 | Desktop OS paste menu | Requires native desktop workflow proof | Not yet proven |

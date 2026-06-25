@@ -22,18 +22,16 @@ The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements
 can be reported from structured counters instead of subjective observation.
-On 2026-06-24, the `--window-smoke` and `--window-perf-smoke` commands were
-tightened to fail unless the bounded native-window run records an actual surface
-presentation. The latest local `--window-smoke` run
-exited with `window smoke failed: no surface frame was presented; redraw
-attempts: 16; surface timeouts: 0; surface occluded: 16`, and the latest local
-`--window-perf-smoke` run exited with `window perf smoke failed: no glyph frame
-was presented; redraw attempts: 768; frames presented: 0; surface timeouts: 0;
-surface occluded: 768; glyph quads: 0; background quads: 0; cursor quads: 0`.
-Hardware-backed live-window glyph presentation and active-monitor frame pacing
-acceptance therefore remain unproven in the current state; the commands now
-prevent stale empty-frame pacing output from being misreported as terminal
-rendering proof.
+On 2026-06-25, `cargo run -- --window-smoke` presented one native surface frame
+after 4 redraw attempts with 0 timeouts and 3 occluded acquisitions. The same
+day, `cargo run -- --window-perf-smoke` presented 192 live glyph frames on a
+120000 mHz active monitor using FIFO present mode, reported a 2548x1568 glyph
+frame with 74 glyph quads, 73920 atlas bytes, and 17 occupied atlas slots,
+collected 180 post-warmup frame interval samples, measured exact p95 frame
+interval 9135333 ns against the 10000000 ns active-monitor budget, recorded 0
+dropped frames, and reported `frame pacing accepted: true`. This proves the
+current active-monitor live-window presentation path, not 144Hz hardware
+acceptance or OS compositor screenshot correctness.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95
