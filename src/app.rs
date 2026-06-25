@@ -18,6 +18,7 @@ mod construction;
 mod errors;
 mod fonts;
 mod handler;
+mod icon;
 mod launch;
 mod lifecycle;
 mod native_input;

@@ -59,7 +59,7 @@ Implemented and covered by automated tests or deterministic smoke commands:
   smoke coverage for available `ssh` and `kubectl`
 - native `winit` app lifecycle, keyboard/mouse mapping, clipboard paste/copy,
   scrollback navigation, live config reload, text zoom, frame scheduling, FPS
-  overlay, and startup welcome screen
+  overlay, startup welcome screen, and generated logo window icon
 - Swash-backed font rasterization, glyph atlas packing/cache, `wgpu` adapter and
   device bootstrap, offscreen GPU smokes, and presentable window-surface glyph
   frame path
@@ -76,6 +76,8 @@ Not yet proven enough to call complete:
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 - release packaging beyond source install
+- macOS `.app` bundle/Dock icon packaging; the native window icon is wired
+  through `winit`, but macOS app identity still needs bundle packaging
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).
@@ -237,6 +239,10 @@ More theme details are in [`documentation/theme.md`](documentation/theme.md).
 
 The repository keeps one documentation tree under `documentation/` for project
 docs that do not belong at the root.
+
+Source logo/avatar images and generated terminal, preview, and window-icon
+assets live under [`images/`](images/). The native app currently embeds
+`images/logos/logo-icon-128.rgba` as the `winit` window icon.
 
 ## Contributing
 

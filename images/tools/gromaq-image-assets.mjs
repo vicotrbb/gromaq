@@ -51,6 +51,12 @@ export async function generateAssetSet({
     console.log(`wrote ${name} ${image.width}x${image.height}`);
   }
 
+  if (kind === 'logo') {
+    const windowIcon = contain(trimmed, 128, 128);
+    writeFileSync(join(outputDir, 'logo-icon-128.rgba'), windowIcon.rgba);
+    console.log(`wrote logo-icon-128.rgba ${windowIcon.width}x${windowIcon.height}`);
+  }
+
   const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
   const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows, terminalMode);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';

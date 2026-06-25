@@ -7,6 +7,7 @@ use winit::window::{Window, WindowAttributes};
 use crate::config::GromaqConfig;
 
 use super::super::NativeAppError;
+use super::super::icon::gromaq_window_icon;
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 
@@ -72,6 +73,7 @@ impl NativeAppConfig {
     pub fn window_attributes(&self) -> WindowAttributes {
         Window::default_attributes()
             .with_title(self.title.clone())
+            .with_window_icon(gromaq_window_icon())
             .with_inner_size(LogicalSize::new(
                 f64::from(self.width),
                 f64::from(self.height),

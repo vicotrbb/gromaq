@@ -60,6 +60,7 @@ fn native_app_config_builds_terminal_window_attributes() {
     assert_eq!(attributes.title, "Gromaq");
     assert!(attributes.visible);
     assert!(attributes.resizable);
+    assert!(attributes.window_icon.is_some());
     assert_eq!(
         attributes.inner_size,
         Some(Size::Logical(winit::dpi::LogicalSize::new(1280.0, 800.0)))

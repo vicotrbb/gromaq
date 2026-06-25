@@ -69,10 +69,12 @@ remaining terminal-core work.
 | Native glyph-frame presentation | `cargo run -- --window-perf-smoke` on 2026-06-25 presented 192 live glyph frames with a 2548x1568 glyph frame, 74 glyph quads, 73920 atlas bytes, and 17 occupied atlas slots | Proven in current live run |
 | Prepared native glyph-frame preview artifact | `--runtime-glyph-frame-snapshot <path>` writes a deterministic PPM from the same owned glyph-frame preparation path used before surface presentation | Proven as CPU-side preview, not a live desktop screenshot |
 | Native-window glyph-frame snapshot artifact | `cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame-current.ppm` on 2026-06-25 wrote a 2548x1568 PPM with 11985809 bytes, 60 glyph quads, and 1 cursor quad from the prepared native-window frame path | Proven as native presentation-path artifact, not an OS compositor screenshot |
+| Generated logo window icon | Native app config embeds `images/logos/logo-icon-128.rgba` and sets it on `winit` `WindowAttributes`; app config tests assert the icon is present before native window creation | Proven for the cross-platform `winit` window-icon boundary |
 | Active-monitor frame pacing | `cargo run -- --window-perf-smoke` on 2026-06-25 collected 180 post-warmup samples on a 120000 mHz monitor, reported `frame interval target limited by monitor: true`, measured exact p95 8845125 ns against the 10000000 ns active-monitor budget, recorded 0 dropped frames, and reported `frame pacing accepted: true` | Proven for current 120Hz active monitor |
 | 144Hz display pacing | Requires live proof on 144Hz-capable hardware | Not yet proven |
 | Desktop screenshot of windowed glyph output | Requires live screenshot proof | Not yet proven |
 | Desktop OS paste menu | Requires native desktop workflow proof | Not yet proven |
+| macOS Dock/app bundle icon | Requires a generated `.app` bundle with icon metadata; raw `winit` window icons are not sufficient proof for macOS Dock identity | Not yet proven |
 
 ## Remaining Matrix Work
 
