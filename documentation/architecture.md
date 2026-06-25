@@ -28,9 +28,9 @@ handoff, and validation tooling.
 - `app`: native `winit` app wiring, lifecycle state, launch wrappers, config
   reload application, PTY bridge, input mapping, text zoom, font discovery,
   runtime rendering, and native window surface presentation. Handler actions,
-  shortcut policy, resize mapping, lifecycle run-report data, frame-interval
-  accounting, snapshot artifact helpers, and native font search policy live in
-  focused child modules.
+  shortcut policy, resize mapping, lifecycle window ownership, lifecycle
+  run-report data, frame-interval accounting, snapshot artifact helpers, and
+  native font search policy live in focused child modules.
 - `cli`: executable smoke commands, config utilities, GPU reports, runtime
   validation commands, and bounded live-window probes. GPU command context
   traits are isolated from GPU CLI output formatting, and config launch
