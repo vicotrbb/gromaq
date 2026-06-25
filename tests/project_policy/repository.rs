@@ -12,6 +12,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "COMPATIBILITY.md",
     "ROADMAP.md",
     "LICENSE",
+    "SECURITY.md",
     "TESTING.md",
     "DEBUGGING.md",
     "GOOD_FIRST_ISSUES.md",

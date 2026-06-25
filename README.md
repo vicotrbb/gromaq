@@ -283,6 +283,8 @@ More theme details are in [`documentation/theme.md`](documentation/theme.md).
 - [`TESTING.md`](TESTING.md): fixture conventions and live-proof boundaries
 - [`DEBUGGING.md`](DEBUGGING.md): failure investigation workflow
 - [`ROADMAP.md`](ROADMAP.md): open work toward daily-driver quality
+- [`SECURITY.md`](SECURITY.md): vulnerability reporting scope and private
+  disclosure path
 
 The repository keeps one documentation tree under `documentation/` for project
 docs that do not belong at the root.
