@@ -22,6 +22,7 @@ remaining terminal-core work.
 | `vim` launch workflow | Real PTY command workflow when available | Conditional on host binary |
 | `vim` SGR mouse split selection | Scripted real PTY workflow when available | Conditional on host binary |
 | `nvim` launch workflow | Real PTY command workflow when available | Conditional on host binary |
+| `nvim` SGR mouse split selection | Scripted real PTY workflow when available | Conditional on host binary |
 | `tmux` launch workflow | Real PTY command workflow when available | Conditional on host binary |
 | `tmux` SGR mouse pane selection | Scripted real PTY workflow when available | Conditional on host binary |
 | `less` launch workflow | Real PTY command workflow when available | Conditional on host binary |
