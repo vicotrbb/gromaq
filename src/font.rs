@@ -4,7 +4,7 @@ use swash::scale::image::Content;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::shape::ShapeContext;
 use swash::zeno::Format;
-use swash::{CacheKey, FontRef, GlyphId};
+use swash::{CacheKey, FontRef};
 use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
 
@@ -12,6 +12,7 @@ use crate::renderer::{GlyphBitmap, GlyphEntry};
 
 mod cache;
 mod image;
+mod shaping;
 
 pub use cache::{RasterizedGlyphBatch, RasterizedGlyphCache};
 use image::{RenderedGlyph, compose_rendered_glyphs, image_to_rgba8};
@@ -152,30 +153,6 @@ impl FontRasterizer {
         compose_rendered_glyphs(entry, &rendered).ok_or(FontRasterError::RenderFailed(first_char))
     }
 
-    fn shape_text(&mut self, text: &str, size_px: f32) -> Vec<ShapedGlyph> {
-        let font = FontRef {
-            data: &self.font_bytes,
-            offset: self.offset,
-            key: self.key,
-        };
-        let mut shaper = self.shape_context.builder(font).size(size_px).build();
-        shaper.add_str(text);
-
-        let mut glyphs = Vec::new();
-        let mut pen_x = 0.0;
-        shaper.shape_with(|cluster| {
-            for glyph in cluster.glyphs {
-                glyphs.push(ShapedGlyph {
-                    id: glyph.id,
-                    x: pen_x + glyph.x,
-                    y: glyph.y,
-                });
-                pen_x += glyph.advance;
-            }
-        });
-        glyphs
-    }
-
     fn missing_visible_char(&self, text: &str) -> Option<char> {
         let font = FontRef {
             data: &self.font_bytes,
@@ -186,13 +163,6 @@ impl FontRasterizer {
         text.chars()
             .find(|ch| UnicodeWidthChar::width(*ch).unwrap_or(0) > 0 && charmap.map(*ch) == 0)
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-struct ShapedGlyph {
-    id: GlyphId,
-    x: f32,
-    y: f32,
 }
 
 #[cfg(test)]
