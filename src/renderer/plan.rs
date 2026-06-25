@@ -4,17 +4,18 @@ use crate::config::{DEFAULT_ANSI_COLORS_RGB8, DEFAULT_DIM_OPACITY, DEFAULT_SELEC
 use crate::dirty::DirtyRegion;
 use crate::error::Result;
 use crate::grid::GridSnapshot;
-use crate::selection::SelectionRange;
 use crate::terminal::CursorSnapshot;
 
 use super::atlas::{GlyphAtlas, GlyphKey};
 use super::color::style_background_rgba8;
+use backgrounds::{append_background_fill, is_selected};
 use clipping::clipped_dirty_region;
 use decorations::append_cell_decorations;
 pub use types::{
     PlannedBackground, PlannedGlyph, PlannedTextDecoration, RenderPlan, TextDecorationKind,
 };
 
+mod backgrounds;
 mod clipping;
 mod decorations;
 #[cfg(test)]
@@ -165,52 +166,4 @@ impl RenderPlanner {
             glyphs,
         })
     }
-}
-
-fn is_selected(selection: Option<SelectionRange>, row: u16, col: u16) -> bool {
-    let Some(selection) = selection else {
-        return false;
-    };
-    row >= selection.start.row
-        && row <= selection.end.row
-        && col >= selection_start_col(selection, row)
-        && col <= selection_end_col(selection, row)
-}
-
-fn selection_start_col(selection: SelectionRange, row: u16) -> u16 {
-    if row == selection.start.row {
-        selection.start.col
-    } else {
-        0
-    }
-}
-
-fn selection_end_col(selection: SelectionRange, row: u16) -> u16 {
-    if row == selection.end.row {
-        selection.end.col
-    } else {
-        u16::MAX
-    }
-}
-
-fn append_background_fill(
-    backgrounds: &mut Vec<PlannedBackground>,
-    row: u16,
-    col: u16,
-    color_rgba8: [u8; 4],
-) {
-    if let Some(last) = backgrounds.last_mut()
-        && last.row == row
-        && last.col.saturating_add(last.cols) == col
-        && last.color_rgba8 == color_rgba8
-    {
-        last.cols = last.cols.saturating_add(1);
-        return;
-    }
-    backgrounds.push(PlannedBackground {
-        row,
-        col,
-        cols: 1,
-        color_rgba8,
-    });
 }
