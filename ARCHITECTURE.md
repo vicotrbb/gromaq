@@ -37,7 +37,7 @@ Terminal code is organized as a state-machine parent plus focused helper modules
 
 Renderer code is organized as a module tree rather than a single file. `renderer::mod` keeps the public renderer boundary, render-plan, and surface presentation APIs, `renderer::atlas` owns deterministic glyph atlas keying, storage, metrics, and RGBA8 atlas image packing, `renderer::quads` owns CPU-side background, text-decoration, cursor, and glyph quad planning, with text-decoration stroke/segment geometry isolated under `renderer::quads::text_decoration::geometry`, `renderer::scheduler` owns deterministic frame pacing decisions and metrics, `renderer::color` owns private terminal color/style resolution for backgrounds, decorations, and glyph tinting, and `renderer::surface` owns deterministic surface configuration and resize lifecycle planning. Future renderer splits should preserve the public `gromaq::renderer::*` API while moving cohesive private implementation areas into focused submodules.
 
-Rust source files are kept under the repository-enforced 216-line review cap.
+Rust source files are kept under the repository-enforced 214-line review cap.
 When a module approaches that limit, split tests, stable data types, or cohesive
 behavior into child modules before adding new responsibilities.
 

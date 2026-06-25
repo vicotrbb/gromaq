@@ -57,5 +57,5 @@ Prefer small vertical modules over large mixed-responsibility files. When a file
 starts mixing durable data types, platform glue, and behavior, split stable data
 types into a sibling module first, then move behavior only when tests show a
 clear boundary. The repository policy test currently caps Rust source files at
-216 lines, which makes module growth visible before it turns into a maintenance
+214 lines, which makes module growth visible before it turns into a maintenance
 problem. Avoid cosmetic reshuffles that do not reduce ownership confusion.
