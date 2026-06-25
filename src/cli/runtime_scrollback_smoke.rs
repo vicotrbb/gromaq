@@ -12,6 +12,13 @@ use crate::app::{
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
 use crate::renderer::{RendererConfig, WgpuRenderer};
 
+mod output;
+
+use output::{
+    RuntimeScrollbackSmokeReport, runtime_scrollback_smoke_error, runtime_scrollback_smoke_failure,
+    runtime_scrollback_smoke_success,
+};
+
 const RUNTIME_SCROLLBACK_SMOKE_TEXT: &str = "one\r\ntwo\r\nthree\r\nfour\r\nfive\r\nsix";
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -144,25 +151,24 @@ pub(super) fn runtime_scrollback_smoke_exit() -> CliExit {
         );
     }
 
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime scrollback smoke: ok\npumped bytes: {}\nlocal scroll rows: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells max: {}\nscrolled visible lines: {}|{}|{}\nlive visible lines: {}|{}|{}\npty input writes: {}\n",
-            pumped_bytes,
-            local_scroll_rows,
-            runtime_perf.rendered_frames,
-            runtime_perf.rendered_dirty_regions,
-            runtime_perf.rendered_dirty_cells_max,
+    runtime_scrollback_smoke_success(&RuntimeScrollbackSmokeReport {
+        pumped_bytes,
+        local_scroll_rows,
+        rendered_frames: runtime_perf.rendered_frames,
+        rendered_dirty_regions: runtime_perf.rendered_dirty_regions,
+        rendered_dirty_cells_max: runtime_perf.rendered_dirty_cells_max,
+        scrolled_lines: [
             scrolled.line_text(0),
             scrolled.line_text(1),
             scrolled.line_text(2),
+        ],
+        live_lines: [
             live_after.line_text(0),
             live_after.line_text(1),
             live_after.line_text(2),
-            runtime_perf.pty_input_writes
-        ),
-        stderr: String::new(),
-    }
+        ],
+        pty_input_writes: runtime_perf.pty_input_writes,
+    })
 }
 
 fn render_runtime_scrollback_frame(
@@ -170,20 +176,4 @@ fn render_runtime_scrollback_frame(
     renderer: &mut WgpuRenderer,
 ) -> Result<bool, crate::error::GromaqError> {
     runtime.render_terminal_frame(renderer)
-}
-
-fn runtime_scrollback_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime scrollback smoke failed: {error}\n"),
-    }
-}
-
-fn runtime_scrollback_smoke_failure(reason: &str) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime scrollback smoke failed: {reason}\n"),
-    }
 }
