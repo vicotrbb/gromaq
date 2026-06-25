@@ -10,34 +10,35 @@ remaining terminal-core work.
 | Workflow | Current proof | Status |
 | --- | --- | --- |
 | `/bin/sh` interactive input/output | Native PTY smoke, real-shell command-output smoke, and app runtime tests | Proven in CI/local tests |
-| `bash` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
-| `zsh` command lifecycle and repaint preservation | Real PTY command workflow plus native redraw preservation test and `cargo run -- --runtime-repaint-smoke` deterministic zsh-style prompt repaint proof | Conditional on host binary for real PTY lifecycle; deterministic repaint proof is proven |
-| `fish` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
-| `nushell` command lifecycle | Real PTY command workflow when available | Conditional on host binary |
+| `bash` command lifecycle | Real PTY command and interactive workflows when available. On 2026-06-25, `cargo test --test pty` passed the current-host bash command and interactive checks. | Proven on current host; conditional elsewhere |
+| `zsh` command lifecycle and repaint preservation | Real PTY command workflow plus native redraw preservation test and `cargo run -- --runtime-repaint-smoke` deterministic zsh-style prompt repaint proof. On 2026-06-25, `cargo test --test pty` passed the current-host zsh command and interactive checks. | Proven on current host; deterministic repaint proof is proven |
+| `fish` command lifecycle | Real PTY command and interactive workflows when available. On 2026-06-25, the current host did not have `fish` on PATH, so the conditional PTY tests skipped this workflow. | Conditional on host binary; not proven on current host |
+| `nushell` command lifecycle | Real PTY command and interactive workflows when available. On 2026-06-25, the current host did not have `nu` on PATH, so the conditional PTY tests skipped this workflow. | Conditional on host binary; not proven on current host |
 
 ## Editors, Pagers, and Multiplexers
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| `vim` launch workflow | Real PTY command workflow when available | Conditional on host binary |
-| `vim` alternate-screen enter/exit | Scripted real PTY workflow when available | Conditional on host binary |
-| `vim` SGR mouse split selection | Scripted real PTY workflow when available | Conditional on host binary |
-| `nvim` launch workflow | Real PTY command workflow when available | Conditional on host binary |
-| `nvim` alternate-screen enter/exit | Scripted real PTY workflow when available | Conditional on host binary |
-| `nvim` SGR mouse split selection | Scripted real PTY workflow when available | Conditional on host binary |
-| `tmux` launch workflow | Real PTY command workflow when available | Conditional on host binary |
-| `tmux` SGR mouse pane selection | Scripted real PTY workflow when available | Conditional on host binary |
-| `less` launch workflow | Real PTY command workflow when available | Conditional on host binary |
-| `less` alternate-screen enter/exit | Scripted real PTY workflow when available | Conditional on host binary |
+| `vim` launch workflow | Real PTY command workflow when available. On 2026-06-25, `cargo test --test pty` passed current-host `vim --version` and scripted edit workflows. | Proven on current host; conditional elsewhere |
+| `vim` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-25, `cargo test --test pty` passed current-host Vim alternate-screen enter/exit proof. | Proven on current host; conditional elsewhere |
+| `vim` SGR mouse split selection | Scripted real PTY workflow when available. On 2026-06-25, `cargo test --test pty` passed current-host Vim SGR mouse split-window selection proof. | Proven on current host; conditional elsewhere |
+| `nvim` launch workflow | Real PTY command workflow when available. On 2026-06-25, the current host did not have `nvim` on PATH, so the conditional PTY tests skipped this workflow. | Conditional on host binary; not proven on current host |
+| `nvim` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-25, the current host did not have `nvim` on PATH, so the conditional PTY tests skipped this workflow. | Conditional on host binary; not proven on current host |
+| `nvim` SGR mouse split selection | Scripted real PTY workflow when available. On 2026-06-25, the current host did not have `nvim` on PATH, so the conditional PTY tests skipped this workflow. | Conditional on host binary; not proven on current host |
+| `tmux` launch workflow | Real PTY command and interactive pane workflows when available. On 2026-06-25, `cargo test --test pty` passed current-host `tmux -V` and interactive pane checks. | Proven on current host; conditional elsewhere |
+| `tmux` SGR mouse pane selection | Scripted real PTY workflow when available. On 2026-06-25, `cargo test --test pty` passed current-host tmux SGR mouse pane-selection proof. | Proven on current host; conditional elsewhere |
+| `less` launch workflow | Real PTY command and interactive search workflows when available. On 2026-06-25, `cargo test --test pty` passed current-host `less --version` and search checks. | Proven on current host; conditional elsewhere |
+| `less` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-25, `cargo test --test pty` passed current-host less alternate-screen enter/exit proof. | Proven on current host; conditional elsewhere |
 
 ## CLI and TUI Programs
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| `top`, `htop`, `btop` launch workflows | Real PTY command workflows when available | Conditional on host binaries |
+| `top` launch workflow | Real PTY command workflow when available. On 2026-06-25, `cargo test --test pty` passed the current-host `top` snapshot check. | Proven on current host; conditional elsewhere |
+| `htop`, `btop` launch workflows | Real PTY command workflows when available. On 2026-06-25, the current host did not have `htop` or `btop` on PATH, so the conditional PTY tests skipped these workflows. | Conditional on host binaries; not proven on current host |
 | `ssh` launch workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `ssh -V` in a native PTY and requires `OpenSSH` output when the binary is present. On 2026-06-25 this smoke passed on the current host with 31 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
 | `kubectl` output workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `kubectl version --client=true` in a native PTY and requires `Client` output when the binary is present. On 2026-06-25 this smoke passed on the current host with 52 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
-| `cargo test -- --nocapture` output | Real PTY fixture workflow with deterministic large output | Proven when Cargo is available |
+| `cargo test -- --nocapture` output | Real PTY fixture workflow with deterministic large output. On 2026-06-25, `cargo test --test pty` passed current-host quiet and large-output cargo fixture checks. | Proven on current host |
 
 ## Terminal Features
 
@@ -75,10 +76,10 @@ remaining terminal-core work.
 
 ## Remaining Matrix Work
 
-- Run the same scripted workflows on a broader host matrix.
+- Run the current-host scripted workflows on a broader host matrix.
 - Add live screenshot artifacts for the native window path.
 - Add 144Hz hardware proof on a 144Hz-capable monitor.
-- Expand editor/multiplexer interaction beyond launch and current scripted mouse
-  workflows.
+- Expand editor/multiplexer interaction beyond the current scripted edit,
+  alternate-screen, search, and mouse workflows.
 - Expand `ssh` and `kubectl` beyond current safe local client/version commands
   into real but safe target scenarios.
