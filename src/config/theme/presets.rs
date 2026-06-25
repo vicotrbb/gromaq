@@ -10,6 +10,8 @@ use super::{
 
 /// Name of the alternate high-contrast graphite theme.
 pub const GRAPHITE_THEME_PRESET: &str = "gromaq-graphite";
+/// Name of the Ghostty-inspired dark terminal theme.
+pub const GHOSTTY_THEME_PRESET: &str = "gromaq-ghostty";
 
 /// Named built-in terminal theme preset.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -20,6 +22,8 @@ pub enum ThemePresetSetting {
     GromaqDark,
     /// Cooler graphite theme with a brighter foreground and crisp ANSI colors.
     GromaqGraphite,
+    /// Ghostty-inspired dark theme with calm contrast and expressive ANSI colors.
+    GromaqGhostty,
 }
 
 impl ThemeSettings {
@@ -60,6 +64,25 @@ impl ThemeSettings {
                 surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
                 dim_opacity: 0.7,
             },
+            ThemePresetSetting::GromaqGhostty => Self {
+                preset,
+                background: "#101216".to_owned(),
+                foreground: "#eef4fb".to_owned(),
+                cursor: "#f6c177".to_owned(),
+                selection: "#2f3b52".to_owned(),
+                cursor_style: CursorStyleSetting::default(),
+                cursor_blinking: true,
+                ansi: [
+                    "#242933", "#ff6b7a", "#9ece6a", "#e0af68", "#7aa2f7", "#bb9af7", "#7dcfff",
+                    "#c8d3e5", "#5f667a", "#ff8fa3", "#b9f27c", "#ffd98a", "#9dbdff", "#d7afff",
+                    "#9ee7ff", "#f7fbff",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+                surface_padding_px: DEFAULT_SURFACE_PADDING_PX,
+                dim_opacity: 0.68,
+            },
         }
     }
 }
@@ -69,5 +92,6 @@ pub fn format_theme_preset(preset: ThemePresetSetting) -> &'static str {
     match preset {
         ThemePresetSetting::GromaqDark => DEFAULT_THEME_PRESET,
         ThemePresetSetting::GromaqGraphite => GRAPHITE_THEME_PRESET,
+        ThemePresetSetting::GromaqGhostty => GHOSTTY_THEME_PRESET,
     }
 }

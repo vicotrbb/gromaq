@@ -69,6 +69,7 @@ fn built_in_theme_presets_keep_core_terminal_colors_legible() {
     for preset in [
         ThemePresetSetting::GromaqDark,
         ThemePresetSetting::GromaqGraphite,
+        ThemePresetSetting::GromaqGhostty,
     ] {
         let theme = ThemeSettings::from_preset(preset);
         let background = theme.background_rgb8().unwrap();
@@ -340,6 +341,26 @@ fn theme_toml_config_applies_named_graphite_preset() {
     assert_eq!(config.theme.dim_opacity, 0.7);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [31, 38, 48]);
     assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [255, 255, 255]);
+}
+
+#[test]
+fn theme_toml_config_applies_named_ghostty_preset() {
+    let config = GromaqConfig::from_toml_str(
+        r##"
+        [theme]
+        preset = "gromaq-ghostty"
+        "##,
+    )
+    .unwrap();
+
+    assert_eq!(config.theme.preset, ThemePresetSetting::GromaqGhostty);
+    assert_eq!(config.theme.background_rgb8().unwrap(), [16, 18, 22]);
+    assert_eq!(config.theme.foreground_rgb8().unwrap(), [238, 244, 251]);
+    assert_eq!(config.theme.cursor_rgb8().unwrap(), [246, 193, 119]);
+    assert_eq!(config.theme.selection_rgb8().unwrap(), [47, 59, 82]);
+    assert_eq!(config.theme.dim_opacity, 0.68);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[0], [36, 41, 51]);
+    assert_eq!(config.theme.ansi_rgb8().unwrap()[15], [247, 251, 255]);
 }
 
 #[test]

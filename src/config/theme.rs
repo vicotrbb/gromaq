@@ -6,7 +6,9 @@ use crate::error::{GromaqError, Result};
 
 mod presets;
 
-pub use presets::{GRAPHITE_THEME_PRESET, ThemePresetSetting, format_theme_preset};
+pub use presets::{
+    GHOSTTY_THEME_PRESET, GRAPHITE_THEME_PRESET, ThemePresetSetting, format_theme_preset,
+};
 
 /// Maximum supported visual surface padding in physical pixels.
 pub const MAX_SURFACE_PADDING_PX: u16 = 512;
