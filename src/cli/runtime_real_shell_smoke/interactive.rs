@@ -1,6 +1,7 @@
 use std::thread;
 use std::time::Instant;
 
+mod output;
 #[cfg(test)]
 mod tests;
 
@@ -13,6 +14,10 @@ use super::{
     REAL_SHELL_EXIT, REAL_SHELL_INPUT, REAL_SHELL_READY, REAL_SHELL_SMOKE_COLS,
     REAL_SHELL_SMOKE_POLL_INTERVAL, REAL_SHELL_SMOKE_ROWS, REAL_SHELL_SMOKE_TIMEOUT,
 };
+use output::{
+    real_shell_perf_budget_smoke_success, real_shell_smoke_success,
+    runtime_real_shell_perf_budget_smoke_error, runtime_real_shell_smoke_error,
+};
 
 const REAL_SHELL_RENDER_P95_BUDGET_NS: u64 = 6_940_000;
 const REAL_SHELL_INPUT_TO_RENDER_P95_BUDGET_NS: u64 = 10_000_000;
@@ -22,25 +27,7 @@ pub(in crate::cli) fn runtime_real_shell_smoke_exit() -> CliExit {
         Ok(probe) => probe,
         Err(error) => return runtime_real_shell_smoke_error(error),
     };
-
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime real-shell smoke: ok\nshell: /bin/sh\npumped bytes: {}\npty input writes: {}\npty input bytes: {}\nrendered frames: {}\nrendered dirty regions: {}\nrendered dirty cells max: {}\nready observed: {}\ninput echo observed: {}\nexit echo observed: {}\nrender p95 ns: {}\ninput-to-render p95 ns: {}\n",
-            probe.pumped_bytes,
-            probe.pty_input_writes,
-            probe.pty_input_bytes,
-            probe.rendered_frames,
-            probe.rendered_dirty_regions,
-            probe.rendered_dirty_cells_max,
-            probe.ready_observed,
-            probe.input_echo_observed,
-            probe.exit_echo_observed,
-            probe.render_p95_ns,
-            probe.input_to_render_p95_ns
-        ),
-        stderr: String::new(),
-    }
+    real_shell_smoke_success(&probe)
 }
 
 pub(in crate::cli) fn runtime_real_shell_perf_budget_smoke_exit() -> CliExit {
@@ -49,19 +36,7 @@ pub(in crate::cli) fn runtime_real_shell_perf_budget_smoke_exit() -> CliExit {
         Err(error) => return runtime_real_shell_perf_budget_smoke_error(error),
     };
     let Some(failure) = real_shell_perf_budget_failure(&probe) else {
-        return CliExit {
-            code: 0,
-            stdout: format!(
-                "runtime real-shell perf budget smoke: ok\nshell: /bin/sh\npumped bytes: {}\nrendered frames: {}\nrender p95 ns: {}\nrender p95 budget ns: {}\ninput-to-render p95 ns: {}\ninput-to-render p95 budget ns: {}\n",
-                probe.pumped_bytes,
-                probe.rendered_frames,
-                probe.render_p95_ns,
-                REAL_SHELL_RENDER_P95_BUDGET_NS,
-                probe.input_to_render_p95_ns,
-                REAL_SHELL_INPUT_TO_RENDER_P95_BUDGET_NS
-            ),
-            stderr: String::new(),
-        };
+        return real_shell_perf_budget_smoke_success(&probe);
     };
 
     CliExit {
@@ -161,20 +136,4 @@ fn real_shell_perf_budget_failure(probe: &RuntimeRealShellSmokeProbe) -> Option<
         return Some("real-shell input-to-render p95 exceeded latency budget");
     }
     None
-}
-
-fn runtime_real_shell_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime real-shell smoke failed: {error}\n"),
-    }
-}
-
-fn runtime_real_shell_perf_budget_smoke_error(error: impl std::fmt::Display) -> CliExit {
-    CliExit {
-        code: 1,
-        stdout: String::new(),
-        stderr: format!("runtime real-shell perf budget smoke failed: {error}\n"),
-    }
 }
