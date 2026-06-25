@@ -19,6 +19,9 @@ jobs:
       - run: cargo test --all
       - run: cargo run -- --theme-legibility-smoke
       - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
+      - run: |
+          printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' > target/gromaq-theme-preview-config-ci.toml
+          cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm
       - run: cargo run -- --runtime-clipboard-paste-smoke
       - run: cargo run -- --runtime-glyph-frame-smoke
       - run: cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm
