@@ -6,7 +6,7 @@ use gromaq::native_gpu::{
     GpuTextAtlasUploadRunner, GpuTextureUploadRunner, GpuTexturedQuadRunner, NativeGpuContext,
 };
 
-use super::skip_benchmark;
+use crate::support::skip_benchmark;
 
 pub(super) fn gpu_textured_quad_draw_readback(c: &mut Criterion) {
     let Some(context) = native_gpu_context_for_benchmark(c, "gpu_textured_quad_draw_readback")
