@@ -21,6 +21,9 @@ Control/Super `0`, Control/Super mouse wheel, and dedicated OS/browser
 `cargo run -- --runtime-text-zoom-smoke` verifies that default metrics zoom
 from 32/18/44 px font/cell/line-height to 37/21/51 px, reduce the visible
 grid, and reset back to the default metrics without a live GPU window.
+`cargo run -- --theme-legibility-smoke` verifies the shipped default theme from
+the CLI, including default font metrics, foreground/background contrast,
+selection contrast, cursor contrast, and readable ANSI color contrast gates.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:

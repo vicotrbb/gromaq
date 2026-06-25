@@ -54,7 +54,7 @@ remaining terminal-core work.
 | Mouse reporting modes | Runtime mouse smoke and alternate-screen mouse tests | Proven for default and SGR covered paths |
 | Shell prompt repaint output retention | App redraw tests and `cargo run -- --runtime-repaint-smoke` prove zsh-style prompt repaint sequences preserve the command line, two output rows, and repainted prompt in a full-viewport render plan after the swapchain-clear boundary | Proven for covered repaint sequence |
 | Theme color propagation | Renderer config mapping plus prepared-frame tests for background, ANSI foreground, selection, and cursor colors | Proven for covered paths |
-| Built-in theme legibility | Config contrast tests for foreground, cursor, selection, and readable ANSI slots across shipped presets, plus prepared-frame preview pixel tests for default padding, foreground glyph coverage, cursor color, and unclipped cell edges | Proven for shipped presets and default prepared-frame path |
+| Built-in theme legibility | Config contrast tests for foreground, cursor, selection, and readable ANSI slots across shipped presets, `cargo run -- --theme-legibility-smoke` CLI proof for the shipped default preset and default text metrics, plus prepared-frame preview pixel tests for default padding, foreground glyph coverage, cursor color, and unclipped cell edges | Proven for shipped presets and default prepared-frame path |
 | Default terminal font stack | Native font resolver tests for polished user fonts, including JetBrains Mono Nerd Font and MesloLGS Nerd Font, before system fallbacks | Proven for covered paths |
 
 ## Live Native Window Proof

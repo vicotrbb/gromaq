@@ -92,6 +92,7 @@ Implemented and tested:
 - Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
 - Deterministic runtime config reload smoke with `--runtime-config-reload-smoke`
 - Deterministic runtime text zoom smoke with `--runtime-text-zoom-smoke`
+- Deterministic default theme legibility smoke with `--theme-legibility-smoke`, reporting the built-in preset, default font metrics, foreground/background, selection, cursor, and readable ANSI contrast gates
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
