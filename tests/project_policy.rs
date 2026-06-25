@@ -76,6 +76,8 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo test --all",
     "cargo run -- --theme-legibility-smoke",
     "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm",
+    "cargo run -- --runtime-repaint-smoke",
+    "cargo run -- --runtime-real-shell-command-output-smoke",
     "cargo run -- --runtime-real-shell-perf-budget-smoke",
     "cargo run -- --runtime-real-shell-large-output-smoke",
     "cargo bench --bench parser_throughput -- --list",
