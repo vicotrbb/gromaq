@@ -16,7 +16,8 @@ Default terminal text is intentionally larger than a compact emulator baseline:
 32 px font size, 44 px line height, and 18 px automatic cell width. Users can
 override those metrics in the `[font]` section, and the native app supports
 browser-style runtime zoom with Control/Super `+`, Control/Super `-`,
-Control/Super `0`, and Control/Super mouse wheel.
+Control/Super `0`, Control/Super mouse wheel, and dedicated OS/browser
+`ZoomIn` or `ZoomOut` keys when the platform exposes them.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:

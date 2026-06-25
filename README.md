@@ -234,7 +234,8 @@ be found.
 
 Terminal text can be zoomed at runtime with browser-style shortcuts:
 Control/Super `+`, Control/Super `-`, Control/Super `0`, and Control/Super
-mouse wheel.
+mouse wheel. Dedicated OS/browser `ZoomIn` and `ZoomOut` keys are also handled
+when the platform exposes them.
 
 Benchmark coverage, expected benchmark names, reproducible local run steps, and
 Criterion regression handling are documented in

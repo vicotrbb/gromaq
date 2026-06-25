@@ -50,7 +50,7 @@ remaining terminal-core work.
 | Scrollback retention and viewport navigation | Unit/integration tests and runtime scrollback smoke | Proven |
 | Selection/copy and OSC 52 clipboard | Unit tests and native clipboard smoke paths | Proven for covered paths |
 | Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, and native shortcuts, including dedicated Paste, Shift+Insert, Control+V, and Super+V paste routing | Proven for covered keys |
-| Browser-style terminal text zoom | Native shortcut mapping tests plus native app renderer/grid reconfiguration tests for increase, decrease, reset, and modifier-wheel zoom policy | Proven for covered controls |
+| Browser-style terminal text zoom | Native shortcut mapping tests plus native app renderer/grid reconfiguration tests for increase, decrease, reset, shifted plus, modifier-wheel, and dedicated OS/browser zoom-key policy | Proven for covered controls |
 | Mouse reporting modes | Runtime mouse smoke and alternate-screen mouse tests | Proven for default and SGR covered paths |
 | Theme color propagation | Renderer config mapping plus prepared-frame tests for background, ANSI foreground, selection, and cursor colors | Proven for covered paths |
 | Built-in theme legibility | Config contrast tests for foreground, cursor, selection, and readable ANSI slots across shipped presets, plus prepared-frame preview pixel tests for default padding, foreground glyph coverage, cursor color, and unclipped cell edges | Proven for shipped presets and default prepared-frame path |
