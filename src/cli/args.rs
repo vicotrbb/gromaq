@@ -67,6 +67,8 @@ pub(super) enum CliCommand<'a> {
     RuntimeConfigReloadSmoke,
     /// Runtime text zoom smoke command.
     RuntimeTextZoomSmoke,
+    /// Runtime full-viewport repaint smoke command.
+    RuntimeRepaintSmoke,
     /// Runtime focus smoke command.
     RuntimeFocusSmoke,
     /// Runtime mouse smoke command.
@@ -127,6 +129,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-reflow-smoke" => Some(CliCommand::RuntimeReflowSmoke),
         "--runtime-config-reload-smoke" => Some(CliCommand::RuntimeConfigReloadSmoke),
         "--runtime-text-zoom-smoke" => Some(CliCommand::RuntimeTextZoomSmoke),
+        "--runtime-repaint-smoke" => Some(CliCommand::RuntimeRepaintSmoke),
         "--runtime-focus-smoke" => Some(CliCommand::RuntimeFocusSmoke),
         "--runtime-mouse-smoke" => Some(CliCommand::RuntimeMouseSmoke),
         "--runtime-response-smoke" => Some(CliCommand::RuntimeResponseSmoke),

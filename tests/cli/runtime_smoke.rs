@@ -99,6 +99,26 @@ fn runtime_glyph_frame_snapshot_cli_writes_preview_without_gpu_bootstrap() {
 }
 
 #[test]
+fn runtime_repaint_smoke_cli_preserves_shell_output_after_prompt_repaint() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-repaint-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime repaint smoke: ok"));
+    assert!(exit.stdout.contains("full viewport repainted: true"));
+    assert!(exit.stdout.contains("command preserved: true"));
+    assert!(exit.stdout.contains("first output row preserved: true"));
+    assert!(exit.stdout.contains("second output row preserved: true"));
+    assert!(exit.stdout.contains("prompt preserved: true"));
+    assert!(exit.stdout.contains("planned glyphs:"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn runtime_scrollback_smoke_cli_reports_local_history_navigation_without_gpu_bootstrap() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
