@@ -4,10 +4,12 @@ use super::{
 };
 
 mod color;
+mod geometry;
 
 use color::{
     blend_channel, is_grayscale, linear_f32_rgba_to_srgb8, linear_f64_rgba_to_srgb8, multiply_u8,
 };
+use geometry::{PixelRect, clipped_quad_rect};
 
 /// Deterministic CPU preview of a prepared surface glyph frame.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -228,37 +230,4 @@ fn rgba_offset(width: u32, x: u32, y: u32) -> std::result::Result<usize, Surface
             "prepared frame preview pixel offset is too large".to_owned(),
         )
     })
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct PixelRect {
-    x0: u32,
-    y0: u32,
-    x1: u32,
-    y1: u32,
-}
-
-fn clipped_quad_rect(
-    positions: impl Iterator<Item = [f32; 2]>,
-    width: u32,
-    height: u32,
-) -> Option<PixelRect> {
-    let mut min_x = f32::INFINITY;
-    let mut min_y = f32::INFINITY;
-    let mut max_x = f32::NEG_INFINITY;
-    let mut max_y = f32::NEG_INFINITY;
-    for [x, y] in positions {
-        if !x.is_finite() || !y.is_finite() {
-            return None;
-        }
-        min_x = min_x.min(x);
-        min_y = min_y.min(y);
-        max_x = max_x.max(x);
-        max_y = max_y.max(y);
-    }
-    let x0 = min_x.floor().clamp(0.0, width as f32) as u32;
-    let y0 = min_y.floor().clamp(0.0, height as f32) as u32;
-    let x1 = max_x.ceil().clamp(0.0, width as f32) as u32;
-    let y1 = max_y.ceil().clamp(0.0, height as f32) as u32;
-    (x0 < x1 && y0 < y1).then_some(PixelRect { x0, y0, x1, y1 })
 }
