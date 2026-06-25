@@ -229,12 +229,14 @@ fields are documented in
 
 `font.family = "monospace"` uses Gromaq's automatic mono stack: polished
 user-installed terminal fonts such as JetBrains Mono Nerd Font, MesloLGS Nerd
-Font, Cascadia Mono, and Iosevka Term are preferred when present, then the app
-falls back to SF Mono, Menlo, and common Linux mono fonts. Explicit `.ttf`,
-`.ttc`, and `.otf` file paths are also supported. Supported named aliases
-currently include `JetBrains Mono`, `JetBrains Mono Nerd Font`, `MesloLGS NF`,
-`MesloLGS Nerd Font`, `Cascadia Mono`, `CaskaydiaCove Nerd Font`,
-`Iosevka Term`, `SF Mono`, and `Menlo`.
+Font, Cascadia Mono, Iosevka Term, Geist Mono, Monaspace Neon, Fira Code, and
+Hack are preferred when present, then the app falls back to SF Mono, Menlo, and
+common Linux mono fonts. Explicit `.ttf`, `.ttc`, and `.otf` file paths are also
+supported. Supported named aliases currently include `JetBrains Mono`,
+`JetBrains Mono Nerd Font`, `MesloLGS NF`, `MesloLGS Nerd Font`,
+`Cascadia Mono`, `CaskaydiaCove Nerd Font`, `Iosevka Term`, `Geist Mono`,
+`Monaspace Neon`, `Fira Code`, `Fira Code Nerd Font`, `Hack`, `Hack Nerd Font`,
+`SF Mono`, and `Menlo`.
 `gromaq --config-check <path>` reports the resolved primary font file and
 fallback font files, or an unresolved-font diagnostic if a named family cannot
 be found.

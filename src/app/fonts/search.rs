@@ -16,6 +16,10 @@ pub(super) fn named_font_candidate_paths(font_family: &str) -> Option<Vec<PathBu
         "jetbrainsmono" | "jetbrainsmononerdfont" => JETBRAINS_MONO_FONT_FILES,
         "cascadiamono" | "caskaydiacovenerdfont" => CASCADIA_MONO_FONT_FILES,
         "iosevkaterm" | "iosevka" => IOSEVKA_TERM_FONT_FILES,
+        "geistmono" | "geistmononerdfont" => GEIST_MONO_FONT_FILES,
+        "monaspaceneon" | "monaspace" => MONASPACE_NEON_FONT_FILES,
+        "firacode" | "firacodenerdfont" => FIRA_CODE_FONT_FILES,
+        "hack" | "hacknerdfont" => HACK_FONT_FILES,
         "sfmono" => SF_MONO_FONT_FILES,
         "menlo" => MENLO_FONT_FILES,
         _ => return None,
@@ -73,6 +77,13 @@ const DEFAULT_PREFERRED_MONO_FONT_FILES: &[&str] = &[
     "CaskaydiaCoveNerdFont-Regular.ttf",
     "CascadiaMono.ttf",
     "IosevkaTerm-Regular.ttf",
+    "GeistMonoNerdFont-Regular.otf",
+    "GeistMono-Regular.otf",
+    "MonaspaceNeon-Regular.otf",
+    "FiraCodeNerdFont-Regular.ttf",
+    "FiraCode-Regular.ttf",
+    "HackNerdFont-Regular.ttf",
+    "Hack-Regular.ttf",
     "SFNSMono.ttf",
     "Menlo.ttc",
 ];
@@ -113,6 +124,30 @@ const IOSEVKA_TERM_FONT_FILES: &[&str] = &[
     "Iosevka-Regular.ttc",
 ];
 
+const GEIST_MONO_FONT_FILES: &[&str] = &[
+    "GeistMonoNerdFont-Regular.otf",
+    "GeistMono-Regular.otf",
+    "GeistMono-Regular.ttf",
+];
+
+const MONASPACE_NEON_FONT_FILES: &[&str] = &[
+    "MonaspaceNeon-Regular.otf",
+    "MonaspaceNeon-Regular.ttf",
+    "MonaspaceNeonVarVF[wght,wdth,slnt].ttf",
+];
+
+const FIRA_CODE_FONT_FILES: &[&str] = &[
+    "FiraCodeNerdFont-Regular.ttf",
+    "FiraCode-Regular.ttf",
+    "Fira Code Regular Nerd Font Complete.ttf",
+];
+
+const HACK_FONT_FILES: &[&str] = &[
+    "HackNerdFont-Regular.ttf",
+    "Hack-Regular.ttf",
+    "Hack Regular Nerd Font Complete.ttf",
+];
+
 const SF_MONO_FONT_FILES: &[&str] = &["SFNSMono.ttf", "SFNSMonoItalic.ttf"];
 
 const MENLO_FONT_FILES: &[&str] = &["Menlo.ttc"];
@@ -146,6 +181,28 @@ mod tests {
             .position(|name| name == "MesloLGS NF Regular.ttf")
             .unwrap();
         assert!(meslo_index < sf_mono_index);
+
+        let geist_index = names
+            .iter()
+            .position(|name| name == "GeistMonoNerdFont-Regular.otf")
+            .unwrap();
+        let monaspace_index = names
+            .iter()
+            .position(|name| name == "MonaspaceNeon-Regular.otf")
+            .unwrap();
+        let fira_index = names
+            .iter()
+            .position(|name| name == "FiraCodeNerdFont-Regular.ttf")
+            .unwrap();
+        let hack_index = names
+            .iter()
+            .position(|name| name == "HackNerdFont-Regular.ttf")
+            .unwrap();
+
+        assert!(geist_index < sf_mono_index);
+        assert!(monaspace_index < sf_mono_index);
+        assert!(fira_index < sf_mono_index);
+        assert!(hack_index < sf_mono_index);
     }
 
     #[test]
@@ -165,6 +222,34 @@ mod tests {
             .map(|name| name.to_string_lossy())
             .collect::<Vec<_>>();
         assert!(meslo_names.contains(&"MesloLGS NF Regular.ttf".into()));
+        let geist_candidates = named_font_candidate_paths("Geist Mono").unwrap();
+        let geist_names = geist_candidates
+            .iter()
+            .filter_map(|path| path.file_name())
+            .map(|name| name.to_string_lossy())
+            .collect::<Vec<_>>();
+        assert!(geist_names.contains(&"GeistMonoNerdFont-Regular.otf".into()));
+        let monaspace_candidates = named_font_candidate_paths("Monaspace Neon").unwrap();
+        let monaspace_names = monaspace_candidates
+            .iter()
+            .filter_map(|path| path.file_name())
+            .map(|name| name.to_string_lossy())
+            .collect::<Vec<_>>();
+        assert!(monaspace_names.contains(&"MonaspaceNeon-Regular.otf".into()));
+        let fira_candidates = named_font_candidate_paths("Fira Code Nerd Font").unwrap();
+        let fira_names = fira_candidates
+            .iter()
+            .filter_map(|path| path.file_name())
+            .map(|name| name.to_string_lossy())
+            .collect::<Vec<_>>();
+        assert!(fira_names.contains(&"FiraCodeNerdFont-Regular.ttf".into()));
+        let hack_candidates = named_font_candidate_paths("Hack Nerd Font").unwrap();
+        let hack_names = hack_candidates
+            .iter()
+            .filter_map(|path| path.file_name())
+            .map(|name| name.to_string_lossy())
+            .collect::<Vec<_>>();
+        assert!(hack_names.contains(&"HackNerdFont-Regular.ttf".into()));
         assert!(named_font_candidate_paths("Unmapped Mono").is_none());
     }
 }
