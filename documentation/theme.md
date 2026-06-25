@@ -13,7 +13,7 @@ black and bright black remain intentionally subdued for terminal UI roles that
 need lower emphasis.
 
 Default terminal text is intentionally larger than a compact emulator baseline:
-28 px font size, 38 px line height, and 16 px automatic cell width. Users can
+32 px font size, 44 px line height, and 18 px automatic cell width. Users can
 override those metrics in the `[font]` section, and the native app supports
 browser-style runtime zoom with Control/Super `+`, Control/Super `-`,
 Control/Super `0`, and Control/Super mouse wheel.

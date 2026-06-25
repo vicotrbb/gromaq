@@ -376,9 +376,9 @@ fn default_theme_prepared_frame_preview_keeps_text_padded_legible_and_unclipped(
     .unwrap();
     let preview = prepared.preview_rgba8().unwrap();
 
-    assert_eq!(renderer_config.font_size_px, 28);
-    assert_eq!(renderer_config.cell_width_px, 16);
-    assert_eq!(renderer_config.line_height_px, 38);
+    assert_eq!(renderer_config.font_size_px, 32);
+    assert_eq!(renderer_config.cell_width_px, 18);
+    assert_eq!(renderer_config.line_height_px, 44);
     assert_eq!(
         renderer_config.surface_padding_px,
         DEFAULT_SURFACE_PADDING_PX
