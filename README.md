@@ -161,6 +161,7 @@ cargo run -- --runtime-alternate-screen-smoke
 cargo run -- --runtime-reflow-smoke
 cargo run -- --runtime-config-reload-smoke
 cargo run -- --runtime-text-zoom-smoke
+cargo run -- --theme-list
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --runtime-focus-smoke
@@ -232,6 +233,8 @@ palette, cursor style, cursor blinking, surface padding, optional cell spacing,
 and dim text opacity; every field in `[theme]` can still be overridden directly
 in TOML. The theme fields are documented in
 [`documentation/theme.md`](documentation/theme.md).
+Use `gromaq --theme-list` to inspect the built-in presets and their core
+theme tokens.
 
 `[welcome].enabled = true` shows the built-in startup screen with system,
 terminal, renderer, and theme stats before the shell prompt. Set it to `false`

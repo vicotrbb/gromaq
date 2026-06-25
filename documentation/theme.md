@@ -112,3 +112,9 @@ Generate a parseable starter file with:
 ```bash
 gromaq --config-template
 ```
+
+List built-in presets and their core theme tokens with:
+
+```bash
+gromaq --theme-list
+```
