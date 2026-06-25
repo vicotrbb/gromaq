@@ -1,9 +1,18 @@
 use std::cell::RefCell;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use super::{MockBackend, run_with_backend};
 
+fn real_shell_test_guard() -> MutexGuard<'static, ()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("real shell CLI test lock should not be poisoned")
+}
+
 #[test]
 fn runtime_real_shell_smoke_cli_drives_real_shell_through_runtime() {
+    let _guard = real_shell_test_guard();
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
     };
@@ -30,6 +39,7 @@ fn runtime_real_shell_smoke_cli_drives_real_shell_through_runtime() {
 
 #[test]
 fn runtime_real_shell_perf_budget_smoke_cli_enforces_real_shell_latency_budgets() {
+    let _guard = real_shell_test_guard();
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
     };
@@ -60,6 +70,7 @@ fn runtime_real_shell_perf_budget_smoke_cli_enforces_real_shell_latency_budgets(
 
 #[test]
 fn runtime_real_shell_large_output_smoke_cli_renders_real_shell_burst() {
+    let _guard = real_shell_test_guard();
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
     };
@@ -92,6 +103,7 @@ fn runtime_real_shell_large_output_smoke_cli_renders_real_shell_burst() {
 
 #[test]
 fn runtime_real_shell_reflow_smoke_cli_resizes_real_shell_output() {
+    let _guard = real_shell_test_guard();
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
     };

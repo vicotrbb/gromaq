@@ -318,9 +318,9 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("[shell]"));
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[font]"));
-    assert!(exit.stdout.contains("size_px = 32"));
-    assert!(exit.stdout.contains("line_height_px = 44"));
-    assert!(exit.stdout.contains("# cell_width_px = 18"));
+    assert!(exit.stdout.contains("size_px = 37"));
+    assert!(exit.stdout.contains("line_height_px = 51"));
+    assert!(exit.stdout.contains("# cell_width_px = 21"));
     assert!(exit.stdout.contains("[theme]"));
     assert!(
         exit.stdout
@@ -502,12 +502,12 @@ fn runtime_text_zoom_smoke_reports_browser_style_zoom_metrics_without_gpu_bootst
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("runtime text zoom smoke: ok"));
-    assert!(exit.stdout.contains("default font size px: 32"));
-    assert!(exit.stdout.contains("default cell width px: 18"));
-    assert!(exit.stdout.contains("default line height px: 44"));
-    assert!(exit.stdout.contains("zoomed font size px: 37"));
-    assert!(exit.stdout.contains("zoomed cell width px: 21"));
-    assert!(exit.stdout.contains("zoomed line height px: 51"));
+    assert!(exit.stdout.contains("default font size px: 37"));
+    assert!(exit.stdout.contains("default cell width px: 21"));
+    assert!(exit.stdout.contains("default line height px: 51"));
+    assert!(exit.stdout.contains("zoomed font size px: 43"));
+    assert!(exit.stdout.contains("zoomed cell width px: 24"));
+    assert!(exit.stdout.contains("zoomed line height px: 59"));
     assert!(exit.stdout.contains("zoom in reduced grid: true"));
     assert!(exit.stdout.contains("reset restored metrics: true"));
     assert!(exit.stdout.contains("reset restored grid: true"));
@@ -618,7 +618,7 @@ fn config_launch_cli_loads_config_and_launches_native_app_without_gpu_bootstrap(
             dirty_regions: false,
             font_size_px: 17,
             cell_width_px: 9,
-            line_height_px: 44,
+            line_height_px: 51,
             ..RendererConfig::default()
         }
     );

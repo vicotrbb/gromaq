@@ -59,16 +59,16 @@ preserved the command output in the render plan with render p95 500000 ns. On
 zsh-style repaint bytes, rendered one CPU-side frame, forced one full-viewport
 clear region, retained 103 planned glyphs, and preserved the command line,
 both output rows, and the repainted prompt in the render plan. On
-2026-06-24,
+2026-06-25,
 `cargo run -- --runtime-glyph-frame-smoke` pumped 19 bytes, planned 16 glyphs,
 rasterized 12 glyphs, reused 4 glyphs, built 16 prepared quads, produced one
-selection background, one cursor quad, a 604x204 frame, a 40128-byte atlas, 44 px
+selection background, one cursor quad, a 700x232 frame, a 53856-byte atlas, 51 px
 line height, and 14 px surface padding through the native glyph-frame path. On
-2026-06-24,
+2026-06-25,
 `cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame.ppm`
-wrote a 604x204 binary PPM CPU preview from the same prepared glyph-frame path,
-reported 369663 bytes written, 123216 preview pixels, 16 prepared quads, one
-background quad, one cursor quad, and 40128 atlas bytes. This is an inspectable
+wrote a 700x232 binary PPM CPU preview from the same prepared glyph-frame path,
+reported 487215 bytes written, 162400 preview pixels, 16 prepared quads, one
+background quad, one cursor quad, and 53856 atlas bytes. This is an inspectable
 prepared-frame artifact, not a live desktop screenshot capture. On
 2026-06-24,
 `cargo run -- --window-glyph-frame-snapshot target/gromaq-window-glyph-frame.ppm`
