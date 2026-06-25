@@ -16,6 +16,8 @@ mod image;
 pub use cache::{RasterizedGlyphBatch, RasterizedGlyphCache};
 use image::{RenderedGlyph, compose_rendered_glyphs, image_to_rgba8};
 
+const DEFAULT_OUTLINE_EMBOLDEN_STRENGTH: f32 = 0.18;
+
 /// Errors produced by font-backed glyph rasterization.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum FontRasterError {
@@ -47,11 +49,19 @@ pub struct FontRasterizer {
     key: CacheKey,
     shape_context: ShapeContext,
     scale_context: ScaleContext,
+    outline_embolden_strength: f32,
 }
 
 impl FontRasterizer {
     /// Build a rasterizer from font or font-collection bytes.
     pub fn from_bytes(font_bytes: Vec<u8>) -> Result<Self, FontRasterError> {
+        Self::from_bytes_with_outline_embolden(font_bytes, DEFAULT_OUTLINE_EMBOLDEN_STRENGTH)
+    }
+
+    fn from_bytes_with_outline_embolden(
+        font_bytes: Vec<u8>,
+        outline_embolden_strength: f32,
+    ) -> Result<Self, FontRasterError> {
         let (offset, key) = {
             let font = FontRef::from_index(&font_bytes, 0).ok_or(FontRasterError::InvalidFont)?;
             (font.offset, font.key)
@@ -62,6 +72,7 @@ impl FontRasterizer {
             key,
             shape_context: ShapeContext::new(),
             scale_context: ScaleContext::new(),
+            outline_embolden_strength,
         })
     }
 
@@ -110,7 +121,9 @@ impl FontRasterizer {
             Source::ColorBitmap(StrikeWith::BestFit),
             Source::Outline,
         ]);
-        let renderer = renderer.format(Format::Alpha);
+        let renderer = renderer
+            .format(Format::Alpha)
+            .embolden(self.outline_embolden_strength);
         let mut rendered = Vec::with_capacity(glyphs.len());
         for glyph in glyphs {
             let image = renderer
@@ -180,4 +193,62 @@ struct ShapedGlyph {
     id: GlyphId,
     x: f32,
     y: f32,
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    fn system_mono_font() -> PathBuf {
+        [
+            "/System/Library/Fonts/SFNSMono.ttf",
+            "/System/Library/Fonts/Menlo.ttc",
+            "/System/Library/Fonts/Supplemental/Courier New.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+            "/usr/share/fonts/dejavu-sans-fonts/DejaVuSansMono.ttf",
+            "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
+            "/usr/share/fonts/liberation/LiberationMono-Regular.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
+        ]
+        .into_iter()
+        .map(PathBuf::from)
+        .find(|path| path.exists())
+        .expect("expected a local system monospace font for rasterization proof")
+    }
+
+    #[test]
+    fn default_rasterizer_emboldens_outline_glyph_alpha_coverage() {
+        let font_bytes = std::fs::read(system_mono_font()).unwrap();
+        let mut plain =
+            FontRasterizer::from_bytes_with_outline_embolden(font_bytes.clone(), 0.0).unwrap();
+        let mut emboldened = FontRasterizer::from_bytes(font_bytes).unwrap();
+        let plain_glyph = plain
+            .rasterize(
+                'm',
+                28.0,
+                GlyphEntry {
+                    slot: 0,
+                    generation: 0,
+                },
+            )
+            .unwrap();
+        let emboldened_glyph = emboldened
+            .rasterize(
+                'm',
+                28.0,
+                GlyphEntry {
+                    slot: 0,
+                    generation: 0,
+                },
+            )
+            .unwrap();
+
+        assert!(alpha_coverage(&emboldened_glyph.rgba) > alpha_coverage(&plain_glyph.rgba));
+    }
+
+    fn alpha_coverage(rgba: &[u8]) -> u64 {
+        rgba.chunks_exact(4).map(|pixel| u64::from(pixel[3])).sum()
+    }
 }
