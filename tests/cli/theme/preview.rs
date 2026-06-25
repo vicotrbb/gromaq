@@ -24,6 +24,7 @@ fn theme_preview_snapshot_writes_default_theme_ppm_without_gpu_bootstrap() {
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("theme preview snapshot: ok"));
+    assert!(exit.stdout.contains("preset: gromaq-ghostty"));
     assert!(exit.stdout.contains("font size px: 34"));
     assert!(exit.stdout.contains("cell width px: 19"));
     assert!(exit.stdout.contains("line height px: 47"));

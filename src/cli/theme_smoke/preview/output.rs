@@ -2,6 +2,7 @@ use crate::cli::CliExit;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct ThemePreviewSnapshotReport {
+    pub(super) preset: &'static str,
     pub(super) bytes_written: usize,
     pub(super) width: u32,
     pub(super) height: u32,
@@ -28,7 +29,8 @@ pub(super) fn theme_preview_snapshot_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "theme preview snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nbackground opacity percent: {}\nsurface padding px: {}\ncell spacing px: {}\nhigh contrast text pixels: {}\nselection pixels: {}\ncursor pixels: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
+            "theme preview snapshot: ok\npath: {path}\npreset: {}\nbytes written: {}\nframe size: {}x{}\npreview pixels: {}\nfont size px: {}\ncell width px: {}\nline height px: {}\nbackground opacity percent: {}\nsurface padding px: {}\ncell spacing px: {}\nhigh contrast text pixels: {}\nselection pixels: {}\ncursor pixels: {}\nprepared quads: {}\nbackground quads: {}\ncursor quads: {}\natlas bytes: {}\n",
+            report.preset,
             report.bytes_written,
             report.width,
             report.height,

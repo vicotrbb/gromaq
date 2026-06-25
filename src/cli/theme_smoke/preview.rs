@@ -2,6 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::app::load_default_native_glyph_cache;
+use crate::config::{GromaqConfig, format_theme_preset};
 use crate::renderer::{
     GlyphAtlas, GlyphAtlasConfig, PreparedSurfaceGlyphFrame, PreparedSurfaceGlyphFrameConfig,
     RenderPlanner, RendererConfig,
@@ -35,7 +36,9 @@ pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
 }
 
 fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotReport, String> {
-    let renderer_config = RendererConfig::default();
+    let config = GromaqConfig::default();
+    let renderer_config = RendererConfig::from_gromaq_config(&config)
+        .map_err(|error| format!("failed to build default renderer config: {error}"))?;
     let mut terminal = Terminal::new(
         TerminalConfig::new(THEME_PREVIEW_COLS, THEME_PREVIEW_ROWS)
             .map_err(|error| error.to_string())?,
@@ -102,6 +105,7 @@ fn theme_preview_snapshot_report(path: &str) -> Result<ThemePreviewSnapshotRepor
         .map_err(|error| format!("failed to write theme preview snapshot: {error}"))?;
     let frame = prepared.as_surface_glyph_frame();
     Ok(ThemePreviewSnapshotReport {
+        preset: format_theme_preset(config.theme.preset),
         bytes_written: snapshot.len(),
         width: preview.width,
         height: preview.height,
