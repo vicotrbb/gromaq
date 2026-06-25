@@ -17,6 +17,8 @@ jobs:
       - run: git diff --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all
+      - run: cargo run -- --theme-legibility-smoke
+      - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
       - run: cargo run -- --runtime-real-shell-perf-budget-smoke
       - run: cargo run -- --runtime-real-shell-large-output-smoke
       - run: cargo bench --bench parser_throughput -- --list
