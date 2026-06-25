@@ -1,5 +1,7 @@
 //! CLI command dispatch.
 
+mod arguments;
+
 use super::args::{CliCommand, command_for, usage};
 use super::clipboard_smoke::{clipboard_smoke_exit, osc52_clipboard_smoke_exit};
 use super::config_commands::{
@@ -37,6 +39,7 @@ use super::window_smoke::{window_glyph_frame_snapshot_exit, window_smoke_exit};
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
 use crate::native_gpu::GpuBootstrapBackend;
+use arguments::{reject_extra_args, required_path_arg, required_snapshot_path_arg};
 
 pub(super) fn run_with_optional_app_and_clipboard<I, S, B, A, C>(
     args: I,
@@ -203,43 +206,4 @@ where
         | CliCommand::WindowPerfSmoke
         | CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
     }
-}
-
-fn required_path_arg<I, S>(args: &mut I, command: &str) -> Result<S, CliExit>
-where
-    I: Iterator<Item = S>,
-    S: AsRef<str>,
-{
-    args.next().ok_or_else(|| CliExit {
-        code: 2,
-        stdout: String::new(),
-        stderr: format!("{}missing config path for {command}\n", usage()),
-    })
-}
-
-fn required_snapshot_path_arg<I, S>(args: &mut I, command: &str) -> Result<S, CliExit>
-where
-    I: Iterator<Item = S>,
-    S: AsRef<str>,
-{
-    args.next().ok_or_else(|| CliExit {
-        code: 2,
-        stdout: String::new(),
-        stderr: format!("{}missing snapshot path for {command}\n", usage()),
-    })
-}
-
-fn reject_extra_args<I, S>(args: &mut I) -> Result<(), CliExit>
-where
-    I: Iterator<Item = S>,
-    S: AsRef<str>,
-{
-    if let Some(extra) = args.next() {
-        return Err(CliExit {
-            code: 2,
-            stdout: String::new(),
-            stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
-        });
-    }
-    Ok(())
 }
