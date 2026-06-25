@@ -16,6 +16,9 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "DEBUGGING.md",
     "GOOD_FIRST_ISSUES.md",
     "scripts/install.sh",
+    "scripts/package-macos-app.sh",
+    "packaging/linux/dev.gromaq.Gromaq.desktop",
+    "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",
     "documentation/benchmarks.md",
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",
@@ -99,6 +102,26 @@ fn cargo_manifest_keeps_public_open_source_metadata() {
     assert_string_array_contains(package, "keywords", "terminal");
     assert_string_array_contains(package, "keywords", "wgpu");
     assert_string_array_contains(package, "categories", "command-line-utilities");
+}
+
+#[test]
+fn distribution_assets_keep_desktop_identity() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let install_script = fs::read_to_string(root.join("scripts/install.sh")).unwrap();
+    let macos_script = fs::read_to_string(root.join("scripts/package-macos-app.sh")).unwrap();
+    let desktop =
+        fs::read_to_string(root.join("packaging/linux/dev.gromaq.Gromaq.desktop")).unwrap();
+    let metainfo =
+        fs::read_to_string(root.join("packaging/linux/dev.gromaq.Gromaq.metainfo.xml")).unwrap();
+
+    assert!(install_script.contains("dev.gromaq.Gromaq.desktop"));
+    assert!(install_script.contains("GROMAQ_INSTALL_DESKTOP_ASSETS"));
+    assert!(macos_script.contains("CFBundleIconFile"));
+    assert!(macos_script.contains("AppIcon.icns"));
+    assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
+    assert!(desktop.contains("Categories=System;TerminalEmulator;"));
+    assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));
+    assert!(metainfo.contains("<launchable type=\"desktop-id\">"));
 }
 
 fn assert_string_array_contains(package: &toml::map::Map<String, Value>, field: &str, item: &str) {

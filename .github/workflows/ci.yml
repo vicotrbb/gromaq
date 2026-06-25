@@ -14,6 +14,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: sh -n scripts/install.sh
+      - run: sh -n scripts/package-macos-app.sh
       - run: cargo fmt --check
       - run: git diff --check
       - run: cargo clippy --all-targets --all-features -- -D warnings

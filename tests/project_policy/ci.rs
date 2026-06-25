@@ -4,6 +4,7 @@ use super::support::relative_path;
 
 const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/install.sh",
+    "sh -n scripts/package-macos-app.sh",
     "cargo fmt --check",
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",

@@ -44,6 +44,19 @@ The one-command installer is deliberately small and auditable. It does not
 install Rust or system packages for you; if Cargo is missing, install Rust from
 your package manager or `https://rustup.rs`, then run the command again.
 
+On Linux, the installer also installs user-local desktop assets by default:
+`dev.gromaq.Gromaq.desktop`, the project icon under the hicolor icon theme, and
+AppStream metainfo under `${XDG_DATA_HOME:-~/.local/share}`. Set
+`GROMAQ_INSTALL_DESKTOP_ASSETS=0` to install only the binary.
+
+On macOS, source install gives you the `gromaq` binary. To build a `.app` bundle
+with the project logo as the Dock/app icon from a checked-out repository, run:
+
+```bash
+scripts/package-macos-app.sh
+open target/dist/Gromaq.app
+```
+
 ## Status
 
 Implemented and covered by automated tests or deterministic smoke commands:
@@ -76,8 +89,7 @@ Not yet proven enough to call complete:
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 - release packaging beyond source install
-- macOS `.app` bundle/Dock icon packaging; the native window icon is wired
-  through `winit`, but macOS app identity still needs bundle packaging
+- signed/notarized macOS release artifacts and prebuilt Linux packages
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).

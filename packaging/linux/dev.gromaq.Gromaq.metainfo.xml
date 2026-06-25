@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.gromaq.Gromaq</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Gromaq</name>
+  <summary>Native Rust GPU terminal emulator</summary>
+  <description>
+    <p>
+      Gromaq is a native Rust terminal emulator built with winit, wgpu, real
+      PTYs, and a performance-first renderer.
+    </p>
+  </description>
+  <launchable type="desktop-id">dev.gromaq.Gromaq.desktop</launchable>
+  <url type="homepage">https://gromaq.dev</url>
+  <url type="vcs-browser">https://github.com/vicotrbb/gromaq</url>
+  <developer_name>Gromaq contributors</developer_name>
+  <content_rating type="oars-1.1" />
+</component>
