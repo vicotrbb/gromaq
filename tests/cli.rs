@@ -11,7 +11,7 @@ use gromaq::native_gpu::GpuBootstrapBackend;
 
 #[path = "cli/clipboard.rs"]
 mod clipboard;
-#[path = "cli/config.rs"]
+#[path = "cli/config/mod.rs"]
 mod config;
 #[path = "cli/gpu_smoke.rs"]
 mod gpu_smoke;
