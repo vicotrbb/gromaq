@@ -6,7 +6,7 @@ use crate::pty::ShellCommand;
 use super::pty_smoke::{RuntimeInputCaptureSmokePtySession, RuntimeInputCaptureSmokePtySpawner};
 
 const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";
-const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1006h";
+const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1002h\x1b[?1003h\x1b[?1006h";
 const RUNTIME_RESPONSE_SMOKE_QUERIES: &str = "\x1b[3;5H\x1b[6n\x1b[5n\x1b[c\x1b[>c";
 
 type RuntimeProtocolSmokeRuntime = NativeTerminalRuntime<RuntimeInputCaptureSmokePtySession>;
@@ -109,6 +109,24 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
         Ok(released) => released,
         Err(error) => return runtime_mouse_smoke_error(error),
     };
+    let dragged = match runtime.send_mouse_input(MouseEvent::new(
+        MouseEventKind::Drag,
+        MouseButton::Left,
+        4,
+        2,
+    )) {
+        Ok(dragged) => dragged,
+        Err(error) => return runtime_mouse_smoke_error(error),
+    };
+    let motion = match runtime.send_mouse_input(MouseEvent::new(
+        MouseEventKind::Motion,
+        MouseButton::None,
+        6,
+        1,
+    )) {
+        Ok(motion) => motion,
+        Err(error) => return runtime_mouse_smoke_error(error),
+    };
     let wheel = match runtime.send_mouse_input(MouseEvent::new(
         MouseEventKind::Press,
         MouseButton::WheelUp,
@@ -123,6 +141,8 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
     let expected_input = [
         b"\x1b[<0;3;2M".as_slice(),
         b"\x1b[<0;3;2m".as_slice(),
+        b"\x1b[<32;5;3M".as_slice(),
+        b"\x1b[<35;7;2M".as_slice(),
         b"\x1b[<64;1;1M".as_slice(),
     ]
     .concat();
@@ -130,10 +150,12 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
     if pumped_bytes != RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING.len()
         || !pressed
         || !released
+        || !dragged
+        || !motion
         || !wheel
         || input != expected_input
-        || metrics.mouse_inputs != 3
-        || metrics.pty_input_writes != 3
+        || metrics.mouse_inputs != 5
+        || metrics.pty_input_writes != 5
         || metrics.pty_input_bytes != expected_input.len() as u64
     {
         return CliExit {
@@ -147,10 +169,12 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime mouse smoke: ok\npumped bytes: {}\npress reported: {}\nrelease reported: {}\nwheel reported: {}\nmouse inputs: {}\npty input writes: {}\npty input bytes: {}\n",
+            "runtime mouse smoke: ok\npumped bytes: {}\npress reported: {}\nrelease reported: {}\ndrag reported: {}\nmotion reported: {}\nwheel reported: {}\nmouse inputs: {}\npty input writes: {}\npty input bytes: {}\n",
             pumped_bytes,
             pressed,
             released,
+            dragged,
+            motion,
             wheel,
             metrics.mouse_inputs,
             metrics.pty_input_writes,

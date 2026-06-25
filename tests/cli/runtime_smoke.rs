@@ -182,13 +182,15 @@ fn runtime_mouse_smoke_cli_reports_mouse_events_without_gpu_bootstrap() {
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("runtime mouse smoke: ok"));
-    assert!(exit.stdout.contains("pumped bytes: 16"));
+    assert!(exit.stdout.contains("pumped bytes: 32"));
     assert!(exit.stdout.contains("press reported: true"));
     assert!(exit.stdout.contains("release reported: true"));
+    assert!(exit.stdout.contains("drag reported: true"));
+    assert!(exit.stdout.contains("motion reported: true"));
     assert!(exit.stdout.contains("wheel reported: true"));
-    assert!(exit.stdout.contains("mouse inputs: 3"));
-    assert!(exit.stdout.contains("pty input writes: 3"));
-    assert!(exit.stdout.contains("pty input bytes: 28"));
+    assert!(exit.stdout.contains("mouse inputs: 5"));
+    assert!(exit.stdout.contains("pty input writes: 5"));
+    assert!(exit.stdout.contains("pty input bytes: 48"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
