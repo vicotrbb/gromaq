@@ -23,6 +23,8 @@ pub struct NativeAppConfig {
     pub target_fps: u32,
     /// Optional presented-frame limit after which the native app exits.
     pub exit_after_presented_frames: Option<u64>,
+    /// Optional redraw-attempt limit after which the native app exits even if no frame presented.
+    pub exit_after_redraw_attempts: Option<u64>,
     /// Request redraws after presented frames until the configured frame limit is reached.
     pub redraw_until_presented_frame_limit: bool,
     /// Number of initial presented frames excluded from frame-interval performance metrics.
@@ -41,6 +43,7 @@ impl Default for NativeAppConfig {
             height: 800,
             target_fps: 144,
             exit_after_presented_frames: None,
+            exit_after_redraw_attempts: None,
             redraw_until_presented_frame_limit: false,
             frame_interval_warmup_frames: 0,
             glyph_frame_snapshot_path: None,

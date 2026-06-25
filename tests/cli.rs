@@ -96,6 +96,7 @@ impl NativeAppLauncher for MockAppLauncher {
         };
         self.launches.borrow_mut().push(config);
         Ok(NativeAppRunReport {
+            redraw_attempts: frames_presented,
             frames_presented,
             monitor_refresh_millihertz: Some(60_000),
             surface_present_mode: Some("Mailbox"),
@@ -143,10 +144,11 @@ impl NativeAppLauncher for NoGlyphFrameAppLauncher {
         config: NativeAppLaunchConfig,
     ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
         Ok(NativeAppRunReport {
-            frames_presented: config.app.exit_after_presented_frames.unwrap_or_default(),
+            redraw_attempts: config.app.exit_after_redraw_attempts.unwrap_or_default(),
+            frames_presented: 0,
             frame_interval_target_fps: 60,
             frame_interval_warmup_frames: config.app.frame_interval_warmup_frames,
-            frame_interval_samples: 180,
+            frame_interval_samples: 0,
             glyph_frame_presented: false,
             ..NativeAppRunReport::default()
         })
@@ -518,7 +520,7 @@ fn window_smoke_launches_bounded_native_terminal_app() {
         exit,
         CliExit {
             code: 0,
-            stdout: "window smoke: ok\npresented frame limit: 1\n".to_owned(),
+            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\n".to_owned(),
             stderr: String::new(),
         }
     );
@@ -526,9 +528,29 @@ fn window_smoke_launches_bounded_native_terminal_app() {
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
     assert_eq!(launch.app.exit_after_presented_frames, Some(1));
+    assert_eq!(launch.app.exit_after_redraw_attempts, Some(16));
+    assert!(launch.app.redraw_until_presented_frame_limit);
     assert_eq!(launch.runtime, NativeAppLaunchConfig::default().runtime);
     assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
     assert_eq!(launch.config_path, None);
+}
+
+#[test]
+fn window_smoke_fails_when_no_surface_frame_is_presented() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = NoGlyphFrameAppLauncher;
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-smoke"], &backend, &app);
+
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(
+        exit.stderr
+            .contains("window smoke failed: no surface frame was presented; redraw attempts: 16")
+    );
+    assert!(backend.requests.borrow().is_empty());
 }
 
 #[test]
@@ -545,7 +567,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.starts_with(
-        "window perf smoke: ok\npresented frame limit: 192\nframes presented: 192\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nframe interval p95 budget ns: 20000000\nframe interval warmup frames: 12\nelapsed ns: "
+        "window perf smoke: ok\npresented frame limit: 192\nredraw attempts: 192\nframes presented: 192\ntarget fps: 144\nmonitor refresh mhz: 60000\nsurface present mode: Mailbox\nwindow physical size: 2560x1600\nwindow scale milliscale: 2000\nglyph frame presented: true\nglyph frame size: 2560x1600\nglyph frame glyph quads: 12\nglyph frame background quads: 1\nglyph frame decoration quads: 0\nglyph frame cursor quads: 1\nglyph frame atlas bytes: 4096\nglyph frame atlas occupied slots: 8\nframe interval target fps: 60\nframe interval target ns: 16666666\nframe interval p95 budget ns: 20000000\nframe interval warmup frames: 12\nelapsed ns: "
     ));
     assert!(exit.stdout.contains("frame interval samples: 180\n"));
     assert!(exit.stdout.contains("frame interval avg ns: 6940000\n"));
@@ -581,6 +603,7 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
     assert_eq!(launch.app.exit_after_presented_frames, Some(192));
+    assert_eq!(launch.app.exit_after_redraw_attempts, Some(768));
     assert!(launch.app.redraw_until_presented_frame_limit);
     assert_eq!(launch.app.frame_interval_warmup_frames, 12);
     assert_eq!(launch.app.target_fps, 144);
@@ -613,7 +636,7 @@ fn window_perf_smoke_fails_when_no_glyph_frame_is_presented() {
     assert!(exit.stdout.is_empty());
     assert!(
         exit.stderr.contains(
-            "window perf smoke failed: no glyph frame was presented; frames presented: 192"
+            "window perf smoke failed: no glyph frame was presented; redraw attempts: 768; frames presented: 0"
         )
     );
     assert!(backend.requests.borrow().is_empty());
@@ -652,6 +675,7 @@ fn window_glyph_frame_snapshot_smoke_writes_artifact() {
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
     assert_eq!(launch.app.exit_after_presented_frames, Some(60));
+    assert_eq!(launch.app.exit_after_redraw_attempts, Some(60));
     assert!(launch.app.redraw_until_presented_frame_limit);
     assert_eq!(
         launch.app.glyph_frame_snapshot_path.as_deref(),

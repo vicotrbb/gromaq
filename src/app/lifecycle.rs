@@ -36,6 +36,7 @@ pub struct NativeAppLifecycle {
     close_requested: bool,
     windows_created: u64,
     redraw_requests: u64,
+    redraw_attempts: u64,
     frames_presented: u64,
     monitor_refresh_millihertz: Option<u32>,
     surface_present_mode: Option<&'static str>,
@@ -55,6 +56,7 @@ impl NativeAppLifecycle {
             close_requested: false,
             windows_created: 0,
             redraw_requests: 0,
+            redraw_attempts: 0,
             frames_presented: 0,
             monitor_refresh_millihertz: None,
             surface_present_mode: None,
@@ -199,13 +201,44 @@ impl NativeAppLifecycle {
 
     /// Record that a redraw was presented by the native app boundary at `presented_at`.
     pub fn on_redraw_requested_at(&mut self, presented_at: Instant) -> NativeAppAction {
+        self.on_redraw_attempt_finished_at(presented_at, true)
+    }
+
+    /// Record that a redraw attempt finished, with presentation success tracked separately.
+    pub fn on_redraw_attempt_finished(&mut self, frame_presented: bool) -> NativeAppAction {
+        self.on_redraw_attempt_finished_at(Instant::now(), frame_presented)
+    }
+
+    /// Record that a redraw attempt finished at `finished_at`.
+    pub fn on_redraw_attempt_finished_at(
+        &mut self,
+        finished_at: Instant,
+        frame_presented: bool,
+    ) -> NativeAppAction {
+        self.redraw_attempts = self.redraw_attempts.saturating_add(1);
+        if !frame_presented {
+            return self.action_after_redraw_attempt();
+        }
         let presented_frame_index = self.frames_presented.saturating_add(1);
-        self.record_frame_presented_at(presented_at, presented_frame_index);
+        self.record_frame_presented_at(finished_at, presented_frame_index);
         self.frames_presented = presented_frame_index;
         let Some(limit) = self.config.exit_after_presented_frames else {
-            return NativeAppAction::None;
+            return self.action_after_redraw_attempt();
         };
         if self.frames_presented >= limit {
+            self.close_requested = true;
+            NativeAppAction::Exit
+        } else {
+            self.action_after_redraw_attempt()
+        }
+    }
+
+    fn action_after_redraw_attempt(&mut self) -> NativeAppAction {
+        if self
+            .config
+            .exit_after_redraw_attempts
+            .is_some_and(|limit| self.redraw_attempts >= limit)
+        {
             self.close_requested = true;
             NativeAppAction::Exit
         } else if self.config.redraw_until_presented_frame_limit && self.has_window {
@@ -234,6 +267,11 @@ impl NativeAppLifecycle {
     /// Count of redraw requests scheduled by this lifecycle.
     pub fn redraw_requests(&self) -> u64 {
         self.redraw_requests
+    }
+
+    /// Count of redraw callbacks processed by this lifecycle.
+    pub fn redraw_attempts(&self) -> u64 {
+        self.redraw_attempts
     }
 
     /// Count of redraw events observed by this lifecycle.

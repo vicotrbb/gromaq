@@ -131,7 +131,7 @@ where
 
 impl<B> NativeWindowSurface<B>
 where
-    B: SurfaceFrameBackend,
+    B: SurfaceBackend + SurfaceFrameBackend,
 {
     /// Clear the current native surface frame and present it.
     pub fn clear_and_present(
@@ -158,7 +158,7 @@ pub fn render_and_present_terminal_glyph_frame<S, B>(
     surface: &mut NativeWindowSurface<B>,
 ) -> Result<bool, NativeGlyphFrameError>
 where
-    B: SurfaceFrameBackend,
+    B: SurfaceBackend + SurfaceFrameBackend,
 {
     render_and_present_terminal_glyph_frame_report(runtime, renderer, glyph_cache, surface)
         .map(|report| report.glyph_frame_presented)
@@ -172,7 +172,7 @@ pub fn render_and_present_terminal_glyph_frame_report<S, B>(
     surface: &mut NativeWindowSurface<B>,
 ) -> Result<NativeGlyphFramePresentation, NativeGlyphFrameError>
 where
-    B: SurfaceFrameBackend,
+    B: SurfaceBackend + SurfaceFrameBackend,
 {
     render_and_present_terminal_glyph_frame_report_with_snapshot(
         runtime,
@@ -192,20 +192,19 @@ pub fn render_and_present_terminal_glyph_frame_report_with_snapshot<S, B>(
     snapshot_path: Option<&Path>,
 ) -> Result<NativeGlyphFramePresentation, NativeGlyphFrameError>
 where
-    B: SurfaceFrameBackend,
+    B: SurfaceBackend + SurfaceFrameBackend,
 {
     // Swapchain frames are not retained. Until native partial-present support exists,
     // every surface presentation must redraw the full visible terminal contents.
     runtime.invalidate_terminal_frame();
-    if !runtime.render_terminal_frame(renderer)? {
-        return Ok(NativeGlyphFramePresentation::default());
-    }
     let clear_color = renderer.config().clear_color;
+    if !runtime.render_terminal_frame(renderer)? {
+        return clear_and_present_report(surface, clear_color);
+    }
     let Some(plan) = renderer.last_plan() else {
-        return Ok(NativeGlyphFramePresentation {
-            rendered: true,
-            ..NativeGlyphFramePresentation::default()
-        });
+        let mut report = clear_and_present_report(surface, clear_color)?;
+        report.rendered = true;
+        return Ok(report);
     };
     let glyphs = glyph_cache.rasterize_plan(plan)?;
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
@@ -266,4 +265,23 @@ where
         Err(error) => return Err(error.into()),
     }
     Ok(report)
+}
+
+fn clear_and_present_report<B>(
+    surface: &mut NativeWindowSurface<B>,
+    clear_color: [f64; 4],
+) -> Result<NativeGlyphFramePresentation, NativeGlyphFrameError>
+where
+    B: SurfaceBackend + SurfaceFrameBackend,
+{
+    let (width, height) = surface.configured_size().unwrap_or_default();
+    surface.clear_and_present(clear_color)?;
+    Ok(NativeGlyphFramePresentation {
+        rendered: false,
+        glyph_frame_presented: false,
+        clear_presented: true,
+        width,
+        height,
+        ..NativeGlyphFramePresentation::default()
+    })
 }

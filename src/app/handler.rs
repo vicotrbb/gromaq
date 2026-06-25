@@ -58,6 +58,10 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                 if let Err(error) = self.runtime.start_shell(&self.pty_spawner) {
                     self.startup_error = Some(error.to_string());
                     event_loop.exit();
+                    return;
+                }
+                if let Some(window) = &self.window {
+                    window.request_redraw();
                 }
             }
             Err(error) => {

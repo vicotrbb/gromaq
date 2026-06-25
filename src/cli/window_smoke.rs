@@ -7,6 +7,8 @@ use crate::pty::ShellCommand;
 
 const WINDOW_PERF_SMOKE_FRAME_LIMIT: u64 = 180;
 const WINDOW_PERF_SMOKE_WARMUP_FRAMES: u64 = 12;
+const WINDOW_SMOKE_REDRAW_ATTEMPT_LIMIT: u64 = 16;
+const WINDOW_PERF_SMOKE_REDRAW_ATTEMPT_MULTIPLIER: u64 = 4;
 const WINDOW_PERF_SMOKE_P95_BUDGET_PERCENT: u64 = 120;
 
 pub(super) fn window_smoke_exit<A>(command: CliCommand<'_>, app_launcher: Option<&A>) -> CliExit
@@ -36,8 +38,14 @@ where
         _ => unreachable!(),
     };
     launch_config.app.exit_after_presented_frames = Some(frame_limit);
+    launch_config.app.exit_after_redraw_attempts = Some(match command {
+        CliCommand::WindowSmoke => WINDOW_SMOKE_REDRAW_ATTEMPT_LIMIT,
+        CliCommand::WindowPerfSmoke => frame_limit * WINDOW_PERF_SMOKE_REDRAW_ATTEMPT_MULTIPLIER,
+        CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
+        _ => unreachable!(),
+    });
+    launch_config.app.redraw_until_presented_frame_limit = true;
     if command == CliCommand::WindowPerfSmoke {
-        launch_config.app.redraw_until_presented_frame_limit = true;
         launch_config.app.startup_text =
             Some("gromaq window perf smoke\nframe pacing probe\n".to_owned());
         launch_config.runtime.shell = ShellCommand {
@@ -60,7 +68,8 @@ where
                         code: 1,
                         stdout: String::new(),
                         stderr: format!(
-                            "window perf smoke failed: no glyph frame was presented; frames presented: {}; glyph quads: {}; background quads: {}; cursor quads: {}\n",
+                            "window perf smoke failed: no glyph frame was presented; redraw attempts: {}; frames presented: {}; glyph quads: {}; background quads: {}; cursor quads: {}\n",
+                            report.redraw_attempts,
                             report.frames_presented,
                             report.glyph_frame_glyph_quads,
                             report.glyph_frame_background_quads,
@@ -87,7 +96,8 @@ where
                 CliExit {
                     code: 0,
                     stdout: format!(
-                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nwindow physical size: {window_size}\nwindow scale milliscale: {window_scale}\nglyph frame presented: {}\nglyph frame size: {}x{}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame decoration quads: {}\nglyph frame cursor quads: {}\nglyph frame atlas bytes: {}\nglyph frame atlas occupied slots: {}\nframe interval target fps: {}\nframe interval target ns: {frame_interval_target_ns}\nframe interval p95 budget ns: {frame_interval_p95_budget_ns}\nframe interval warmup frames: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval max sample: {}\nframe interval p95 ns: {}\nframe interval p95 exact ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nfirst dropped frame interval sample: {}\nlast dropped frame interval sample: {}\nframe pacing accepted: {}\n",
+                        "window perf smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\ntarget fps: {target_fps}\nmonitor refresh mhz: {monitor_refresh_millihertz}\nsurface present mode: {surface_present_mode}\nwindow physical size: {window_size}\nwindow scale milliscale: {window_scale}\nglyph frame presented: {}\nglyph frame size: {}x{}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame decoration quads: {}\nglyph frame cursor quads: {}\nglyph frame atlas bytes: {}\nglyph frame atlas occupied slots: {}\nframe interval target fps: {}\nframe interval target ns: {frame_interval_target_ns}\nframe interval p95 budget ns: {frame_interval_p95_budget_ns}\nframe interval warmup frames: {}\nelapsed ns: {}\nframe interval samples: {}\nframe interval avg ns: {}\nframe interval max ns: {}\nframe interval max sample: {}\nframe interval p95 ns: {}\nframe interval p95 exact ns: {}\nframe intervals over target: {}\nframe intervals over double target: {}\ndropped frames: {}\nfirst dropped frame interval sample: {}\nlast dropped frame interval sample: {}\nframe pacing accepted: {}\n",
+                        report.redraw_attempts,
                         report.frames_presented,
                         report.glyph_frame_presented,
                         report.glyph_frame_width,
@@ -117,10 +127,24 @@ where
                     stderr: String::new(),
                 }
             } else {
-                CliExit {
-                    code: 0,
-                    stdout: "window smoke: ok\npresented frame limit: 1\n".to_owned(),
-                    stderr: String::new(),
+                if report.frames_presented == 0 {
+                    CliExit {
+                        code: 1,
+                        stdout: String::new(),
+                        stderr: format!(
+                            "window smoke failed: no surface frame was presented; redraw attempts: {}\n",
+                            report.redraw_attempts
+                        ),
+                    }
+                } else {
+                    CliExit {
+                        code: 0,
+                        stdout: format!(
+                            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\n",
+                            report.redraw_attempts
+                        ),
+                        stderr: String::new(),
+                    }
                 }
             }
         }
@@ -149,6 +173,7 @@ where
 
     let mut launch_config = NativeAppLaunchConfig::default();
     launch_config.app.exit_after_presented_frames = Some(60);
+    launch_config.app.exit_after_redraw_attempts = Some(60);
     launch_config.app.redraw_until_presented_frame_limit = true;
     launch_config.app.glyph_frame_snapshot_path = Some(PathBuf::from(path));
     launch_config.app.startup_text = Some("gromaq window glyph frame snapshot\n".to_owned());

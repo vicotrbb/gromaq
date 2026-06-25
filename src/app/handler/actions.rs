@@ -44,8 +44,12 @@ impl NativeTerminalApp {
             event_loop.exit();
             return;
         }
+        let mut frame_presented = false;
         match self.present_redraw_frame() {
-            Ok(report) => self.lifecycle.record_glyph_frame_presentation(report),
+            Ok(report) => {
+                frame_presented = report.glyph_frame_presented || report.clear_presented;
+                self.lifecycle.record_glyph_frame_presentation(report);
+            }
             Err(error) => match error {
                 NativeGlyphFrameError::Surface(
                     SurfaceFrameError::Timeout | SurfaceFrameError::Occluded,
@@ -64,7 +68,7 @@ impl NativeTerminalApp {
                 }
             },
         }
-        match self.lifecycle.on_redraw_requested() {
+        match self.lifecycle.on_redraw_attempt_finished(frame_presented) {
             NativeAppAction::RequestRedraw => {
                 if let Some(window) = &self.window {
                     window.request_redraw();

@@ -11,7 +11,9 @@ pub struct NativeAppRunReport {
     pub windows_created: u64,
     /// Count of native redraw requests scheduled by app logic.
     pub redraw_requests: u64,
-    /// Count of redraw events observed by the app boundary.
+    /// Count of native redraw callbacks processed by the app boundary.
+    pub redraw_attempts: u64,
+    /// Count of redraw attempts that presented a native surface frame.
     pub frames_presented: u64,
     /// Active monitor refresh rate in millihertz, if the platform reported one.
     pub monitor_refresh_millihertz: Option<u32>,
@@ -83,6 +85,7 @@ pub struct NativeAppRunReport {
 pub(super) struct NativeAppRunReportInput {
     pub(super) windows_created: u64,
     pub(super) redraw_requests: u64,
+    pub(super) redraw_attempts: u64,
     pub(super) frames_presented: u64,
     pub(super) monitor_refresh_millihertz: Option<u32>,
     pub(super) surface_present_mode: Option<&'static str>,

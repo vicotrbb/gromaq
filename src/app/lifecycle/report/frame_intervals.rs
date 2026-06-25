@@ -105,6 +105,7 @@ impl PresentedFrameIntervals {
         NativeAppRunReport {
             windows_created: input.windows_created,
             redraw_requests: input.redraw_requests,
+            redraw_attempts: input.redraw_attempts,
             frames_presented: input.frames_presented,
             monitor_refresh_millihertz: input.monitor_refresh_millihertz,
             surface_present_mode: input.surface_present_mode,

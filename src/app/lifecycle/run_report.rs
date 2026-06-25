@@ -11,6 +11,7 @@ impl NativeAppLifecycle {
         self.frame_intervals.run_report(NativeAppRunReportInput {
             windows_created: self.windows_created,
             redraw_requests: self.redraw_requests,
+            redraw_attempts: self.redraw_attempts,
             frames_presented: self.frames_presented,
             monitor_refresh_millihertz: self.monitor_refresh_millihertz,
             surface_present_mode: self.surface_present_mode,
