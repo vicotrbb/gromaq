@@ -90,6 +90,7 @@ Implemented and tested:
 - Deterministic runtime alternate-screen smoke with `--runtime-alternate-screen-smoke`
 - Deterministic runtime scrollback resize/reflow smoke with `--runtime-reflow-smoke`
 - Deterministic runtime config reload smoke with `--runtime-config-reload-smoke`
+- Deterministic runtime text zoom smoke with `--runtime-text-zoom-smoke`
 - Deterministic runtime focus-report smoke with `--runtime-focus-smoke`
 - Deterministic runtime mouse-report smoke with `--runtime-mouse-smoke`
 - Deterministic runtime terminal-response smoke with `--runtime-response-smoke`
@@ -155,6 +156,7 @@ cargo run -- --runtime-continuous-output-smoke
 cargo run -- --runtime-alternate-screen-smoke
 cargo run -- --runtime-reflow-smoke
 cargo run -- --runtime-config-reload-smoke
+cargo run -- --runtime-text-zoom-smoke
 cargo run -- --runtime-focus-smoke
 cargo run -- --runtime-mouse-smoke
 cargo run -- --runtime-response-smoke
