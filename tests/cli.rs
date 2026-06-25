@@ -44,6 +44,9 @@ struct MockAppLauncher {
 }
 
 #[derive(Debug)]
+struct NoGlyphFrameAppLauncher;
+
+#[derive(Debug)]
 struct ReadOnlyClipboard {
     text: String,
 }
@@ -129,6 +132,22 @@ impl NativeAppLauncher for MockAppLauncher {
             dropped_frames: 1,
             first_dropped_frame_interval_sample: 17,
             last_dropped_frame_interval_sample: 17,
+            ..NativeAppRunReport::default()
+        })
+    }
+}
+
+impl NativeAppLauncher for NoGlyphFrameAppLauncher {
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
+        Ok(NativeAppRunReport {
+            frames_presented: config.app.exit_after_presented_frames.unwrap_or_default(),
+            frame_interval_target_fps: 60,
+            frame_interval_warmup_frames: config.app.frame_interval_warmup_frames,
+            frame_interval_samples: 180,
+            glyph_frame_presented: false,
             ..NativeAppRunReport::default()
         })
     }
@@ -565,6 +584,10 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     assert!(launch.app.redraw_until_presented_frame_limit);
     assert_eq!(launch.app.frame_interval_warmup_frames, 12);
     assert_eq!(launch.app.target_fps, 144);
+    assert_eq!(
+        launch.app.startup_text.as_deref(),
+        Some("gromaq window perf smoke\nframe pacing probe\n")
+    );
     assert_eq!(launch.runtime.shell.program, "/bin/sh");
     assert_eq!(
         launch.runtime.shell.args,
@@ -575,6 +598,25 @@ fn window_perf_smoke_launches_bounded_multi_frame_native_terminal_app() {
     );
     assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
     assert_eq!(launch.config_path, None);
+}
+
+#[test]
+fn window_perf_smoke_fails_when_no_glyph_frame_is_presented() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = NoGlyphFrameAppLauncher;
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-perf-smoke"], &backend, &app);
+
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(
+        exit.stderr.contains(
+            "window perf smoke failed: no glyph frame was presented; frames presented: 192"
+        )
+    );
+    assert!(backend.requests.borrow().is_empty());
 }
 
 #[test]

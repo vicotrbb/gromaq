@@ -38,6 +38,8 @@ where
     launch_config.app.exit_after_presented_frames = Some(frame_limit);
     if command == CliCommand::WindowPerfSmoke {
         launch_config.app.redraw_until_presented_frame_limit = true;
+        launch_config.app.startup_text =
+            Some("gromaq window perf smoke\nframe pacing probe\n".to_owned());
         launch_config.runtime.shell = ShellCommand {
             program: "/bin/sh".into(),
             args: vec![
@@ -53,6 +55,19 @@ where
     match app_launcher.launch(launch_config) {
         Ok(report) => {
             if command == CliCommand::WindowPerfSmoke {
+                if !report.glyph_frame_presented {
+                    return CliExit {
+                        code: 1,
+                        stdout: String::new(),
+                        stderr: format!(
+                            "window perf smoke failed: no glyph frame was presented; frames presented: {}; glyph quads: {}; background quads: {}; cursor quads: {}\n",
+                            report.frames_presented,
+                            report.glyph_frame_glyph_quads,
+                            report.glyph_frame_background_quads,
+                            report.glyph_frame_cursor_quads,
+                        ),
+                    };
+                }
                 let monitor_refresh_millihertz = report
                     .monitor_refresh_millihertz
                     .map(|refresh| refresh.to_string())
