@@ -27,6 +27,13 @@ const ALLOWED_IMAGE_TOOLING_FILES: &[&str] = &[
     "images/tools/gromaq-image-assets.mjs",
 ];
 
+/// Directories that never contain Gromaq source and must be skipped by the
+/// native-only scan: version-control metadata, build output, dependency trees,
+/// and external tooling workspaces. `.opencode/` carries the opencode agent's
+/// own node-based TUI state and is not part of the native Rust project, so it
+/// must not be reported as a Gromaq frontend runtime file.
+const NON_PROJECT_DIRECTORIES: &[&str] = &[".git", "target", "node_modules", ".opencode"];
+
 const FORBIDDEN_DEPENDENCIES: &[&str] = &[
     "boa_engine",
     "deno_core",
@@ -100,7 +107,7 @@ fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Ve
         let file_name = file_name.to_string_lossy();
 
         if path.is_dir() {
-            if matches!(file_name.as_ref(), ".git" | "target") {
+            if NON_PROJECT_DIRECTORIES.contains(&file_name.as_ref()) {
                 continue;
             }
             collect_frontend_file_violations(root, &path, violations);
