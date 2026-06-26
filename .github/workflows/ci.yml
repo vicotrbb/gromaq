@@ -54,7 +54,9 @@ jobs:
       - run: cargo run -- --runtime-real-shell-perf-budget-smoke
       - run: cargo run -- --runtime-real-shell-large-output-smoke
       - run: cargo run -- --runtime-real-shell-reflow-smoke
+      - run: cargo run -- --frame-scheduler-smoke
       - run: cargo run -- --gpu-smoke
+      - run: cargo run -- --gpu-upload-smoke
       - run: cargo run -- --gpu-textured-quad-smoke
       - run: cargo run -- --gpu-terminal-text-smoke
       - run: cargo run -- --gpu-glyph-atlas-smoke
