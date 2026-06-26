@@ -55,6 +55,10 @@ fn current_process_cpu_percent() -> Result<f32, String> {
     let pid = std::process::id().to_string();
     let output = Command::new("ps")
         .args(["-o", "%cpu=", "-p", &pid])
+        // Force the POSIX locale so `%cpu` always uses a `.` decimal separator.
+        // Without this, hosts with a comma-decimal locale (e.g. `pt_BR.UTF-8`)
+        // emit values like `0,0`, which `f32::parse` rejects.
+        .env("LC_ALL", "C")
         .output()
         .map_err(|error| format!("process cpu sampling failed to start: {error}"))?;
     if !output.status.success() {
@@ -65,10 +69,18 @@ fn current_process_cpu_percent() -> Result<f32, String> {
     }
     let stdout = String::from_utf8(output.stdout)
         .map_err(|error| format!("process cpu output was not utf-8: {error}"))?;
-    stdout
+    let token = stdout
         .split_whitespace()
         .next()
-        .ok_or_else(|| "process cpu output was empty".to_owned())?
+        .ok_or_else(|| "process cpu output was empty".to_owned())?;
+    parse_cpu_percent(token)
+}
+
+/// Parse a `ps` `%cpu` token, tolerating either a `.` or `,` decimal separator
+/// so the smoke stays robust even if a host ignores the POSIX-locale override.
+fn parse_cpu_percent(token: &str) -> Result<f32, String> {
+    token
+        .replace(',', ".")
         .parse::<f32>()
         .map_err(|error| format!("process cpu output was not numeric: {error}"))
 }
@@ -106,5 +118,18 @@ mod tests {
             runtime_idle_cpu_budget_failure(RUNTIME_IDLE_CPU_BUDGET_PERCENT + 0.1),
             Some("idle cpu percent exceeded budget")
         );
+    }
+
+    #[test]
+    fn parse_cpu_percent_accepts_dot_decimal() {
+        assert_eq!(parse_cpu_percent("0.0"), Ok(0.0));
+        assert_eq!(parse_cpu_percent("1.8"), Ok(1.8));
+    }
+
+    #[test]
+    fn parse_cpu_percent_accepts_comma_decimal_locale() {
+        // Hosts with a comma-decimal locale (e.g. pt_BR.UTF-8) emit `0,0`.
+        assert_eq!(parse_cpu_percent("0,0"), Ok(0.0));
+        assert_eq!(parse_cpu_percent("1,8"), Ok(1.8));
     }
 }
