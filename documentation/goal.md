@@ -22,6 +22,8 @@ These rules are non-negotiable:
 - Performance-first architecture is mandatory.
 - 144Hz-capable rendering is mandatory.
 - AI features must not be implemented until the terminal core is stable, benchmarked, and correct.
+- Public release quality is mandatory: README, install path, branding, and
+  documentation organization are part of the product, not afterthoughts.
 - Do not add dependencies casually.
 - Do not optimize by sacrificing correctness.
 - Do not implement large untested code paths.
@@ -304,32 +306,37 @@ The project should be easy for contributors to understand.
 
 Maintain:
 
-- an accurate, polished, open-source-grade `README.md` that reflects the actual
-  current feature set, proof boundaries, installation path, validation commands,
-  screenshots/assets, and contribution workflow
+- an accurate, polished, open-source-grade `README.md` that is suitable for a
+  public GitHub project and reflects the actual current feature set, proof
+  boundaries, installation path, validation commands, screenshots/assets, and
+  contribution workflow
 - clear issue labels
 - clear coding standards
 - reproducible tests
 - reproducible benchmarks
 - minimal setup friction
-- one-command installation for end users where practical, with documented macOS
-  and Linux paths
+- one-command installation for normal end users on macOS and Linux where
+  practical, with documented manual fallback commands for contributors and
+  unsupported environments
 - documented architecture
 - clear contribution path
 - good first issue candidates
 - no hidden proprietary assumptions
-- one canonical documentation tree under `documentation/`; do not keep a
-  parallel `docs/` tree
+- one canonical documentation tree under `documentation/`; remove any stray
+  `docs/` tree instead of maintaining parallel documentation locations
 
 ## Distribution and Branding Standards
 
 The public project must be easy to install and visibly branded:
 
 - provide a simple one-command install path for normal macOS and Linux users
+- keep that one-command path easy to audit and safe to run from a public
+  open-source repository
 - document manual build/install fallback commands for contributors and
   unsupported environments
 - ensure the project logo is wired into native application identity where the
-  platform supports it, including window/app/taskbar or dock metadata
+  platform supports it, including window, app bundle, taskbar, app switcher, and
+  dock metadata
 - keep source logo/avatar assets and generated app/icon outputs organized in
   repository assets
 - test or document the platform boundary for app-icon behavior instead of
