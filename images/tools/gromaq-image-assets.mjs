@@ -511,7 +511,7 @@ function boostTerminalColor([red, green, blue], coverageRatio = 1) {
     green * 0.72 * edgeLift,
     blue * 1.42 * edgeLift + 42,
   ];
-  return floorTerminalContrast(boosted).map((channel) => clamp(Math.round(channel), 0, 255));
+  return floorTerminalContrast(boosted);
 }
 
 // The dark gromaq background makes dark avatar cells disappear. Add neutral
@@ -523,9 +523,11 @@ function boostTerminalColor([red, green, blue], coverageRatio = 1) {
 function floorTerminalContrast([red, green, blue]) {
   const requiredLuminance =
     TERMINAL_AVATAR_MIN_CONTRAST * (relativeLuminance(TERMINAL_BACKGROUND_RGB) + 0.05) - 0.05;
-  let r = red;
-  let g = green;
-  let b = blue;
+  // Snap to the final 8-bit channels first, then check the floor against those
+  // exact values so the contrast target survives the float-to-u8 rounding.
+  let r = clamp(Math.round(red), 0, 255);
+  let g = clamp(Math.round(green), 0, 255);
+  let b = clamp(Math.round(blue), 0, 255);
   while (
     (r < 255 || g < 255 || b < 255) &&
     relativeLuminance([r, g, b]) < requiredLuminance
