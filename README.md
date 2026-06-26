@@ -68,6 +68,16 @@ scripts/package-macos-app.sh
 open target/dist/Gromaq.app
 ```
 
+The one-command installer can also install a user-local `.app` bundle when run
+on macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_APP_BUNDLE=1 sh
+```
+
+By default this copies `Gromaq.app` to `~/Applications`. Set
+`GROMAQ_MACOS_APP_DIR=/path/to/apps` to choose another destination.
+
 Release artifact helpers:
 
 ```bash

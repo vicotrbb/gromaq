@@ -11,6 +11,16 @@ The public one-command install path builds from source with Cargo:
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh
 ```
 
+On macOS, the same installer can also package and copy a user-local `.app`
+bundle with the project icon:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_APP_BUNDLE=1 sh
+```
+
+The default destination is `~/Applications/Gromaq.app`. Override it with
+`GROMAQ_MACOS_APP_DIR=/path/to/apps`.
+
 Requirements:
 
 - Rust stable with Cargo
@@ -77,6 +87,11 @@ metadata from `Cargo.toml`.
 
 Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary.
 
+When `GROMAQ_INSTALL_APP_BUNDLE=1` is set, `scripts/install.sh` prepares the
+minimal packaging assets needed by `scripts/package-macos-app.sh`, runs it
+against the installed binary, and copies the generated bundle to
+`${GROMAQ_MACOS_APP_DIR:-~/Applications}`.
+
 ## GitHub Artifacts
 
 `.github/workflows/release.yml` runs on `v*` tags and manual dispatch. It
@@ -97,6 +112,8 @@ Proven locally:
 
 - macOS `.app` generation with a supplied debug binary
 - `Info.plist` syntax and icon metadata
+- optional macOS app-bundle install path with file-backed raw assets and a
+  supplied installed binary
 - Linux install-root desktop asset placement without network or home writes
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
