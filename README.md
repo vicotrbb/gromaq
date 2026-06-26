@@ -114,6 +114,9 @@ Implemented and covered by automated tests or deterministic smoke commands:
   theme legibility gates
 - Criterion benchmark harness and repository policy tests for native-only Rust,
   public metadata, docs, CI commands, and module-size discipline
+- remote GitHub Actions release workflow that builds and uploads the Linux
+  tarball and macOS `.app` release artifacts with a SHA256SUMS manifest on tag
+  and manual dispatch
 
 Not yet proven enough to call complete:
 
@@ -122,7 +125,6 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- remote GitHub Actions release workflow success
 - signed/notarized macOS app distribution and package-manager-specific Linux
   packages
 
