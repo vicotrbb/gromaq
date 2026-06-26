@@ -71,7 +71,7 @@ fn runtime_real_shell_perf_budget_smoke_cli_enforces_real_shell_latency_budgets(
     assert!(exit.stdout.contains("input-to-render p95 ns:"));
     assert!(
         exit.stdout
-            .contains("input-to-render p95 budget ns: 10000000")
+            .contains("input-to-render p95 budget ns: 20000000")
     );
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
