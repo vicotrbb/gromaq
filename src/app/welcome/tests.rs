@@ -38,11 +38,19 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
 fn default_welcome_avatar_is_trimmed_and_uses_supported_block_glyphs() {
     let lines: Vec<_> = WELCOME_AVATAR_ANSI.lines().collect();
     let widths: Vec<_> = lines.iter().map(|line| ansi_visible_width(line)).collect();
+    let max_width = widths.iter().copied().max().unwrap_or(0);
 
     assert_eq!(lines.len(), 15);
-    assert_eq!(widths.iter().copied().max(), Some(21));
-    assert!(widths.iter().all(|width| *width == 21));
-    assert!(WELCOME_AVATAR_ANSI.chars().any(is_quadrant_block));
+    assert_eq!(max_width, 32);
+    assert!(widths.iter().all(|width| *width == 32));
+    assert!(WELCOME_AVATAR_ANSI.chars().any(is_half_block));
+
+    // The avatar is baked for the default gromaq cell (18x44px). A near-square
+    // source must render wider-than-tall in cell counts (ratio ~2.3) to avoid
+    // the vertical stretching that left the old avatar 39% too narrow. This
+    // guards the aspect-correct half-block rendering against regressions.
+    let ratio = max_width as f64 / lines.len() as f64;
+    assert!(ratio >= 2.0, "avatar aspect ratio regressed: {ratio}");
 }
 
 #[test]
@@ -66,24 +74,8 @@ fn default_welcome_text_uses_renderer_theme_colors() {
     assert!(text.contains("\x1b[38;2;10;11;12mnative Rust GPU terminal"));
 }
 
-fn is_quadrant_block(ch: char) -> bool {
-    matches!(
-        ch,
-        '▘' | '▝'
-            | '▀'
-            | '▖'
-            | '▌'
-            | '▞'
-            | '▛'
-            | '▗'
-            | '▚'
-            | '▐'
-            | '▜'
-            | '▄'
-            | '▙'
-            | '▟'
-            | '█'
-    )
+fn is_half_block(ch: char) -> bool {
+    matches!(ch, '▀' | '▄' | '█')
 }
 
 #[test]

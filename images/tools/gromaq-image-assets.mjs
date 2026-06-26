@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const DEFAULT_CELL_ASPECT = 18 / 44;
 const OUTPUTS = {
   avatar: [
     ['avatar-transparent.png', 768],
@@ -27,6 +28,7 @@ export async function generateAssetSet({
   terminalRows,
   terminalCrop,
   terminalMode = 'half-block',
+  terminalCellAspect = DEFAULT_CELL_ASPECT,
 }) {
   const dir = join(ROOT, folder);
   const sourcePath = join(dir, source);
@@ -58,7 +60,7 @@ export async function generateAssetSet({
   }
 
   const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
-  const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows, terminalMode);
+  const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows, terminalMode, terminalCellAspect);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';
   writeFileSync(join(outputDir, ansiName), terminal, 'utf8');
   console.log(`wrote ${ansiName} ${terminalColumns}x${terminalRows} cells`);
@@ -329,36 +331,49 @@ function sampleBilinear(image, x, y, out, offset) {
   }
 }
 
-function terminalAnsi(image, columns, rows, mode) {
+function terminalAnsi(image, columns, rows, mode, cellAspect) {
   if (mode === 'quadrant-block') {
-    return terminalQuadrantBlockAnsi(image, columns, rows);
+    return terminalQuadrantBlockAnsi(image, columns, rows, cellAspect);
   }
   if (mode !== 'half-block') {
     throw new Error(`unsupported terminal image mode: ${mode}`);
   }
-  return terminalHalfBlockAnsi(image, columns, rows);
+  return terminalHalfBlockAnsi(image, columns, rows, cellAspect);
 }
 
-function terminalHalfBlockAnsi(image, columns, rows) {
-  const sampled = contain(image, columns * 4, rows * 8);
+function terminalSampleSize(cellAspect) {
+  const sampleWidth = 4;
+  const cellHeight = Math.max(2, Math.round(sampleWidth / cellAspect));
+  return {
+    sampleWidth,
+    cellHeight,
+    halfWidth: Math.max(1, Math.round(sampleWidth / 2)),
+    halfHeight: Math.max(1, Math.round(cellHeight / 2)),
+  };
+}
+
+function terminalHalfBlockAnsi(image, columns, rows, cellAspect) {
+  const { sampleWidth, cellHeight, halfHeight } = terminalSampleSize(cellAspect);
+  const sampled = contain(image, columns * sampleWidth, rows * cellHeight);
   const lines = [];
   for (let row = 0; row < rows; row++) {
     let line = '';
     for (let col = 0; col < columns; col++) {
-      line += terminalHalfBlockCell(sampled, col * 4, row * 8);
+      line += terminalHalfBlockCell(sampled, col * sampleWidth, row * cellHeight, sampleWidth, halfHeight);
     }
     lines.push(line);
   }
   return normalizedTerminalLines(lines);
 }
 
-function terminalQuadrantBlockAnsi(image, columns, rows) {
-  const sampled = contain(image, columns * 2, rows * 2);
+function terminalQuadrantBlockAnsi(image, columns, rows, cellAspect) {
+  const { sampleWidth, cellHeight, halfWidth, halfHeight } = terminalSampleSize(cellAspect);
+  const sampled = contain(image, columns * sampleWidth, rows * cellHeight);
   const lines = [];
   for (let row = 0; row < rows; row++) {
     let line = '';
     for (let col = 0; col < columns; col++) {
-      line += terminalQuadrantBlockCell(sampled, col * 2, row * 2);
+      line += terminalQuadrantBlockCell(sampled, col * sampleWidth, row * cellHeight, halfWidth, halfHeight);
     }
     lines.push(line);
   }
@@ -384,14 +399,14 @@ const QUADRANT_BLOCKS = [
   '█',
 ];
 
-function terminalQuadrantBlockCell(image, left, top) {
+function terminalQuadrantBlockCell(image, left, top, halfWidth, halfHeight) {
   let mask = 0;
   const colors = [];
   const samples = [
     [0, 0, 1],
-    [1, 0, 2],
-    [0, 1, 4],
-    [1, 1, 8],
+    [halfWidth, 0, 2],
+    [0, halfHeight, 4],
+    [halfWidth, halfHeight, 8],
   ];
   for (const [x, y, bit] of samples) {
     const sample = pixel(image, left + x, top + y);
@@ -424,9 +439,9 @@ function ansiVisibleWidth(value) {
   return width;
 }
 
-function terminalHalfBlockCell(image, left, top) {
-  const topSample = terminalBlockSample(image, left, top, 4, 4);
-  const bottomSample = terminalBlockSample(image, left, top + 4, 4, 4);
+function terminalHalfBlockCell(image, left, top, sampleWidth, halfHeight) {
+  const topSample = terminalBlockSample(image, left, top, sampleWidth, halfHeight);
+  const bottomSample = terminalBlockSample(image, left, top + halfHeight, sampleWidth, halfHeight);
 
   if (!topSample.visible && !bottomSample.visible) return ' ';
   if (topSample.visible && bottomSample.visible) {
