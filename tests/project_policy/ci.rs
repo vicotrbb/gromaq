@@ -61,6 +61,7 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "linux-packaging:",
     "runs-on: ubuntu-latest",
     "cargo test --test project_policy",
+    "GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT=\"$PWD\" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh",
     "scripts/package-linux-tarball.sh",
     "scripts/generate-checksums.sh",
 ];

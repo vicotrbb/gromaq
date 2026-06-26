@@ -86,7 +86,8 @@ uploads:
 - a zipped macOS `.app` bundle from `scripts/package-macos-app.sh`
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
-repository policy checks and Linux tarball assembly on `ubuntu-latest`.
+repository policy checks, Linux user-local desktop asset install proof, and
+Linux tarball assembly on `ubuntu-latest`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set.
 
@@ -97,6 +98,7 @@ Proven locally:
 - macOS `.app` generation with a supplied debug binary
 - `Info.plist` syntax and icon metadata
 - Linux install-root desktop asset placement without network or home writes
+- CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - release checksum manifest generation for local tarball artifacts
 - shell syntax checks for install and packaging scripts
