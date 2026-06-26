@@ -6,6 +6,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_CELL_ASPECT = 18 / 44;
+// The welcome avatar is baked for the default gromaq-ghostty theme background.
+// Dark source cells otherwise render near this luminance and disappear.
+const TERMINAL_BACKGROUND_RGB = [0x10, 0x12, 0x16];
+const TERMINAL_AVATAR_MIN_CONTRAST = 3.0;
 const OUTPUTS = {
   avatar: [
     ['avatar-transparent.png', 768],
@@ -507,12 +511,38 @@ function boostTerminalColor([red, green, blue], coverageRatio = 1) {
     green * 0.72 * edgeLift,
     blue * 1.42 * edgeLift + 42,
   ];
-  const max = Math.max(...boosted);
-  if (max < 96) {
-    const scale = 96 / Math.max(1, max);
-    return boosted.map((channel) => clamp(Math.round(channel * scale), 0, 255));
+  return floorTerminalContrast(boosted).map((channel) => clamp(Math.round(channel), 0, 255));
+}
+
+// The dark gromaq background makes dark avatar cells disappear. Add neutral
+// light (equal red/green/blue) until the cell reaches the WCAG graphical
+// contrast minimum against the background. Raising green/red is the only way to
+// lift the luminance of blue-dominant cells; equal light desaturates toward a
+// lighter tint while preserving the hue direction, avoiding muddy low-contrast
+// output without washing cells out to white.
+function floorTerminalContrast([red, green, blue]) {
+  const requiredLuminance =
+    TERMINAL_AVATAR_MIN_CONTRAST * (relativeLuminance(TERMINAL_BACKGROUND_RGB) + 0.05) - 0.05;
+  let r = red;
+  let g = green;
+  let b = blue;
+  while (
+    (r < 255 || g < 255 || b < 255) &&
+    relativeLuminance([r, g, b]) < requiredLuminance
+  ) {
+    if (r < 255) r += 1;
+    if (g < 255) g += 1;
+    if (b < 255) b += 1;
   }
-  return boosted.map((channel) => clamp(Math.round(channel), 0, 255));
+  return [r, g, b];
+}
+
+function relativeLuminance([red, green, blue]) {
+  const channel = (value) => {
+    const c = value / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(red) + 0.7152 * channel(green) + 0.0722 * channel(blue);
 }
 
 function compositeOnBackground(image, background) {
