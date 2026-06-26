@@ -71,6 +71,26 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ),
 ];
 
+const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
+    ("README.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
+    ("README.md", "GROMAQ_MACOS_APP_DIR"),
+    (
+        "README.md",
+        "installer asset placement plus Linux tarball assembly",
+    ),
+    (
+        "README.md",
+        "remote GitHub Actions release workflow success",
+    ),
+    ("README.md", "signed/notarized macOS app distribution"),
+    ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
+    ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
+    (
+        "documentation/release.md",
+        "optional macOS app-bundle install path",
+    ),
+];
+
 #[test]
 fn public_docs_keep_default_visual_contract_and_proof_commands() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -81,6 +101,21 @@ fn public_docs_keep_default_visual_contract_and_proof_commands() {
         assert!(
             source.contains(marker),
             "{} must document `{marker}` for the default visual contract",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
+fn public_docs_keep_release_install_boundaries() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    for (relative, marker) in REQUIRED_RELEASE_DOC_MARKERS {
+        let path = root.join(relative);
+        let source = fs::read_to_string(&path).unwrap();
+        assert!(
+            source.contains(marker),
+            "{} must document `{marker}` for public install and release boundaries",
             relative_path(root, &path)
         );
     }

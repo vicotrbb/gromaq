@@ -88,7 +88,8 @@ scripts/package-macos-app.sh
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball and a zipped macOS `.app` bundle.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
-tarball assembly. Release artifacts include a `SHA256SUMS` manifest.
+installer asset placement plus Linux tarball assembly. Release artifacts include
+a `SHA256SUMS` manifest.
 
 ## Status
 
@@ -121,8 +122,8 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- release packaging beyond source install
-- signed/notarized macOS release artifacts and package-manager-specific Linux
+- remote GitHub Actions release workflow success
+- signed/notarized macOS app distribution and package-manager-specific Linux
   packages
 
 Current proof details live in
