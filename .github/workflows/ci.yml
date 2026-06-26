@@ -16,6 +16,7 @@ jobs:
       - run: sh -n scripts/install.sh
       - run: sh -n scripts/package-macos-app.sh
       - run: sh -n scripts/package-linux-tarball.sh
+      - run: sh -n scripts/generate-checksums.sh
       - run: sh -n scripts/capture-macos-window-proof.sh
       - run: cargo fmt --check
       - run: git diff --check
@@ -63,5 +64,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: sh -n scripts/install.sh
       - run: sh -n scripts/package-linux-tarball.sh
+      - run: sh -n scripts/generate-checksums.sh
       - run: cargo test --test project_policy
       - run: scripts/package-linux-tarball.sh
+      - run: scripts/generate-checksums.sh

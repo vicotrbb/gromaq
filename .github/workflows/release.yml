@@ -15,10 +15,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --test project_policy
       - run: scripts/package-linux-tarball.sh
+      - run: scripts/generate-checksums.sh
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-linux-tarball
-          path: target/dist/*.tar.gz
+          path: |
+            target/dist/*.tar.gz
+            target/dist/SHA256SUMS
 
   macos-app:
     runs-on: macos-latest
@@ -29,7 +32,10 @@ jobs:
       - run: cargo test --test project_policy
       - run: scripts/package-macos-app.sh
       - run: ditto -c -k --sequesterRsrc --keepParent target/dist/Gromaq.app target/dist/Gromaq-macos-app.zip
+      - run: scripts/generate-checksums.sh
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-macos-app
-          path: target/dist/Gromaq-macos-app.zip
+          path: |
+            target/dist/Gromaq-macos-app.zip
+            target/dist/SHA256SUMS

@@ -87,6 +87,8 @@ uploads:
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
 repository policy checks and Linux tarball assembly on `ubuntu-latest`.
+Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
+next to each artifact set.
 
 ## Current Proof Boundary
 
@@ -96,6 +98,7 @@ Proven locally:
 - `Info.plist` syntax and icon metadata
 - Linux install-root desktop asset placement without network or home writes
 - Linux tarball archive structure with a supplied binary
+- release checksum manifest generation for local tarball artifacts
 - shell syntax checks for install and packaging scripts
 - project policy tests covering required release files and workflow markers
 
