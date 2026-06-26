@@ -54,6 +54,11 @@ jobs:
       - run: cargo run -- --runtime-real-shell-perf-budget-smoke
       - run: cargo run -- --runtime-real-shell-large-output-smoke
       - run: cargo run -- --runtime-real-shell-reflow-smoke
+      - run: cargo run -- --gpu-smoke
+      - run: cargo run -- --gpu-textured-quad-smoke
+      - run: cargo run -- --gpu-terminal-text-smoke
+      - run: cargo run -- --gpu-glyph-atlas-smoke
+      - run: cargo run -- --gpu-text-atlas-smoke
       - run: cargo bench --bench parser_throughput -- --list
 
   linux-packaging:
