@@ -278,6 +278,8 @@ More theme details are in [`documentation/theme.md`](documentation/theme.md).
   reproducible runs, and regression handling
 - [`documentation/compatibility.md`](documentation/compatibility.md): current
   compatibility proof and gaps
+- [`documentation/release.md`](documentation/release.md): install, packaging,
+  release artifact, and proof-boundary workflow
 - [`documentation/theme.md`](documentation/theme.md): theme, font, opacity, and
   welcome-screen contract
 - [`TESTING.md`](TESTING.md): fixture conventions and live-proof boundaries

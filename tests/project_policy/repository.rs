@@ -25,6 +25,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",
     "images/screenshots/gromaq-welcome-preview.png",
     "documentation/benchmarks.md",
+    "documentation/release.md",
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",
     ".github/workflows/release.yml",
