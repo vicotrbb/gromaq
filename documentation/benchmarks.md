@@ -50,7 +50,12 @@ windowed GPU frame pacing acceptance proof. `cargo run --
 --runtime-real-shell-perf-budget-smoke` applies the same render and
 input-to-render p95 budgets to the real `/bin/sh` PTY transcript path, making
 the executable gate closer to daily shell usage while still remaining distinct
-from live windowed GPU pacing proof. On 2026-06-25, `cargo run --
+from live windowed GPU pacing proof. On 2026-06-25, after the real-shell smoke
+was changed to wait for the shell-ready marker before sending measured input
+and to poll below the 10 ms latency budget, `cargo run --
+--runtime-real-shell-smoke` pumped 169 bytes, rendered 3 CPU-side frames,
+reported render p95 250000 ns, and reported input-to-render p95 250000 ns. On
+2026-06-25, `cargo run --
 --runtime-real-shell-command-output-smoke` pumped 205 bytes from a real
 `/bin/sh`, wrote 97 PTY input bytes, observed two command-output rows plus a
 post-command prompt marker, rendered 3 CPU-side frames, and proved a full redraw

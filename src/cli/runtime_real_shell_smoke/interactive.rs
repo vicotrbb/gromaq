@@ -76,24 +76,35 @@ fn run_runtime_real_shell_smoke() -> Result<RuntimeRealShellSmokeProbe, String> 
     runtime
         .start_shell(&RealNativePtySpawner::default())
         .map_err(|error| error.to_string())?;
-    runtime
-        .send_pty_input(format!("{REAL_SHELL_INPUT}\n{REAL_SHELL_EXIT}\n").as_bytes())
-        .map_err(|error| error.to_string())?;
 
     let mut renderer =
         WgpuRenderer::new(RendererConfig::default()).map_err(|error| error.to_string())?;
     let mut pumped_bytes = 0;
     let deadline = Instant::now() + REAL_SHELL_SMOKE_TIMEOUT;
+
     loop {
-        let pumped = runtime
-            .pump_pty_output()
-            .map_err(|error| error.to_string())?;
-        if pumped > 0 {
-            pumped_bytes += pumped;
-            runtime
-                .render_terminal_frame(&mut renderer)
-                .map_err(|error| error.to_string())?;
+        pumped_bytes += pump_and_render_real_shell_output(&mut runtime, &mut renderer)?;
+
+        let transcript = runtime_transcript(&runtime);
+        if transcript.contains(REAL_SHELL_READY) {
+            break;
         }
+
+        if Instant::now() >= deadline {
+            return Err(format!(
+                "timed out waiting for real shell ready marker; observed: {}",
+                transcript.replace('\n', "|")
+            ));
+        }
+        thread::sleep(REAL_SHELL_SMOKE_POLL_INTERVAL);
+    }
+
+    runtime
+        .send_pty_input(format!("{REAL_SHELL_INPUT}\n{REAL_SHELL_EXIT}\n").as_bytes())
+        .map_err(|error| error.to_string())?;
+
+    loop {
+        pumped_bytes += pump_and_render_real_shell_output(&mut runtime, &mut renderer)?;
 
         let transcript = runtime_transcript(&runtime);
         let ready_observed = transcript.contains(REAL_SHELL_READY);
@@ -126,6 +137,21 @@ fn run_runtime_real_shell_smoke() -> Result<RuntimeRealShellSmokeProbe, String> 
         }
         thread::sleep(REAL_SHELL_SMOKE_POLL_INTERVAL);
     }
+}
+
+fn pump_and_render_real_shell_output(
+    runtime: &mut NativeTerminalRuntime<crate::pty::PtySession>,
+    renderer: &mut WgpuRenderer,
+) -> Result<usize, String> {
+    let pumped = runtime
+        .pump_pty_output()
+        .map_err(|error| error.to_string())?;
+    if pumped > 0 {
+        runtime
+            .render_terminal_frame(renderer)
+            .map_err(|error| error.to_string())?;
+    }
+    Ok(pumped)
 }
 
 fn real_shell_perf_budget_failure(probe: &RuntimeRealShellSmokeProbe) -> Option<&'static str> {

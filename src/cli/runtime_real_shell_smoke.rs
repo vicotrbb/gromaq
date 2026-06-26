@@ -18,7 +18,7 @@ use std::time::Duration;
 const REAL_SHELL_SMOKE_COLS: u16 = 48;
 const REAL_SHELL_SMOKE_ROWS: u16 = 8;
 const REAL_SHELL_SMOKE_TIMEOUT: Duration = Duration::from_secs(3);
-const REAL_SHELL_SMOKE_POLL_INTERVAL: Duration = Duration::from_millis(10);
+const REAL_SHELL_SMOKE_POLL_INTERVAL: Duration = Duration::from_millis(1);
 const REAL_SHELL_READY: &str = "gromaq-real-shell-ready";
 const REAL_SHELL_INPUT: &str = "gromaq-real-shell-input";
 const REAL_SHELL_EXIT: &str = "gromaq-real-shell-exit";
