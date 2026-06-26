@@ -63,6 +63,20 @@ fn repository_keeps_required_release_readiness_files() {
 }
 
 #[test]
+fn repository_keeps_single_documentation_tree() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    assert!(
+        root.join("documentation").is_dir(),
+        "repository documentation must live under documentation/"
+    );
+    assert!(
+        !root.join("docs").exists(),
+        "do not keep a parallel docs/ tree; use documentation/ instead"
+    );
+}
+
+#[test]
 fn repository_keeps_required_issue_labels() {
     let labels_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/labels.yml");
     let labels = fs::read_to_string(&labels_path).unwrap();
