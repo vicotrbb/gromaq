@@ -92,6 +92,32 @@ mod unix {
         );
     }
 
+    #[test]
+    fn checksum_script_rejects_empty_release_directory_without_manifest() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let dist = TempDist(std::env::temp_dir().join(unique_temp_name("gromaq-checksum-empty")));
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/generate-checksums.sh"))
+            .env("GROMAQ_DIST_DIR", dist.path())
+            .output()
+            .unwrap();
+
+        assert!(
+            !output.status.success(),
+            "checksum generation must fail without release artifacts"
+        );
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("no release archives found"),
+            "stderr should explain empty release directory: {stderr}"
+        );
+        assert!(
+            !dist.path().join("SHA256SUMS").exists(),
+            "checksum script must not write a manifest for an empty release directory"
+        );
+    }
+
     struct TempDist(PathBuf);
 
     impl TempDist {
