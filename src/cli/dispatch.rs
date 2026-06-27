@@ -83,6 +83,7 @@ where
     match command {
         CliCommand::Gpu(arg) => gpu_command_exit(arg, backend),
         CliCommand::GpuTerminalTextSnapshot => unreachable!(),
+        CliCommand::GpuWelcomeImageSnapshot => unreachable!(),
         CliCommand::ClipboardSmoke => clipboard_smoke_exit(clipboard),
         CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),

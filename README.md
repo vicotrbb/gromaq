@@ -145,6 +145,7 @@ Useful smoke commands:
 cargo run -- --gpu-info
 cargo run -- --gpu-smoke
 cargo run -- --gpu-terminal-text-smoke
+cargo run -- --welcome-image-snapshot target/gromaq-welcome-image.ppm
 cargo run -- --runtime-real-shell-smoke
 cargo run -- --runtime-real-shell-command-output-smoke
 cargo run -- --runtime-tool-workflow-smoke
@@ -307,7 +308,8 @@ docs that do not belong at the root.
 
 Source logo/avatar images and generated terminal, preview, and window-icon
 assets live under [`images/`](images/). The native app currently embeds
-`images/logos/logo-icon-128.rgba` as the `winit` window icon.
+`images/logos/logo-icon-128.rgba` as the `winit` window icon and
+`images/avatar/avatar-splash.rgba` for the GPU-rendered welcome image smoke.
 
 ## Contributing
 

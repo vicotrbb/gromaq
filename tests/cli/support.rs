@@ -14,6 +14,9 @@ use gromaq::native_gpu::{
     GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
 
+#[path = "support/gpu_welcome_image.rs"]
+mod gpu_welcome_image;
+
 #[derive(Debug)]
 pub(crate) struct MockBackend {
     pub(crate) requests: RefCell<Vec<GpuBootstrapRequest>>,

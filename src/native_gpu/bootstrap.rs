@@ -3,7 +3,8 @@
 use thiserror::Error;
 
 use super::offscreen::{
-    clear_offscreen_rgba8, draw_textured_quad_rgba8, upload_rgba8_and_readback,
+    clear_offscreen_rgba8, draw_image_quad_rgba8, draw_textured_quad_rgba8,
+    upload_rgba8_and_readback,
 };
 use super::surface::{GpuSurfaceError, NativeGpuWindowSurface};
 use super::upload::UploadPattern;
@@ -155,5 +156,27 @@ impl NativeGpuContext {
         height: u32,
     ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
         draw_textured_quad_rgba8(&self.device, &self.queue, pattern, width, height)
+    }
+
+    /// Draw a centered, aspect-preserved image quad over a solid background into
+    /// an offscreen render target and read it back. Used by the welcome splash
+    /// image snapshot to prove the GPU can render the avatar as a real image.
+    pub fn draw_image_quad_and_readback(
+        &self,
+        pattern: &UploadPattern,
+        target_width: u32,
+        target_height: u32,
+        background_rgba: [f32; 4],
+        fit_fraction: f32,
+    ) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
+        draw_image_quad_rgba8(
+            &self.device,
+            &self.queue,
+            pattern,
+            target_width,
+            target_height,
+            background_rgba,
+            fit_fraction,
+        )
     }
 }

@@ -15,6 +15,8 @@ mod clipboard;
 mod config;
 #[path = "cli/gpu_smoke.rs"]
 mod gpu_smoke;
+#[path = "cli/gpu_welcome_image.rs"]
+mod gpu_welcome_image;
 #[path = "cli/real_shell.rs"]
 mod real_shell;
 #[path = "cli/runtime_smoke.rs"]

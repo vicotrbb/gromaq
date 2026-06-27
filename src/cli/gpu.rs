@@ -9,9 +9,11 @@ use crate::native_gpu::{
 
 mod context;
 mod terminal_text;
+mod welcome_image;
 
 pub use context::{AdapterReport, GpuCommandContext};
-pub(super) use terminal_text::gpu_terminal_text_snapshot_exit;
+pub(in crate::cli) use terminal_text::gpu_terminal_text_snapshot_exit;
+pub(in crate::cli) use welcome_image::gpu_welcome_image_snapshot_exit;
 
 pub(super) fn gpu_command_exit<B>(arg: &str, backend: &B) -> CliExit
 where

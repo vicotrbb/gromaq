@@ -1,4 +1,5 @@
 use super::draw_buffers::checked_textured_index_count;
+use super::image_quad::{centered_image_quad, full_target_background_batch};
 use super::quad_bytes::{
     background_quad_index_bytes, background_quad_vertex_bytes, glyph_quad_index_bytes,
     glyph_quad_vertex_bytes, textured_quad_index_bytes, textured_quad_vertex_bytes,
@@ -14,6 +15,54 @@ mod texture_io;
 mod textured_draw;
 
 pub(super) use texture_io::{clear_offscreen_rgba8, upload_rgba8_and_readback};
+
+pub(super) fn draw_image_quad_rgba8(
+    device: &wgpu::Device,
+    queue: &wgpu::Queue,
+    pattern: &UploadPattern,
+    target_width: u32,
+    target_height: u32,
+    background_rgba: [f32; 4],
+    fit_fraction: f32,
+) -> std::result::Result<Vec<u8>, GpuBootstrapError> {
+    if target_width == 0 || target_height == 0 {
+        return Err(GpuBootstrapError::SmokeReadback(
+            "image quad target dimensions must be non-zero".to_owned(),
+        ));
+    }
+    let source_layout = validate_textured_source_pattern(pattern)?;
+    let (vertices, indices) = centered_image_quad(
+        target_width,
+        target_height,
+        pattern.width,
+        pattern.height,
+        fit_fraction,
+    )?;
+    let background_batch =
+        full_target_background_batch(target_width, target_height, background_rgba);
+    let background = Some(BackgroundDrawInput {
+        vertex_bytes: background_quad_vertex_bytes(&background_batch, target_width, target_height)?,
+        index_bytes: background_quad_index_bytes(&background_batch),
+        index_count: checked_textured_index_count(background_batch.indices.len())?,
+    });
+    draw_textured_vertices_rgba8(
+        device,
+        queue,
+        TexturedDrawInput {
+            pattern,
+            source_layout,
+            background,
+            decoration: None,
+            cursor: None,
+            vertex_bytes: &vertices,
+            index_bytes: &indices,
+            index_count: 6,
+            index_format: wgpu::IndexFormat::Uint16,
+            width: target_width,
+            height: target_height,
+        },
+    )
+}
 
 pub(super) fn draw_textured_quad_rgba8(
     device: &wgpu::Device,

@@ -1,4 +1,5 @@
 use super::GpuBootstrapError;
+use std::path::Path;
 
 mod terminal_text;
 
@@ -126,4 +127,30 @@ pub trait GpuTexturedQuadRunner {
     fn run_textured_quad_smoke(
         &self,
     ) -> std::result::Result<GpuTexturedQuadReport, GpuBootstrapError>;
+}
+
+/// Result of a welcome splash image snapshot rendered offscreen.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GpuWelcomeImageSnapshotReport {
+    /// Render target width in pixels.
+    pub width: u32,
+    /// Render target height in pixels.
+    pub height: u32,
+    /// PPM bytes written to the snapshot path.
+    pub bytes_written: usize,
+    /// Background corner pixel (expected to match the theme background).
+    pub background_pixel: [u8; 4],
+    /// A pixel sampled from the centered avatar region.
+    pub image_pixel: [u8; 4],
+    /// Number of pixels that differ from the background (the avatar coverage).
+    pub drawn_pixels: usize,
+}
+
+/// Interface for contexts that can render the welcome avatar image offscreen.
+pub trait GpuWelcomeImageSnapshotRunner {
+    /// Render the welcome splash avatar image to a PPM snapshot.
+    fn run_welcome_image_snapshot(
+        &self,
+        path: &Path,
+    ) -> std::result::Result<GpuWelcomeImageSnapshotReport, GpuBootstrapError>;
 }

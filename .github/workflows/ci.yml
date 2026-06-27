@@ -30,6 +30,7 @@ jobs:
       - run: cargo run -- --runtime-clipboard-paste-smoke
       - run: cargo run -- --runtime-glyph-frame-smoke
       - run: cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm
+      - run: cargo run -- --welcome-image-snapshot target/gromaq-welcome-image-ci.ppm
       - run: cargo run -- --runtime-scrollback-smoke
       - run: cargo run -- --runtime-perf-smoke
       - run: cargo run -- --runtime-perf-budget-smoke

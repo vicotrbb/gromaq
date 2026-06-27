@@ -5,7 +5,7 @@ pub(in crate::cli) fn usage() -> String {
         "--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|",
         "--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|",
         "--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|",
-        "--gpu-terminal-text-snapshot <path>|--clipboard-smoke|--config <path>|",
+        "--gpu-terminal-text-snapshot <path>|--welcome-image-snapshot <path>|--clipboard-smoke|--config <path>|",
         "--config-check <path>|--config-template|--window-smoke|--window-perf-smoke|",
         "--window-glyph-frame-snapshot <path>|--osc52-clipboard-smoke|",
         "--runtime-clipboard-paste-smoke|--runtime-glyph-frame-smoke|",

@@ -63,6 +63,12 @@ export async function generateAssetSet({
     console.log(`wrote logo-icon-128.rgba ${windowIcon.width}x${windowIcon.height}`);
   }
 
+  if (kind === 'avatar') {
+    const splash = contain(trimmed, 320, 320);
+    writeFileSync(join(outputDir, 'avatar-splash.rgba'), splashRgba(splash));
+    console.log(`wrote avatar-splash.rgba ${splash.width}x${splash.height}`);
+  }
+
   const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
   const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows, terminalMode, terminalCellAspect);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';
@@ -545,6 +551,28 @@ function relativeLuminance([red, green, blue]) {
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
   return 0.2126 * channel(red) + 0.7152 * channel(green) + 0.0722 * channel(blue);
+}
+
+// Build the raw RGBA8 buffer used by the native GPU welcome splash. Fully
+// transparent pixels are left untouched; every visible pixel gets the same WCAG
+// luminance floor as the ANSI avatar so the splash image stays readable on the
+// dark gromaq background instead of being a near-invisible dark silhouette.
+function splashRgba(image) {
+  const out = Buffer.from(image.rgba);
+  for (let i = 0; i < out.length; i += 4) {
+    if (out[i + 3] === 0) {
+      continue;
+    }
+    const [red, green, blue] = floorTerminalContrast([
+      out[i],
+      out[i + 1],
+      out[i + 2],
+    ]);
+    out[i] = red;
+    out[i + 1] = green;
+    out[i + 2] = blue;
+  }
+  return out;
 }
 
 function compositeOnBackground(image, background) {

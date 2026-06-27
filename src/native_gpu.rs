@@ -2,6 +2,7 @@
 
 mod bootstrap;
 mod draw_buffers;
+mod image_quad;
 mod offscreen;
 mod quad_bytes;
 mod readback;
@@ -24,6 +25,7 @@ pub use reports::{
     GpuTerminalTextRunner, GpuTerminalTextSnapshotReport, GpuTerminalTextSnapshotRunner,
     GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner, GpuTextureUploadReport,
     GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
+    GpuWelcomeImageSnapshotReport, GpuWelcomeImageSnapshotRunner,
 };
 pub use surface::{GpuSurfaceError, NativeGpuWindowSurface};
 pub use upload::{UploadPattern, UploadPatternLayout};

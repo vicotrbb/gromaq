@@ -11,6 +11,8 @@ pub(super) enum CliCommand<'a> {
     Gpu(&'a str),
     /// GPU terminal text snapshot export command.
     GpuTerminalTextSnapshot,
+    /// GPU welcome splash avatar image snapshot export command.
+    GpuWelcomeImageSnapshot,
     /// Host clipboard smoke command.
     ClipboardSmoke,
     /// Config-file native launch command.
@@ -109,6 +111,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         | "--gpu-terminal-text-smoke"
         | "--gpu-terminal-text-perf-smoke" => Some(CliCommand::Gpu(arg)),
         "--gpu-terminal-text-snapshot" => Some(CliCommand::GpuTerminalTextSnapshot),
+        "--welcome-image-snapshot" => Some(CliCommand::GpuWelcomeImageSnapshot),
         "--clipboard-smoke" => Some(CliCommand::ClipboardSmoke),
         "--config" => Some(CliCommand::Config),
         "--config-check" => Some(CliCommand::ConfigCheck),

@@ -6,6 +6,7 @@ use crate::native_gpu::{
     GpuAdapterSnapshot, GpuBootstrapError, GpuGlyphAtlasUploadRunner, GpuSmokeRunner,
     GpuTerminalTextPerfRunner, GpuTerminalTextRunner, GpuTerminalTextSnapshotRunner,
     GpuTextAtlasUploadRunner, GpuTextureUploadRunner, GpuTexturedQuadRunner,
+    GpuWelcomeImageSnapshotRunner,
 };
 
 /// Adapter metadata reporting abstraction.
@@ -25,6 +26,7 @@ pub trait GpuCommandContext:
     + GpuTerminalTextRunner
     + GpuTerminalTextPerfRunner
     + GpuTerminalTextSnapshotRunner
+    + GpuWelcomeImageSnapshotRunner
 {
 }
 
@@ -38,6 +40,7 @@ impl<T> GpuCommandContext for T where
         + GpuTerminalTextRunner
         + GpuTerminalTextPerfRunner
         + GpuTerminalTextSnapshotRunner
+        + GpuWelcomeImageSnapshotRunner
 {
 }
 
@@ -106,6 +109,15 @@ impl GpuTerminalTextSnapshotRunner for GpuAdapterSnapshot {
         &self,
         _path: &Path,
     ) -> Result<crate::native_gpu::GpuTerminalTextSnapshotReport, GpuBootstrapError> {
+        Err(metadata_without_live_context_error())
+    }
+}
+
+impl GpuWelcomeImageSnapshotRunner for GpuAdapterSnapshot {
+    fn run_welcome_image_snapshot(
+        &self,
+        _path: &Path,
+    ) -> Result<crate::native_gpu::GpuWelcomeImageSnapshotReport, GpuBootstrapError> {
         Err(metadata_without_live_context_error())
     }
 }

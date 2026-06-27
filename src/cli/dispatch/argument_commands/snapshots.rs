@@ -1,7 +1,9 @@
 //! Snapshot-oriented CLI argument commands.
 
 use crate::cli::dispatch::arguments::{reject_extra_args, required_snapshot_path_arg};
-use crate::cli::gpu::{GpuCommandContext, gpu_terminal_text_snapshot_exit};
+use crate::cli::gpu::{
+    GpuCommandContext, gpu_terminal_text_snapshot_exit, gpu_welcome_image_snapshot_exit,
+};
 use crate::cli::runtime_glyph_frame_smoke::runtime_glyph_frame_snapshot_exit;
 use crate::cli::theme_smoke::{theme_preview_snapshot_exit, welcome_preview_snapshot_exit};
 use crate::cli::window_smoke::window_glyph_frame_snapshot_exit;
@@ -23,6 +25,23 @@ where
         return exit;
     }
     gpu_terminal_text_snapshot_exit(path.as_ref(), backend)
+}
+
+pub(super) fn gpu_welcome_image_snapshot_command<I, S, B>(args: &mut I, backend: &B) -> CliExit
+where
+    I: Iterator<Item = S>,
+    S: AsRef<str>,
+    B: GpuBootstrapBackend,
+    B::Context: GpuCommandContext,
+{
+    let path = match required_snapshot_path_arg(args, "--welcome-image-snapshot") {
+        Ok(path) => path,
+        Err(exit) => return exit,
+    };
+    if let Err(exit) = reject_extra_args(args) {
+        return exit;
+    }
+    gpu_welcome_image_snapshot_exit(path.as_ref(), backend)
 }
 
 pub(super) fn runtime_glyph_frame_snapshot_command<I, S>(args: &mut I) -> CliExit

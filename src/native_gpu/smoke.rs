@@ -11,6 +11,7 @@ use super::{GpuBootstrapError, NativeGpuContext, UploadPattern};
 use crate::renderer::GlyphAtlasImage;
 
 mod terminal_text;
+mod welcome_image;
 
 impl GpuSmokeRunner for NativeGpuContext {
     fn run_smoke(&self) -> std::result::Result<GpuSmokeReport, GpuBootstrapError> {
