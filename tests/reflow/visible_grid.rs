@@ -111,3 +111,27 @@ fn reflow_preserves_visible_grid_link_and_underline_metadata() {
         assert_eq!(grid.cell_underline_color(0, col), Color::Rgb(17, 34, 51));
     }
 }
+
+#[test]
+fn reflow_preserves_wide_cell_link_and_underline_metadata() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 4).unwrap());
+    terminal
+        .write_str(
+            "a\x1b]8;;https://gromaq.dev/wide\x1b\\\x1b[4;58:2:17:34:51m界\x1b[0m\x1b]8;;\x1b\\bc",
+        )
+        .unwrap();
+
+    terminal.resize(8, 3).unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "a界bc");
+    let wide = grid.cell(0, 1);
+    assert_eq!(wide.text, "界");
+    assert!(wide.is_wide_leading);
+    assert!(grid.cell(0, 2).is_wide_trailing);
+    assert_eq!(grid.cell_hyperlink(0, 1), Some("https://gromaq.dev/wide"));
+    assert_eq!(grid.cell_hyperlink(0, 2), Some("https://gromaq.dev/wide"));
+    assert!(wide.style.underline);
+    assert_eq!(grid.cell_underline_color(0, 1), Color::Rgb(17, 34, 51));
+    assert_eq!(grid.cell_underline_color(0, 2), Color::Rgb(17, 34, 51));
+}

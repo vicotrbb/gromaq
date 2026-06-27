@@ -51,7 +51,7 @@ were skipped because those binaries were not on PATH.
 | Feature | Current proof | Status |
 | --- | --- | --- |
 | Alternate-screen enter/leave restoration | Golden state tests and runtime alternate-screen smoke | Proven |
-| Resize/reflow | Golden reflow tests and runtime reflow smoke | Proven for covered cases |
+| Resize/reflow | Golden reflow tests cover visible-grid and scrollback reflow, hard-break boundaries, style metadata, hyperlinks, underline colors, wide and emoji clusters, and a wide linked underlined cell; runtime reflow smoke covers current shell-output resize plumbing | Proven for covered cases |
 | ANSI/SGR styling | Parser, state, and fixture tests | Proven for covered sequences |
 | Unicode wide/combining/emoji clusters | Terminal-state tests and glyph rasterization tests | Proven for covered clusters |
 | Scrollback retention and viewport navigation | Unit/integration tests and runtime scrollback smoke | Proven |
