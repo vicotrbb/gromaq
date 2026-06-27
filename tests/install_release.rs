@@ -97,6 +97,34 @@ mod unix {
     }
 
     #[test]
+    fn install_script_rejects_release_method_on_non_linux_platform() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let install_root = TempPath::new("gromaq-release-darwin-root");
+        let bin_dir = TempPath::new("gromaq-release-darwin-bin");
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_PLATFORM", "Darwin")
+            .env("GROMAQ_INSTALL_METHOD", "release")
+            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_BIN_DIR", bin_dir.path())
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .output()
+            .unwrap();
+
+        assert!(
+            !output.status.success(),
+            "release install method must reject non-Linux platforms"
+        );
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("currently supports Linux tarball releases only"),
+            "stderr should explain release-platform support: {stderr}"
+        );
+        assert!(!bin_dir.path().join("gromaq").exists());
+    }
+
+    #[test]
     fn install_script_can_explicitly_skip_release_checksum_verification() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let release_dir = TempPath::new("gromaq-release-no-checksum-assets");
