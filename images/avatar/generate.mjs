@@ -9,6 +9,6 @@ await generateAssetSet({
   // 24-character "native Rust GPU terminal" tagline, renders unclipped.
   terminalColumns: 33,
   terminalRows: 15,
-  terminalMode: 'half-block',
+  terminalMode: 'quadrant-block',
   terminalCellAspect: 18 / 44,
 });
