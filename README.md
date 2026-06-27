@@ -93,9 +93,9 @@ scripts/package-macos-app.sh
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, and a zipped macOS `.app`
-bundle. The remote GitHub Actions release workflow proof currently covers the
-Linux tarball and macOS `.app`; Debian package upload proof is pending the next
-release run.
+bundle. The remote GitHub Actions release workflow completed green on
+2026-06-27 as run `28298839954`, uploading the Linux tarball, Debian package,
+macOS `.app` zip, and checksum manifests.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. On
 2026-06-27, CI run `28298600690` completed green for commit `5f25387`,
@@ -128,9 +128,8 @@ Implemented and covered by automated tests or deterministic smoke commands:
   public metadata, docs, CI commands, and module-size discipline
 - GitHub Actions release workflow that is configured to build and upload the
   Linux tarball, Debian `.deb`, and macOS `.app` release artifacts with a
-  SHA256SUMS manifest on tag and manual dispatch; remote proof currently covers
-  the tarball and macOS `.app`, while CI covers Debian package assembly and
-  checksum generation
+  SHA256SUMS manifest on tag and manual dispatch; remote proof covers the
+  tarball, Debian package, macOS `.app`, and checksum uploads
 
 Not yet proven enough to call complete:
 
@@ -139,8 +138,7 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- signed/notarized macOS app distribution and remote release-workflow upload
-  proof for the Debian package artifact on GitHub Actions
+- signed/notarized macOS app distribution
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).

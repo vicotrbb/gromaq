@@ -139,11 +139,14 @@ next to each artifact set.
 Proven remotely:
 
 - GitHub Actions release workflow success: manual `workflow_dispatch` run
-  `28257777529` for `Release Artifacts` completed successfully on 2026-06-26.
-  The `linux-tarball` job ran project policy, packaged the Linux tarball,
-  generated checksums, and uploaded artifacts. The `macos-app` job ran project
-  policy, packaged and zipped `Gromaq.app`, generated checksums, and uploaded
-  artifacts.
+  `28298839954` for `Release Artifacts` completed successfully on 2026-06-27.
+  The `linux-tarball` job ran project policy, packaged the Linux tarball and
+  Debian package, generated checksums, and uploaded artifacts. The downloaded
+  `gromaq-linux-tarball` artifact contains `gromaq-0.1.0-linux-x86_64.tar.gz`,
+  `gromaq_0.1.0_amd64.deb`, and `SHA256SUMS`; `ar -t` on the downloaded `.deb`
+  listed `debian-binary`, `control.tar.gz`, and `data.tar.gz`. The `macos-app`
+  job ran project policy, packaged and zipped `Gromaq.app`, generated
+  checksums, and uploaded artifacts.
 - GitHub Actions CI run `28298600690` completed successfully on 2026-06-27 for
   commit `5f25387`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
@@ -173,7 +176,5 @@ Proven locally:
 Not yet proven:
 
 - signed and notarized macOS app distribution
-- remote GitHub Actions release-workflow upload proof for the Debian package
-  artifact
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app
