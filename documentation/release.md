@@ -108,6 +108,15 @@ next to each artifact set.
 
 ## Current Proof Boundary
 
+Proven remotely:
+
+- GitHub Actions release workflow success: manual `workflow_dispatch` run
+  `28257777529` for `Release Artifacts` completed successfully on 2026-06-26.
+  The `linux-tarball` job ran project policy, packaged the Linux tarball,
+  generated checksums, and uploaded artifacts. The `macos-app` job ran project
+  policy, packaged and zipped `Gromaq.app`, generated checksums, and uploaded
+  artifacts.
+
 Proven locally:
 
 - macOS `.app` generation with a supplied debug binary
@@ -123,7 +132,6 @@ Proven locally:
 
 Not yet proven:
 
-- remote GitHub Actions release workflow success
 - signed and notarized macOS app distribution
 - package-manager-specific Linux packages
 - live Linux desktop menu refresh
