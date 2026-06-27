@@ -15,9 +15,9 @@ textured-quad GPU draw/readback, offscreen terminal text GPU draw/readback, and
 repeated offscreen terminal text GPU draw/readback timing.
 
 They do not prove the full performance acceptance target by themselves. Hardware
-backed 144Hz frame pacing on a 144Hz-capable display, p95 frame time, input
-latency, idle CPU, memory growth, and broader live window runtime proof still
-require separate live measurements.
+backed 144Hz frame pacing on a 144Hz-capable display, live p95 frame time, live
+input latency, live-window idle CPU, live-window long-session memory growth, and
+broader live window runtime proof still require separate live measurements.
 The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements

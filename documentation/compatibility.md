@@ -65,6 +65,14 @@ remaining terminal-core work.
 | Welcome avatar contrast floor | `boostTerminalColor` in `images/tools/gromaq-image-assets.mjs` applies a WCAG luminance floor against the default `#101216` background after the hue-shaping boost, snapping to the final 8-bit channels and adding neutral light until each cell reaches the 3.0:1 graphical contrast minimum. Without it the dark source avatar rendered at min 1.13:1 / mean 2.14:1 with 83.4% of cells below 3:1 (nearly invisible); the committed avatar now measures min 3.0:1 / mean 3.46:1 with 100% of cells at or above 3:1 (checking the rounded output values so the floor survives float-to-u8 rounding), resolving the muddy low-contrast output against the dark background. | Proven for the deterministic prepared-frame welcome avatar path |
 | Frame FPS status overlay | Runtime rendering tests prove the FPS/status text is added only to a cloned render snapshot, appears in the rendered frame when its target cells are blank, appends an overlay dirty span, skips occupied right-prompt cells, and does not mutate terminal-owned grid text or shell scrollback | Proven for covered runtime render path |
 
+## Performance and Runtime Bounds
+
+| Workflow | Current proof | Status |
+| --- | --- | --- |
+| Deterministic idle CPU path | `cargo run -- --runtime-idle-cpu-smoke` on 2026-06-27 sampled the clean-frame idle path 5 times at 50 ms intervals, reported max process CPU 3.2% against the 5.0% budget, performed 16 render attempts, skipped all 16 clean frames, and rendered 0 frames. CI runs the same smoke command. | Proven for deterministic clean-frame runtime idle path; live-window near-zero idle CPU still requires separate measurement |
+| Bounded long-session memory growth | `cargo run -- --runtime-memory-smoke` on 2026-06-27 pumped 110592 bytes from 4608 lines, rendered 9 frames, retained the configured 128-line scrollback cap, kept retained scrollback cells at 3054 against the 4096-cell deterministic cap, reported RSS growth 1504 KiB against the 65536 KiB cap, and observed `gromaq-memory-line-4607`. CI runs the same smoke command. | Proven for deterministic runtime bounded-state and RSS-growth gate; live-window long interactive memory stability still requires separate measurement |
+| Real-shell large output render budget | `cargo run -- --runtime-real-shell-large-output-smoke` on 2026-06-27 drove `/bin/sh` through a 256-line burst, pumped 7168 bytes, retained the configured 64-line scrollback cap, evicted the first line, observed the last line, rendered 2 dirty frames, and reported render p95 1000000 ns against the 6940000 ns budget. CI runs the same smoke command. | Proven for current-host real-shell large-output render budget and bounded scrollback behavior; broader live TUI/output stress remains ongoing compatibility work |
+
 ## Live Native Window Proof
 
 | Workflow | Current proof | Status |
