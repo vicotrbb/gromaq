@@ -154,6 +154,10 @@ fn config_check_cli_reports_invalid_config_without_gpu_bootstrap() {
     assert!(exit.stdout.is_empty());
     assert!(exit.stderr.contains("config check failed:"));
     assert!(exit.stderr.contains("target fps"));
+    assert!(exit.stderr.contains(&format!(
+        "run `gromaq --config-check {}` after editing",
+        path.display()
+    )));
     assert!(backend.requests.borrow().is_empty());
     let _ = fs::remove_file(path);
 }

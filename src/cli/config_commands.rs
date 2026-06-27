@@ -110,7 +110,9 @@ pub(super) fn config_check_exit(path: &str) -> CliExit {
         Err(error) => CliExit {
             code: 1,
             stdout: String::new(),
-            stderr: format!("config check failed: {error}\n"),
+            stderr: format!(
+                "config check failed: {error}\nrun `gromaq --config-check {path}` after editing\n"
+            ),
         },
     }
 }
