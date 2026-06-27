@@ -140,6 +140,7 @@ fn distribution_assets_keep_desktop_identity() {
     let checksum_script = fs::read_to_string(root.join("scripts/generate-checksums.sh")).unwrap();
     let screenshot_script =
         fs::read_to_string(root.join("scripts/capture-macos-window-proof.sh")).unwrap();
+    let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
     let desktop =
@@ -201,6 +202,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_DELAY_SECONDS:-0.05"));
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_MIN_BACKGROUND_PIXELS"));
     assert!(screenshot_script.contains("rm -f \"${output}\""));
+    assert!(window_startup.contains("set_content_protected(false)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));

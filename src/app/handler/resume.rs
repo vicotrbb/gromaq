@@ -61,6 +61,7 @@ impl NativeTerminalApp {
             return;
         }
         if let Some(window) = &self.window {
+            window.set_content_protected(false);
             window.request_redraw();
         }
     }
