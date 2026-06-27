@@ -9,7 +9,10 @@ where
     args.next().ok_or_else(|| CliExit {
         code: 2,
         stdout: String::new(),
-        stderr: format!("{}missing config path for {command}\n", usage()),
+        stderr: format!(
+            "{}missing config path for {command}\nrun `gromaq --help` for usage\n",
+            usage()
+        ),
     })
 }
 
@@ -21,7 +24,10 @@ where
     args.next().ok_or_else(|| CliExit {
         code: 2,
         stdout: String::new(),
-        stderr: format!("{}missing snapshot path for {command}\n", usage()),
+        stderr: format!(
+            "{}missing snapshot path for {command}\nrun `gromaq --help` for usage\n",
+            usage()
+        ),
     })
 }
 

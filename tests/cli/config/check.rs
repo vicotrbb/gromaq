@@ -173,5 +173,6 @@ fn config_check_cli_requires_path() {
     assert_eq!(exit.code, 2);
     assert!(exit.stdout.is_empty());
     assert!(exit.stderr.contains("missing config path"));
+    assert!(exit.stderr.ends_with("run `gromaq --help` for usage\n"));
     assert!(backend.requests.borrow().is_empty());
 }
