@@ -51,6 +51,19 @@ Preview the actions without installing or writing files:
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_DRY_RUN=1 sh
 ```
 
+Linux users can opt into the prebuilt release tarball path once a tagged
+release has published GitHub Release assets:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0 sh
+```
+
+This downloads `gromaq-<version>-linux-<arch>.tar.gz`, installs the binary into
+`${GROMAQ_BIN_DIR:-${CARGO_HOME:-~/.cargo}/bin}`, and installs the Linux desktop
+identity assets from the tarball. The release method is locally proven against a
+file-backed tarball; it still needs live GitHub Release asset proof from a tag
+run before becoming the default installer path.
+
 On Linux, the installer also installs user-local desktop assets by default:
 `dev.gromaq.Gromaq.desktop`, the project icon under the hicolor icon theme, and
 AppStream metainfo under `${XDG_DATA_HOME:-~/.local/share}`. Set

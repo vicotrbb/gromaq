@@ -8,6 +8,7 @@
 #[cfg(unix)]
 mod unix {
     use std::fs;
+    use std::os::unix::fs::PermissionsExt;
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -39,6 +40,103 @@ mod unix {
         assert!(
             !install_root.path().exists(),
             "dry-run install must not create install root"
+        );
+    }
+
+    #[test]
+    fn install_script_dry_run_reports_linux_release_asset_without_writes() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let install_root = TempPath::new("gromaq-release-dry-run-root");
+        let bin_dir = TempPath::new("gromaq-release-dry-run-bin");
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_DRY_RUN", "1")
+            .env("GROMAQ_PLATFORM", "Linux")
+            .env("GROMAQ_INSTALL_METHOD", "release")
+            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
+            .env("GROMAQ_BIN_DIR", bin_dir.path())
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "release dry-run install failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Dry run: would install gromaq"));
+        assert!(stdout.contains("Dry run: would download release asset"));
+        assert!(stdout.contains("gromaq-0.1.0-linux-x86_64.tar.gz"));
+        assert!(stdout.contains("Dry run complete; no files written."));
+        assert!(!install_root.path().exists());
+        assert!(!bin_dir.path().exists());
+    }
+
+    #[test]
+    fn install_script_installs_linux_release_tarball_from_local_base() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let release_dir = TempPath::new("gromaq-release-assets");
+        let install_root = TempPath::new("gromaq-release-install-root");
+        let bin_dir = TempPath::new("gromaq-release-bin");
+        let stub = release_dir.path().join("gromaq-stub");
+        fs::create_dir_all(release_dir.path()).unwrap();
+        fs::write(&stub, "#!/bin/sh\nprintf 'stub gromaq\\n'\n").unwrap();
+        fs::set_permissions(&stub, fs::Permissions::from_mode(0o755)).unwrap();
+
+        let package = Command::new("sh")
+            .arg(root.join("scripts/package-linux-tarball.sh"))
+            .env("GROMAQ_BINARY_PATH", &stub)
+            .env("GROMAQ_DIST_DIR", release_dir.path())
+            .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
+            .output()
+            .unwrap();
+        assert!(
+            package.status.success(),
+            "release tarball packaging failed: {}",
+            String::from_utf8_lossy(&package.stderr)
+        );
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_PLATFORM", "Linux")
+            .env("GROMAQ_INSTALL_METHOD", "release")
+            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
+            .env(
+                "GROMAQ_RELEASE_BASE",
+                format!("file://{}", release_dir.path().display()),
+            )
+            .env("GROMAQ_BIN_DIR", bin_dir.path())
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "release tarball install failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        assert!(bin_dir.path().join("gromaq").is_file());
+        assert!(
+            install_root
+                .path()
+                .join("share/applications/dev.gromaq.Gromaq.desktop")
+                .is_file()
+        );
+        assert!(
+            install_root
+                .path()
+                .join("share/metainfo/dev.gromaq.Gromaq.metainfo.xml")
+                .is_file()
+        );
+        assert!(
+            install_root
+                .path()
+                .join("share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png")
+                .is_file()
         );
     }
 

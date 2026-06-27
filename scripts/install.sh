@@ -6,15 +6,24 @@ branch="${GROMAQ_BRANCH:-main}"
 package="${GROMAQ_PACKAGE:-gromaq}"
 raw_base="${GROMAQ_RAW_BASE:-https://raw.githubusercontent.com/vicotrbb/gromaq/${branch}}"
 asset_root="${GROMAQ_ASSET_ROOT:-}"
-bin_dir="${CARGO_HOME:-${HOME}/.cargo}/bin"
+bin_dir="${GROMAQ_BIN_DIR:-${CARGO_HOME:-${HOME}/.cargo}/bin}"
 platform="${GROMAQ_PLATFORM:-$(uname -s)}"
 dry_run="${GROMAQ_DRY_RUN:-0}"
+install_method="${GROMAQ_INSTALL_METHOD:-cargo}"
+release_version="${GROMAQ_VERSION:-v0.1.0}"
+release_package_version="${release_version#v}"
+release_base="${GROMAQ_RELEASE_BASE:-${repo}/releases/download/${release_version}}"
 install_temp_root=""
 macos_asset_root=""
+release_temp_root=""
+installed_linux_desktop_assets=0
 
 cleanup_install_temp_root() {
   if [ -n "${install_temp_root}" ]; then
     rm -rf "${install_temp_root}"
+  fi
+  if [ -n "${release_temp_root}" ]; then
+    rm -rf "${release_temp_root}"
   fi
 }
 
@@ -28,10 +37,39 @@ linux_data_home() {
   fi
 }
 
+linux_release_target() {
+  if [ -n "${GROMAQ_RELEASE_TARGET:-}" ]; then
+    printf '%s\n' "${GROMAQ_RELEASE_TARGET}"
+    return
+  fi
+
+  arch="$(uname -m)"
+  case "${arch}" in
+    amd64)
+      arch="x86_64"
+      ;;
+    arm64)
+      arch="aarch64"
+      ;;
+  esac
+  printf 'linux-%s\n' "${arch}"
+}
+
+release_asset_name() {
+  printf '%s-%s-%s.tar.gz\n' "${package}" "${release_package_version}" "$(linux_release_target)"
+}
+
+release_asset_url() {
+  printf '%s/%s\n' "${release_base}" "$(release_asset_name)"
+}
+
 print_dry_run_and_exit() {
   printf '%s\n' "Dry run: would install ${package} from ${repo} (${branch})."
   if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" = "1" ]; then
     printf '%s\n' "Dry run: would skip cargo install because GROMAQ_SKIP_CARGO_INSTALL=1."
+  elif [ "${install_method}" = "release" ]; then
+    printf '%s\n' "Dry run: would download release asset $(release_asset_url)."
+    printf '%s\n' "Dry run: would install binary to ${bin_dir}/${package}."
   else
     printf '%s\n' "Dry run: would run cargo install --git ${repo} --branch ${branch} --locked --force ${package}."
     printf '%s\n' "Dry run: expected binary path is ${bin_dir}/${package}."
@@ -60,19 +98,6 @@ print_dry_run_and_exit() {
 
 if [ "${dry_run}" = "1" ]; then
   print_dry_run_and_exit
-fi
-
-if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" != "1" ] && ! command -v cargo >/dev/null 2>&1; then
-  printf '%s\n' "error: Cargo is required to install Gromaq." >&2
-  printf '%s\n' "Install Rust stable from your package manager or https://rustup.rs, then rerun this installer." >&2
-  exit 1
-fi
-
-if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" = "1" ]; then
-  printf '%s\n' "Skipping Cargo install because GROMAQ_SKIP_CARGO_INSTALL=1."
-else
-  printf '%s\n' "Installing ${package} from ${repo} (${branch})..."
-  cargo install --git "${repo}" --branch "${branch}" --locked --force "${package}"
 fi
 
 install_file() {
@@ -120,6 +145,60 @@ install_linux_desktop_assets() {
   printf '%s\n' "Installed Linux desktop assets under ${data_home}."
 }
 
+install_linux_desktop_assets_from_release() {
+  release_root="$1"
+  data_home="$(linux_data_home)"
+  mkdir -p \
+    "${data_home}/applications" \
+    "${data_home}/icons/hicolor/256x256/apps" \
+    "${data_home}/metainfo"
+  cp "${release_root}/share/applications/dev.gromaq.Gromaq.desktop" \
+    "${data_home}/applications/dev.gromaq.Gromaq.desktop"
+  cp "${release_root}/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png" \
+    "${data_home}/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
+  cp "${release_root}/share/metainfo/dev.gromaq.Gromaq.metainfo.xml" \
+    "${data_home}/metainfo/dev.gromaq.Gromaq.metainfo.xml"
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "${data_home}/applications" >/dev/null 2>&1 || true
+  fi
+  installed_linux_desktop_assets=1
+  printf '%s\n' "Installed Linux desktop assets under ${data_home}."
+}
+
+install_release_tarball() {
+  if [ "${platform}" != "Linux" ]; then
+    printf '%s\n' "error: GROMAQ_INSTALL_METHOD=release currently supports Linux tarball releases only." >&2
+    exit 1
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    printf '%s\n' "error: curl is required to download Gromaq release assets." >&2
+    exit 1
+  fi
+
+  release_temp_root="$(mktemp -d "${TMPDIR:-/tmp}/gromaq-release-install.XXXXXX")"
+  archive="${release_temp_root}/$(release_asset_name)"
+  extract_dir="${release_temp_root}/extract"
+  release_root="${extract_dir}/${package}-${release_package_version}-$(linux_release_target)"
+
+  printf '%s\n' "Downloading $(release_asset_url)..."
+  curl -fsSL "$(release_asset_url)" -o "${archive}"
+  mkdir -p "${extract_dir}"
+  tar -xzf "${archive}" -C "${extract_dir}"
+
+  if [ ! -x "${release_root}/bin/${package}" ]; then
+    printf '%s\n' "error: release archive did not contain bin/${package}." >&2
+    exit 1
+  fi
+
+  mkdir -p "${bin_dir}"
+  cp "${release_root}/bin/${package}" "${bin_dir}/${package}"
+  chmod 755 "${bin_dir}/${package}"
+
+  if [ "${GROMAQ_INSTALL_DESKTOP_ASSETS:-1}" != "0" ]; then
+    install_linux_desktop_assets_from_release "${release_root}"
+  fi
+}
+
 prepare_macos_asset_root() {
   if [ -n "${asset_root}" ]; then
     macos_asset_root="${asset_root}"
@@ -156,9 +235,26 @@ install_macos_app_bundle() {
   printf '%s\n' "Installed macOS app bundle to ${destination}."
 }
 
+if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" = "1" ]; then
+  printf '%s\n' "Skipping Cargo install because GROMAQ_SKIP_CARGO_INSTALL=1."
+elif [ "${install_method}" = "cargo" ]; then
+  if ! command -v cargo >/dev/null 2>&1; then
+    printf '%s\n' "error: Cargo is required to install Gromaq." >&2
+    printf '%s\n' "Install Rust stable from your package manager or https://rustup.rs, then rerun this installer." >&2
+    exit 1
+  fi
+  printf '%s\n' "Installing ${package} from ${repo} (${branch})..."
+  cargo install --git "${repo}" --branch "${branch}" --locked --force "${package}"
+elif [ "${install_method}" = "release" ]; then
+  install_release_tarball
+else
+  printf '%s\n' "error: unsupported GROMAQ_INSTALL_METHOD=${install_method}; use cargo or release." >&2
+  exit 1
+fi
+
 case "${platform}" in
   Linux)
-    if [ "${GROMAQ_INSTALL_DESKTOP_ASSETS:-1}" != "0" ]; then
+    if [ "${GROMAQ_INSTALL_DESKTOP_ASSETS:-1}" != "0" ] && [ "${installed_linux_desktop_assets}" != "1" ]; then
       install_linux_desktop_assets
     fi
     ;;

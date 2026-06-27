@@ -36,6 +36,20 @@ Preview installer actions without installing or writing files:
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_DRY_RUN=1 sh
 ```
 
+Linux users can opt into a prebuilt release tarball install after a tagged
+release publishes GitHub Release assets:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0 sh
+```
+
+The release method downloads `gromaq-<version>-linux-<arch>.tar.gz` from
+`${GROMAQ_REPO}/releases/download/${GROMAQ_VERSION}` by default, or from
+`GROMAQ_RELEASE_BASE` when testing against a mirror or local `file://` release
+directory. It installs the binary to
+`${GROMAQ_BIN_DIR:-${CARGO_HOME:-~/.cargo}/bin}` and copies the Linux desktop
+identity assets from the tarball itself.
+
 ## Linux Desktop Assets
 
 On Linux, `scripts/install.sh` installs user-local desktop identity assets by
@@ -190,6 +204,11 @@ Proven locally:
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes
+- Linux release-tarball installer path with
+  `GROMAQ_INSTALL_METHOD=release`, `GROMAQ_RELEASE_BASE=file://...`, and
+  `GROMAQ_BIN_DIR=<temp-bin>`, proven by
+  `tests/install_dry_run.rs::install_script_installs_linux_release_tarball_from_local_base`
+  against a locally generated tarball without network or home writes
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - Debian `.deb` archive structure with a supplied binary, canonical
@@ -204,6 +223,7 @@ Proven locally:
 Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
+- live Linux release-method install from GitHub Release assets
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

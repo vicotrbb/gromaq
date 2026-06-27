@@ -151,6 +151,9 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(install_script.contains("GROMAQ_DRY_RUN"));
     assert!(install_script.contains("GROMAQ_INSTALL_APP_BUNDLE"));
     assert!(install_script.contains("GROMAQ_MACOS_APP_DIR"));
+    assert!(install_script.contains("GROMAQ_INSTALL_METHOD"));
+    assert!(install_script.contains("GROMAQ_RELEASE_BASE"));
+    assert!(install_script.contains("GROMAQ_BIN_DIR"));
     assert!(install_script.contains("prepare_macos_asset_root"));
     assert!(install_script.contains("scripts/package-macos-app.sh"));
     assert!(macos_script.contains("CFBundleIconFile"));
