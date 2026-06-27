@@ -221,6 +221,14 @@ Proven remotely:
   listed `debian-binary`, `control.tar.gz`, and `data.tar.gz`. The `macos-app`
   job ran project policy, packaged and zipped `Gromaq.app`, generated
   checksums, and uploaded artifacts.
+- GitHub Actions release workflow run `28301764662` completed successfully on
+  2026-06-27 for commit `c4feef2`. It proved the Linux and macOS release jobs
+  still complete with the Arch metadata checksum path, and the downloaded Linux
+  checksum manifest listed both `PKGBUILD` and `.SRCINFO`. Artifact inspection
+  also exposed that `actions/upload-artifact` omitted hidden `.SRCINFO` from
+  the workflow artifact unless `include-hidden-files: true` is set. The local
+  workflow now includes that option, but the corrected hidden-file artifact
+  upload still awaits the next release workflow run.
 - GitHub Actions CI run `28300600507` completed successfully on 2026-06-27 for
   commit `93fcbef`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, copied the checksum manifest to
@@ -290,6 +298,8 @@ Proven locally:
 - release checksum manifest generation for local tarball, Debian package,
   optional extra release assets such as the Arch `PKGBUILD` and `.SRCINFO`, and
   macOS zip artifacts
+- release workflow hidden-file upload guard with `include-hidden-files: true`
+  for the Linux artifact set that carries `packaging/arch/.SRCINFO`
 - shell syntax checks for install and packaging scripts
 - project policy tests covering required release files and workflow markers
 
@@ -297,7 +307,7 @@ Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
 - live release workflow upload proof for the Arch `PKGBUILD` plus `.SRCINFO`
-  artifacts
+  artifacts after the local `include-hidden-files: true` fix
 - live Linux release-method install from GitHub Release assets
 - live Arch `makepkg` build/install
 - Developer ID signed and notarized macOS app distribution

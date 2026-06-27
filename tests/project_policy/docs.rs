@@ -112,6 +112,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/release.md",
         "Arch `PKGBUILD` plus `.SRCINFO` source-package metadata is configured for CI",
     ),
+    ("documentation/release.md", "include-hidden-files: true"),
     (
         "documentation/compatibility.md",
         "tests/checksums.rs::checksum_script_can_include_additional_release_assets",
