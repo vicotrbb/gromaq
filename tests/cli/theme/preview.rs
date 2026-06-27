@@ -184,6 +184,10 @@ fn theme_preview_config_rejects_invalid_config_without_writing_snapshot() {
     assert!(exit.stdout.is_empty());
     assert!(exit.stderr.contains("theme preview snapshot failed:"));
     assert!(exit.stderr.contains("background opacity"));
+    assert!(exit.stderr.contains(&format!(
+        "run `gromaq --config-check {}` before rendering a preview",
+        config_path.display()
+    )));
     assert!(backend.requests.borrow().is_empty());
     assert!(!snapshot_path.exists());
 }

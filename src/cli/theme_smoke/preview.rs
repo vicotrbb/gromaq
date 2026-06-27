@@ -37,7 +37,9 @@ pub(in crate::cli) fn theme_preview_snapshot_exit(path: &str) -> CliExit {
 
 pub(in crate::cli) fn theme_preview_config_exit(config_path: &str, snapshot_path: &str) -> CliExit {
     match GromaqConfig::from_toml_file(config_path)
-        .map_err(|error| error.to_string())
+        .map_err(|error| {
+            format!("{error}\nrun `gromaq --config-check {config_path}` before rendering a preview")
+        })
         .and_then(|config| theme_preview_snapshot_report(&config, snapshot_path))
     {
         Ok(report) => theme_preview_snapshot_success(snapshot_path, &report),
