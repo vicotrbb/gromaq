@@ -217,12 +217,6 @@ Proven remotely:
   listed `debian-binary`, `control.tar.gz`, and `data.tar.gz`. The `macos-app`
   job ran project policy, packaged and zipped `Gromaq.app`, generated
   checksums, and uploaded artifacts.
-- The tag-triggered GitHub Release publication path is configured in
-  `.github/workflows/release.yml` and guarded by
-  `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
-  which checks the required `gh release create`, `gh release upload`, token
-  permission, tag-only condition, Arch `PKGBUILD` upload, and unique checksum
-  manifest markers.
 - GitHub Actions CI run `28300600507` completed successfully on 2026-06-27 for
   commit `93fcbef`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, copied the checksum manifest to
@@ -233,9 +227,6 @@ Proven remotely:
   `cargo clippy --all-targets --all-features -- -D warnings`,
   `cargo test --all`, the runtime/theme/GPU smoke suite, and
   `cargo bench --bench parser_throughput -- --list`.
-- The Arch `PKGBUILD` source-package recipe is syntax-checked in CI and guarded
-  by repository policy markers for the Cargo build command, desktop file,
-  AppStream metainfo, and hicolor icon payload.
 - GitHub Actions CI run `28299568944` completed successfully on 2026-06-27 for
   commit `12f7dfe`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
@@ -270,9 +261,18 @@ Proven locally:
   metadata, `/usr/bin/gromaq`, desktop file, AppStream metainfo, icon, README,
   and copyright payloads
 - Arch `PKGBUILD` syntax and payload-marker policy coverage
+- Arch `PKGBUILD` source-package recipe is configured for CI syntax checks and
+  guarded by repository policy markers for the Cargo build command, desktop
+  file, AppStream metainfo, and hicolor icon payload
 - Arch `arch-packaging` CI job configuration and policy coverage for
   `makepkg --nobuild` and `makepkg --printsrcinfo`; this local commit has not
   yet been pushed and therefore has no remote run proof yet
+- tag-triggered GitHub Release publication path is configured locally in
+  `.github/workflows/release.yml` and guarded by
+  `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
+  which checks the required `gh release create`, `gh release upload`, token
+  permission, tag-only condition, Arch `PKGBUILD` upload, and unique checksum
+  manifest markers
 - release checksum manifest generation for local tarball, Debian package,
   optional extra release assets such as the Arch `PKGBUILD`, and macOS zip
   artifacts

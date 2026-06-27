@@ -103,6 +103,14 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "optional macOS app-bundle install path",
     ),
     (
+        "documentation/release.md",
+        "tag-triggered GitHub Release publication path is configured locally",
+    ),
+    (
+        "documentation/release.md",
+        "Arch `PKGBUILD` source-package recipe is configured for CI syntax checks",
+    ),
+    (
         "documentation/compatibility.md",
         "tests/checksums.rs::checksum_script_can_include_additional_release_assets",
     ),
