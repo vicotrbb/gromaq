@@ -174,12 +174,12 @@ Manual live-window screenshot proof on macOS:
 scripts/capture-macos-window-proof.sh target/gromaq-live-window-proof.png
 ```
 
-The screenshot script launches bounded `--window-screenshot-smoke`, captures a
-local desktop screenshot artifact under `target/`, and waits for the app process
-to exit. It is intentionally manual because desktop screenshots can include
-local user state, and macOS Screen Recording permissions can produce a desktop
-capture that does not include app windows even when `screencapture` exits
-successfully.
+The screenshot script launches bounded `--window-screenshot-smoke`, locates the
+visible `Gromaq` window through macOS window metadata, captures that specific
+window under `target/`, and waits for the app process to exit. It is
+intentionally manual because desktop screenshots can include local user state;
+if macOS cannot expose or capture the targeted window, the helper fails instead
+of accepting a desktop-only image.
 
 Full local verification:
 

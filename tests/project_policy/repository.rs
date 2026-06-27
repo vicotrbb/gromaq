@@ -170,6 +170,9 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("--window-screenshot-smoke"));
     assert!(!screenshot_script.contains("--window-perf-smoke"));
     assert!(screenshot_script.contains("screencapture -x"));
+    assert!(screenshot_script.contains("CGWindowListCopyWindowInfo"));
+    assert!(screenshot_script.contains("Gromaq"));
+    assert!(screenshot_script.contains("screencapture -x -l"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));
