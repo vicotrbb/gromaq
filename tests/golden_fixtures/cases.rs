@@ -1,8 +1,9 @@
 use gromaq::{Terminal, TerminalConfig};
 
 use super::formatting::{
-    format_osc_clipboard_paste_golden, format_status_capability_reports_golden,
-    format_terminal_golden, format_vt_editing_status_golden, format_vt_unicode_osc_golden,
+    format_dec_origin_scroll_region_golden, format_osc_clipboard_paste_golden,
+    format_status_capability_reports_golden, format_terminal_golden,
+    format_vt_editing_status_golden, format_vt_unicode_osc_golden,
 };
 
 #[test]
@@ -85,6 +86,36 @@ fn terminal_state_matches_vt_editing_status_golden() {
     assert_eq!(
         format_vt_editing_status_golden(&mut terminal),
         include_str!("../fixtures/terminal_golden/vt_editing_status.txt")
+    );
+}
+
+#[test]
+fn terminal_state_matches_dec_origin_scroll_region_golden() {
+    let mut terminal = Terminal::new(TerminalConfig::new(10, 5).unwrap());
+
+    terminal
+        .write_str(
+            "\
+\x1b[1;1Htop\
+\x1b[2;1Hone\
+\x1b[3;1Htwo\
+\x1b[4;1Hthree\
+\x1b[5;1Hbottom\
+\x1b[2;4r\
+\x1b[?6h\
+\x1b[1;1HZ\
+\x1b[3;1HQ\
+\n\
+\x1b[?6$p\
+\x1b[?6l\
+\x1b[1;1HV\
+\x1b[?6$p",
+        )
+        .unwrap();
+
+    assert_eq!(
+        format_dec_origin_scroll_region_golden(&mut terminal),
+        include_str!("../fixtures/terminal_golden/dec_origin_scroll_region.txt")
     );
 }
 

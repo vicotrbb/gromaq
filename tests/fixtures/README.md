@@ -17,6 +17,8 @@ Current fixtures:
   OSC 8 hyperlink metadata.
 - `vt_editing_status.txt`: VT editing, tab stops, DEC special graphics, cursor
   state, and status replies.
+- `dec_origin_scroll_region.txt`: DEC origin mode, scroll-region cursor
+  addressing, region-local scrolling, and mode response bytes.
 - `osc_clipboard_paste.txt`: OSC title/icon label state, OSC 52 clipboard text,
   bracketed paste encoding, and pending response bytes.
 - `status_capability_reports.txt`: grouped terminal status, capability, mode,

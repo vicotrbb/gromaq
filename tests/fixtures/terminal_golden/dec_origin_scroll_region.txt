@@ -1,0 +1,9 @@
+grid:10x5
+visible[0]:"Vop"
+visible[1]:"two"
+visible[2]:"Qhree"
+visible[3]:""
+visible[4]:"bottom"
+cursor:row=0,col=1,visible=true,shape=Block,blinking=true
+pending_response:\x1b[?6;1$y\x1b[?6;2$y
+perf:parsed_bytes=100,dirty_cells=53,scrolls=1,resizes=0,dirty_batches=0

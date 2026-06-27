@@ -187,6 +187,45 @@ encoded_paste:{encoded_paste}
     )
 }
 
+pub(super) fn format_dec_origin_scroll_region_golden(terminal: &mut Terminal) -> String {
+    let grid = terminal.dump_grid();
+    let cursor = terminal.dump_cursor();
+    let metrics = terminal.dump_perf_metrics();
+    let pending_response = terminal.take_pending_response_bytes();
+
+    format!(
+        "\
+grid:{cols}x{rows}
+visible[0]:{line0:?}
+visible[1]:{line1:?}
+visible[2]:{line2:?}
+visible[3]:{line3:?}
+visible[4]:{line4:?}
+cursor:row={cursor_row},col={cursor_col},visible={cursor_visible},shape={cursor_shape:?},blinking={cursor_blinking}
+pending_response:{pending_response}
+perf:parsed_bytes={parsed_bytes},dirty_cells={dirty_cells},scrolls={scrolls},resizes={resizes},dirty_batches={dirty_batches}
+",
+        cols = grid.cols,
+        rows = grid.rows,
+        line0 = grid.line_text(0),
+        line1 = grid.line_text(1),
+        line2 = grid.line_text(2),
+        line3 = grid.line_text(3),
+        line4 = grid.line_text(4),
+        cursor_row = cursor.row,
+        cursor_col = cursor.col,
+        cursor_visible = cursor.visible,
+        cursor_shape = cursor.shape,
+        cursor_blinking = cursor.blinking,
+        pending_response = format_response_bytes(&pending_response),
+        parsed_bytes = metrics.parsed_bytes,
+        dirty_cells = metrics.dirty_cells,
+        scrolls = metrics.scrolls,
+        resizes = metrics.resizes,
+        dirty_batches = metrics.dirty_region_batches,
+    )
+}
+
 pub(super) fn format_vt_editing_status_golden(terminal: &mut Terminal) -> String {
     let grid = terminal.dump_grid();
     let cursor = terminal.dump_cursor();
