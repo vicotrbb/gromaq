@@ -140,6 +140,10 @@ fn config_launch_cli_reports_invalid_config_without_launch_or_gpu_bootstrap() {
     assert!(exit.stdout.is_empty());
     assert!(exit.stderr.contains("config launch failed:"));
     assert!(exit.stderr.contains("columns"));
+    assert!(exit.stderr.contains(&format!(
+        "run `gromaq --config-check {}` before launch",
+        path.display()
+    )));
     assert!(backend.requests.borrow().is_empty());
     assert!(app.launches.borrow().is_empty());
     let _ = fs::remove_file(path);

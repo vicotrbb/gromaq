@@ -24,7 +24,9 @@ where
             return CliExit {
                 code: 1,
                 stdout: String::new(),
-                stderr: format!("config launch failed: {error}\n"),
+                stderr: format!(
+                    "config launch failed: {error}\nrun `gromaq --config-check {path}` before launch\n"
+                ),
             };
         }
     };
