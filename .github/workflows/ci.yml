@@ -18,6 +18,7 @@ jobs:
       - run: sh -n scripts/package-linux-tarball.sh
       - run: sh -n scripts/package-debian-deb.sh
       - run: sh -n scripts/generate-checksums.sh
+      - run: sh -n scripts/notarize-macos-app.sh
       - run: sh -n scripts/capture-macos-window-proof.sh
       - run: cargo fmt --check
       - run: git diff --check

@@ -22,6 +22,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/package-linux-tarball.sh",
     "scripts/package-debian-deb.sh",
     "scripts/generate-checksums.sh",
+    "scripts/notarize-macos-app.sh",
     "scripts/capture-macos-window-proof.sh",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
     "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",

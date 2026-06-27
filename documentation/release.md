@@ -117,6 +117,12 @@ Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Set
 `GROMAQ_CODESIGN_IDENTITY=-` for local ad-hoc signing, or set
 `GROMAQ_CODESIGN_IDENTITY` to a Developer ID Application identity for release
 signing. Developer ID signing uses hardened runtime and timestamp options.
+After signing, `scripts/notarize-macos-app.sh <path-to-app>` creates a notary
+zip, submits it with `xcrun notarytool submit --wait`, staples the accepted
+ticket, validates stapling, and runs `spctl` assessment when available. Set
+`GROMAQ_NOTARY_KEYCHAIN_PROFILE`, or provide
+`GROMAQ_NOTARY_APPLE_ID`, `GROMAQ_NOTARY_PASSWORD`, and
+`GROMAQ_NOTARY_TEAM_ID`.
 
 When `GROMAQ_INSTALL_APP_BUNDLE=1` is set, `scripts/install.sh` prepares the
 minimal packaging assets needed by `scripts/package-macos-app.sh`, runs it
@@ -165,6 +171,8 @@ Proven locally:
   supplied installed binary
 - local ad-hoc codesigning of the macOS app bundle with
   `GROMAQ_CODESIGN_IDENTITY=-` and strict `codesign --verify`
+- notarization helper dry-run with `GROMAQ_NOTARY_DRY_RUN=1`, which creates the
+  notary zip and prints the planned notarytool, stapler, and validation steps
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes

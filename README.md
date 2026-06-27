@@ -81,6 +81,13 @@ signing:
 GROMAQ_CODESIGN_IDENTITY=- scripts/package-macos-app.sh
 ```
 
+To notarize a signed release bundle, provide a notarytool keychain profile or
+Apple ID credentials:
+
+```bash
+GROMAQ_NOTARY_KEYCHAIN_PROFILE=gromaq scripts/notarize-macos-app.sh target/dist/Gromaq.app
+```
+
 The one-command installer can also install a user-local `.app` bundle when run
 on macOS:
 
