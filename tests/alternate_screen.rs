@@ -32,6 +32,21 @@ fn alternate_screen_1049_restores_saved_rendition_state() {
 }
 
 #[test]
+fn alternate_screen_1049_restores_saved_charset_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b)0\x0eP\x1b[?1049h\x0falt\x1b[?1049lq")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "P─");
+    assert_eq!(grid.cell(0, 0).text, "P");
+    assert_eq!(grid.cell(0, 1).text, "─");
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
 fn repeated_1049_enter_keeps_original_primary_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 
