@@ -102,6 +102,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/release.md",
         "optional macOS app-bundle install path",
     ),
+    (
+        "documentation/compatibility.md",
+        "tests/checksums.rs::checksum_script_can_include_additional_release_assets",
+    ),
 ];
 
 #[test]
