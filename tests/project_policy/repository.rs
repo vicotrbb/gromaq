@@ -186,6 +186,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("screencapture -x -R"));
     assert!(screenshot_script.contains("NSBitmapImageRep"));
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_MIN_BACKGROUND_PIXELS"));
+    assert!(screenshot_script.contains("rm -f \"${output}\""));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));

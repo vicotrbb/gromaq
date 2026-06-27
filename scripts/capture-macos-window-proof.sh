@@ -193,6 +193,7 @@ if [ -s "${validation_stderr}" ]; then
 fi
 rm -f "${validation_stderr}"
 if [ "${validation_status}" -ne 0 ]; then
+  rm -f "${output}"
   printf '%s\n' "error: screenshot validation rejected ${output}; see ${log_path}." >&2
   exit "${validation_status}"
 fi
