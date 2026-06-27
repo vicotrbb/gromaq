@@ -29,6 +29,20 @@ fn shift_out_uses_g1_dec_special_graphics_until_shift_in() {
 }
 
 #[test]
+fn dec_cursor_restore_restores_saved_g1_charset_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+
+    terminal.write_str("\x1b)0\x0eA\x1b7\x0fB\x1b8q").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "A─");
+    assert_eq!(grid.cell(0, 0).text, "A");
+    assert_eq!(grid.cell(0, 1).text, "─");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 2);
+}
+
+#[test]
 fn csi_erase_display_mode_3_clears_scrollback_only() {
     let config = TerminalConfig::new(8, 2)
         .unwrap()

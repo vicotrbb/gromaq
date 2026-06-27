@@ -52,7 +52,7 @@ were skipped because those binaries were not on PATH.
 | --- | --- | --- |
 | Alternate-screen enter/leave restoration | Golden state tests and runtime alternate-screen smoke | Proven |
 | Resize/reflow | Golden reflow tests cover visible-grid and scrollback reflow, hard-break boundaries, style metadata, hyperlinks, underline colors, wide and emoji clusters, and a wide linked underlined cell; runtime reflow smoke covers current shell-output resize plumbing | Proven for covered cases |
-| ANSI/SGR styling | Parser, state, and fixture tests cover SGR colors/styles, DEC special graphics through both G0 and G1 shift-out/shift-in paths, and golden VT editing fixtures | Proven for covered sequences |
+| ANSI/SGR styling | Parser, state, and fixture tests cover SGR colors/styles, DEC special graphics through both G0 and G1 shift-out/shift-in paths, saved-cursor charset restoration, and golden VT editing fixtures | Proven for covered sequences |
 | Unicode wide/combining/emoji clusters | Terminal-state tests and glyph rasterization tests | Proven for covered clusters |
 | Scrollback retention and viewport navigation | Unit/integration tests and runtime scrollback smoke | Proven |
 | Selection/copy and OSC 52 clipboard | Unit tests cover visible-grid copy, displayed scrollback copy, displayed styled scrollback with wide-cell text, soft-wrap versus hard-break newlines, emoji clusters, wide-cell trailing-half selection, viewport clamping, stale-selection clearing, and native clipboard smoke paths | Proven for covered paths |
