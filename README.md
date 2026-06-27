@@ -98,7 +98,7 @@ bundle. The remote GitHub Actions release workflow completed green on
 macOS `.app` zip, and checksum manifests.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. On
-2026-06-27, CI run `28298600690` completed green for commit `5f25387`,
+2026-06-27, CI run `28298948675` completed green for commit `498521f`,
 including the Debian package assembly path on Ubuntu and the macOS packaging
 test that inspects the `.deb` member structure.
 Release artifacts include a `SHA256SUMS` manifest.
