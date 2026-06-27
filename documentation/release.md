@@ -231,6 +231,16 @@ Proven remotely:
   `cargo clippy --all-targets --all-features -- -D warnings`,
   `cargo test --all`, the runtime/theme/GPU smoke suite, and
   `cargo bench --bench parser_throughput -- --list`.
+- GitHub Actions CI run `28301610408` completed successfully on 2026-06-27 for
+  commit `c4feef2`. The new `arch-packaging` job ran in
+  `archlinux:base-devel`, installed `git` and `rust`, checked
+  `packaging/arch/.SRCINFO`, ran `bash -n packaging/arch/PKGBUILD`, and passed
+  both `makepkg --nobuild --noconfirm` and `makepkg --printsrcinfo` as an
+  unprivileged builder user. The `linux-packaging` job also generated
+  checksums with both Arch metadata paths in `GROMAQ_CHECKSUM_EXTRA_FILES` and
+  completed the local release-method install proof, while the macOS `rust` job
+  passed the full formatting, clippy, test, runtime/theme/GPU smoke, and
+  benchmark-list suite.
 - GitHub Actions CI run `28299568944` completed successfully on 2026-06-27 for
   commit `12f7dfe`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
@@ -269,9 +279,8 @@ Proven locally:
   syntax checks and guarded by repository policy markers for the Cargo build
   command, desktop file, AppStream metainfo, hicolor icon payload, and source
   metadata
-- Arch `arch-packaging` CI job configuration and policy coverage for
-  `makepkg --nobuild` and `makepkg --printsrcinfo`; this local commit has not
-  yet been pushed and therefore has no remote run proof yet
+- Arch `arch-packaging` CI job policy coverage for `makepkg --nobuild` and
+  `makepkg --printsrcinfo`
 - tag-triggered GitHub Release publication path is configured locally in
   `.github/workflows/release.yml` and guarded by
   `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
@@ -291,7 +300,6 @@ Not yet proven:
   artifacts
 - live Linux release-method install from GitHub Release assets
 - live Arch `makepkg` build/install
-- remote GitHub Actions proof of the Arch `arch-packaging` job
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

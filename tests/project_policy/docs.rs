@@ -116,6 +116,8 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "tests/checksums.rs::checksum_script_can_include_additional_release_assets",
     ),
+    ("documentation/release.md", "28301610408"),
+    ("documentation/compatibility.md", "28301610408"),
 ];
 
 #[test]

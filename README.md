@@ -126,11 +126,12 @@ bash -n packaging/arch/PKGBUILD
 `packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO` provide an Arch
 `makepkg` source-package recipe that builds from the public Git repository and
 installs the binary, desktop file, AppStream metainfo, hicolor icon, README, and
-license. CI and repository policy syntax-check the recipe, and the local CI
-workflow now includes an `arch-packaging` job under `archlinux:base-devel` that
-runs `makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
-user. That job still awaits remote GitHub Actions proof, and a full live package
-build/install on Arch Linux remains a separate platform proof.
+license. CI and repository policy syntax-check the recipe. On 2026-06-27, CI
+run `28301610408` completed green for commit `c4feef2`, including the
+`arch-packaging` job under `archlinux:base-devel` that ran
+`makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
+user. A full live package build/install on Arch Linux remains a separate
+platform proof.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
@@ -150,9 +151,9 @@ tarball plus checksum manifest before accepting packaging success. The checksum
 script also accepts
 `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO"`,
 and the Linux packaging and release workflows use that path so the Arch recipe
-metadata is covered by the Linux checksum manifest when it is uploaded. On
-2026-06-27, CI run `28300600507` completed green for commit `93fcbef`,
-including the release-method tarball install step on Ubuntu. CI run
+metadata is covered by the Linux checksum manifest when it is uploaded. CI run
+`28301610408` completed green for commit `c4feef2`, including that checksum
+path and the release-method tarball install step on Ubuntu. CI run
 `28299568944` also completed green for commit `12f7dfe`, including the Debian
 package assembly path on Ubuntu and the macOS packaging test that inspects the
 `.deb` member structure.
