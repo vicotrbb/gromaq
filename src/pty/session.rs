@@ -88,6 +88,7 @@ impl PtySession {
                         wakeup();
                     }
                     Err(error) if error.kind() == ErrorKind::Interrupted => {}
+                    Err(error) if is_pty_reader_eof(&error) => break,
                     Err(error) => {
                         let _ = sender.send(Err(PtyError::io(error)));
                         break;
@@ -160,5 +161,37 @@ impl PtySession {
             }
             std::thread::sleep(Duration::from_millis(10));
         }
+    }
+}
+
+fn is_pty_reader_eof(error: &std::io::Error) -> bool {
+    #[cfg(unix)]
+    {
+        const UNIX_EIO: i32 = 5;
+        error.raw_os_error() == Some(UNIX_EIO)
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = error;
+        false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pty_reader_treats_unix_eio_as_eof() {
+        let error = std::io::Error::from_raw_os_error(5);
+
+        assert!(is_pty_reader_eof(&error));
+    }
+
+    #[test]
+    fn pty_reader_keeps_other_read_errors_fatal() {
+        let error = std::io::Error::new(ErrorKind::BrokenPipe, "writer closed");
+
+        assert!(!is_pty_reader_eof(&error));
     }
 }
