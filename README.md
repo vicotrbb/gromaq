@@ -108,9 +108,12 @@ scripts/package-macos-app.sh
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, and a zipped macOS `.app`
-bundle. The remote GitHub Actions release workflow completed green on
-2026-06-27 as run `28298839954`, uploading the Linux tarball, Debian package,
-macOS `.app` zip, and checksum manifests.
+bundle as GitHub Actions artifacts. Tag-triggered runs also create or reuse the
+matching GitHub Release and upload release assets. The remote GitHub Actions release workflow
+completed green on 2026-06-27 as run `28298839954`, uploading the Linux
+tarball, Debian package, macOS `.app` zip, and checksum manifests as workflow
+artifacts; tag-triggered GitHub Release asset publication is configured but
+still needs a live tag-run proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. On
 2026-06-27, CI run `28299568944` completed green for commit `12f7dfe`,

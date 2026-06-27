@@ -6,6 +6,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   linux-tarball:
     runs-on: ubuntu-latest
@@ -17,6 +20,23 @@ jobs:
       - run: scripts/package-linux-tarball.sh
       - run: scripts/package-debian-deb.sh
       - run: scripts/generate-checksums.sh
+      - name: Publish Linux assets to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "${GITHUB_REF_NAME}" \
+              --notes "Gromaq ${GITHUB_REF_NAME} release artifacts." \
+              --verify-tag || gh release view "${GITHUB_REF_NAME}" >/dev/null
+          fi
+          cp target/dist/SHA256SUMS target/dist/SHA256SUMS-linux-x86_64
+          gh release upload "${GITHUB_REF_NAME}" \
+            target/dist/*.tar.gz \
+            target/dist/*.deb \
+            target/dist/SHA256SUMS-linux-x86_64 \
+            --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-linux-tarball
@@ -35,6 +55,22 @@ jobs:
       - run: scripts/package-macos-app.sh
       - run: ditto -c -k --sequesterRsrc --keepParent target/dist/Gromaq.app target/dist/Gromaq-macos-app.zip
       - run: scripts/generate-checksums.sh
+      - name: Publish macOS assets to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "${GITHUB_REF_NAME}" \
+              --notes "Gromaq ${GITHUB_REF_NAME} release artifacts." \
+              --verify-tag || gh release view "${GITHUB_REF_NAME}" >/dev/null
+          fi
+          cp target/dist/SHA256SUMS target/dist/SHA256SUMS-macos-app
+          gh release upload "${GITHUB_REF_NAME}" \
+            target/dist/Gromaq-macos-app.zip \
+            target/dist/SHA256SUMS-macos-app \
+            --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-macos-app

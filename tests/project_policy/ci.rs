@@ -61,6 +61,17 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "target/dist/Gromaq-macos-app.zip",
 ];
 
+const REQUIRED_TAG_RELEASE_UPLOAD_MARKERS: &[&str] = &[
+    "permissions:",
+    "contents: write",
+    "startsWith(github.ref, 'refs/tags/')",
+    "gh release create",
+    "gh release upload",
+    "SHA256SUMS-linux-x86_64",
+    "SHA256SUMS-macos-app",
+    "GH_TOKEN: ${{ github.token }}",
+];
+
 const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "linux-packaging:",
     "runs-on: ubuntu-latest",
@@ -94,6 +105,20 @@ fn release_workflow_builds_distribution_artifacts() {
         assert!(
             workflow.contains(command),
             "{} must run or upload `{command}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
+}
+
+#[test]
+fn release_workflow_publishes_tag_assets_to_github_releases() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for marker in REQUIRED_TAG_RELEASE_UPLOAD_MARKERS {
+        assert!(
+            workflow.contains(marker),
+            "{} must include tag release publication marker `{marker}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
         );
     }

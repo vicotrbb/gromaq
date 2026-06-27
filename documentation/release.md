@@ -132,11 +132,18 @@ against the installed binary, and copies the generated bundle to
 ## GitHub Artifacts
 
 `.github/workflows/release.yml` runs on `v*` tags and manual dispatch. It
-uploads:
+uploads workflow artifacts for both trigger types:
 
 - a Linux tarball from `scripts/package-linux-tarball.sh`
 - a Debian package from `scripts/package-debian-deb.sh`
 - a zipped macOS `.app` bundle from `scripts/package-macos-app.sh`
+
+On tag-triggered runs, the workflow also creates or reuses the matching GitHub
+Release and uploads the Linux tarball, Debian package, macOS `.app` zip, and
+platform-specific checksum manifests as release assets. The checksum files are
+copied to `SHA256SUMS-linux-x86_64` and `SHA256SUMS-macos-app` before release
+upload so the Linux and macOS manifests do not collide as GitHub Release asset
+names.
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
 repository policy checks, Linux user-local desktop asset install proof, and
@@ -157,6 +164,11 @@ Proven remotely:
   listed `debian-binary`, `control.tar.gz`, and `data.tar.gz`. The `macos-app`
   job ran project policy, packaged and zipped `Gromaq.app`, generated
   checksums, and uploaded artifacts.
+- The tag-triggered GitHub Release publication path is configured in
+  `.github/workflows/release.yml` and guarded by
+  `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
+  which checks the required `gh release create`, `gh release upload`, token
+  permission, tag-only condition, and unique checksum manifest markers.
 - GitHub Actions CI run `28299568944` completed successfully on 2026-06-27 for
   commit `12f7dfe`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
@@ -191,6 +203,7 @@ Proven locally:
 
 Not yet proven:
 
+- live tag-triggered GitHub Release asset publication
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app
