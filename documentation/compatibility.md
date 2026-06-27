@@ -5,6 +5,12 @@ tests, real PTY workflows, scripted interaction, and live smoke commands. It is
 not a claim of full daily-driver compatibility yet; it is a proof map for the
 remaining terminal-core work.
 
+On 2026-06-27, `cargo test --test pty -- --nocapture` passed all 36 PTY tests
+on the current macOS host. The captured output confirmed live current-host
+coverage for bash, zsh, vim, tmux, less, top, ssh, kubectl, and the tiny cargo
+fixture workflows, and also confirmed that fish, nushell, nvim, htop, and btop
+were skipped because those binaries were not on PATH.
+
 ## Shells
 
 | Workflow | Current proof | Status |
