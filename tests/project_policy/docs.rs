@@ -150,3 +150,25 @@ fn public_docs_keep_release_install_boundaries() {
         );
     }
 }
+
+#[test]
+fn compatibility_matrix_rows_keep_three_columns() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("documentation/compatibility.md");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for (line_number, line) in source.lines().enumerate() {
+        let trimmed = line.trim();
+        if !trimmed.starts_with('|') || trimmed == "| --- | --- | --- |" {
+            continue;
+        }
+
+        assert_eq!(
+            trimmed.matches('|').count(),
+            4,
+            "{}:{} must keep three markdown table columns",
+            relative_path(root, &path),
+            line_number + 1
+        );
+    }
+}
