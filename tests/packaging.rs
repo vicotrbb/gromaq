@@ -168,6 +168,26 @@ mod unix {
         );
     }
 
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_app_script_can_codesign_bundle_when_identity_is_supplied() {
+        let dist = run_packaging_script(
+            "scripts/package-macos-app.sh",
+            &[("GROMAQ_CODESIGN_IDENTITY", "-")],
+        );
+        let app = dist.path().join("Gromaq.app");
+
+        let verify_ok = Command::new("codesign")
+            .args(["--verify", "--deep", "--strict", &app.to_string_lossy()])
+            .status()
+            .unwrap()
+            .success();
+        assert!(
+            verify_ok,
+            "codesigned app bundle must pass strict verification"
+        );
+    }
+
     struct TempDist(PathBuf);
 
     impl TempDist {

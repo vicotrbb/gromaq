@@ -113,7 +113,10 @@ The script builds a release binary when needed, creates `AppIcon.icns` from the
 generated logo assets, writes `CFBundleIconFile`, and derives bundle version
 metadata from `Cargo.toml`.
 
-Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary.
+Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Set
+`GROMAQ_CODESIGN_IDENTITY=-` for local ad-hoc signing, or set
+`GROMAQ_CODESIGN_IDENTITY` to a Developer ID Application identity for release
+signing. Developer ID signing uses hardened runtime and timestamp options.
 
 When `GROMAQ_INSTALL_APP_BUNDLE=1` is set, `scripts/install.sh` prepares the
 minimal packaging assets needed by `scripts/package-macos-app.sh`, runs it
@@ -160,6 +163,8 @@ Proven locally:
 - `Info.plist` syntax and icon metadata
 - optional macOS app-bundle install path with file-backed raw assets and a
   supplied installed binary
+- local ad-hoc codesigning of the macOS app bundle with
+  `GROMAQ_CODESIGN_IDENTITY=-` and strict `codesign --verify`
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes
@@ -176,6 +181,6 @@ Proven locally:
 
 Not yet proven:
 
-- signed and notarized macOS app distribution
+- Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

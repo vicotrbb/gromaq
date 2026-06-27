@@ -73,6 +73,14 @@ scripts/package-macos-app.sh
 open target/dist/Gromaq.app
 ```
 
+To sign the bundle during packaging, set `GROMAQ_CODESIGN_IDENTITY`. Use `-`
+for local ad-hoc signing, or a Developer ID Application identity for release
+signing:
+
+```bash
+GROMAQ_CODESIGN_IDENTITY=- scripts/package-macos-app.sh
+```
+
 The one-command installer can also install a user-local `.app` bundle when run
 on macOS:
 

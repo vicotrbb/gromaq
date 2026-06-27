@@ -10,6 +10,7 @@ version="$(
 )"
 binary_path="${GROMAQ_BINARY_PATH:-${root}/target/release/${binary_name}}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
+codesign_identity="${GROMAQ_CODESIGN_IDENTITY:-}"
 app_dir="${dist_dir}/${app_name}.app"
 contents_dir="${app_dir}/Contents"
 macos_dir="${contents_dir}/MacOS"
@@ -99,5 +100,18 @@ EOF
 
 printf '%s' 'APPL????' > "${contents_dir}/PkgInfo"
 rm -rf "${iconset_dir}"
+
+if [ -n "${codesign_identity}" ]; then
+  if ! command -v codesign >/dev/null 2>&1; then
+    printf '%s\n' "error: codesign is required when GROMAQ_CODESIGN_IDENTITY is set." >&2
+    exit 1
+  fi
+  if [ "${codesign_identity}" = "-" ]; then
+    codesign --force --deep --sign - "${app_dir}"
+  else
+    codesign --force --deep --options runtime --timestamp --sign "${codesign_identity}" "${app_dir}"
+  fi
+  printf '%s\n' "Codesigned ${app_dir}"
+fi
 
 printf '%s\n' "Packaged ${app_dir}"
