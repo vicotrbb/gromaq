@@ -144,6 +144,11 @@ Proven remotely:
   generated checksums, and uploaded artifacts. The `macos-app` job ran project
   policy, packaged and zipped `Gromaq.app`, generated checksums, and uploaded
   artifacts.
+- GitHub Actions CI run `28298600690` completed successfully on 2026-06-27 for
+  commit `5f25387`. The `linux-packaging` job built the Linux tarball and
+  Debian package, generated checksums, and proved Linux install-root desktop
+  asset placement. The macOS `rust` job passed `cargo test --all`, including
+  the packaging test that inspects the Debian package member structure.
 
 Proven locally:
 
@@ -168,6 +173,7 @@ Proven locally:
 Not yet proven:
 
 - signed and notarized macOS app distribution
-- remote GitHub Actions proof for the Debian package artifact
+- remote GitHub Actions release-workflow upload proof for the Debian package
+  artifact
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

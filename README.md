@@ -94,10 +94,13 @@ scripts/package-macos-app.sh
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, and a zipped macOS `.app`
 bundle. The remote GitHub Actions release workflow proof currently covers the
-Linux tarball and macOS `.app`; Debian package remote proof is pending the next
+Linux tarball and macOS `.app`; Debian package upload proof is pending the next
 release run.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
-installer asset placement plus Linux tarball and Debian package assembly.
+installer asset placement plus Linux tarball and Debian package assembly. On
+2026-06-27, CI run `28298600690` completed green for commit `5f25387`,
+including the Debian package assembly path on Ubuntu and the macOS packaging
+test that inspects the `.deb` member structure.
 Release artifacts include a `SHA256SUMS` manifest.
 
 ## Status
