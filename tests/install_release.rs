@@ -54,6 +54,49 @@ mod unix {
     }
 
     #[test]
+    fn install_script_rejects_release_checksum_manifest_without_tarball_entry() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let release_dir = TempPath::new("gromaq-release-missing-checksum-assets");
+        let install_root = TempPath::new("gromaq-release-missing-checksum-root");
+        let bin_dir = TempPath::new("gromaq-release-missing-checksum-bin");
+        create_release_tarball(root, release_dir.path());
+        fs::write(
+            release_dir.path().join("SHA256SUMS-linux-x86_64"),
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  unrelated-file\n",
+        )
+        .unwrap();
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_PLATFORM", "Linux")
+            .env("GROMAQ_INSTALL_METHOD", "release")
+            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
+            .env(
+                "GROMAQ_RELEASE_BASE",
+                format!("file://{}", release_dir.path().display()),
+            )
+            .env("GROMAQ_BIN_DIR", bin_dir.path())
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .output()
+            .unwrap();
+
+        assert!(
+            !output.status.success(),
+            "missing checksum entry must fail installation"
+        );
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("checksum manifest did not contain"),
+            "stderr should explain missing checksum entry: {stderr}"
+        );
+        assert!(
+            !bin_dir.path().join("gromaq").exists(),
+            "binary must not be installed without a matching checksum entry"
+        );
+    }
+
+    #[test]
     fn install_script_can_explicitly_skip_release_checksum_verification() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let release_dir = TempPath::new("gromaq-release-no-checksum-assets");
