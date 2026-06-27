@@ -35,6 +35,7 @@ jobs:
           gh release upload "${GITHUB_REF_NAME}" \
             target/dist/*.tar.gz \
             target/dist/*.deb \
+            packaging/arch/PKGBUILD \
             target/dist/SHA256SUMS-linux-x86_64 \
             --clobber
       - uses: actions/upload-artifact@v4
@@ -43,6 +44,7 @@ jobs:
           path: |
             target/dist/*.tar.gz
             target/dist/*.deb
+            packaging/arch/PKGBUILD
             target/dist/SHA256SUMS
 
   macos-app:

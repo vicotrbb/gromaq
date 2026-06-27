@@ -59,6 +59,7 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "target/dist/SHA256SUMS",
     "target/dist/*.tar.gz",
     "target/dist/*.deb",
+    "packaging/arch/PKGBUILD",
     "target/dist/Gromaq-macos-app.zip",
 ];
 
@@ -68,6 +69,7 @@ const REQUIRED_TAG_RELEASE_UPLOAD_MARKERS: &[&str] = &[
     "startsWith(github.ref, 'refs/tags/')",
     "gh release create",
     "gh release upload",
+    "packaging/arch/PKGBUILD",
     "SHA256SUMS-linux-x86_64",
     "SHA256SUMS-macos-app",
     "GH_TOKEN: ${{ github.token }}",

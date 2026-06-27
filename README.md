@@ -130,13 +130,15 @@ syntax-check the recipe; a live `makepkg` package build is still a separate
 platform proof.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
-upload a Linux tarball, a Debian `.deb` package, and a zipped macOS `.app`
-bundle as GitHub Actions artifacts. Tag-triggered runs also create or reuse the
-matching GitHub Release and upload release assets. The remote GitHub Actions release workflow
-completed green on 2026-06-27 as run `28298839954`, uploading the Linux
-tarball, Debian package, macOS `.app` zip, and checksum manifests as workflow
-artifacts; tag-triggered GitHub Release asset publication is configured but
-still needs a live tag-run proof.
+upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD`, and a
+zipped macOS `.app` bundle as GitHub Actions artifacts. Tag-triggered runs also
+create or reuse the matching GitHub Release and upload release assets. The
+remote GitHub Actions release workflow completed green on 2026-06-27 as run
+`28298839954`, uploading the Linux tarball, Debian package, macOS `.app` zip,
+and checksum manifests as workflow artifacts; Arch `PKGBUILD` release upload
+is configured locally and awaits the next release workflow proof. Tag-triggered
+GitHub Release asset publication is configured but still needs a live tag-run
+proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured to install from the locally generated Linux release
