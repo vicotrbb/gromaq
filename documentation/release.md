@@ -261,6 +261,8 @@ Proven locally:
 - `Info.plist` syntax and icon metadata
 - optional macOS app-bundle install path with file-backed raw assets and a
   supplied installed binary
+- installed macOS app-bundle LaunchServices smoke from the configured
+  `GROMAQ_MACOS_APP_DIR`, proven with `open -W -n ... --args --window-smoke`
 - local ad-hoc codesigning of the macOS app bundle with
   `GROMAQ_CODESIGN_IDENTITY=-` and strict `codesign --verify`
 - notarization helper dry-run with `GROMAQ_NOTARY_DRY_RUN=1`, which creates the
