@@ -147,6 +147,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(install_script.contains("GROMAQ_SKIP_CARGO_INSTALL"));
     assert!(install_script.contains("GROMAQ_INSTALL_ROOT"));
     assert!(install_script.contains("GROMAQ_PLATFORM"));
+    assert!(install_script.contains("GROMAQ_DRY_RUN"));
     assert!(install_script.contains("GROMAQ_INSTALL_APP_BUNDLE"));
     assert!(install_script.contains("GROMAQ_MACOS_APP_DIR"));
     assert!(install_script.contains("prepare_macos_asset_root"));

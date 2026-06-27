@@ -45,6 +45,11 @@ Requirements:
 The one-command installer is deliberately small and auditable. It does not
 install Rust or system packages for you; if Cargo is missing, install Rust from
 your package manager or `https://rustup.rs`, then run the command again.
+Preview the actions without installing or writing files:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_DRY_RUN=1 sh
+```
 
 On Linux, the installer also installs user-local desktop assets by default:
 `dev.gromaq.Gromaq.desktop`, the project icon under the hicolor icon theme, and

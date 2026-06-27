@@ -73,6 +73,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
 
 const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
+    ("README.md", "GROMAQ_DRY_RUN=1"),
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "README.md",
@@ -81,6 +82,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "remote GitHub Actions release workflow"),
     ("README.md", "signed/notarized macOS app distribution"),
     ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
+    ("documentation/release.md", "GROMAQ_DRY_RUN=1"),
     ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "documentation/release.md",

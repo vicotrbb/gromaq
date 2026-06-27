@@ -8,6 +8,7 @@ raw_base="${GROMAQ_RAW_BASE:-https://raw.githubusercontent.com/vicotrbb/gromaq/$
 asset_root="${GROMAQ_ASSET_ROOT:-}"
 bin_dir="${CARGO_HOME:-${HOME}/.cargo}/bin"
 platform="${GROMAQ_PLATFORM:-$(uname -s)}"
+dry_run="${GROMAQ_DRY_RUN:-0}"
 install_temp_root=""
 macos_asset_root=""
 
@@ -18,6 +19,48 @@ cleanup_install_temp_root() {
 }
 
 trap cleanup_install_temp_root EXIT
+
+linux_data_home() {
+  if [ -n "${GROMAQ_INSTALL_ROOT:-}" ]; then
+    printf '%s\n' "${GROMAQ_INSTALL_ROOT}/share"
+  else
+    printf '%s\n' "${XDG_DATA_HOME:-${HOME}/.local/share}"
+  fi
+}
+
+print_dry_run_and_exit() {
+  printf '%s\n' "Dry run: would install ${package} from ${repo} (${branch})."
+  if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" = "1" ]; then
+    printf '%s\n' "Dry run: would skip cargo install because GROMAQ_SKIP_CARGO_INSTALL=1."
+  else
+    printf '%s\n' "Dry run: would run cargo install --git ${repo} --branch ${branch} --locked --force ${package}."
+    printf '%s\n' "Dry run: expected binary path is ${bin_dir}/${package}."
+  fi
+
+  case "${platform}" in
+    Linux)
+      if [ "${GROMAQ_INSTALL_DESKTOP_ASSETS:-1}" != "0" ]; then
+        printf '%s\n' "Dry run: would install Linux desktop assets under $(linux_data_home)."
+      else
+        printf '%s\n' "Dry run: would skip Linux desktop assets because GROMAQ_INSTALL_DESKTOP_ASSETS=0."
+      fi
+      ;;
+    Darwin)
+      if [ "${GROMAQ_INSTALL_APP_BUNDLE:-0}" = "1" ]; then
+        app_name="${GROMAQ_APP_NAME:-Gromaq}"
+        app_dir="${GROMAQ_MACOS_APP_DIR:-${HOME}/Applications}"
+        printf '%s\n' "Dry run: would install macOS app bundle to ${app_dir}/${app_name}.app."
+      fi
+      ;;
+  esac
+
+  printf '%s\n' "Dry run complete; no files written."
+  exit 0
+}
+
+if [ "${dry_run}" = "1" ]; then
+  print_dry_run_and_exit
+fi
 
 if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" != "1" ] && ! command -v cargo >/dev/null 2>&1; then
   printf '%s\n' "error: Cargo is required to install Gromaq." >&2
@@ -64,11 +107,7 @@ install_required_file() {
 }
 
 install_linux_desktop_assets() {
-  if [ -n "${GROMAQ_INSTALL_ROOT:-}" ]; then
-    data_home="${GROMAQ_INSTALL_ROOT}/share"
-  else
-    data_home="${XDG_DATA_HOME:-${HOME}/.local/share}"
-  fi
+  data_home="$(linux_data_home)"
   install_file "images/logos/logo-icon-256.png" \
     "${data_home}/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
   install_file "packaging/linux/dev.gromaq.Gromaq.desktop" \

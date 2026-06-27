@@ -122,6 +122,43 @@ mod unix {
         );
     }
 
+    #[test]
+    fn install_script_dry_run_reports_actions_without_writing_install_root() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let install_root = TempDist(std::env::temp_dir().join(format!(
+            "gromaq-install-dry-run-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        )));
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_DRY_RUN", "1")
+            .env("GROMAQ_PLATFORM", "Linux")
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .env("GROMAQ_ASSET_ROOT", root)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "dry-run install failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Dry run: would install gromaq"));
+        assert!(stdout.contains("Dry run: would run cargo install"));
+        assert!(stdout.contains("Dry run: would install Linux desktop assets under"));
+        assert!(stdout.contains("Dry run complete; no files written."));
+        assert!(
+            !install_root.path().exists(),
+            "dry-run install must not create install root"
+        );
+    }
+
     #[cfg(target_os = "macos")]
     #[test]
     fn macos_app_script_builds_well_formed_bundle_from_stub_binary() {

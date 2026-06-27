@@ -29,6 +29,11 @@ Requirements:
 
 The installer intentionally does not install Rust or system packages. If Cargo
 is absent, it exits with a clear error.
+Preview installer actions without installing or writing files:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_DRY_RUN=1 sh
+```
 
 ## Linux Desktop Assets
 
