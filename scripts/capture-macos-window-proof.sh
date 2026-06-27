@@ -103,7 +103,8 @@ SWIFT
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 output="${1:-${root}/target/gromaq-live-window-proof.png}"
 log_path="${GROMAQ_WINDOW_PROOF_LOG:-${root}/target/gromaq-live-window-proof.log}"
-capture_stderr="${log_path}.screencapture"
+window_capture_stderr="${log_path}.window-capture"
+region_capture_stderr="${log_path}.region-capture"
 validation_stderr="${log_path}.validation"
 delay="${GROMAQ_SCREENSHOT_DELAY_SECONDS:-0.05}"
 window_title="${GROMAQ_WINDOW_TITLE:-Gromaq}"
@@ -112,7 +113,7 @@ window_lookup_attempts="${GROMAQ_WINDOW_LOOKUP_ATTEMPTS:-20}"
 window_lookup_interval="${GROMAQ_WINDOW_LOOKUP_INTERVAL_SECONDS:-0.2}"
 
 mkdir -p "$(dirname "${output}")" "$(dirname "${log_path}")"
-rm -f "${capture_stderr}" "${validation_stderr}"
+rm -f "${window_capture_stderr}" "${region_capture_stderr}" "${validation_stderr}"
 
 (
   cd "${root}"
@@ -148,18 +149,13 @@ window_width="$4"
 window_height="$5"
 window_region="${window_x},${window_y},${window_width},${window_height}"
 capture_status=0
-screencapture -x -l "${window_id}" "${output}" 2> "${capture_stderr}" || capture_status="$?"
+screencapture -x -l "${window_id}" "${output}" 2> "${window_capture_stderr}" || capture_status="$?"
 capture_method="window-id"
+window_capture_status="${capture_status}"
 
 if [ "${capture_status}" -ne 0 ]; then
-  {
-    printf '%s\n' "window-id capture failed; attempting bounded region capture: ${window_region}"
-    if [ -s "${capture_stderr}" ]; then
-      cat "${capture_stderr}"
-    fi
-  } >> "${log_path}"
   capture_status=0
-  screencapture -x -R"${window_region}" "${output}" 2> "${capture_stderr}" || capture_status="$?"
+  screencapture -x -R"${window_region}" "${output}" 2> "${region_capture_stderr}" || capture_status="$?"
   capture_method="window-region"
 fi
 
@@ -170,11 +166,17 @@ wait "${app_pid}" || app_status="$?"
   printf '%s\n' "macOS window id: ${window_id}"
   printf '%s\n' "macOS window region: ${window_region}"
   printf '%s\n' "macOS capture method: ${capture_method}"
-  if [ -s "${capture_stderr}" ]; then
-    cat "${capture_stderr}"
+  if [ "${window_capture_status}" -ne 0 ]; then
+    printf '%s\n' "window-id capture failed; attempted bounded region capture: ${window_region}"
+    if [ -s "${window_capture_stderr}" ]; then
+      cat "${window_capture_stderr}"
+    fi
+  fi
+  if [ -s "${region_capture_stderr}" ]; then
+    cat "${region_capture_stderr}"
   fi
 } >> "${log_path}"
-rm -f "${capture_stderr}"
+rm -f "${window_capture_stderr}" "${region_capture_stderr}"
 
 if [ "${capture_status}" -ne 0 ]; then
   printf '%s\n' "error: screencapture could not capture Gromaq window id ${window_id}; see ${log_path}." >&2
