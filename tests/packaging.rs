@@ -14,7 +14,10 @@ mod unix {
     use std::os::unix::fs::PermissionsExt;
     use std::path::{Path, PathBuf};
     use std::process::Command;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
     #[test]
     fn linux_tarball_script_assembles_complete_archive_from_stub_binary() {
@@ -88,14 +91,7 @@ mod unix {
     #[test]
     fn debian_package_script_accepts_relative_dist_dir() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let relative = format!(
-            "target/gromaq-relative-deb-{}-{}",
-            std::process::id(),
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        );
+        let relative = format!("target/{}", unique_temp_name("gromaq-relative-deb"));
         let dist = RelativeTempDist(root.join(&relative));
         fs::create_dir_all(dist.path()).unwrap();
         let stub = dist.path().join("gromaq-stub");
@@ -202,14 +198,7 @@ mod unix {
 
     fn run_packaging_script(script: &str, extra_env: &[(&str, &str)]) -> TempDist {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let dist = TempDist(std::env::temp_dir().join(format!(
-            "gromaq-packaging-{}-{}",
-            std::process::id(),
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        )));
+        let dist = TempDist(std::env::temp_dir().join(unique_temp_name("gromaq-packaging")));
         let stub = dist.path().join("gromaq-stub");
         fs::create_dir_all(dist.path()).unwrap();
         fs::write(&stub, "#!/bin/sh\nexit 0\n").unwrap();
@@ -229,6 +218,20 @@ mod unix {
             String::from_utf8_lossy(&output.stderr)
         );
         dist
+    }
+
+    fn unique_temp_name(prefix: &str) -> String {
+        let sequence = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+        format!(
+            "{}-{}-{}-{}",
+            prefix,
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+            sequence
+        )
     }
 
     fn single_tarball(dist: &Path) -> PathBuf {
