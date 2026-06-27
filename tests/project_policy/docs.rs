@@ -73,6 +73,10 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "input-to-render p95 budget ns: 10000000",
     ),
+    (
+        "documentation/compatibility.md",
+        "runtime perf p95 smoke: ok",
+    ),
 ];
 
 const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
