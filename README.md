@@ -127,7 +127,7 @@ bash -n packaging/arch/PKGBUILD
 `makepkg` source-package recipe that builds from the public Git repository and
 installs the binary, desktop file, AppStream metainfo, hicolor icon, README, and
 license. CI and repository policy syntax-check the recipe. On 2026-06-27, CI
-run `28301610408` completed green for commit `c4feef2`, including the
+run `28303175039` completed green for commit `12a38e8`, including the
 `arch-packaging` job under `archlinux:base-devel` that ran
 `makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
 user. A full live package build/install on Arch Linux remains a separate
@@ -138,11 +138,12 @@ upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
 `.SRCINFO`, and a zipped macOS `.app` bundle as GitHub Actions artifacts.
 Tag-triggered runs also create or reuse the matching GitHub Release and upload
 release assets. The remote GitHub Actions release workflow completed green on
-2026-06-27 as run `28302556353`, uploading the Linux tarball, Debian package,
-Arch `PKGBUILD`, hidden `.SRCINFO`, macOS `.app` zip, and checksum manifests as
-workflow artifacts. The downloaded macOS zip includes an app `Info.plist` with
-`LSApplicationCategoryType=public.app-category.utilities`. Tag-triggered GitHub
-Release asset publication is configured but still needs a live tag-run proof.
+2026-06-27 as run `28303243197` for commit `12a38e8`, uploading the Linux
+tarball, Debian package, Arch `PKGBUILD`, hidden `.SRCINFO`, macOS `.app` zip,
+and checksum manifests as workflow artifacts. The downloaded macOS zip includes
+an app `Info.plist` with `LSApplicationCategoryType=public.app-category.utilities`.
+Tag-triggered GitHub Release asset publication is configured but still needs a
+live tag-run proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured to install from the locally generated Linux release
@@ -151,11 +152,10 @@ script also accepts
 `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO"`,
 and the Linux packaging and release workflows use that path so the Arch recipe
 metadata is covered by the Linux checksum manifest when it is uploaded. CI run
-`28301610408` completed green for commit `c4feef2`, including that checksum
-path and the release-method tarball install step on Ubuntu. CI run
-`28299568944` also completed green for commit `12f7dfe`, including the Debian
-package assembly path on Ubuntu and the macOS packaging test that inspects the
-`.deb` member structure.
+`28303175039` completed green for commit `12a38e8`, including that checksum
+path, Debian package assembly, and the release-method tarball install step on
+Ubuntu; the macOS job passed the packaging test that inspects the `.deb` member
+structure.
 Release artifacts include a `SHA256SUMS` manifest.
 
 ## Status

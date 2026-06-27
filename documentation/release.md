@@ -213,6 +213,27 @@ and `.SRCINFO` metadata as well as the Linux tarball and Debian package.
 
 Proven remotely:
 
+- GitHub Actions release workflow run `28303243197` completed successfully on
+  2026-06-27 for commit `12a38e8`. The Linux workflow artifact contained
+  `target/dist/gromaq-0.1.0-linux-x86_64.tar.gz`,
+  `target/dist/gromaq_0.1.0_amd64.deb`, `target/dist/SHA256SUMS`,
+  `packaging/arch/PKGBUILD`, and the hidden `packaging/arch/.SRCINFO`; tarball
+  inspection confirmed `bin/gromaq`, README, license, desktop file, AppStream
+  metainfo, and hicolor icon payloads, and `ar -t` on the Debian package listed
+  `debian-binary`, `control.tar.gz`, and `data.tar.gz`. The Linux checksum
+  manifest listed `.SRCINFO`, `PKGBUILD`, the tarball, and the Debian package.
+  The macOS workflow artifact contained `Gromaq-macos-app.zip` and
+  `SHA256SUMS`; the zipped app contains `MacOS/gromaq`, `Resources/AppIcon.icns`,
+  `Info.plist`, and `PkgInfo`, and `Info.plist` includes
+  `LSApplicationCategoryType=public.app-category.utilities`. The manual-dispatch
+  publish steps were skipped as expected because the run was not tag-triggered.
+- GitHub Actions CI run `28303175039` completed successfully on 2026-06-27 for
+  commit `12a38e8`. The `arch-packaging` job passed
+  `makepkg --nobuild --noconfirm` and `makepkg --printsrcinfo`, the
+  `linux-packaging` job completed the Linux install-root, tarball, Debian,
+  checksum-extra, and local release-method install proof, and the macOS `rust`
+  job passed formatting, whitespace, clippy, `cargo test --all`, the
+  runtime/theme/GPU smoke suite, and `cargo bench --bench parser_throughput -- --list`.
 - GitHub Actions release workflow run `28302556353` completed successfully on
   2026-06-27 for commit `c4bb4f1`. The downloaded Linux workflow artifact
   contained `target/dist/gromaq-0.1.0-linux-x86_64.tar.gz`,
