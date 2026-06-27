@@ -56,12 +56,13 @@ SWIFT
 }
 
 validate_screenshot_contains_terminal_background() {
-  swift - "${1}" "${2}" <<'SWIFT'
+  swift - "${1}" "${2}" "${3}" <<'SWIFT'
 import AppKit
 import Foundation
 
 let path = CommandLine.arguments.dropFirst().first ?? ""
-let minimum = Int(CommandLine.arguments.dropFirst(2).first ?? "") ?? 2500
+let minimumBackground = Int(CommandLine.arguments.dropFirst(2).first ?? "") ?? 2500
+let minimumForeground = Int(CommandLine.arguments.dropFirst(3).first ?? "") ?? 20
 guard let image = NSImage(contentsOfFile: path),
       let tiff = image.tiffRepresentation,
       let bitmap = NSBitmapImageRep(data: tiff) else {
@@ -71,10 +72,13 @@ guard let image = NSImage(contentsOfFile: path),
 
 let width = bitmap.pixelsWide
 let height = bitmap.pixelsHigh
-let sampleStep = 4
-let target = (red: 0x10, green: 0x12, blue: 0x16)
-let tolerance = 3
-var matches = 0
+let sampleStep = 2
+let background = (red: 0x10, green: 0x12, blue: 0x16)
+let foreground = (red: 0xee, green: 0xf4, blue: 0xfb)
+let backgroundTolerance = 3
+let foregroundTolerance = 16
+var backgroundMatches = 0
+var foregroundMatches = 0
 
 for y in stride(from: 0, to: height, by: sampleStep) {
   for x in stride(from: 0, to: width, by: sampleStep) {
@@ -84,17 +88,27 @@ for y in stride(from: 0, to: height, by: sampleStep) {
     let red = Int((color.redComponent * 255.0).rounded())
     let green = Int((color.greenComponent * 255.0).rounded())
     let blue = Int((color.blueComponent * 255.0).rounded())
-    if abs(red - target.red) <= tolerance &&
-       abs(green - target.green) <= tolerance &&
-       abs(blue - target.blue) <= tolerance {
-      matches += 1
+    if abs(red - background.red) <= backgroundTolerance &&
+       abs(green - background.green) <= backgroundTolerance &&
+       abs(blue - background.blue) <= backgroundTolerance {
+      backgroundMatches += 1
+    }
+    if abs(red - foreground.red) <= foregroundTolerance &&
+       abs(green - foreground.green) <= foregroundTolerance &&
+       abs(blue - foreground.blue) <= foregroundTolerance {
+      foregroundMatches += 1
     }
   }
 }
 
-print("terminal background sampled pixels: \(matches)")
-if matches < minimum {
-  fputs("error: screenshot did not contain enough default terminal background pixels; got \(matches), need \(minimum).\n", stderr)
+print("terminal background sampled pixels: \(backgroundMatches)")
+print("terminal foreground sampled pixels: \(foregroundMatches)")
+if backgroundMatches < minimumBackground {
+  fputs("error: screenshot did not contain enough default terminal background pixels; got \(backgroundMatches), need \(minimumBackground).\n", stderr)
+  exit(1)
+}
+if foregroundMatches < minimumForeground {
+  fputs("error: screenshot did not contain enough default terminal foreground pixels; got \(foregroundMatches), need \(minimumForeground).\n", stderr)
   exit(1)
 }
 SWIFT
@@ -109,6 +123,7 @@ validation_stderr="${log_path}.validation"
 delay="${GROMAQ_SCREENSHOT_DELAY_SECONDS:-0.05}"
 window_title="${GROMAQ_WINDOW_TITLE:-Gromaq}"
 min_background_pixels="${GROMAQ_SCREENSHOT_MIN_BACKGROUND_PIXELS:-2500}"
+min_foreground_pixels="${GROMAQ_SCREENSHOT_MIN_FOREGROUND_PIXELS:-20}"
 window_lookup_attempts="${GROMAQ_WINDOW_LOOKUP_ATTEMPTS:-20}"
 window_lookup_interval="${GROMAQ_WINDOW_LOOKUP_INTERVAL_SECONDS:-0.2}"
 
@@ -193,7 +208,7 @@ if [ "${app_status}" -ne 0 ]; then
 fi
 
 validation_status=0
-validate_screenshot_contains_terminal_background "${output}" "${min_background_pixels}" >> "${log_path}" 2> "${validation_stderr}" || validation_status="$?"
+validate_screenshot_contains_terminal_background "${output}" "${min_background_pixels}" "${min_foreground_pixels}" >> "${log_path}" 2> "${validation_stderr}" || validation_status="$?"
 if [ -s "${validation_stderr}" ]; then
   cat "${validation_stderr}" >> "${log_path}"
 fi

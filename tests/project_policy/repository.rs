@@ -206,6 +206,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("NSBitmapImageRep"));
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_DELAY_SECONDS:-0.05"));
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_MIN_BACKGROUND_PIXELS"));
+    assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_MIN_FOREGROUND_PIXELS"));
+    assert!(screenshot_script.contains("foreground sampled pixels"));
     assert!(screenshot_script.contains("rm -f \"${output}\""));
     assert!(window_startup.contains("set_content_protected(false)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));

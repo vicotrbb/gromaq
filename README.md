@@ -244,7 +244,8 @@ visible `Gromaq` window through macOS window metadata, captures that specific
 window under `target/`, and waits for the app process to exit. If macOS cannot
 capture the window id directly, it can fall back to the detected window bounds,
 then validates that the screenshot contains Gromaq's default terminal
-background before accepting it. Rejected captures are removed. It is
+background and foreground text colors before accepting it. Rejected captures
+are removed. It is
 intentionally manual because desktop screenshots can include local user state;
 if macOS cannot expose or capture the targeted window content, the helper fails
 instead of accepting a desktop-only image.
