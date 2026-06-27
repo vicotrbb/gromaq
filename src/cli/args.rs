@@ -7,6 +7,8 @@ pub(super) use usage::usage;
 /// Parsed top-level command.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum CliCommand<'a> {
+    /// Print usage help and exit.
+    Help,
     /// Print package metadata and exit.
     Version,
     /// GPU-backed smoke or diagnostics command.
@@ -106,6 +108,7 @@ pub(super) enum CliCommand<'a> {
 /// Parse one top-level CLI argument.
 pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
     match arg {
+        "--help" | "-h" => Some(CliCommand::Help),
         "--version" => Some(CliCommand::Version),
         "--gpu-info"
         | "--gpu-smoke"

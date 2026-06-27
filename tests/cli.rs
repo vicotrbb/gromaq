@@ -109,6 +109,22 @@ fn unknown_cli_argument_returns_usage_error() {
 }
 
 #[test]
+fn help_cli_reports_usage_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--help"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.starts_with("usage: gromaq ["));
+    assert!(exit.stdout.contains("--version"));
+    assert!(exit.stdout.contains("--welcome-preview-snapshot <path>"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn version_cli_reports_package_version_without_gpu_bootstrap() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),

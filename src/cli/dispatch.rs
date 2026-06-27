@@ -81,6 +81,11 @@ where
     }
 
     match command {
+        CliCommand::Help => CliExit {
+            code: 0,
+            stdout: usage(),
+            stderr: String::new(),
+        },
         CliCommand::Version => CliExit {
             code: 0,
             stdout: format!("gromaq {}\n", env!("CARGO_PKG_VERSION")),
