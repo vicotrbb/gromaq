@@ -190,15 +190,21 @@ Proven remotely:
   `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
   which checks the required `gh release create`, `gh release upload`, token
   permission, tag-only condition, and unique checksum manifest markers.
+- GitHub Actions CI run `28300600507` completed successfully on 2026-06-27 for
+  commit `93fcbef`. The `linux-packaging` job built the Linux tarball and
+  Debian package, generated checksums, copied the checksum manifest to
+  `SHA256SUMS-linux-x86_64`, installed from the generated local release tarball
+  with `GROMAQ_INSTALL_METHOD=release`, and verified
+  `target/release-install-proof/bin/gromaq` exists. The macOS `rust` job passed
+  `cargo fmt --check`, `git diff --check`,
+  `cargo clippy --all-targets --all-features -- -D warnings`,
+  `cargo test --all`, the runtime/theme/GPU smoke suite, and
+  `cargo bench --bench parser_throughput -- --list`.
 - GitHub Actions CI run `28299568944` completed successfully on 2026-06-27 for
   commit `12f7dfe`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
   asset placement. The macOS `rust` job passed `cargo test --all`, including
   the packaging test that inspects the Debian package member structure.
-- The Linux packaging CI job is locally configured, and guarded by
-  `tests/project_policy/ci.rs::ci_runs_linux_distribution_checks`, to install
-  from its generated release tarball and checksum manifest before accepting the
-  packaging job.
 
 Proven locally:
 
@@ -236,7 +242,6 @@ Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
-- remote CI proof for the newly added Linux release-method install step
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app
