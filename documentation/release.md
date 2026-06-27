@@ -157,8 +157,8 @@ Proven remotely:
   listed `debian-binary`, `control.tar.gz`, and `data.tar.gz`. The `macos-app`
   job ran project policy, packaged and zipped `Gromaq.app`, generated
   checksums, and uploaded artifacts.
-- GitHub Actions CI run `28298948675` completed successfully on 2026-06-27 for
-  commit `498521f`. The `linux-packaging` job built the Linux tarball and
+- GitHub Actions CI run `28299568944` completed successfully on 2026-06-27 for
+  commit `12f7dfe`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
   asset placement. The macOS `rust` job passed `cargo test --all`, including
   the packaging test that inspects the Debian package member structure.
