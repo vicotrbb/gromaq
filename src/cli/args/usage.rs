@@ -2,7 +2,8 @@
 pub(in crate::cli) fn usage() -> String {
     concat!(
         "usage: gromaq [",
-        "--help|-h|--version|--gpu-info|--gpu-smoke|--gpu-upload-smoke|--gpu-glyph-atlas-smoke|",
+        "--help|-h|--version|-V|--gpu-info|--gpu-smoke|--gpu-upload-smoke|",
+        "--gpu-glyph-atlas-smoke|",
         "--gpu-text-atlas-smoke|--gpu-textured-quad-smoke|",
         "--gpu-terminal-text-smoke|--gpu-terminal-text-perf-smoke|",
         "--gpu-terminal-text-snapshot <path>|--welcome-image-snapshot <path>|--clipboard-smoke|--config <path>|",

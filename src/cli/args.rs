@@ -109,7 +109,7 @@ pub(super) enum CliCommand<'a> {
 pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
     match arg {
         "--help" | "-h" => Some(CliCommand::Help),
-        "--version" => Some(CliCommand::Version),
+        "--version" | "-V" => Some(CliCommand::Version),
         "--gpu-info"
         | "--gpu-smoke"
         | "--gpu-upload-smoke"

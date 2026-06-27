@@ -142,6 +142,23 @@ fn version_cli_reports_package_version_without_gpu_bootstrap() {
 }
 
 #[test]
+fn short_version_cli_reports_package_version_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "-V"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert_eq!(
+        exit.stdout,
+        format!("gromaq {}\n", env!("CARGO_PKG_VERSION"))
+    );
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn frame_scheduler_smoke_cli_reports_144hz_timeline_without_gpu_bootstrap() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
