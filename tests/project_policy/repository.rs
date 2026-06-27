@@ -165,6 +165,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(install_script.contains("scripts/package-macos-app.sh"));
     assert!(macos_script.contains("CFBundleIconFile"));
     assert!(macos_script.contains("AppIcon.icns"));
+    assert!(macos_script.contains("LSApplicationCategoryType"));
     assert!(macos_script.contains("Cargo.toml"));
     assert!(macos_script.contains("CFBundleShortVersionString"));
     assert!(macos_script.contains("GROMAQ_CODESIGN_IDENTITY"));

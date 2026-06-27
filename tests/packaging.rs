@@ -135,6 +135,11 @@ mod unix {
             plist.contains("<string>AppIcon</string>"),
             "Info.plist must declare the AppIcon resource"
         );
+        assert!(
+            plist.contains("<key>LSApplicationCategoryType</key>")
+                && plist.contains("<string>public.app-category.utilities</string>"),
+            "Info.plist must declare the macOS application category"
+        );
 
         assert_eq!(
             fs::read(contents.join("PkgInfo")).unwrap(),

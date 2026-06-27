@@ -92,6 +92,8 @@ cat > "${contents_dir}/Info.plist" <<EOF
   <string>${version}</string>
   <key>LSMinimumSystemVersion</key>
   <string>12.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.utilities</string>
   <key>NSHighResolutionCapable</key>
   <true/>
 </dict>

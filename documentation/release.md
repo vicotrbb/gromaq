@@ -157,8 +157,9 @@ open target/dist/Gromaq.app
 ```
 
 The script builds a release binary when needed, creates `AppIcon.icns` from the
-generated logo assets, writes `CFBundleIconFile`, and derives bundle version
-metadata from `Cargo.toml`.
+generated logo assets, writes `CFBundleIconFile` and
+`LSApplicationCategoryType=public.app-category.utilities`, and derives bundle
+version metadata from `Cargo.toml`.
 
 Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Set
 `GROMAQ_CODESIGN_IDENTITY=-` for local ad-hoc signing, or set
