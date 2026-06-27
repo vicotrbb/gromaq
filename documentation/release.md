@@ -194,7 +194,10 @@ the generated local tarball through `GROMAQ_INSTALL_METHOD=release` before
 checking that `target/release-install-proof/bin/gromaq` exists. CI also runs
 `bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
-next to each artifact set.
+next to each artifact set. The Linux packaging and release jobs run checksum
+generation with `GROMAQ_CHECKSUM_EXTRA_FILES=packaging/arch/PKGBUILD`, so the
+uploaded Linux checksum manifest covers the Arch source-package recipe as well
+as the Linux tarball and Debian package.
 
 ## Current Proof Boundary
 
@@ -262,8 +265,9 @@ Proven locally:
   metadata, `/usr/bin/gromaq`, desktop file, AppStream metainfo, icon, README,
   and copyright payloads
 - Arch `PKGBUILD` syntax and payload-marker policy coverage
-- release checksum manifest generation for local tarball, Debian package, and
-  macOS zip artifacts
+- release checksum manifest generation for local tarball, Debian package,
+  optional extra release assets such as the Arch `PKGBUILD`, and macOS zip
+  artifacts
 - shell syntax checks for install and packaging scripts
 - project policy tests covering required release files and workflow markers
 

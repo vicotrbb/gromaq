@@ -44,6 +44,17 @@ for artifact in "${dist_dir}"/*.tar.gz "${dist_dir}"/*.deb "${dist_dir}"/*.zip; 
   found=1
 done
 
+for artifact in ${GROMAQ_CHECKSUM_EXTRA_FILES:-}; do
+  if [ ! -f "${artifact}" ]; then
+    rm -f "${tmp_manifest}"
+    printf '%s\n' "error: checksum extra file not found: ${artifact}." >&2
+    exit 1
+  fi
+  checksum="$(hash_file "${tool}" "${artifact}")"
+  printf '%s  %s\n' "${checksum}" "$(basename "${artifact}")" >> "${tmp_manifest}"
+  found=1
+done
+
 if [ "${found}" -eq 0 ]; then
   rm -f "${tmp_manifest}"
   printf '%s\n' "error: no release archives found in ${dist_dir}." >&2

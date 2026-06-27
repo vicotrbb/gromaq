@@ -180,6 +180,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(arch_pkgbuild.contains("dev.gromaq.Gromaq.metainfo.xml"));
     assert!(arch_pkgbuild.contains("logo-icon-256.png"));
     assert!(checksum_script.contains("SHA256SUMS"));
+    assert!(checksum_script.contains("GROMAQ_CHECKSUM_EXTRA_FILES"));
     assert!(checksum_script.contains(".tar.gz"));
     assert!(checksum_script.contains(".deb"));
     assert!(checksum_script.contains(".zip"));

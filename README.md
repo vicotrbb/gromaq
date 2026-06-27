@@ -142,7 +142,10 @@ proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured to install from the locally generated Linux release
-tarball plus checksum manifest before accepting packaging success. On
+tarball plus checksum manifest before accepting packaging success. The checksum
+script also accepts `GROMAQ_CHECKSUM_EXTRA_FILES=packaging/arch/PKGBUILD`, and
+the Linux packaging and release workflows use that path so the Arch recipe is
+covered by the Linux checksum manifest when it is uploaded. On
 2026-06-27, CI run `28300600507` completed green for commit `93fcbef`,
 including the release-method tarball install step on Ubuntu. CI run
 `28299568944` also completed green for commit `12f7dfe`, including the Debian
