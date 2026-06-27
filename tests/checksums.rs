@@ -28,7 +28,11 @@ mod unix {
             .env("GROMAQ_DIST_DIR", dist.path())
             .env(
                 "GROMAQ_CHECKSUM_EXTRA_FILES",
-                root.join("packaging/arch/PKGBUILD"),
+                format!(
+                    "{} {}",
+                    root.join("packaging/arch/PKGBUILD").display(),
+                    root.join("packaging/arch/.SRCINFO").display()
+                ),
             )
             .output()
             .unwrap();
@@ -46,6 +50,10 @@ mod unix {
         assert!(
             manifest.contains("PKGBUILD"),
             "manifest missing extra PKGBUILD asset:\n{manifest}"
+        );
+        assert!(
+            manifest.contains(".SRCINFO"),
+            "manifest missing extra .SRCINFO asset:\n{manifest}"
         );
     }
 

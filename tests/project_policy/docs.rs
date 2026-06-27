@@ -79,6 +79,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "GROMAQ_VERIFY_CHECKSUMS=0"),
     ("README.md", "GROMAQ_CHECKSUM_EXTRA_FILES"),
     ("README.md", "packaging/arch/PKGBUILD"),
+    ("README.md", "packaging/arch/.SRCINFO"),
     ("README.md", "arch-packaging"),
     ("README.md", "makepkg --nobuild"),
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
@@ -95,6 +96,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/release.md", "GROMAQ_VERIFY_CHECKSUMS=0"),
     ("documentation/release.md", "GROMAQ_CHECKSUM_EXTRA_FILES"),
     ("documentation/release.md", "packaging/arch/PKGBUILD"),
+    ("documentation/release.md", "packaging/arch/.SRCINFO"),
     ("documentation/release.md", "arch-packaging"),
     ("documentation/release.md", "makepkg --nobuild"),
     ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
@@ -108,7 +110,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/release.md",
-        "Arch `PKGBUILD` source-package recipe is configured for CI syntax checks",
+        "Arch `PKGBUILD` plus `.SRCINFO` source-package metadata is configured for CI",
     ),
     (
         "documentation/compatibility.md",

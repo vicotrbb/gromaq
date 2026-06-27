@@ -1,0 +1,14 @@
+pkgbase = gromaq-git
+	pkgdesc = Native Rust GPU-rendered terminal emulator foundation for gromaq.dev
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/vicotrbb/gromaq
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	makedepends = git
+	makedepends = rust
+	source = git+https://github.com/vicotrbb/gromaq.git
+	sha256sums = SKIP
+
+pkgname = gromaq-git

@@ -123,32 +123,34 @@ scripts/package-macos-app.sh
 bash -n packaging/arch/PKGBUILD
 ```
 
-`packaging/arch/PKGBUILD` provides an Arch `makepkg` source-package recipe that
-builds from the public Git repository and installs the binary, desktop file,
-AppStream metainfo, hicolor icon, README, and license. CI and repository policy
-syntax-check the recipe, and the local CI workflow now includes an
-`arch-packaging` job under `archlinux:base-devel` that runs `makepkg --nobuild`
-and `makepkg --printsrcinfo` as an unprivileged builder user. That job still
-awaits remote GitHub Actions proof, and a full live package build/install on
-Arch Linux remains a separate platform proof.
+`packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO` provide an Arch
+`makepkg` source-package recipe that builds from the public Git repository and
+installs the binary, desktop file, AppStream metainfo, hicolor icon, README, and
+license. CI and repository policy syntax-check the recipe, and the local CI
+workflow now includes an `arch-packaging` job under `archlinux:base-devel` that
+runs `makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
+user. That job still awaits remote GitHub Actions proof, and a full live package
+build/install on Arch Linux remains a separate platform proof.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
-upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD`, and a
-zipped macOS `.app` bundle as GitHub Actions artifacts. Tag-triggered runs also
-create or reuse the matching GitHub Release and upload release assets. The
+upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
+`.SRCINFO`, and a zipped macOS `.app` bundle as GitHub Actions artifacts.
+Tag-triggered runs also create or reuse the matching GitHub Release and upload
+release assets. The
 remote GitHub Actions release workflow completed green on 2026-06-27 as run
 `28298839954`, uploading the Linux tarball, Debian package, macOS `.app` zip,
-and checksum manifests as workflow artifacts; Arch `PKGBUILD` release upload
-is configured locally and awaits the next release workflow proof. Tag-triggered
-GitHub Release asset publication is configured but still needs a live tag-run
-proof.
+and checksum manifests as workflow artifacts; Arch `PKGBUILD` plus `.SRCINFO`
+release upload is configured locally and awaits the next release workflow proof.
+Tag-triggered GitHub Release asset publication is configured but still needs a
+live tag-run proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured to install from the locally generated Linux release
 tarball plus checksum manifest before accepting packaging success. The checksum
-script also accepts `GROMAQ_CHECKSUM_EXTRA_FILES=packaging/arch/PKGBUILD`, and
-the Linux packaging and release workflows use that path so the Arch recipe is
-covered by the Linux checksum manifest when it is uploaded. On
+script also accepts
+`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO"`,
+and the Linux packaging and release workflows use that path so the Arch recipe
+metadata is covered by the Linux checksum manifest when it is uploaded. On
 2026-06-27, CI run `28300600507` completed green for commit `93fcbef`,
 including the release-method tarball install step on Ubuntu. CI run
 `28299568944` also completed green for commit `12f7dfe`, including the Debian

@@ -120,7 +120,8 @@ directly so package assembly is testable on normal Unix CI hosts. Use
 
 ## Arch Package Recipe
 
-`packaging/arch/PKGBUILD` provides an Arch `makepkg` source-package recipe:
+`packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO` provide an Arch
+`makepkg` source-package recipe:
 
 ```bash
 bash -n packaging/arch/PKGBUILD
@@ -141,9 +142,10 @@ identity payload markers. The local CI workflow now includes an
 `arch-packaging` job under `archlinux:base-devel` that installs `git` and
 `rust`, switches to an unprivileged builder user, and runs
 `makepkg --nobuild --noconfirm` plus `makepkg --printsrcinfo` from
-`packaging/arch`. That job awaits remote GitHub Actions proof after the next
-push. A full live `makepkg` build and install on Arch Linux still requires
-separate platform proof.
+`packaging/arch`; it also checks that `packaging/arch/.SRCINFO` is present.
+That job awaits remote GitHub Actions proof after the next push. A full live
+`makepkg` build and install on Arch Linux still requires separate platform
+proof.
 
 ## macOS App Bundle
 
@@ -181,13 +183,14 @@ uploads workflow artifacts for both trigger types:
 
 - a Linux tarball from `scripts/package-linux-tarball.sh`
 - a Debian package from `scripts/package-debian-deb.sh`
-- the Arch `packaging/arch/PKGBUILD` source-package recipe
+- the Arch `packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO`
+  source-package metadata
 - a zipped macOS `.app` bundle from `scripts/package-macos-app.sh`
 
 On tag-triggered runs, the workflow also creates or reuses the matching GitHub
-Release and uploads the Linux tarball, Debian package, Arch `PKGBUILD`, macOS
-`.app` zip, and platform-specific checksum manifests as release assets. The
-checksum files are copied to `SHA256SUMS-linux-x86_64` and
+Release and uploads the Linux tarball, Debian package, Arch `PKGBUILD`,
+`.SRCINFO`, macOS `.app` zip, and platform-specific checksum manifests as
+release assets. The checksum files are copied to `SHA256SUMS-linux-x86_64` and
 `SHA256SUMS-macos-app` before release upload so the Linux and macOS manifests
 do not collide as GitHub Release asset names.
 
@@ -200,9 +203,10 @@ checking that `target/release-install-proof/bin/gromaq` exists. CI also runs
 `bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
-generation with `GROMAQ_CHECKSUM_EXTRA_FILES=packaging/arch/PKGBUILD`, so the
-uploaded Linux checksum manifest covers the Arch source-package recipe as well
-as the Linux tarball and Debian package.
+generation with
+`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO"`,
+so the uploaded Linux checksum manifest covers the Arch source-package recipe
+and `.SRCINFO` metadata as well as the Linux tarball and Debian package.
 
 ## Current Proof Boundary
 
@@ -260,10 +264,11 @@ Proven locally:
   `debian-binary`, `control.tar.gz`, and `data.tar.gz` members, control
   metadata, `/usr/bin/gromaq`, desktop file, AppStream metainfo, icon, README,
   and copyright payloads
-- Arch `PKGBUILD` syntax and payload-marker policy coverage
-- Arch `PKGBUILD` source-package recipe is configured for CI syntax checks and
-  guarded by repository policy markers for the Cargo build command, desktop
-  file, AppStream metainfo, and hicolor icon payload
+- Arch `PKGBUILD` syntax plus `.SRCINFO` and payload-marker policy coverage
+- Arch `PKGBUILD` plus `.SRCINFO` source-package metadata is configured for CI
+  syntax checks and guarded by repository policy markers for the Cargo build
+  command, desktop file, AppStream metainfo, hicolor icon payload, and source
+  metadata
 - Arch `arch-packaging` CI job configuration and policy coverage for
   `makepkg --nobuild` and `makepkg --printsrcinfo`; this local commit has not
   yet been pushed and therefore has no remote run proof yet
@@ -271,18 +276,19 @@ Proven locally:
   `.github/workflows/release.yml` and guarded by
   `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
   which checks the required `gh release create`, `gh release upload`, token
-  permission, tag-only condition, Arch `PKGBUILD` upload, and unique checksum
-  manifest markers
+  permission, tag-only condition, Arch `PKGBUILD` plus `.SRCINFO` upload, and
+  unique checksum manifest markers
 - release checksum manifest generation for local tarball, Debian package,
-  optional extra release assets such as the Arch `PKGBUILD`, and macOS zip
-  artifacts
+  optional extra release assets such as the Arch `PKGBUILD` and `.SRCINFO`, and
+  macOS zip artifacts
 - shell syntax checks for install and packaging scripts
 - project policy tests covering required release files and workflow markers
 
 Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
-- live release workflow upload proof for the Arch `PKGBUILD` artifact
+- live release workflow upload proof for the Arch `PKGBUILD` plus `.SRCINFO`
+  artifacts
 - live Linux release-method install from GitHub Release assets
 - live Arch `makepkg` build/install
 - remote GitHub Actions proof of the Arch `arch-packaging` job

@@ -19,7 +19,7 @@ jobs:
       - run: cargo test --test project_policy
       - run: scripts/package-linux-tarball.sh
       - run: scripts/package-debian-deb.sh
-      - run: GROMAQ_CHECKSUM_EXTRA_FILES=packaging/arch/PKGBUILD scripts/generate-checksums.sh
+      - run: GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO" scripts/generate-checksums.sh
       - name: Publish Linux assets to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -36,6 +36,7 @@ jobs:
             target/dist/*.tar.gz \
             target/dist/*.deb \
             packaging/arch/PKGBUILD \
+            packaging/arch/.SRCINFO \
             target/dist/SHA256SUMS-linux-x86_64 \
             --clobber
       - uses: actions/upload-artifact@v4
@@ -45,6 +46,7 @@ jobs:
             target/dist/*.tar.gz
             target/dist/*.deb
             packaging/arch/PKGBUILD
+            packaging/arch/.SRCINFO
             target/dist/SHA256SUMS
 
   macos-app:
