@@ -191,6 +191,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(checksum_script.contains(".deb"));
     assert!(checksum_script.contains(".zip"));
     assert!(screenshot_script.contains("--window-screenshot-smoke"));
+    assert!(screenshot_script.contains("cargo build"));
+    assert!(screenshot_script.contains("${root}/target/debug/gromaq"));
     assert!(!screenshot_script.contains("--window-perf-smoke"));
     assert!(screenshot_script.contains("screencapture -x"));
     assert!(screenshot_script.contains("CGWindowListCopyWindowInfo"));

@@ -117,8 +117,12 @@ rm -f "${window_capture_stderr}" "${region_capture_stderr}" "${validation_stderr
 
 (
   cd "${root}"
-  cargo run -- --window-screenshot-smoke
-) > "${log_path}" 2>&1 &
+  cargo build
+) > "${log_path}" 2>&1
+
+(
+  "${root}/target/debug/gromaq" --window-screenshot-smoke
+) >> "${log_path}" 2>&1 &
 app_pid="$!"
 
 sleep "${delay}"
