@@ -12,6 +12,21 @@ cargo bench
 CI runs the benchmark list command so the harness keeps compiling without
 running full Criterion measurements on every push.
 
+## Troubleshooting
+
+- Criterion can run without `gnuplot`; when it is unavailable, Criterion falls
+  back to its Rust plotting backend. Treat that as a reporting difference, not a
+  benchmark failure.
+- GPU and real-font benchmarks depend on the current host. A clear skip message
+  means the benchmark name still compiled, but it is not throughput proof for
+  that machine.
+- Run full `cargo bench` separately from long `cargo test` or `cargo clippy`
+  commands. Parallel Cargo invocations can block on the shared package/build
+  locks and add avoidable noise around benchmark setup.
+- Record the host OS, CPU/GPU class, skipped benchmark messages, and any
+  Criterion regression lines when copying results into
+  `documentation/benchmarks.md`.
+
 Current benchmarks:
 
 - `parser_large_output`: parses ANSI-styled output with Unicode content.
