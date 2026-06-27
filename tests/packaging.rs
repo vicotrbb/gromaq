@@ -92,7 +92,7 @@ mod unix {
     fn debian_package_script_accepts_relative_dist_dir() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let relative = format!("target/{}", unique_temp_name("gromaq-relative-deb"));
-        let dist = RelativeTempDist(root.join(&relative));
+        let dist = TempDist(root.join(&relative));
         fs::create_dir_all(dist.path()).unwrap();
         let stub = dist.path().join("gromaq-stub");
         fs::write(&stub, "#!/bin/sh\nexit 0\n").unwrap();
@@ -227,20 +227,6 @@ mod unix {
     }
 
     impl Drop for TempDist {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.0);
-        }
-    }
-
-    struct RelativeTempDist(PathBuf);
-
-    impl RelativeTempDist {
-        fn path(&self) -> &Path {
-            &self.0
-        }
-    }
-
-    impl Drop for RelativeTempDist {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
