@@ -1,7 +1,8 @@
 # Release and Distribution
 
-This document tracks how Gromaq is installed and packaged today, and what is
-still missing before release artifacts can be called complete.
+This document tracks how Gromaq is installed and packaged today, which release
+artifacts are proven, and which distribution surfaces still need live platform
+proof.
 
 ## User Install
 
