@@ -41,6 +41,87 @@ mod unix {
         }
     }
 
+    #[test]
+    fn debian_package_script_assembles_installable_desktop_package_from_stub_binary() {
+        let dist = run_packaging_script(
+            "scripts/package-debian-deb.sh",
+            &[("GROMAQ_DEB_ARCH", "amd64")],
+        );
+        let deb = single_deb(dist.path());
+        let members = ar_member_names(&deb);
+        assert_eq!(
+            members,
+            ["debian-binary", "control.tar.gz", "data.tar.gz"],
+            "deb archive must contain canonical members"
+        );
+
+        let control_tar = extract_ar_member(&deb, "control.tar.gz", dist.path());
+        let control = tar_file_contents(&control_tar, "./control");
+        for required in [
+            "Package: gromaq",
+            "Version: 0.1.0",
+            "Architecture: amd64",
+            "Maintainer: Gromaq contributors",
+            "Description: Native Rust GPU-rendered terminal emulator foundation for gromaq.dev",
+        ] {
+            assert!(control.contains(required), "control missing {required}");
+        }
+
+        let data_tar = extract_ar_member(&deb, "data.tar.gz", dist.path());
+        let listing = tar_listing(&data_tar);
+        for required in [
+            "./usr/bin/gromaq",
+            "./usr/share/doc/gromaq/README.md",
+            "./usr/share/doc/gromaq/copyright",
+            "./usr/share/applications/dev.gromaq.Gromaq.desktop",
+            "./usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml",
+            "./usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png",
+        ] {
+            assert!(
+                listing.iter().any(|entry| entry == required),
+                "deb data missing {required}; listing:\n{}",
+                listing.join("\n")
+            );
+        }
+    }
+
+    #[test]
+    fn debian_package_script_accepts_relative_dist_dir() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let relative = format!(
+            "target/gromaq-relative-deb-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        let dist = RelativeTempDist(root.join(&relative));
+        fs::create_dir_all(dist.path()).unwrap();
+        let stub = dist.path().join("gromaq-stub");
+        fs::write(&stub, "#!/bin/sh\nexit 0\n").unwrap();
+        fs::set_permissions(&stub, Permissions::from_mode(0o755)).unwrap();
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/package-debian-deb.sh"))
+            .current_dir(root)
+            .env("GROMAQ_BINARY_PATH", &stub)
+            .env("GROMAQ_DEB_ARCH", "amd64")
+            .env("GROMAQ_DIST_DIR", &relative)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "relative dist deb packaging failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        assert!(
+            dist.path().join("gromaq_0.1.0_amd64.deb").is_file(),
+            "relative dist package missing"
+        );
+    }
+
     #[cfg(target_os = "macos")]
     #[test]
     fn macos_app_script_builds_well_formed_bundle_from_stub_binary() {
@@ -105,6 +186,20 @@ mod unix {
         }
     }
 
+    struct RelativeTempDist(PathBuf);
+
+    impl RelativeTempDist {
+        fn path(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for RelativeTempDist {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
     fn run_packaging_script(script: &str, extra_env: &[(&str, &str)]) -> TempDist {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let dist = TempDist(std::env::temp_dir().join(format!(
@@ -150,6 +245,20 @@ mod unix {
         tarballs.pop().unwrap()
     }
 
+    fn single_deb(dist: &Path) -> PathBuf {
+        let mut packages: Vec<_> = fs::read_dir(dist)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| path.extension().is_some_and(|extension| extension == "deb"))
+            .collect();
+        assert_eq!(
+            packages.len(),
+            1,
+            "expected exactly one deb package: {packages:?}"
+        );
+        packages.pop().unwrap()
+    }
+
     fn archive_stem(tarball: &Path) -> String {
         tarball
             .file_name()
@@ -169,5 +278,37 @@ mod unix {
             .lines()
             .map(str::to_owned)
             .collect()
+    }
+
+    fn ar_member_names(archive: &Path) -> Vec<String> {
+        let output = Command::new("ar")
+            .args(["-t", &archive.to_string_lossy()])
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "ar member listing failed");
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .map(str::to_owned)
+            .collect()
+    }
+
+    fn extract_ar_member(archive: &Path, member: &str, dist: &Path) -> PathBuf {
+        let output = Command::new("ar")
+            .args(["-p", &archive.to_string_lossy(), member])
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "ar extraction failed for {member}");
+        let path = dist.join(member);
+        fs::write(&path, output.stdout).unwrap();
+        path
+    }
+
+    fn tar_file_contents(tarball: &Path, path: &str) -> String {
+        let output = Command::new("tar")
+            .args(["-xOf", &tarball.to_string_lossy(), path])
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "tar extract failed for {path}");
+        String::from_utf8_lossy(&output.stdout).into_owned()
     }
 }

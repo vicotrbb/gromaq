@@ -16,6 +16,7 @@ jobs:
       - run: sh -n scripts/install.sh
       - run: sh -n scripts/package-macos-app.sh
       - run: sh -n scripts/package-linux-tarball.sh
+      - run: sh -n scripts/package-debian-deb.sh
       - run: sh -n scripts/generate-checksums.sh
       - run: sh -n scripts/capture-macos-window-proof.sh
       - run: cargo fmt --check
@@ -72,8 +73,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: sh -n scripts/install.sh
       - run: sh -n scripts/package-linux-tarball.sh
+      - run: sh -n scripts/package-debian-deb.sh
       - run: sh -n scripts/generate-checksums.sh
       - run: cargo test --test project_policy
       - run: GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh
       - run: scripts/package-linux-tarball.sh
+      - run: scripts/package-debian-deb.sh
       - run: scripts/generate-checksums.sh

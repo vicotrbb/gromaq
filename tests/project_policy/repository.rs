@@ -20,6 +20,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/install.sh",
     "scripts/package-macos-app.sh",
     "scripts/package-linux-tarball.sh",
+    "scripts/package-debian-deb.sh",
     "scripts/generate-checksums.sh",
     "scripts/capture-macos-window-proof.sh",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
@@ -132,6 +133,7 @@ fn distribution_assets_keep_desktop_identity() {
     let install_script = fs::read_to_string(root.join("scripts/install.sh")).unwrap();
     let macos_script = fs::read_to_string(root.join("scripts/package-macos-app.sh")).unwrap();
     let linux_script = fs::read_to_string(root.join("scripts/package-linux-tarball.sh")).unwrap();
+    let debian_script = fs::read_to_string(root.join("scripts/package-debian-deb.sh")).unwrap();
     let checksum_script = fs::read_to_string(root.join("scripts/generate-checksums.sh")).unwrap();
     let screenshot_script =
         fs::read_to_string(root.join("scripts/capture-macos-window-proof.sh")).unwrap();
@@ -156,8 +158,13 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(linux_script.contains("logo-icon-256.png"));
     assert!(linux_script.contains(".tar.gz"));
+    assert!(debian_script.contains("dev.gromaq.Gromaq.desktop"));
+    assert!(debian_script.contains("control.tar.gz"));
+    assert!(debian_script.contains("data.tar.gz"));
+    assert!(debian_script.contains(".deb"));
     assert!(checksum_script.contains("SHA256SUMS"));
     assert!(checksum_script.contains(".tar.gz"));
+    assert!(checksum_script.contains(".deb"));
     assert!(checksum_script.contains(".zip"));
     assert!(screenshot_script.contains("--window-perf-smoke"));
     assert!(screenshot_script.contains("screencapture -x"));

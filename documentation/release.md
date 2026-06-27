@@ -72,6 +72,28 @@ The archive includes:
 
 Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary.
 
+## Debian Package
+
+Build a Debian package from the current checkout:
+
+```bash
+scripts/package-debian-deb.sh
+```
+
+The `.deb` installs:
+
+- `/usr/bin/gromaq`
+- `/usr/share/doc/gromaq/README.md`
+- `/usr/share/doc/gromaq/copyright`
+- Linux desktop file
+- AppStream metainfo
+- hicolor app icon
+
+The script does not require `dpkg-deb`; it writes the Debian ar/tar members
+directly so package assembly is testable on normal Unix CI hosts. Use
+`GROMAQ_BINARY_PATH=<path>` to package an already-built binary and
+`GROMAQ_DEB_ARCH=<arch>` to override the detected Debian architecture.
+
 ## macOS App Bundle
 
 Build a local `.app` bundle:
@@ -98,11 +120,12 @@ against the installed binary, and copies the generated bundle to
 uploads:
 
 - a Linux tarball from `scripts/package-linux-tarball.sh`
+- a Debian package from `scripts/package-debian-deb.sh`
 - a zipped macOS `.app` bundle from `scripts/package-macos-app.sh`
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
 repository policy checks, Linux user-local desktop asset install proof, and
-Linux tarball assembly on `ubuntu-latest`.
+Linux tarball plus Debian package assembly on `ubuntu-latest`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set.
 
@@ -126,13 +149,18 @@ Proven locally:
 - Linux install-root desktop asset placement without network or home writes
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
-- release checksum manifest generation for local tarball artifacts
+- Debian `.deb` archive structure with a supplied binary, canonical
+  `debian-binary`, `control.tar.gz`, and `data.tar.gz` members, control
+  metadata, `/usr/bin/gromaq`, desktop file, AppStream metainfo, icon, README,
+  and copyright payloads
+- release checksum manifest generation for local tarball, Debian package, and
+  macOS zip artifacts
 - shell syntax checks for install and packaging scripts
 - project policy tests covering required release files and workflow markers
 
 Not yet proven:
 
 - signed and notarized macOS app distribution
-- package-manager-specific Linux packages
+- remote GitHub Actions proof for the Debian package artifact
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

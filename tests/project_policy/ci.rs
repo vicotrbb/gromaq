@@ -6,6 +6,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/install.sh",
     "sh -n scripts/package-macos-app.sh",
     "sh -n scripts/package-linux-tarball.sh",
+    "sh -n scripts/package-debian-deb.sh",
     "sh -n scripts/generate-checksums.sh",
     "sh -n scripts/capture-macos-window-proof.sh",
     "cargo fmt --check",
@@ -49,11 +50,13 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
 
 const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "scripts/package-linux-tarball.sh",
+    "scripts/package-debian-deb.sh",
     "scripts/package-macos-app.sh",
     "scripts/generate-checksums.sh",
     "actions/upload-artifact@v4",
     "target/dist/SHA256SUMS",
     "target/dist/*.tar.gz",
+    "target/dist/*.deb",
     "target/dist/Gromaq-macos-app.zip",
 ];
 
@@ -63,6 +66,7 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "cargo test --test project_policy",
     "GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT=\"$PWD\" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh",
     "scripts/package-linux-tarball.sh",
+    "scripts/package-debian-deb.sh",
     "scripts/generate-checksums.sh",
 ];
 

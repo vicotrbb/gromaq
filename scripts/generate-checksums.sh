@@ -37,7 +37,7 @@ mkdir -p "${dist_dir}"
 tool="$(checksum_command)"
 found=0
 
-for artifact in "${dist_dir}"/*.tar.gz "${dist_dir}"/*.zip; do
+for artifact in "${dist_dir}"/*.tar.gz "${dist_dir}"/*.deb "${dist_dir}"/*.zip; do
   [ -f "${artifact}" ] || continue
   checksum="$(hash_file "${tool}" "${artifact}")"
   printf '%s  %s\n' "${checksum}" "$(basename "${artifact}")" >> "${tmp_manifest}"

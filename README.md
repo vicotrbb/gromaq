@@ -82,14 +82,18 @@ Release artifact helpers:
 
 ```bash
 scripts/package-linux-tarball.sh
+scripts/package-debian-deb.sh
 scripts/package-macos-app.sh
 ```
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
-upload a Linux tarball and a zipped macOS `.app` bundle.
+upload a Linux tarball, a Debian `.deb` package, and a zipped macOS `.app`
+bundle. The remote GitHub Actions release workflow proof currently covers the
+Linux tarball and macOS `.app`; Debian package remote proof is pending the next
+release run.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
-installer asset placement plus Linux tarball assembly. Release artifacts include
-a `SHA256SUMS` manifest.
+installer asset placement plus Linux tarball and Debian package assembly.
+Release artifacts include a `SHA256SUMS` manifest.
 
 ## Status
 
@@ -114,9 +118,10 @@ Implemented and covered by automated tests or deterministic smoke commands:
   theme legibility gates
 - Criterion benchmark harness and repository policy tests for native-only Rust,
   public metadata, docs, CI commands, and module-size discipline
-- remote GitHub Actions release workflow that builds and uploads the Linux
-  tarball and macOS `.app` release artifacts with a SHA256SUMS manifest on tag
-  and manual dispatch
+- GitHub Actions release workflow that is configured to build and upload the
+  Linux tarball, Debian `.deb`, and macOS `.app` release artifacts with a
+  SHA256SUMS manifest on tag and manual dispatch; remote proof currently covers
+  the tarball and macOS `.app`
 
 Not yet proven enough to call complete:
 
@@ -125,8 +130,8 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- signed/notarized macOS app distribution and package-manager-specific Linux
-  packages
+- signed/notarized macOS app distribution and remote proof for the Debian
+  package artifact on GitHub Actions
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).

@@ -76,7 +76,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "README.md",
-        "installer asset placement plus Linux tarball assembly",
+        "installer asset placement plus Linux tarball and Debian package assembly",
     ),
     ("README.md", "remote GitHub Actions release workflow"),
     ("README.md", "signed/notarized macOS app distribution"),
