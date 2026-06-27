@@ -40,7 +40,11 @@ where
         return Err(CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: format!("{}unexpected extra argument: {}\n", usage(), extra.as_ref()),
+            stderr: format!(
+                "{}unexpected extra argument: {}\nrun `gromaq --help` for usage\n",
+                usage(),
+                extra.as_ref()
+            ),
         });
     }
     Ok(())

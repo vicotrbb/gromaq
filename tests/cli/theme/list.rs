@@ -35,5 +35,6 @@ fn theme_list_cli_rejects_extra_arguments() {
     assert!(exit.stdout.is_empty());
     assert!(exit.stderr.starts_with("usage: gromaq ["));
     assert!(exit.stderr.contains("unexpected extra argument: extra"));
+    assert!(exit.stderr.ends_with("run `gromaq --help` for usage\n"));
     assert!(backend.requests.borrow().is_empty());
 }
