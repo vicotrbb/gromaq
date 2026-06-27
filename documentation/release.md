@@ -173,6 +173,8 @@ Proven locally:
   `GROMAQ_CODESIGN_IDENTITY=-` and strict `codesign --verify`
 - notarization helper dry-run with `GROMAQ_NOTARY_DRY_RUN=1`, which creates the
   notary zip and prints the planned notarytool, stapler, and validation steps
+- packaged macOS app executable launch via
+  `target/dist/Gromaq.app/Contents/MacOS/gromaq --window-smoke`
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes
