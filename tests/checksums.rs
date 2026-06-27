@@ -118,6 +118,41 @@ mod unix {
         );
     }
 
+    #[test]
+    fn checksum_script_writes_custom_manifest_path() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let dist = TempDist(
+            std::env::temp_dir().join(unique_temp_name("gromaq-checksum-custom-manifest")),
+        );
+        fs::create_dir_all(dist.path()).unwrap();
+        fs::write(
+            dist.path().join("gromaq-0.1.0-linux-x86_64.tar.gz"),
+            b"stub archive",
+        )
+        .unwrap();
+        let manifest = dist.path().join("SHA256SUMS-linux-x86_64");
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/generate-checksums.sh"))
+            .env("GROMAQ_DIST_DIR", dist.path())
+            .env("GROMAQ_CHECKSUM_MANIFEST", &manifest)
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "custom manifest generation failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(manifest.is_file());
+        assert!(
+            !dist.path().join("SHA256SUMS").exists(),
+            "custom manifest path must not also write the default manifest"
+        );
+        let contents = fs::read_to_string(manifest).unwrap();
+        assert!(contents.contains("gromaq-0.1.0-linux-x86_64.tar.gz"));
+    }
+
     struct TempDist(PathBuf);
 
     impl TempDist {
