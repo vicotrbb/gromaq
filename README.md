@@ -145,6 +145,8 @@ Implemented and covered by automated tests or deterministic smoke commands:
   Linux tarball, Debian `.deb`, and macOS `.app` release artifacts with a
   SHA256SUMS manifest on tag and manual dispatch; remote proof covers the
   tarball, Debian package, macOS `.app`, and checksum uploads
+- macOS `.app` ad-hoc signing support plus a notarization helper with dry-run
+  archive proof
 
 Not yet proven enough to call complete:
 
@@ -153,7 +155,7 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- signed/notarized macOS app distribution
+- Developer ID signed/notarized macOS app distribution
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).
