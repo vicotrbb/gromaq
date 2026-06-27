@@ -34,6 +34,22 @@ the behavior under test.
 - `tests/native_gpu.rs` and `tests/cli.rs`: GPU and CLI smoke fixtures.
 - `benches/parser_throughput.rs`: reproducible benchmark payloads.
 
+## Golden Fixture Review
+
+File-backed terminal golden fixtures should capture a narrow behavior contract,
+not a transcript dump. When adding one:
+
+- Choose a small viewport that makes wrapping, scrollback, cursor, and metadata
+  effects visible without long expected files.
+- Put the exact control bytes in the test and keep the formatter scoped to the
+  fields that prove the behavior.
+- Include pending terminal response bytes only when the fixture is proving a
+  response boundary such as status or mode reports.
+- Run the focused golden test once with the expected fixture empty, inspect the
+  rendered assertion output, then commit only the reviewed expected snapshot.
+- Update `tests/fixtures/README.md` when adding or changing a file-backed
+  fixture so reviewers know what the fixture is intended to prove.
+
 ## Required Local Checks
 
 Run from the repository root before treating a code slice as complete:
