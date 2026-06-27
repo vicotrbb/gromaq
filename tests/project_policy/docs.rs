@@ -76,6 +76,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "GROMAQ_DRY_RUN=1"),
     ("README.md", "GROMAQ_INSTALL_METHOD=release"),
     ("README.md", "GROMAQ_BIN_DIR"),
+    ("README.md", "GROMAQ_VERIFY_CHECKSUMS=0"),
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "README.md",
@@ -87,6 +88,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/release.md", "GROMAQ_DRY_RUN=1"),
     ("documentation/release.md", "GROMAQ_INSTALL_METHOD=release"),
     ("documentation/release.md", "GROMAQ_BIN_DIR"),
+    ("documentation/release.md", "GROMAQ_VERIFY_CHECKSUMS=0"),
     ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "documentation/release.md",

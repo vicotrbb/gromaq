@@ -13,6 +13,7 @@ install_method="${GROMAQ_INSTALL_METHOD:-cargo}"
 release_version="${GROMAQ_VERSION:-v0.1.0}"
 release_package_version="${release_version#v}"
 release_base="${GROMAQ_RELEASE_BASE:-${repo}/releases/download/${release_version}}"
+verify_checksums="${GROMAQ_VERIFY_CHECKSUMS:-1}"
 install_temp_root=""
 macos_asset_root=""
 release_temp_root=""
@@ -63,12 +64,47 @@ release_asset_url() {
   printf '%s/%s\n' "${release_base}" "$(release_asset_name)"
 }
 
+checksum_asset_name() {
+  printf '%s\n' "${GROMAQ_CHECKSUM_ASSET:-SHA256SUMS-$(linux_release_target)}"
+}
+
+checksum_asset_url() {
+  printf '%s/%s\n' "${release_base}" "$(checksum_asset_name)"
+}
+
+checksum_command() {
+  if command -v shasum >/dev/null 2>&1; then
+    printf '%s\n' "shasum"
+    return
+  fi
+  if command -v sha256sum >/dev/null 2>&1; then
+    printf '%s\n' "sha256sum"
+    return
+  fi
+  printf '%s\n' "error: shasum or sha256sum is required to verify release checksums." >&2
+  exit 1
+}
+
+hash_file() {
+  tool="$1"
+  path="$2"
+  if [ "${tool}" = "shasum" ]; then
+    line="$(shasum -a 256 "${path}")"
+  else
+    line="$(sha256sum "${path}")"
+  fi
+  printf '%s\n' "${line%% *}"
+}
+
 print_dry_run_and_exit() {
   printf '%s\n' "Dry run: would install ${package} from ${repo} (${branch})."
   if [ "${GROMAQ_SKIP_CARGO_INSTALL:-0}" = "1" ]; then
     printf '%s\n' "Dry run: would skip cargo install because GROMAQ_SKIP_CARGO_INSTALL=1."
   elif [ "${install_method}" = "release" ]; then
     printf '%s\n' "Dry run: would download release asset $(release_asset_url)."
+    if [ "${verify_checksums}" != "0" ]; then
+      printf '%s\n' "Dry run: would verify release checksum from $(checksum_asset_url)."
+    fi
     printf '%s\n' "Dry run: would install binary to ${bin_dir}/${package}."
   else
     printf '%s\n' "Dry run: would run cargo install --git ${repo} --branch ${branch} --locked --force ${package}."
@@ -182,6 +218,7 @@ install_release_tarball() {
 
   printf '%s\n' "Downloading $(release_asset_url)..."
   curl -fsSL "$(release_asset_url)" -o "${archive}"
+  verify_release_checksum "${archive}"
   mkdir -p "${extract_dir}"
   tar -xzf "${archive}" -C "${extract_dir}"
 
@@ -196,6 +233,29 @@ install_release_tarball() {
 
   if [ "${GROMAQ_INSTALL_DESKTOP_ASSETS:-1}" != "0" ]; then
     install_linux_desktop_assets_from_release "${release_root}"
+  fi
+}
+
+verify_release_checksum() {
+  archive="$1"
+  if [ "${verify_checksums}" = "0" ]; then
+    return
+  fi
+
+  manifest="${release_temp_root}/$(checksum_asset_name)"
+  printf '%s\n' "Verifying checksum from $(checksum_asset_url)..."
+  curl -fsSL "$(checksum_asset_url)" -o "${manifest}"
+  artifact="$(basename "${archive}")"
+  expected="$(awk -v artifact="${artifact}" '$2 == artifact { print $1; exit }' "${manifest}")"
+  if [ -z "${expected}" ]; then
+    printf '%s\n' "error: checksum manifest did not contain ${artifact}." >&2
+    exit 1
+  fi
+
+  actual="$(hash_file "$(checksum_command)" "${archive}")"
+  if [ "${actual}" != "${expected}" ]; then
+    printf '%s\n' "error: checksum mismatch for ${artifact}." >&2
+    exit 1
   fi
 }
 

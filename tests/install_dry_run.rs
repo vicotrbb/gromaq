@@ -98,6 +98,21 @@ mod unix {
             "release tarball packaging failed: {}",
             String::from_utf8_lossy(&package.stderr)
         );
+        let checksums = Command::new("sh")
+            .arg(root.join("scripts/generate-checksums.sh"))
+            .env("GROMAQ_DIST_DIR", release_dir.path())
+            .output()
+            .unwrap();
+        assert!(
+            checksums.status.success(),
+            "release checksum generation failed: {}",
+            String::from_utf8_lossy(&checksums.stderr)
+        );
+        fs::copy(
+            release_dir.path().join("SHA256SUMS"),
+            release_dir.path().join("SHA256SUMS-linux-x86_64"),
+        )
+        .unwrap();
 
         let output = Command::new("sh")
             .arg(root.join("scripts/install.sh"))

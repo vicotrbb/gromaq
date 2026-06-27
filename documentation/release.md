@@ -48,7 +48,11 @@ The release method downloads `gromaq-<version>-linux-<arch>.tar.gz` from
 `GROMAQ_RELEASE_BASE` when testing against a mirror or local `file://` release
 directory. It installs the binary to
 `${GROMAQ_BIN_DIR:-${CARGO_HOME:-~/.cargo}/bin}` and copies the Linux desktop
-identity assets from the tarball itself.
+identity assets from the tarball itself. By default it also downloads the
+matching `SHA256SUMS-linux-<arch>` manifest and verifies the tarball before
+extraction. Set `GROMAQ_VERIFY_CHECKSUMS=0` only for local mirror/debug
+scenarios where another integrity check is already in place; set
+`GROMAQ_CHECKSUM_ASSET` when a mirror uses a different manifest filename.
 
 ## Linux Desktop Assets
 
@@ -208,7 +212,8 @@ Proven locally:
   `GROMAQ_INSTALL_METHOD=release`, `GROMAQ_RELEASE_BASE=file://...`, and
   `GROMAQ_BIN_DIR=<temp-bin>`, proven by
   `tests/install_dry_run.rs::install_script_installs_linux_release_tarball_from_local_base`
-  against a locally generated tarball without network or home writes
+  against a locally generated tarball and matching checksum manifest without
+  network or home writes
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - Debian `.deb` archive structure with a supplied binary, canonical

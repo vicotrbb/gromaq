@@ -60,7 +60,10 @@ curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/instal
 
 This downloads `gromaq-<version>-linux-<arch>.tar.gz`, installs the binary into
 `${GROMAQ_BIN_DIR:-${CARGO_HOME:-~/.cargo}/bin}`, and installs the Linux desktop
-identity assets from the tarball. The release method is locally proven against a
+identity assets from the tarball. By default it also downloads
+`SHA256SUMS-linux-<arch>` and verifies the tarball before extraction. Set
+`GROMAQ_VERIFY_CHECKSUMS=0` only for local mirror/debug scenarios where you have
+another integrity check. The release method is locally proven against a
 file-backed tarball; it still needs live GitHub Release asset proof from a tag
 run before becoming the default installer path.
 
