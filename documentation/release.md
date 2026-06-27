@@ -267,6 +267,9 @@ Proven locally:
   notary zip and prints the planned notarytool, stapler, and validation steps
 - packaged macOS app executable launch via
   `target/dist/Gromaq.app/Contents/MacOS/gromaq --window-smoke`
+- packaged macOS app LaunchServices launch via
+  `open -W -n -o target/macos-open-proof.stdout --stderr target/macos-open-proof.stderr target/dist/Gromaq.app --args --window-smoke`,
+  which returned 0 and captured `window smoke: ok`
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes
@@ -312,4 +315,4 @@ Not yet proven:
 - live Arch `makepkg` build/install
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
-- live macOS Dock behavior from a launched packaged app
+- manual macOS Dock/Finder UI behavior from a launched packaged app
