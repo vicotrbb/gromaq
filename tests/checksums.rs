@@ -57,6 +57,41 @@ mod unix {
         );
     }
 
+    #[test]
+    fn checksum_script_rejects_missing_additional_release_assets() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let dist =
+            TempDist(std::env::temp_dir().join(unique_temp_name("gromaq-checksum-missing-extra")));
+        fs::create_dir_all(dist.path()).unwrap();
+        fs::write(
+            dist.path().join("gromaq-0.1.0-linux-x86_64.tar.gz"),
+            b"stub archive",
+        )
+        .unwrap();
+        let missing_extra = dist.path().join("missing.SRCINFO");
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/generate-checksums.sh"))
+            .env("GROMAQ_DIST_DIR", dist.path())
+            .env("GROMAQ_CHECKSUM_EXTRA_FILES", &missing_extra)
+            .output()
+            .unwrap();
+
+        assert!(
+            !output.status.success(),
+            "checksum generation must fail when an extra file is missing"
+        );
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("checksum extra file not found"),
+            "stderr should explain missing extra file: {stderr}"
+        );
+        assert!(
+            !dist.path().join("SHA256SUMS").exists(),
+            "checksum script must not leave a manifest after missing-extra failure"
+        );
+    }
+
     struct TempDist(PathBuf);
 
     impl TempDist {
