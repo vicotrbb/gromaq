@@ -90,6 +90,44 @@ mod unix {
         assert!(bin_dir.path().join("gromaq").is_file());
     }
 
+    #[test]
+    fn install_script_accepts_custom_release_checksum_asset_name() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let release_dir = TempPath::new("gromaq-release-custom-checksum-assets");
+        let install_root = TempPath::new("gromaq-release-custom-checksum-root");
+        let bin_dir = TempPath::new("gromaq-release-custom-checksum-bin");
+        create_release_tarball(root, release_dir.path());
+        create_checksum_manifest(root, release_dir.path());
+        fs::copy(
+            release_dir.path().join("SHA256SUMS"),
+            release_dir.path().join("CUSTOMSUMS"),
+        )
+        .unwrap();
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_PLATFORM", "Linux")
+            .env("GROMAQ_INSTALL_METHOD", "release")
+            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
+            .env(
+                "GROMAQ_RELEASE_BASE",
+                format!("file://{}", release_dir.path().display()),
+            )
+            .env("GROMAQ_BIN_DIR", bin_dir.path())
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .env("GROMAQ_CHECKSUM_ASSET", "CUSTOMSUMS")
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "custom checksum manifest install should pass: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(bin_dir.path().join("gromaq").is_file());
+    }
+
     fn create_release_tarball(root: &Path, release_dir: &Path) {
         let stub = release_dir.join("gromaq-stub");
         fs::create_dir_all(release_dir).unwrap();
@@ -106,6 +144,19 @@ mod unix {
         assert!(
             output.status.success(),
             "release tarball packaging failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    fn create_checksum_manifest(root: &Path, release_dir: &Path) {
+        let output = Command::new("sh")
+            .arg(root.join("scripts/generate-checksums.sh"))
+            .env("GROMAQ_DIST_DIR", release_dir)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "release checksum generation failed: {}",
             String::from_utf8_lossy(&output.stderr)
         );
     }
