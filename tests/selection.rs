@@ -47,6 +47,24 @@ fn copy_selection_uses_displayed_scrollback_view() {
 }
 
 #[test]
+fn copy_selection_uses_displayed_styled_scrollback_text() {
+    let mut terminal = Terminal::new(
+        TerminalConfig::new(8, 3)
+            .unwrap()
+            .with_scrollback_limit(8)
+            .unwrap(),
+    );
+    terminal
+        .write_str("\x1b[31mred\x1b[0m\r\n\x1b[1mwide界\x1b[0m\r\nplain\r\nlive")
+        .unwrap();
+
+    assert!(terminal.scroll_display_up(1));
+    terminal.set_selection(SelectionRange::new((0, 0), (1, 5)));
+
+    assert_eq!(terminal.copy_selection().unwrap(), "red\nwide界");
+}
+
+#[test]
 fn copy_selection_omits_newline_across_soft_wrapped_rows() {
     let mut terminal = Terminal::new(TerminalConfig::new(5, 3).unwrap());
     terminal.write_str("helloworld").unwrap();
