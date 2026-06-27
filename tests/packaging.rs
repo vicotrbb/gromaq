@@ -188,6 +188,36 @@ mod unix {
         );
     }
 
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn notarization_script_dry_run_prepares_archive_without_credentials() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let dist = TempDist(std::env::temp_dir().join(unique_temp_name("gromaq-notary")));
+        let app = dist.path().join("Gromaq.app");
+        let macos = app.join("Contents/MacOS");
+        let zip = dist.path().join("Gromaq-notary.zip");
+        fs::create_dir_all(&macos).unwrap();
+        fs::write(macos.join("gromaq"), "#!/bin/sh\nexit 0\n").unwrap();
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/notarize-macos-app.sh"))
+            .arg(&app)
+            .env("GROMAQ_NOTARY_DRY_RUN", "1")
+            .env("GROMAQ_NOTARY_ZIP_PATH", &zip)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "notarization dry run failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Dry run: prepared notarization archive"));
+        assert!(stdout.contains("xcrun notarytool submit --wait"));
+        assert!(stdout.contains("would staple and validate"));
+        assert!(zip.is_file(), "dry run should create the notary zip");
+    }
+
     struct TempDist(PathBuf);
 
     impl TempDist {
