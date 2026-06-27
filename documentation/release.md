@@ -213,6 +213,17 @@ and `.SRCINFO` metadata as well as the Linux tarball and Debian package.
 
 Proven remotely:
 
+- GitHub Actions release workflow run `28302556353` completed successfully on
+  2026-06-27 for commit `c4bb4f1`. The downloaded Linux workflow artifact
+  contained `target/dist/gromaq-0.1.0-linux-x86_64.tar.gz`,
+  `target/dist/gromaq_0.1.0_amd64.deb`, `target/dist/SHA256SUMS`,
+  `packaging/arch/PKGBUILD`, and the hidden `packaging/arch/.SRCINFO`, proving
+  the `include-hidden-files: true` release-artifact upload path. The downloaded
+  Linux checksum manifest listed `.SRCINFO`, `PKGBUILD`, the tarball, and the
+  Debian package. The downloaded macOS workflow artifact contained
+  `Gromaq-macos-app.zip` and `SHA256SUMS`; inspecting the zipped
+  `Gromaq.app/Contents/Info.plist` proved
+  `LSApplicationCategoryType=public.app-category.utilities`.
 - GitHub Actions release workflow success: manual `workflow_dispatch` run
   `28298839954` for `Release Artifacts` completed successfully on 2026-06-27.
   The `linux-tarball` job ran project policy, packaged the Linux tarball and
@@ -227,9 +238,8 @@ Proven remotely:
   still complete with the Arch metadata checksum path, and the downloaded Linux
   checksum manifest listed both `PKGBUILD` and `.SRCINFO`. Artifact inspection
   also exposed that `actions/upload-artifact` omitted hidden `.SRCINFO` from
-  the workflow artifact unless `include-hidden-files: true` is set. The local
-  workflow now includes that option, but the corrected hidden-file artifact
-  upload still awaits the next release workflow run.
+  the workflow artifact unless `include-hidden-files: true` is set; later run
+  `28302556353` proved that corrected hidden-file artifact upload.
 - GitHub Actions CI run `28300600507` completed successfully on 2026-06-27 for
   commit `93fcbef`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, copied the checksum manifest to
@@ -312,8 +322,6 @@ Proven locally:
 Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
-- live release workflow upload proof for the Arch `PKGBUILD` plus `.SRCINFO`
-  artifacts after the local `include-hidden-files: true` fix
 - live Linux release-method install from GitHub Release assets
 - live Arch `makepkg` build/install
 - Developer ID signed and notarized macOS app distribution
