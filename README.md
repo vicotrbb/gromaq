@@ -226,6 +226,7 @@ cargo run -- --welcome-image-snapshot target/gromaq-welcome-image.ppm
 cargo run -- --runtime-real-shell-smoke
 cargo run -- --runtime-real-shell-command-output-smoke
 cargo run -- --runtime-tool-workflow-smoke
+cargo run -- --runtime-perf-budget-smoke
 cargo run -- --runtime-text-zoom-smoke
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
