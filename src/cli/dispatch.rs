@@ -81,6 +81,11 @@ where
     }
 
     match command {
+        CliCommand::Version => CliExit {
+            code: 0,
+            stdout: format!("gromaq {}\n", env!("CARGO_PKG_VERSION")),
+            stderr: String::new(),
+        },
         CliCommand::Gpu(arg) => gpu_command_exit(arg, backend),
         CliCommand::GpuTerminalTextSnapshot => unreachable!(),
         CliCommand::GpuWelcomeImageSnapshot => unreachable!(),
