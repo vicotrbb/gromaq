@@ -164,12 +164,18 @@ fn pump_and_render_real_shell_output(
     Ok(pumped)
 }
 
-fn real_shell_perf_budget_failure(probe: &RuntimeRealShellSmokeProbe) -> Option<&'static str> {
+fn real_shell_perf_budget_failure(probe: &RuntimeRealShellSmokeProbe) -> Option<String> {
     if probe.render_p95_ns > REAL_SHELL_RENDER_P95_BUDGET_NS {
-        return Some("real-shell render p95 exceeded 144Hz frame budget");
+        return Some(format!(
+            "real-shell render p95 exceeded 144Hz frame budget: measured {} ns, budget {} ns",
+            probe.render_p95_ns, REAL_SHELL_RENDER_P95_BUDGET_NS
+        ));
     }
     if probe.input_to_render_p95_ns > REAL_SHELL_INPUT_TO_RENDER_P95_BUDGET_NS {
-        return Some("real-shell input-to-render p95 exceeded latency budget");
+        return Some(format!(
+            "real-shell input-to-render p95 exceeded latency budget: measured {} ns, budget {} ns",
+            probe.input_to_render_p95_ns, REAL_SHELL_INPUT_TO_RENDER_P95_BUDGET_NS
+        ));
     }
     None
 }

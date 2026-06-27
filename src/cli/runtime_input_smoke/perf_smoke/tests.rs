@@ -29,7 +29,10 @@ fn runtime_perf_budget_rejects_render_p95_over_144hz_budget() {
 
     assert_eq!(
         runtime_perf_budget_failure(&probe),
-        Some("render p95 exceeded 144Hz frame budget")
+        Some(
+            "render p95 exceeded 144Hz frame budget: measured 6940001 ns, budget 6940000 ns"
+                .to_owned()
+        )
     );
 }
 
@@ -47,7 +50,10 @@ fn runtime_perf_budget_rejects_input_to_render_p95_over_latency_budget() {
 
     assert_eq!(
         runtime_perf_budget_failure(&probe),
-        Some("input-to-render p95 exceeded latency budget")
+        Some(
+            "input-to-render p95 exceeded latency budget: measured 10000001 ns, budget 10000000 ns"
+                .to_owned()
+        )
     );
 }
 

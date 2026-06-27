@@ -100,12 +100,18 @@ fn runtime_perf_smoke_success(probe: RuntimePerfProbe) -> CliExit {
     }
 }
 
-fn runtime_perf_budget_failure(probe: &RuntimePerfProbe) -> Option<&'static str> {
+fn runtime_perf_budget_failure(probe: &RuntimePerfProbe) -> Option<String> {
     if probe.metrics.render_time_p95_ns > RUNTIME_RENDER_P95_BUDGET_NS {
-        return Some("render p95 exceeded 144Hz frame budget");
+        return Some(format!(
+            "render p95 exceeded 144Hz frame budget: measured {} ns, budget {} ns",
+            probe.metrics.render_time_p95_ns, RUNTIME_RENDER_P95_BUDGET_NS
+        ));
     }
     if probe.metrics.input_to_render_p95_ns > RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS {
-        return Some("input-to-render p95 exceeded latency budget");
+        return Some(format!(
+            "input-to-render p95 exceeded latency budget: measured {} ns, budget {} ns",
+            probe.metrics.input_to_render_p95_ns, RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS
+        ));
     }
     None
 }

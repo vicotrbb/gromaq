@@ -34,7 +34,10 @@ fn real_shell_perf_budget_rejects_render_p95_over_limit() {
             REAL_SHELL_RENDER_P95_BUDGET_NS + 1,
             REAL_SHELL_INPUT_TO_RENDER_P95_BUDGET_NS
         )),
-        Some("real-shell render p95 exceeded 144Hz frame budget")
+        Some(
+            "real-shell render p95 exceeded 144Hz frame budget: measured 6940001 ns, budget 6940000 ns"
+                .to_owned()
+        )
     );
 }
 
@@ -45,6 +48,9 @@ fn real_shell_perf_budget_rejects_input_to_render_p95_over_limit() {
             REAL_SHELL_RENDER_P95_BUDGET_NS,
             REAL_SHELL_INPUT_TO_RENDER_P95_BUDGET_NS + 1
         )),
-        Some("real-shell input-to-render p95 exceeded latency budget")
+        Some(
+            "real-shell input-to-render p95 exceeded latency budget: measured 20000001 ns, budget 20000000 ns"
+                .to_owned()
+        )
     );
 }
