@@ -38,6 +38,40 @@ fn native_terminal_runtime_encodes_paste_text_to_pty() {
 }
 
 #[test]
+fn native_terminal_runtime_returns_to_plain_paste_after_bracketed_paste_is_disabled() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime
+        .shell_session()
+        .unwrap()
+        .output
+        .borrow_mut()
+        .push_back(b"\x1b[?2004h\x1b[?2004l".to_vec());
+    runtime.pump_pty_output().unwrap();
+    runtime.pump_pty_output().unwrap();
+
+    runtime.send_paste_text("abc").unwrap();
+
+    let session = runtime.shell_session().unwrap();
+    assert_eq!(session.input.borrow().last().unwrap().as_slice(), b"abc");
+}
+
+#[test]
 fn native_terminal_runtime_copies_selection_to_clipboard() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
