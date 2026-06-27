@@ -91,6 +91,16 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "test -x target/release-install-proof/bin/gromaq",
 ];
 
+const REQUIRED_ARCH_PACKAGING_CI_MARKERS: &[&str] = &[
+    "arch-packaging:",
+    "container: archlinux:base-devel",
+    "pacman -Syu --noconfirm git rust",
+    "useradd -m builder",
+    "chown -R builder:builder \"$PWD\"",
+    "su builder -c \"cd '$PWD/packaging/arch' && makepkg --nobuild --noconfirm\"",
+    "su builder -c \"cd '$PWD/packaging/arch' && makepkg --printsrcinfo\"",
+];
+
 #[test]
 fn ci_workflow_runs_required_root_checks() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
@@ -142,6 +152,20 @@ fn ci_runs_linux_distribution_checks() {
         assert!(
             workflow.contains(marker),
             "{} must include Linux packaging marker `{marker}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
+}
+
+#[test]
+fn ci_runs_arch_packaging_checks() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for marker in REQUIRED_ARCH_PACKAGING_CI_MARKERS {
+        assert!(
+            workflow.contains(marker),
+            "{} must include Arch packaging marker `{marker}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
         );
     }

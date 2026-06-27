@@ -126,8 +126,11 @@ bash -n packaging/arch/PKGBUILD
 `packaging/arch/PKGBUILD` provides an Arch `makepkg` source-package recipe that
 builds from the public Git repository and installs the binary, desktop file,
 AppStream metainfo, hicolor icon, README, and license. CI and repository policy
-syntax-check the recipe; a live `makepkg` package build is still a separate
-platform proof.
+syntax-check the recipe, and the local CI workflow now includes an
+`arch-packaging` job under `archlinux:base-devel` that runs `makepkg --nobuild`
+and `makepkg --printsrcinfo` as an unprivileged builder user. That job still
+awaits remote GitHub Actions proof, and a full live package build/install on
+Arch Linux remains a separate platform proof.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD`, and a

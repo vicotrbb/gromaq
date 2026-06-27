@@ -137,8 +137,13 @@ The recipe builds from the public Git repository with
 - hicolor app icon
 
 CI and repository policy syntax-check the recipe and assert the expected desktop
-identity payload markers. A live `makepkg` build and install on Arch Linux still
-requires separate platform proof.
+identity payload markers. The local CI workflow now includes an
+`arch-packaging` job under `archlinux:base-devel` that installs `git` and
+`rust`, switches to an unprivileged builder user, and runs
+`makepkg --nobuild --noconfirm` plus `makepkg --printsrcinfo` from
+`packaging/arch`. That job awaits remote GitHub Actions proof after the next
+push. A full live `makepkg` build and install on Arch Linux still requires
+separate platform proof.
 
 ## macOS App Bundle
 
@@ -265,6 +270,9 @@ Proven locally:
   metadata, `/usr/bin/gromaq`, desktop file, AppStream metainfo, icon, README,
   and copyright payloads
 - Arch `PKGBUILD` syntax and payload-marker policy coverage
+- Arch `arch-packaging` CI job configuration and policy coverage for
+  `makepkg --nobuild` and `makepkg --printsrcinfo`; this local commit has not
+  yet been pushed and therefore has no remote run proof yet
 - release checksum manifest generation for local tarball, Debian package,
   optional extra release assets such as the Arch `PKGBUILD`, and macOS zip
   artifacts
@@ -277,6 +285,7 @@ Not yet proven:
 - live release workflow upload proof for the Arch `PKGBUILD` artifact
 - live Linux release-method install from GitHub Release assets
 - live Arch `makepkg` build/install
+- remote GitHub Actions proof of the Arch `arch-packaging` job
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app
