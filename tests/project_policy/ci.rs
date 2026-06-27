@@ -57,6 +57,7 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "scripts/generate-checksums.sh",
     "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO\" scripts/generate-checksums.sh",
     "actions/upload-artifact@v4",
+    "include-hidden-files: true",
     "target/dist/SHA256SUMS",
     "target/dist/*.tar.gz",
     "target/dist/*.deb",

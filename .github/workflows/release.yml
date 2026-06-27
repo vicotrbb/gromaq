@@ -42,6 +42,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-linux-tarball
+          include-hidden-files: true
           path: |
             target/dist/*.tar.gz
             target/dist/*.deb
