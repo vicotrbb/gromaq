@@ -68,7 +68,10 @@ where
         return CliExit {
             code: 2,
             stdout: String::new(),
-            stderr: format!("{}unknown argument: {arg}\n", usage()),
+            stderr: format!(
+                "{}unknown argument: {arg}\nrun `gromaq --help` for usage\n",
+                usage()
+            ),
         };
     };
     if let Some(exit) =

@@ -104,7 +104,8 @@ fn unknown_cli_argument_returns_usage_error() {
         exit.stderr
             .contains("--runtime-real-shell-command-output-smoke")
     );
-    assert!(exit.stderr.ends_with("unknown argument: --wat\n"));
+    assert!(exit.stderr.contains("unknown argument: --wat\n"));
+    assert!(exit.stderr.ends_with("run `gromaq --help` for usage\n"));
     assert!(backend.requests.borrow().is_empty());
 }
 
