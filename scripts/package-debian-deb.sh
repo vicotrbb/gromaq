@@ -34,6 +34,30 @@ control_dir="${staging_dir}/control"
 data_dir="${staging_dir}/data"
 package_path="${dist_dir}/${package}_${version}_${deb_arch}.deb"
 
+file_size() {
+  wc -c < "$1" | tr -d ' '
+}
+
+append_ar_member() {
+  archive="$1"
+  member="$2"
+  path="$3"
+  size="$(file_size "${path}")"
+
+  printf '%-16s%-12s%-6s%-6s%-8s%-10s`\n' \
+    "${member}" \
+    0 \
+    0 \
+    0 \
+    100644 \
+    "${size}" >> "${archive}"
+  cat "${path}" >> "${archive}"
+
+  if [ $((size % 2)) -ne 0 ]; then
+    printf '\n' >> "${archive}"
+  fi
+}
+
 if [ ! -x "${binary_path}" ]; then
   cargo build --release
 fi
@@ -75,10 +99,11 @@ printf '2.0\n' > "${staging_dir}/debian-binary"
 tar -C "${control_dir}" -czf "${staging_dir}/control.tar.gz" ./control
 tar -C "${data_dir}" -czf "${staging_dir}/data.tar.gz" ./usr
 
-(
-  cd "${staging_dir}"
-  ar -qc "$(basename "${package_path}")" debian-binary control.tar.gz data.tar.gz
-  mv "$(basename "${package_path}")" "${package_path}"
-)
+archive_tmp="${staging_dir}/package.ar"
+printf '!<arch>\n' > "${archive_tmp}"
+append_ar_member "${archive_tmp}" debian-binary "${staging_dir}/debian-binary"
+append_ar_member "${archive_tmp}" control.tar.gz "${staging_dir}/control.tar.gz"
+append_ar_member "${archive_tmp}" data.tar.gz "${staging_dir}/data.tar.gz"
+mv "${archive_tmp}" "${package_path}"
 
 printf '%s\n' "Packaged ${package_path}"
