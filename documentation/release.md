@@ -152,6 +152,7 @@ Proven locally:
 - optional macOS app-bundle install path with file-backed raw assets and a
   supplied installed binary
 - Linux install-root desktop asset placement without network or home writes
+- installer dry-run planning without Cargo, network, home, or install-root writes
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - Debian `.deb` archive structure with a supplied binary, canonical
