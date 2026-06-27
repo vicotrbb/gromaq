@@ -9,8 +9,8 @@ mod output;
 use launch_config::{window_glyph_frame_snapshot_launch_config, window_smoke_launch_config};
 use output::{
     window_glyph_frame_snapshot_failure, window_glyph_frame_snapshot_success,
-    window_perf_no_glyph_failure, window_perf_success, window_smoke_no_surface_failure,
-    window_smoke_success,
+    window_perf_no_glyph_failure, window_perf_success, window_screenshot_smoke_success,
+    window_smoke_no_surface_failure, window_smoke_success,
 };
 
 pub(super) fn window_smoke_exit<A>(command: CliCommand<'_>, app_launcher: Option<&A>) -> CliExit
@@ -39,6 +39,12 @@ where
                     return window_perf_no_glyph_failure(&report);
                 }
                 window_perf_success(&report, frame_limit, target_fps, started_at.elapsed())
+            } else if command == CliCommand::WindowScreenshotSmoke {
+                if report.frames_presented == 0 {
+                    window_smoke_no_surface_failure(&report)
+                } else {
+                    window_screenshot_smoke_success(&report)
+                }
             } else {
                 if report.frames_presented == 0 {
                     window_smoke_no_surface_failure(&report)
@@ -88,6 +94,7 @@ fn window_smoke_command_name(command: CliCommand<'_>) -> &'static str {
     match command {
         CliCommand::WindowSmoke => "--window-smoke",
         CliCommand::WindowPerfSmoke => "--window-perf-smoke",
+        CliCommand::WindowScreenshotSmoke => "--window-screenshot-smoke",
         CliCommand::WindowGlyphFrameSnapshot => "--window-glyph-frame-snapshot",
         _ => unreachable!(),
     }

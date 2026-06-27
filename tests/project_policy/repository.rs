@@ -166,7 +166,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(checksum_script.contains(".tar.gz"));
     assert!(checksum_script.contains(".deb"));
     assert!(checksum_script.contains(".zip"));
-    assert!(screenshot_script.contains("--window-perf-smoke"));
+    assert!(screenshot_script.contains("--window-screenshot-smoke"));
+    assert!(!screenshot_script.contains("--window-perf-smoke"));
     assert!(screenshot_script.contains("screencapture -x"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));

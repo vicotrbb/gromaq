@@ -69,3 +69,35 @@ fn window_smoke_reports_unavailable_native_app_launcher() {
     );
     assert!(backend.requests.borrow().is_empty());
 }
+
+#[test]
+fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = MockAppLauncher {
+        launches: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-screenshot-smoke"], &backend, &app);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stderr.is_empty());
+    assert!(
+        exit.stdout
+            .starts_with("window screenshot smoke: ok\npresented frame limit: 300\n")
+    );
+    assert_eq!(app.launches.borrow().len(), 1);
+    let launch = &app.launches.borrow()[0];
+    assert_eq!(launch.app.exit_after_presented_frames, Some(300));
+    assert_eq!(launch.app.exit_after_redraw_attempts, Some(1200));
+    assert!(launch.app.redraw_until_presented_frame_limit);
+    assert_eq!(
+        launch.app.startup_text.as_deref(),
+        Some("gromaq live screenshot proof\n")
+    );
+    assert_eq!(launch.runtime.shell.program, "/bin/sh");
+    assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
+    assert_eq!(launch.config_path, None);
+    assert!(backend.requests.borrow().is_empty());
+}

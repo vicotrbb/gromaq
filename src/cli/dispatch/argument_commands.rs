@@ -45,7 +45,9 @@ where
         CliCommand::WindowGlyphFrameSnapshot => {
             Some(window_glyph_frame_snapshot_command(args, app_launcher))
         }
-        CliCommand::WindowSmoke | CliCommand::WindowPerfSmoke => {
+        CliCommand::WindowSmoke
+        | CliCommand::WindowPerfSmoke
+        | CliCommand::WindowScreenshotSmoke => {
             Some(window_smoke_command(command, args, app_launcher))
         }
         CliCommand::Config => Some(config_file_command(args, app_launcher)),

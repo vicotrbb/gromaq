@@ -25,6 +25,8 @@ pub(super) enum CliCommand<'a> {
     WindowSmoke,
     /// Bounded native window multi-frame timing smoke command.
     WindowPerfSmoke,
+    /// Bounded native window host command for desktop screenshot capture.
+    WindowScreenshotSmoke,
     /// Bounded native window glyph-frame snapshot export command.
     WindowGlyphFrameSnapshot,
     /// OSC 52 clipboard smoke command.
@@ -118,6 +120,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--config-template" => Some(CliCommand::ConfigTemplate),
         "--window-smoke" => Some(CliCommand::WindowSmoke),
         "--window-perf-smoke" => Some(CliCommand::WindowPerfSmoke),
+        "--window-screenshot-smoke" => Some(CliCommand::WindowScreenshotSmoke),
         "--window-glyph-frame-snapshot" => Some(CliCommand::WindowGlyphFrameSnapshot),
         "--osc52-clipboard-smoke" => Some(CliCommand::Osc52ClipboardSmoke),
         "--runtime-clipboard-paste-smoke" => Some(CliCommand::RuntimeClipboardPasteSmoke),

@@ -20,7 +20,7 @@ mkdir -p "$(dirname "${output}")" "$(dirname "${log_path}")"
 
 (
   cd "${root}"
-  cargo run -- --window-perf-smoke
+  cargo run -- --window-screenshot-smoke
 ) > "${log_path}" 2>&1 &
 app_pid="$!"
 
