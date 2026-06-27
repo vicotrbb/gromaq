@@ -20,6 +20,7 @@ jobs:
       - run: sh -n scripts/generate-checksums.sh
       - run: sh -n scripts/notarize-macos-app.sh
       - run: sh -n scripts/capture-macos-window-proof.sh
+      - run: bash -n packaging/arch/PKGBUILD
       - run: cargo fmt --check
       - run: git diff --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
@@ -76,6 +77,7 @@ jobs:
       - run: sh -n scripts/package-linux-tarball.sh
       - run: sh -n scripts/package-debian-deb.sh
       - run: sh -n scripts/generate-checksums.sh
+      - run: bash -n packaging/arch/PKGBUILD
       - run: cargo test --test project_policy
       - run: GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh
       - run: scripts/package-linux-tarball.sh

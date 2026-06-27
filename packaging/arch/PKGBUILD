@@ -1,0 +1,34 @@
+# Maintainer: Gromaq contributors
+pkgname=gromaq-git
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Native Rust GPU-rendered terminal emulator foundation for gromaq.dev"
+arch=("x86_64" "aarch64")
+url="https://gromaq.dev"
+license=("MIT")
+makedepends=("git" "rust")
+source=("git+https://github.com/vicotrbb/gromaq.git")
+sha256sums=("SKIP")
+
+pkgver() {
+  cd "${srcdir}/gromaq"
+  git describe --tags --always --dirty | sed 's/^v//;s/-/./g'
+}
+
+build() {
+  cd "${srcdir}/gromaq"
+  cargo build --release --locked
+}
+
+package() {
+  cd "${srcdir}/gromaq"
+  install -Dm755 "target/release/gromaq" "${pkgdir}/usr/bin/gromaq"
+  install -Dm644 "README.md" "${pkgdir}/usr/share/doc/gromaq/README.md"
+  install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/gromaq/LICENSE"
+  install -Dm644 "packaging/linux/dev.gromaq.Gromaq.desktop" \
+    "${pkgdir}/usr/share/applications/dev.gromaq.Gromaq.desktop"
+  install -Dm644 "packaging/linux/dev.gromaq.Gromaq.metainfo.xml" \
+    "${pkgdir}/usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml"
+  install -Dm644 "images/logos/logo-icon-256.png" \
+    "${pkgdir}/usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
+}

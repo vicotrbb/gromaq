@@ -118,6 +118,28 @@ directly so package assembly is testable on normal Unix CI hosts. Use
 `GROMAQ_BINARY_PATH=<path>` to package an already-built binary and
 `GROMAQ_DEB_ARCH=<arch>` to override the detected Debian architecture.
 
+## Arch Package Recipe
+
+`packaging/arch/PKGBUILD` provides an Arch `makepkg` source-package recipe:
+
+```bash
+bash -n packaging/arch/PKGBUILD
+```
+
+The recipe builds from the public Git repository with
+`cargo build --release --locked` and installs:
+
+- `/usr/bin/gromaq`
+- README documentation
+- MIT license file
+- Linux desktop file
+- AppStream metainfo
+- hicolor app icon
+
+CI and repository policy syntax-check the recipe and assert the expected desktop
+identity payload markers. A live `makepkg` build and install on Arch Linux still
+requires separate platform proof.
+
 ## macOS App Bundle
 
 Build a local `.app` bundle:
@@ -168,7 +190,8 @@ repository policy checks, Linux user-local desktop asset install proof, and
 Linux tarball plus Debian package assembly on `ubuntu-latest`. The job is also
 configured to copy `SHA256SUMS` to `SHA256SUMS-linux-x86_64` and install from
 the generated local tarball through `GROMAQ_INSTALL_METHOD=release` before
-checking that `target/release-install-proof/bin/gromaq` exists.
+checking that `target/release-install-proof/bin/gromaq` exists. CI also runs
+`bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set.
 
@@ -200,6 +223,9 @@ Proven remotely:
   `cargo clippy --all-targets --all-features -- -D warnings`,
   `cargo test --all`, the runtime/theme/GPU smoke suite, and
   `cargo bench --bench parser_throughput -- --list`.
+- The Arch `PKGBUILD` source-package recipe is syntax-checked in CI and guarded
+  by repository policy markers for the Cargo build command, desktop file,
+  AppStream metainfo, and hicolor icon payload.
 - GitHub Actions CI run `28299568944` completed successfully on 2026-06-27 for
   commit `12f7dfe`. The `linux-packaging` job built the Linux tarball and
   Debian package, generated checksums, and proved Linux install-root desktop
@@ -233,6 +259,7 @@ Proven locally:
   `debian-binary`, `control.tar.gz`, and `data.tar.gz` members, control
   metadata, `/usr/bin/gromaq`, desktop file, AppStream metainfo, icon, README,
   and copyright payloads
+- Arch `PKGBUILD` syntax and payload-marker policy coverage
 - release checksum manifest generation for local tarball, Debian package, and
   macOS zip artifacts
 - shell syntax checks for install and packaging scripts
@@ -242,6 +269,7 @@ Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
+- live Arch `makepkg` build/install
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

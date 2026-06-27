@@ -120,7 +120,14 @@ Release artifact helpers:
 scripts/package-linux-tarball.sh
 scripts/package-debian-deb.sh
 scripts/package-macos-app.sh
+bash -n packaging/arch/PKGBUILD
 ```
+
+`packaging/arch/PKGBUILD` provides an Arch `makepkg` source-package recipe that
+builds from the public Git repository and installs the binary, desktop file,
+AppStream metainfo, hicolor icon, README, and license. CI and repository policy
+syntax-check the recipe; a live `makepkg` package build is still a separate
+platform proof.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, and a zipped macOS `.app`

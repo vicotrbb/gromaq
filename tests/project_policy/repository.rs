@@ -24,6 +24,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/generate-checksums.sh",
     "scripts/notarize-macos-app.sh",
     "scripts/capture-macos-window-proof.sh",
+    "packaging/arch/PKGBUILD",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
     "packaging/linux/dev.gromaq.Gromaq.metainfo.xml",
     "images/screenshots/gromaq-welcome-preview.png",
@@ -138,6 +139,7 @@ fn distribution_assets_keep_desktop_identity() {
     let checksum_script = fs::read_to_string(root.join("scripts/generate-checksums.sh")).unwrap();
     let screenshot_script =
         fs::read_to_string(root.join("scripts/capture-macos-window-proof.sh")).unwrap();
+    let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let desktop =
         fs::read_to_string(root.join("packaging/linux/dev.gromaq.Gromaq.desktop")).unwrap();
     let metainfo =
@@ -172,6 +174,11 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(debian_script.contains("control.tar.gz"));
     assert!(debian_script.contains("data.tar.gz"));
     assert!(debian_script.contains(".deb"));
+    assert!(arch_pkgbuild.contains("pkgname=gromaq-git"));
+    assert!(arch_pkgbuild.contains("cargo build --release --locked"));
+    assert!(arch_pkgbuild.contains("packaging/linux/dev.gromaq.Gromaq.desktop"));
+    assert!(arch_pkgbuild.contains("dev.gromaq.Gromaq.metainfo.xml"));
+    assert!(arch_pkgbuild.contains("logo-icon-256.png"));
     assert!(checksum_script.contains("SHA256SUMS"));
     assert!(checksum_script.contains(".tar.gz"));
     assert!(checksum_script.contains(".deb"));
