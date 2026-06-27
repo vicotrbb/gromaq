@@ -36,6 +36,13 @@ Run:
 gromaq
 ```
 
+Inspect command-line metadata:
+
+```bash
+gromaq --help
+gromaq --version
+```
+
 Requirements:
 
 - Rust stable with Cargo
