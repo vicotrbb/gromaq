@@ -131,10 +131,13 @@ tarball, Debian package, macOS `.app` zip, and checksum manifests as workflow
 artifacts; tag-triggered GitHub Release asset publication is configured but
 still needs a live tag-run proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
-installer asset placement plus Linux tarball and Debian package assembly. On
+installer asset placement plus Linux tarball and Debian package assembly. The
+job is now configured to install from the locally generated Linux release
+tarball plus checksum manifest before accepting packaging success. On
 2026-06-27, CI run `28299568944` completed green for commit `12f7dfe`,
 including the Debian package assembly path on Ubuntu and the macOS packaging
-test that inspects the `.deb` member structure.
+test that inspects the `.deb` member structure; remote proof for the
+release-method install step awaits the next pushed CI run.
 Release artifacts include a `SHA256SUMS` manifest.
 
 ## Status

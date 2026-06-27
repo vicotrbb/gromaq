@@ -165,7 +165,10 @@ names.
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
 repository policy checks, Linux user-local desktop asset install proof, and
-Linux tarball plus Debian package assembly on `ubuntu-latest`.
+Linux tarball plus Debian package assembly on `ubuntu-latest`. The job is also
+configured to copy `SHA256SUMS` to `SHA256SUMS-linux-x86_64` and install from
+the generated local tarball through `GROMAQ_INSTALL_METHOD=release` before
+checking that `target/release-install-proof/bin/gromaq` exists.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set.
 
@@ -192,6 +195,10 @@ Proven remotely:
   Debian package, generated checksums, and proved Linux install-root desktop
   asset placement. The macOS `rust` job passed `cargo test --all`, including
   the packaging test that inspects the Debian package member structure.
+- The Linux packaging CI job is locally configured, and guarded by
+  `tests/project_policy/ci.rs::ci_runs_linux_distribution_checks`, to install
+  from its generated release tarball and checksum manifest before accepting the
+  packaging job.
 
 Proven locally:
 
@@ -229,6 +236,7 @@ Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
+- remote CI proof for the newly added Linux release-method install step
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - live macOS Dock behavior from a launched packaged app

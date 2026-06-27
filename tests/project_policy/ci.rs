@@ -80,6 +80,10 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "scripts/package-linux-tarball.sh",
     "scripts/package-debian-deb.sh",
     "scripts/generate-checksums.sh",
+    "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0",
+    "GROMAQ_RELEASE_BASE=\"file://$PWD/target/dist\"",
+    "GROMAQ_BIN_DIR=target/release-install-proof/bin",
+    "test -x target/release-install-proof/bin/gromaq",
 ];
 
 #[test]
