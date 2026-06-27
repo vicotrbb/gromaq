@@ -172,3 +172,22 @@ fn compatibility_matrix_rows_keep_three_columns() {
         );
     }
 }
+
+#[test]
+fn public_docs_avoid_drift_prone_current_head_remote_proof_claims() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    for relative in [
+        "README.md",
+        "documentation/compatibility.md",
+        "documentation/release.md",
+    ] {
+        let path = root.join(relative);
+        let source = fs::read_to_string(&path).unwrap();
+        assert!(
+            !source.contains("current head"),
+            "{} must cite exact commits or run ids instead of drift-prone `current head` remote proof claims",
+            relative_path(root, &path)
+        );
+    }
+}
