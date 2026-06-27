@@ -143,9 +143,9 @@ identity payload markers. The local CI workflow now includes an
 `rust`, switches to an unprivileged builder user, and runs
 `makepkg --nobuild --noconfirm` plus `makepkg --printsrcinfo` from
 `packaging/arch`; it also checks that `packaging/arch/.SRCINFO` is present.
-That job awaits remote GitHub Actions proof after the next push. A full live
-`makepkg` build and install on Arch Linux still requires separate platform
-proof.
+GitHub Actions CI runs `28301610408` and `28302521484` proved that job
+remotely. A full live `makepkg` build and install on Arch Linux still requires
+separate platform proof.
 
 ## macOS App Bundle
 

@@ -137,13 +137,12 @@ Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
 `.SRCINFO`, and a zipped macOS `.app` bundle as GitHub Actions artifacts.
 Tag-triggered runs also create or reuse the matching GitHub Release and upload
-release assets. The
-remote GitHub Actions release workflow completed green on 2026-06-27 as run
-`28298839954`, uploading the Linux tarball, Debian package, macOS `.app` zip,
-and checksum manifests as workflow artifacts; Arch `PKGBUILD` plus `.SRCINFO`
-release upload is configured locally and awaits the next release workflow proof.
-Tag-triggered GitHub Release asset publication is configured but still needs a
-live tag-run proof.
+release assets. The remote GitHub Actions release workflow completed green on
+2026-06-27 as run `28302556353`, uploading the Linux tarball, Debian package,
+Arch `PKGBUILD`, hidden `.SRCINFO`, macOS `.app` zip, and checksum manifests as
+workflow artifacts. The downloaded macOS zip includes an app `Info.plist` with
+`LSApplicationCategoryType=public.app-category.utilities`. Tag-triggered GitHub
+Release asset publication is configured but still needs a live tag-run proof.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured to install from the locally generated Linux release
@@ -183,9 +182,10 @@ Implemented and covered by automated tests or deterministic smoke commands:
 - Criterion benchmark harness and repository policy tests for native-only Rust,
   public metadata, docs, CI commands, and module-size discipline
 - GitHub Actions release workflow that is configured to build and upload the
-  Linux tarball, Debian `.deb`, and macOS `.app` release artifacts with a
-  SHA256SUMS manifest on tag and manual dispatch; remote proof covers the
-  tarball, Debian package, macOS `.app`, and checksum uploads
+  Linux tarball, Debian `.deb`, Arch `PKGBUILD`/`.SRCINFO`, and macOS `.app`
+  release artifacts with SHA256SUMS manifests on tag and manual dispatch;
+  remote proof covers the tarball, Debian package, Arch metadata, macOS `.app`,
+  and checksum workflow-artifact uploads
 - macOS `.app` ad-hoc signing support plus a notarization helper with dry-run
   archive proof
 
