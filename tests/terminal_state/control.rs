@@ -15,6 +15,20 @@ fn vertical_tab_and_form_feed_follow_linefeed_without_carriage_return() {
 }
 
 #[test]
+fn shift_out_uses_g1_dec_special_graphics_until_shift_in() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 2).unwrap());
+
+    terminal.write_str("\x1b)0A\x0elqk\x0fB").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "A┌─┐B");
+    assert_eq!(grid.cell(0, 1).text, "┌");
+    assert_eq!(grid.cell(0, 2).text, "─");
+    assert_eq!(grid.cell(0, 3).text, "┐");
+    assert_eq!(grid.cell(0, 4).text, "B");
+}
+
+#[test]
 fn csi_erase_display_mode_3_clears_scrollback_only() {
     let config = TerminalConfig::new(8, 2)
         .unwrap()
