@@ -129,7 +129,8 @@ Implemented and covered by automated tests or deterministic smoke commands:
 - GitHub Actions release workflow that is configured to build and upload the
   Linux tarball, Debian `.deb`, and macOS `.app` release artifacts with a
   SHA256SUMS manifest on tag and manual dispatch; remote proof currently covers
-  the tarball and macOS `.app`
+  the tarball and macOS `.app`, while CI covers Debian package assembly and
+  checksum generation
 
 Not yet proven enough to call complete:
 
@@ -138,8 +139,8 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- signed/notarized macOS app distribution and remote proof for the Debian
-  package artifact on GitHub Actions
+- signed/notarized macOS app distribution and remote release-workflow upload
+  proof for the Debian package artifact on GitHub Actions
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).
