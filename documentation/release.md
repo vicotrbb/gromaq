@@ -256,6 +256,18 @@ package.
 
 Proven remotely:
 
+- GitHub Actions CI run `28310371344` completed green for commit `3474653` on
+  2026-06-28 UTC. The macOS `rust` job ran `sh -n
+  scripts/prove-welcome-preview.sh`, ran `scripts/prove-welcome-preview.sh`,
+  uploaded `target/welcome-preview-proof/*` as the
+  `gromaq-welcome-preview-proof` artifact, and still passed formatting,
+  whitespace, clippy, `cargo test --all`, the runtime/theme/GPU smoke suite,
+  and `cargo bench --bench parser_throughput -- --list`. The downloaded proof
+  artifact contained `gromaq-welcome-preview.ppm`, `welcome-preview.log`, and
+  `gromaq-welcome-preview.png`. The `linux-packaging` job passed the
+  helper-backed Linux release-install proof and the `arch-packaging` job passed
+  full `makepkg --noconfirm`, package install, `/usr/bin/gromaq --version`, and
+  installed-payload listing under `archlinux:base-devel`.
 - GitHub Actions CI run `28309262840` completed green for commit `461006d` on
   2026-06-28 UTC. The `linux-packaging` job passed
   Debian package install and payload checks, then ran
