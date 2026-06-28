@@ -138,8 +138,11 @@ license. CI and repository policy syntax-check the recipe. On 2026-06-27, CI
 run `28303175039` completed green for commit `12a38e8`, including the
 `arch-packaging` job under `archlinux:base-devel` that ran
 `makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
-user. A full live package build/install on Arch Linux remains a separate
-platform proof.
+user. The workflow is now configured to continue through full
+`makepkg --noconfirm`, `pacman -U` package installation, `gromaq --version`,
+and `pacman -Ql` payload checks for the binary, README, license, desktop file,
+AppStream metainfo, and hicolor icon. Those full build/install steps still
+need a green remote run before they count as live Arch proof.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus

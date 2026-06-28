@@ -99,4 +99,16 @@ jobs:
       - run: useradd -m builder
       - run: chown -R builder:builder "$PWD"
       - run: su builder -c "cd '$PWD/packaging/arch' && makepkg --nobuild --noconfirm"
+      - run: su builder -c "cd '$PWD/packaging/arch' && makepkg --noconfirm"
+      - run: pacman -U --noconfirm packaging/arch/gromaq-git-*.pkg.tar.*
+      - run: test -x /usr/bin/gromaq
+      - run: /usr/bin/gromaq --version
+      - run: |
+          pacman -Ql gromaq-git
+          pacman -Ql gromaq-git | grep -F /usr/bin/gromaq
+          pacman -Ql gromaq-git | grep -F /usr/share/doc/gromaq/README.md
+          pacman -Ql gromaq-git | grep -F /usr/share/licenses/gromaq/LICENSE
+          pacman -Ql gromaq-git | grep -F /usr/share/applications/dev.gromaq.Gromaq.desktop
+          pacman -Ql gromaq-git | grep -F /usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml
+          pacman -Ql gromaq-git | grep -F /usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png
       - run: su builder -c "cd '$PWD/packaging/arch' && makepkg --printsrcinfo"

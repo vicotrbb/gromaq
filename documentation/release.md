@@ -143,9 +143,13 @@ identity payload markers. The local CI workflow now includes an
 `rust`, switches to an unprivileged builder user, and runs
 `makepkg --nobuild --noconfirm` plus `makepkg --printsrcinfo` from
 `packaging/arch`; it also checks that `packaging/arch/.SRCINFO` is present.
-GitHub Actions CI runs `28301610408` and `28302521484` proved that job
-remotely. A full live `makepkg` build and install on Arch Linux still requires
-separate platform proof.
+The workflow is now configured to continue through full `makepkg --noconfirm`,
+`pacman -U` package installation, `/usr/bin/gromaq --version`, and
+`pacman -Ql gromaq-git` payload checks for the binary, README, license, desktop
+file, AppStream metainfo, and hicolor icon. GitHub Actions CI runs
+`28301610408` and `28302521484` proved the earlier metadata-only job remotely;
+the added full build/install steps still need a green remote run before they
+count as live Arch proof.
 
 ## macOS App Bundle
 
@@ -332,7 +336,9 @@ Proven locally:
   command, desktop file, AppStream metainfo, hicolor icon payload, and source
   metadata
 - Arch `arch-packaging` CI job policy coverage for `makepkg --nobuild` and
-  `makepkg --printsrcinfo`
+  `makepkg --printsrcinfo`; the workflow is also configured for full
+  `makepkg --noconfirm`, `pacman -U`, `gromaq --version`, and installed payload
+  checks, with remote green-run proof still pending
 - tag-triggered GitHub Release publication path is configured locally in
   `.github/workflows/release.yml` and guarded by
   `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
