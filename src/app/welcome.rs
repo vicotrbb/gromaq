@@ -33,7 +33,7 @@ pub(crate) fn default_welcome_text(
         WelcomeLine::metric(
             "Font",
             format!(
-                "{}  {}px / {}px line",
+                "{} {}/{}px",
                 font_family, renderer.font_size_px, renderer.line_height_px
             ),
         ),
