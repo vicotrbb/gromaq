@@ -30,6 +30,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-linux-release-install.sh",
     "scripts/prove-github-release-install.sh",
     "scripts/prove-current-host-compatibility.sh",
+    "scripts/prove-welcome-preview.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",

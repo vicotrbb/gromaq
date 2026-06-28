@@ -24,6 +24,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm",
     ),
+    ("README.md", "scripts/prove-welcome-preview.sh"),
     ("README.md", "selection opacity, before adopting it"),
     ("documentation/theme.md", "32 px font size"),
     ("documentation/theme.md", "44 px line height"),
@@ -55,6 +56,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/theme.md",
         "`cargo run -- --welcome-preview-snapshot",
     ),
+    ("documentation/theme.md", "scripts/prove-welcome-preview.sh"),
     ("documentation/theme.md", "gromaq --theme-list"),
     ("documentation/theme.md", "gromaq --theme-export"),
     ("documentation/theme.md", "gromaq --theme-preview-config"),
@@ -68,6 +70,10 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     (
         "documentation/compatibility.md",
         "--welcome-preview-snapshot <path>",
+    ),
+    (
+        "documentation/compatibility.md",
+        "scripts/prove-welcome-preview.sh",
     ),
     ("documentation/compatibility.md", "avatar color pixels"),
     (

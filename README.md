@@ -281,6 +281,7 @@ cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm
 cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
+scripts/prove-welcome-preview.sh
 ```
 
 Current-host compatibility proof bundle:
