@@ -65,6 +65,7 @@ require_exact_metric() {
 
 require_log_marker "welcome preview snapshot: ok"
 require_log_marker "preset: gromaq-ghostty"
+require_log_marker "frame size: 1468x820"
 require_log_marker "terminal cells: 80x18"
 
 require_min_metric "high contrast text pixels" 30000
