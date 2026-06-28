@@ -40,6 +40,7 @@ jobs:
       - run: node images/avatar/generate.mjs --check
       - run: scripts/prove-current-host-compatibility.sh
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: gromaq-current-host-compatibility-proof
           path: target/compatibility-proof/*
@@ -141,6 +142,7 @@ jobs:
         env:
           GROMAQ_REQUIRED_COMPAT_TOOLS: bash zsh fish vim nvim tmux less top htop btop ssh
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: gromaq-linux-compatibility-proof
           path: target/compatibility-proof/*

@@ -250,6 +250,31 @@ fn ci_runs_linux_compatibility_checks() {
 }
 
 #[test]
+fn ci_uploads_compatibility_proof_artifacts_after_failures() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for artifact_name in [
+        "gromaq-current-host-compatibility-proof",
+        "gromaq-linux-compatibility-proof",
+    ] {
+        let artifact_block = workflow
+            .split(artifact_name)
+            .next()
+            .unwrap()
+            .rsplit("uses: actions/upload-artifact@v4")
+            .next()
+            .unwrap();
+
+        assert!(
+            artifact_block.contains("if: always()"),
+            "{} must upload `{artifact_name}` even when the proof command fails",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
+}
+
+#[test]
 fn ci_runs_arch_packaging_checks() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
     let workflow = fs::read_to_string(&workflow_path).unwrap();
