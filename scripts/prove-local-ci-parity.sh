@@ -37,6 +37,7 @@ run_step "welcome preview proof" scripts/prove-welcome-preview.sh
 run_step "README welcome preview freshness proof" scripts/prove-readme-welcome-preview.sh
 run_step "GPU welcome image snapshot proof" \
   cargo run -- --welcome-image-snapshot "${proof_dir}/gromaq-welcome-image.ppm"
+run_step "frame scheduler smoke" cargo run -- --frame-scheduler-smoke
 run_step "current-host compatibility proof" scripts/prove-current-host-compatibility.sh
 run_step "parser benchmark inventory" cargo bench --bench parser_throughput -- --list
 
