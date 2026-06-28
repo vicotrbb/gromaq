@@ -136,6 +136,47 @@ fn pty_session_runs_less_interactive_search_when_available() {
 }
 
 #[test]
+fn pty_session_runs_less_paging_navigation_when_available() {
+    let Some(_program) = find_program("less") else {
+        eprintln!("skipping less paging PTY workflow test because less is not on PATH");
+        return;
+    };
+    let file = test_temp_path("less-paging.txt");
+    let lines = (0..120)
+        .map(|index| format!("gromaq-less-page-line-{index:03}\n"))
+        .collect::<String>();
+    fs::write(&file, lines).unwrap();
+    let command = format!(
+        "TERM=xterm-256color LESS= less -S {}",
+        shell_quote_path(&file)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session.write_all(b"G").unwrap();
+    let output = drain_until_contains_stripped(
+        &mut session,
+        "gromaq-less-page-line-119",
+        100,
+        Duration::from_millis(20),
+    );
+    session.write_all(b"q").unwrap();
+
+    assert!(
+        output.contains("gromaq-less-page-line-119"),
+        "less paging output: {output:?}"
+    );
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let _ = fs::remove_file(file);
+}
+
+#[test]
 fn pty_session_runs_less_alternate_screen_enter_exit_when_available() {
     let Some(_program) = find_program("less") else {
         eprintln!("skipping less alternate-screen PTY workflow test because less is not on PATH");

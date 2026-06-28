@@ -67,7 +67,7 @@ welcome-preview threshold step.
 | `nvim` SGR mouse split selection | Scripted real PTY workflow when available. On 2026-06-27, the current host did not have `nvim` on PATH, so this workflow remains unproven locally. | Conditional on host binary; not proven on current host |
 | `tmux` launch and prefix-key workflows | Real PTY command and interactive pane workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `tmux -V` and interactive pane checks. A refreshed focused run passed `pty_session_runs_tmux_prefix_split_pane_when_available`, proving `Ctrl-b %` split-pane command routing through the PTY into an isolated tmux server. | Proven on current host for launch, interactive shell, and prefix split-pane workflows; conditional elsewhere |
 | `tmux` SGR mouse pane selection | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host tmux SGR mouse pane-selection proof. | Proven on current host; conditional elsewhere |
-| `less` launch workflow | Real PTY command and interactive search workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `less --version` and search checks. | Proven on current host; conditional elsewhere |
+| `less` launch and paging workflows | Real PTY command, interactive search, and paging-navigation workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `less --version` and search checks. A refreshed focused run passed `pty_session_runs_less_paging_navigation_when_available`, proving `G` paging navigation to the generated final line through the PTY. | Proven on current host for launch, search, and paging navigation; conditional elsewhere |
 | `less` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host less alternate-screen enter/exit proof. | Proven on current host; conditional elsewhere |
 
 ## CLI and TUI Programs
@@ -163,7 +163,7 @@ welcome-preview threshold step.
 - Add live desktop OS paste-menu workflow proof.
 - Add Developer ID signed and notarized macOS app distribution proof.
 - Expand editor/multiplexer interaction beyond the current scripted edit,
-  Vim search navigation, tmux prefix split, less search, alternate-screen, and
-  mouse workflows.
+  Vim search navigation, tmux prefix split, less search/paging,
+  alternate-screen, and mouse workflows.
 - Expand `ssh` and `kubectl` beyond current version plus non-network local
   configuration workflows when safe live targets exist.
