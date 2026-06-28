@@ -46,9 +46,10 @@ single bundle. The helper records the current host's tool inventory and writes
 the `cargo test --test pty -- --nocapture` and
 `cargo run -- --runtime-tool-workflow-smoke` logs under
 `target/compatibility-proof` along with a compact `summary.txt` success marker
-that includes present/missing tool inventory counts, PTY tests passed, and
-runtime tool workflow checked, passed, skipped, and failed counts plus
-passed/skipped workflow names.
+that includes host uname/OS/architecture, Rust and Cargo versions, git commit
+and dirty-worktree state, present/missing tool inventory counts, PTY tests
+passed, and runtime tool workflow checked, passed, skipped, and failed counts
+plus passed/skipped workflow names.
 `.github/workflows/ci.yml` is configured to run the helper in the macOS `rust`
 job and upload `target/compatibility-proof/*` as the
 `gromaq-current-host-compatibility-proof` artifact. The workflow is also

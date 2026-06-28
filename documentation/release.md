@@ -267,7 +267,8 @@ desktop identity payloads under
 `target/release-install-proof`. The macOS `rust` job is configured to run
 `scripts/prove-current-host-compatibility.sh` and upload
 `target/compatibility-proof/*`, including `summary.txt` with present/missing
-tool counts, PTY tests passed, and runtime tool workflow
+tool counts, host uname/OS/architecture, Rust and Cargo versions, git commit
+and dirty-worktree state, PTY tests passed, and runtime tool workflow
 checked/passed/skipped/failed counts plus passed/skipped workflow names, as the
 `gromaq-current-host-compatibility-proof` artifact. CI also has a Linux
 compatibility job that installs common Ubuntu shell/editor/TUI tools, runs the

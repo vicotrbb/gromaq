@@ -11,6 +11,24 @@ summary="${proof_dir}/summary.txt"
 : >"${inventory}"
 printf '%s\n' "Current-host compatibility proof" | tee -a "${inventory}"
 printf 'timestamp_utc=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" | tee -a "${inventory}"
+host_uname="$(uname -a)"
+host_os="$(uname -s)"
+host_arch="$(uname -m)"
+rustc_version="$(rustc -V)"
+cargo_version="$(cargo -V)"
+git_commit="$(git rev-parse --short HEAD 2>/dev/null || printf '%s' unknown)"
+if git diff --quiet --ignore-submodules -- 2>/dev/null && git diff --cached --quiet --ignore-submodules -- 2>/dev/null; then
+  git_dirty=false
+else
+  git_dirty=true
+fi
+printf 'host_uname=%s\n' "${host_uname}" | tee -a "${inventory}"
+printf 'host_os=%s\n' "${host_os}" | tee -a "${inventory}"
+printf 'host_arch=%s\n' "${host_arch}" | tee -a "${inventory}"
+printf 'rustc_version=%s\n' "${rustc_version}" | tee -a "${inventory}"
+printf 'cargo_version=%s\n' "${cargo_version}" | tee -a "${inventory}"
+printf 'git_commit=%s\n' "${git_commit}" | tee -a "${inventory}"
+printf 'git_dirty=%s\n' "${git_dirty}" | tee -a "${inventory}"
 
 tools_present=0
 tools_missing=0
@@ -89,6 +107,13 @@ runtime_tool_workflow_skipped_names="$(extract_runtime_result_names "skipped")"
 {
   printf '%s\n' "Current-host compatibility proof: ok"
   printf 'proof_dir=%s\n' "${proof_dir}"
+  printf 'host_uname=%s\n' "${host_uname}"
+  printf 'host_os=%s\n' "${host_os}"
+  printf 'host_arch=%s\n' "${host_arch}"
+  printf 'rustc_version=%s\n' "${rustc_version}"
+  printf 'cargo_version=%s\n' "${cargo_version}"
+  printf 'git_commit=%s\n' "${git_commit}"
+  printf 'git_dirty=%s\n' "${git_dirty}"
   printf 'tools_present=%s\n' "${tools_present}"
   printf 'tools_missing=%s\n' "${tools_missing}"
   printf 'pty_tests_passed=%s\n' "${pty_tests_passed}"

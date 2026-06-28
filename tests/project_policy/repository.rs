@@ -159,8 +159,6 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/prove-github-release-install.sh")).unwrap();
     let linux_desktop_discovery_script =
         fs::read_to_string(root.join("scripts/prove-linux-desktop-discovery.sh")).unwrap();
-    let compatibility_proof_script =
-        fs::read_to_string(root.join("scripts/prove-current-host-compatibility.sh")).unwrap();
     let pty_tools = fs::read_to_string(root.join("tests/pty/tools.rs")).unwrap();
     let window_perf_proof_script =
         fs::read_to_string(root.join("scripts/prove-144hz-window-perf.sh")).unwrap();
@@ -313,23 +311,6 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_desktop_discovery_script.contains("summary.txt"));
     assert!(linux_desktop_discovery_script.contains("Linux desktop discovery proof: ok"));
     assert!(linux_desktop_discovery_script.contains("does not prove live menu UI rendering"));
-    assert!(compatibility_proof_script.contains("target/compatibility-proof"));
-    assert!(compatibility_proof_script.contains("cargo test --test pty -- --nocapture"));
-    assert!(compatibility_proof_script.contains("cargo run -- --runtime-tool-workflow-smoke"));
-    assert!(compatibility_proof_script.contains("command -v"));
-    assert!(compatibility_proof_script.contains("GROMAQ_REQUIRED_COMPAT_TOOLS"));
-    assert!(compatibility_proof_script.contains("required compatibility tool missing"));
-    assert!(compatibility_proof_script.contains("summary.txt"));
-    assert!(compatibility_proof_script.contains("tools_present="));
-    assert!(compatibility_proof_script.contains("tools_missing="));
-    assert!(compatibility_proof_script.contains("pty_tests_passed="));
-    assert!(compatibility_proof_script.contains("runtime_tool_workflow_checked="));
-    assert!(compatibility_proof_script.contains("runtime_tool_workflow_passed="));
-    assert!(compatibility_proof_script.contains("runtime_tool_workflow_skipped="));
-    assert!(compatibility_proof_script.contains("runtime_tool_workflow_failed="));
-    assert!(compatibility_proof_script.contains("runtime_tool_workflow_passed_names="));
-    assert!(compatibility_proof_script.contains("runtime_tool_workflow_skipped_names="));
-    assert!(compatibility_proof_script.contains("Current-host compatibility proof: ok"));
     assert!(pty_tools.contains("\"--output=yaml\""));
     assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));
     assert!(window_perf_proof_script.contains("summary.txt"));

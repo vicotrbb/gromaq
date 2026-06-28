@@ -358,7 +358,8 @@ scripts/prove-current-host-compatibility.sh
 This records the host tool inventory, runs `cargo test --test pty -- --nocapture`,
 and runs `cargo run -- --runtime-tool-workflow-smoke`, writing logs and
 `summary.txt` under `target/compatibility-proof`. The summary records
-`tools_present` and `tools_missing` inventory counts plus
+`host_uname`, `host_os`, `host_arch`, `rustc_version`, `cargo_version`,
+`git_commit`, `git_dirty`, `tools_present`, and `tools_missing` plus
 `pty_tests_passed`, `runtime_tool_workflow_checked`,
 `runtime_tool_workflow_passed`, `runtime_tool_workflow_skipped`, and
 `runtime_tool_workflow_failed`, plus passed/skipped workflow name lists, so

@@ -1,5 +1,7 @@
 #[path = "project_policy/ci.rs"]
 mod ci;
+#[path = "project_policy/compatibility_proof.rs"]
+mod compatibility_proof;
 #[path = "project_policy/docs.rs"]
 mod docs;
 #[path = "project_policy/docs_markers.rs"]
