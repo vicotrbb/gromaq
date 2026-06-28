@@ -11,8 +11,20 @@ mkdir -p "${proof_dir}"
 rm -f "${ppm_path}" "${png_path}" "${log_path}"
 
 cd "${root}"
-cargo run -- --welcome-preview-snapshot "${ppm_path}" > "${log_path}" 2>&1
-cat "${log_path}"
+
+run_logged() {
+  log_path="$1"
+  shift
+  if "$@" > "${log_path}" 2>&1; then
+    cat "${log_path}"
+    return 0
+  fi
+  status="$?"
+  cat "${log_path}" >&2
+  return "${status}"
+}
+
+run_logged "${log_path}" cargo run -- --welcome-preview-snapshot "${ppm_path}"
 
 require_log_marker() {
   marker="$1"
