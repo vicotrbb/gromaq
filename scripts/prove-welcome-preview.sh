@@ -63,6 +63,18 @@ require_exact_metric() {
   fi
 }
 
+require_ppm_dimensions() {
+  path="$1"
+  expected_width="$2"
+  expected_height="$3"
+  dimensions="$(sed -n '2p' "${path}")"
+  if [ "${dimensions}" != "${expected_width} ${expected_height}" ]; then
+    printf '%s\n' \
+      "error: ${path} dimensions ${dimensions:-missing} did not match ${expected_width} ${expected_height}" >&2
+    exit 1
+  fi
+}
+
 require_log_marker "welcome preview snapshot: ok"
 require_log_marker "preset: gromaq-ghostty"
 require_log_marker "frame size: 1468x820"
@@ -82,6 +94,7 @@ if [ "$(head -c 2 "${ppm_path}")" != "P6" ]; then
   printf '%s\n' "error: ${ppm_path} is not a binary PPM artifact" >&2
   exit 1
 fi
+require_ppm_dimensions "${ppm_path}" 1468 820
 
 if command -v sips >/dev/null 2>&1; then
   sips -s format png "${ppm_path}" --out "${png_path}" >/dev/null
