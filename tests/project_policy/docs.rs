@@ -104,6 +104,8 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "live Linux release-method install from GitHub Release assets",
     ),
+    ("README.md", "live Arch `makepkg` build/install"),
+    ("README.md", "live Linux desktop menu refresh"),
     ("README.md", "signed/notarized macOS app distribution"),
     ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
     ("documentation/release.md", "GROMAQ_DRY_RUN=1"),

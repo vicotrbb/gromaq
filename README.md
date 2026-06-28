@@ -203,6 +203,8 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
+- live Arch `makepkg` build/install
+- live Linux desktop menu refresh
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 - Developer ID signed/notarized macOS app distribution
