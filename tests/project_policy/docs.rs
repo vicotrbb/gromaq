@@ -98,6 +98,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "installer asset placement plus Linux tarball and Debian package assembly",
     ),
+    (
+        "README.md",
+        "Debian `postinst`/`postrm` desktop refresh hooks",
+    ),
     ("README.md", "remote GitHub Actions release workflow"),
     (
         "README.md",
@@ -132,6 +136,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/release.md",
+        "Debian `postinst` and `postrm` maintainer scripts",
+    ),
+    (
+        "documentation/release.md",
         "tag-triggered GitHub Release publication path is configured locally",
     ),
     (
@@ -142,6 +150,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     (
         "documentation/compatibility.md",
         "tests/checksums.rs::checksum_script_can_include_additional_release_assets",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Debian `postinst`/`postrm` desktop metadata refresh",
     ),
     (
         "documentation/compatibility.md",

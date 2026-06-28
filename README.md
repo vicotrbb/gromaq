@@ -177,6 +177,9 @@ path, Debian package assembly, and the release-method tarball install step on
 Ubuntu; the macOS job passed the packaging test that inspects the `.deb` member
 structure.
 Release artifacts include a `SHA256SUMS` manifest.
+The Debian package includes Debian `postinst`/`postrm` desktop refresh hooks
+that conditionally run `update-desktop-database` and refresh the hicolor icon
+cache when those desktop utilities are available.
 
 ## Status
 

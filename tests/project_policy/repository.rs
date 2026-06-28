@@ -181,6 +181,9 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_script.contains(".tar.gz"));
     assert!(debian_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(debian_script.contains("control.tar.gz"));
+    assert!(debian_script.contains("./postinst ./postrm"));
+    assert!(debian_script.contains("update-desktop-database /usr/share/applications"));
+    assert!(debian_script.contains("gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor"));
     assert!(debian_script.contains("data.tar.gz"));
     assert!(debian_script.contains(".deb"));
     assert!(arch_pkgbuild.contains("pkgname=gromaq-git"));

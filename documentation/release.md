@@ -117,6 +117,9 @@ The `.deb` installs:
 - Linux desktop file
 - AppStream metainfo
 - hicolor app icon
+- Debian `postinst` and `postrm` maintainer scripts that refresh the desktop
+  database and hicolor icon cache when the relevant desktop utilities are
+  available
 
 The script does not require `dpkg-deb`; it writes the Debian ar/tar members
 directly so package assembly is testable on normal Unix CI hosts. Use

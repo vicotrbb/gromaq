@@ -1,11 +1,3 @@
-//! Functional packaging proof for the release artifact assembly scripts.
-//!
-//! These tests run the packaging scripts with a tiny stub binary so they prove
-//! bundle/archive assembly without a release build. The Linux tarball script is
-//! exercised on every Unix CI host; the macOS `.app` script is additionally
-//! guarded to macOS because it needs `iconutil` and `sips`. Without these
-//! tests the macOS bundle structure was only verified at release time.
-
 #![forbid(unsafe_code)]
 
 #[cfg(unix)]
@@ -16,7 +8,6 @@ mod unix {
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
-
     static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
     #[test]
@@ -69,7 +60,16 @@ mod unix {
         ] {
             assert!(control.contains(required), "control missing {required}");
         }
-
+        for script in ["./postinst", "./postrm"] {
+            let contents = tar_file_contents(&control_tar, script);
+            for required in [
+                "command -v update-desktop-database",
+                "update-desktop-database /usr/share/applications",
+                "gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor",
+            ] {
+                assert!(contents.contains(required), "{script} missing {required}");
+            }
+        }
         let data_tar = extract_ar_member(&deb, "data.tar.gz", dist.path());
         let listing = tar_listing(&data_tar);
         for required in [
@@ -97,7 +97,6 @@ mod unix {
         let stub = dist.path().join("gromaq-stub");
         fs::write(&stub, "#!/bin/sh\nexit 0\n").unwrap();
         fs::set_permissions(&stub, Permissions::from_mode(0o755)).unwrap();
-
         let output = Command::new("sh")
             .arg(root.join("scripts/package-debian-deb.sh"))
             .current_dir(root)
