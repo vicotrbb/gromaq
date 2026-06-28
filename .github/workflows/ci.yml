@@ -26,6 +26,7 @@ jobs:
       - run: sh -n scripts/prove-linux-release-install.sh
       - run: sh -n scripts/prove-github-release-install.sh
       - run: sh -n scripts/prove-current-host-compatibility.sh
+      - run: sh -n scripts/prove-welcome-preview.sh
       - run: bash -n packaging/arch/PKGBUILD
       - run: sh -n packaging/arch/gromaq.install
       - run: cargo fmt --check
@@ -34,6 +35,7 @@ jobs:
       - run: cargo test --all
       - run: cargo run -- --theme-legibility-smoke
       - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
+      - run: scripts/prove-welcome-preview.sh
       - run: |
           printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' 'cursor_opacity = 0.5' 'selection_opacity = 0.25' > target/gromaq-theme-preview-config-ci.toml
           cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm
