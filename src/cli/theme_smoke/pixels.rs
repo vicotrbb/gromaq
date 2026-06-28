@@ -1,5 +1,7 @@
 const THEME_HIGH_CONTRAST_TEXT_MIN_PIXELS: usize = 64;
 const WELCOME_HIGH_CONTRAST_TEXT_MIN_PIXELS: usize = 512;
+const WELCOME_AVATAR_COLOR_MIN_PIXELS: usize = 256;
+const AVATAR_COLOR_DISTANCE_MAX_SQUARED: u32 = 42 * 42;
 const HIGH_CONTRAST_TEXT_MIN_X100: u64 = 700;
 
 mod color;
@@ -16,6 +18,7 @@ pub(super) struct ThemePreviewPixelReport {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct WelcomePreviewPixelReport {
     pub(super) high_contrast_text_pixels: usize,
+    pub(super) avatar_color_pixels: usize,
 }
 
 pub(super) fn validate_theme_preview_pixels(
@@ -59,17 +62,25 @@ pub(super) fn validate_welcome_preview_pixels(
     pixels: &[u8],
     width: u32,
     clear_color: [f64; 4],
+    avatar_colors: &[[u8; 3]],
 ) -> Result<WelcomePreviewPixelReport, String> {
     let expected = expected_background_pixel("welcome preview", pixels, width, clear_color)?;
     let counts = count_preview_pixels(pixels, expected, None, None);
+    let avatar_color_pixels = count_avatar_color_pixels(pixels, expected, avatar_colors);
     if counts.high_contrast_text_pixels < WELCOME_HIGH_CONTRAST_TEXT_MIN_PIXELS {
         return Err(format!(
             "welcome preview rendered too few high-contrast text pixels: {}",
             counts.high_contrast_text_pixels
         ));
     }
+    if avatar_color_pixels < WELCOME_AVATAR_COLOR_MIN_PIXELS {
+        return Err(format!(
+            "welcome preview rendered too few avatar-color pixels: {avatar_color_pixels}"
+        ));
+    }
     Ok(WelcomePreviewPixelReport {
         high_contrast_text_pixels: counts.high_contrast_text_pixels,
+        avatar_color_pixels,
     })
 }
 
@@ -123,6 +134,31 @@ fn count_preview_pixels(
         }
     }
     counts
+}
+
+fn count_avatar_color_pixels(
+    pixels: &[u8],
+    expected_background: [u8; 4],
+    avatar_colors: &[[u8; 3]],
+) -> usize {
+    pixels
+        .chunks_exact(4)
+        .filter(|pixel| {
+            let rgba = [pixel[0], pixel[1], pixel[2], pixel[3]];
+            rgba != expected_background
+                && avatar_colors.iter().any(|color| {
+                    color_distance_squared([rgba[0], rgba[1], rgba[2]], *color)
+                        <= AVATAR_COLOR_DISTANCE_MAX_SQUARED
+                })
+        })
+        .count()
+}
+
+fn color_distance_squared(a: [u8; 3], b: [u8; 3]) -> u32 {
+    let red = i32::from(a[0]) - i32::from(b[0]);
+    let green = i32::from(a[1]) - i32::from(b[1]);
+    let blue = i32::from(a[2]) - i32::from(b[2]);
+    (red * red + green * green + blue * blue) as u32
 }
 
 fn composited_on_background([red, green, blue, alpha]: [u8; 4], background: [u8; 3]) -> [u8; 4] {

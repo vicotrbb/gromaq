@@ -69,6 +69,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "--welcome-preview-snapshot <path>",
     ),
+    ("documentation/compatibility.md", "avatar color pixels"),
     (
         "documentation/compatibility.md",
         "input-to-render p95 budget ns: 10000000",

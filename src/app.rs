@@ -66,7 +66,7 @@ pub use surface::{
     render_and_present_terminal_glyph_frame_report,
     render_and_present_terminal_glyph_frame_report_with_snapshot,
 };
-pub(crate) use welcome::default_welcome_text;
+pub(crate) use welcome::{WELCOME_AVATAR_ANSI, default_welcome_text};
 
 /// Native terminal application handler for the `winit` event loop.
 pub struct NativeTerminalApp {

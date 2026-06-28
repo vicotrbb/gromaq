@@ -31,6 +31,7 @@ fn welcome_preview_snapshot_writes_default_welcome_ppm_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("preset: gromaq-ghostty"));
     assert!(exit.stdout.contains("terminal cells: 80x18"));
     assert!(exit.stdout.contains("high contrast text pixels:"));
+    assert!(exit.stdout.contains("avatar color pixels:"));
     assert!(exit.stdout.contains("glyph quads:"));
     assert!(exit.stdout.contains("cursor quads: 0"));
     assert!(exit.stdout.contains("atlas bytes:"));

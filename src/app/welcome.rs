@@ -3,7 +3,8 @@
 use super::{NativeAppConfig, NativeTerminalRuntimeConfig};
 use crate::renderer::RendererConfig;
 
-const WELCOME_AVATAR_ANSI: &str = include_str!("../../images/avatar/avatar-welcome.ansi");
+pub(crate) const WELCOME_AVATAR_ANSI: &str =
+    include_str!("../../images/avatar/avatar-welcome.ansi");
 
 mod layout;
 
