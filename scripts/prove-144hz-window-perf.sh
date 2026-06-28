@@ -4,10 +4,11 @@ set -eu
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 proof_dir="${GROMAQ_144HZ_WINDOW_PERF_PROOF_DIR:-${root}/target/144hz-window-perf-proof}"
 log_path="${proof_dir}/window-perf.log"
+summary_path="${proof_dir}/summary.txt"
 minimum_refresh_mhz=144000
 
 mkdir -p "${proof_dir}"
-rm -f "${log_path}" "${log_path}.tmp"
+rm -f "${log_path}" "${log_path}.tmp" "${summary_path}"
 
 cd "${root}"
 printf '%s\n' "$ cargo run -- --window-perf-smoke" | tee "${log_path}"
@@ -56,5 +57,9 @@ require_log_marker "frame interval target limited by monitor: false"
 require_log_marker "dropped frames: 0"
 require_log_marker "frame pacing accepted: true"
 
-printf '%s\n' "144Hz window perf proof: ok"
-printf '%s\n' "Proof log: ${log_path}"
+{
+  printf '%s\n' "144Hz window perf proof: ok"
+  printf '%s\n' "Proof log: ${log_path}"
+  printf '%s\n' "Monitor refresh mhz: ${monitor_refresh_mhz}"
+  printf '%s\n' "Minimum refresh mhz: ${minimum_refresh_mhz}"
+} | tee "${summary_path}"
