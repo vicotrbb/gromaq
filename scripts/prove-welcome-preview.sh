@@ -8,6 +8,7 @@ png_path="${GROMAQ_WELCOME_PREVIEW_PNG:-${proof_dir}/gromaq-welcome-preview.png}
 log_path="${proof_dir}/welcome-preview.log"
 summary_path="${proof_dir}/summary.txt"
 metrics_path="${proof_dir}/metrics.txt"
+avatar_ansi="${root}/images/avatar/avatar-welcome.ansi"
 
 mkdir -p "${proof_dir}"
 rm -f "${ppm_path}" "${png_path}" "${log_path}" "${summary_path}" "${metrics_path}"
@@ -77,10 +78,24 @@ require_ppm_dimensions() {
   fi
 }
 
+require_avatar_rows() {
+  expected="$1"
+  if [ ! -s "${avatar_ansi}" ]; then
+    printf '%s\n' "error: welcome preview proof missing ${avatar_ansi}" >&2
+    exit 1
+  fi
+  avatar_rows="$(wc -l < "${avatar_ansi}" | tr -d '[:space:]')"
+  if [ "${avatar_rows}" != "${expected}" ]; then
+    printf '%s\n' "error: welcome avatar rows ${avatar_rows:-missing} did not match ${expected}" >&2
+    exit 1
+  fi
+}
+
 require_log_marker "welcome preview snapshot: ok"
 require_log_marker "preset: gromaq-ghostty"
 require_log_marker "frame size: 1468x820"
 require_log_marker "terminal cells: 80x18"
+require_avatar_rows 17
 
 require_min_metric "high contrast text pixels" 22000
 require_min_metric "avatar color pixels" 120000
@@ -103,9 +118,16 @@ write_metric() {
   printf '%s=%s\n' "${label}" "$(metric_value "${label}")"
 }
 
+write_static_metric() {
+  label="$1"
+  value="$2"
+  printf '%s=%s\n' "${label}" "${value}"
+}
+
 {
   write_metric "frame size"
   write_metric "terminal cells"
+  write_static_metric "avatar rows" "${avatar_rows}"
   write_metric "high contrast text pixels"
   write_metric "avatar color pixels"
   write_metric "glyph quads"

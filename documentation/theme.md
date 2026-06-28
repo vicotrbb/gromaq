@@ -53,9 +53,10 @@ theme preview snapshots. `node images/avatar/generate.mjs --check` verifies
 that the committed welcome avatar PNG/RGBA/ANSI assets are current with the
 source image and generator settings. `scripts/prove-welcome-preview.sh` wraps
 the preview command, checks the reported high-contrast text, avatar-color,
-glyph, cursor, and atlas metrics, and writes proof artifacts under
-`target/welcome-preview-proof`. `scripts/prove-readme-welcome-preview.sh`
-also compares decoded generated preview pixels against the committed README
+glyph, cursor, and atlas metrics plus the committed avatar row count, and
+writes proof artifacts under `target/welcome-preview-proof`.
+`scripts/prove-readme-welcome-preview.sh` also compares decoded generated
+preview pixels against the committed README
 screenshot with matching dimensions and bounded font-rasterization delta, so
 `images/screenshots/gromaq-welcome-preview.png` cannot drift silently.
 

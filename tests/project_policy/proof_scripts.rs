@@ -13,6 +13,8 @@ fn welcome_preview_proof_keeps_default_visual_quality_floors() {
         "require_min_metric \"avatar color pixels\" 120000",
         "require_min_metric \"glyph quads\" 640",
         "require_exact_metric \"cursor quads\" 0",
+        "require_avatar_rows 17",
+        "write_static_metric \"avatar rows\" \"${avatar_rows}\"",
         "require_log_marker \"frame size: 1468x820\"",
         "require_ppm_dimensions \"${ppm_path}\" 1468 820",
         "run_logged \"${log_path}\" cargo run -- --welcome-preview-snapshot",
