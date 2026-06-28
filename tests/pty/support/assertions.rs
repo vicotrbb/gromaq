@@ -44,9 +44,18 @@ pub(crate) fn assert_interactive_shell_outputs_when_available(
     input: &[u8],
     expected: &str,
 ) {
-    let Some(program) = find_program(shell_name) else {
+    assert_interactive_program_outputs_when_available(shell_name, &[], input, expected);
+}
+
+pub(crate) fn assert_interactive_program_outputs_when_available(
+    program_name: &str,
+    args: &[&str],
+    input: &[u8],
+    expected: &str,
+) {
+    let Some(program) = find_program(program_name) else {
         eprintln!(
-            "skipping {shell_name} interactive PTY workflow test because {shell_name} is not on PATH"
+            "skipping {program_name} interactive PTY workflow test because {program_name} is not on PATH"
         );
         return;
     };
@@ -57,7 +66,7 @@ pub(crate) fn assert_interactive_shell_outputs_when_available(
         pixel_height: 0,
         shell: ShellCommand {
             program,
-            args: Vec::new(),
+            args: args.iter().map(OsString::from).collect(),
             cwd: Some(std::env::current_dir().unwrap()),
         },
     };
@@ -71,7 +80,7 @@ pub(crate) fn assert_interactive_shell_outputs_when_available(
 
     assert!(
         output.contains(expected),
-        "{shell_name} interactive output: {output:?}"
+        "{program_name} interactive output: {output:?}"
     );
     assert!(
         session

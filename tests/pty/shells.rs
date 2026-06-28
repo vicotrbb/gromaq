@@ -43,7 +43,7 @@ fn pty_session_runs_zsh_cwd_workflow_when_available() {
         .unwrap()
         .to_string_lossy()
         .into_owned();
-    assert_interactive_shell_outputs_when_available("zsh", b"pwd\nexit\n", &expected);
+    assert_interactive_program_outputs_when_available("zsh", &["-f"], b"pwd\nexit\n", &expected);
 }
 
 #[test]
