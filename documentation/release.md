@@ -115,9 +115,12 @@ After a tagged GitHub Release publishes the Linux tarball and
 `SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
 `scripts/prove-github-release-install.sh` to install from the real GitHub
 Release URL into `target/github-release-install-proof` with checksum
-verification enabled and a `summary.txt` success handle. That helper is present
-for the live download proof, but the proof is still unrun until release assets
-exist.
+verification enabled. Before installing, the helper uses `gh release view` to
+verify the published release includes the Linux tarball, Debian package, Arch
+metadata files, macOS app zip, and platform checksum manifests. It writes a
+`summary.txt` success handle after the asset-list check, install, checksum, and
+payload checks pass. That helper is present for the live download proof, but
+the proof is still unrun until release assets exist.
 On Linux desktop hosts, `scripts/prove-linux-desktop-discovery.sh` installs the
 desktop identity payloads into `target/linux-desktop-discovery-proof` by
 default, requires `desktop-file-validate`, `appstreamcli`,
@@ -490,8 +493,10 @@ Proven locally:
 - live GitHub Release installer proof helper
   `scripts/prove-github-release-install.sh`, which is Linux-only and installs
   real GitHub Release assets into `target/github-release-install-proof` with
-  checksum verification enabled and a `summary.txt` success handle once tagged
-  release assets exist
+  checksum verification enabled after first verifying the published release
+  asset list includes the Linux tarball, Debian package, Arch metadata files,
+  macOS app zip, and platform checksum manifests. It writes a `summary.txt`
+  success handle once tagged release assets exist and all checks pass
 - Linux desktop metadata/cache discovery proof helper
   `scripts/prove-linux-desktop-discovery.sh`, which is Linux-only and validates
   installed desktop identity metadata under an isolated proof root when the

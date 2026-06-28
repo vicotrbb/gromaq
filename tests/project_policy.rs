@@ -14,6 +14,8 @@ mod local_verification_docs;
 mod native;
 #[path = "project_policy/proof_scripts.rs"]
 mod proof_scripts;
+#[path = "project_policy/release_proof.rs"]
+mod release_proof;
 #[path = "project_policy/repository.rs"]
 mod repository;
 #[path = "project_policy/support.rs"]

@@ -220,10 +220,12 @@ metadata, refreshes the desktop database and hicolor icon cache there, writes
 `summary.txt`, and records that this metadata/cache proof does not prove live
 menu UI rendering.
 After a tagged GitHub Release publishes the Linux tarball and
-`SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
+`SHA256SUMS-linux-<arch>` assets, Linux maintainers with `gh` available can run
 `scripts/prove-github-release-install.sh` to exercise the real GitHub Release
-download path into `target/github-release-install-proof`; after success it
-writes `summary.txt`. This live proof has not passed yet.
+download path into `target/github-release-install-proof`. Before installing,
+the helper verifies the release includes the Linux tarball, Debian package,
+Arch metadata files, macOS app zip, and platform checksum manifests; after
+success it writes `summary.txt`. This live proof has not passed yet.
 
 ## Status
 
