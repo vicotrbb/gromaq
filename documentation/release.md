@@ -435,6 +435,11 @@ Proven locally:
   notary zip and prints the planned notarytool, stapler, and validation steps
 - packaged macOS app executable launch via
   `target/dist/Gromaq.app/Contents/MacOS/gromaq --window-smoke`
+- refreshed macOS `.app` package summary generation via
+  `GROMAQ_BINARY_PATH=target/debug/gromaq scripts/package-macos-app.sh`, which
+  wrote `target/dist/Gromaq-macos-app-summary.txt`, preserved the
+  `dev.gromaq.Gromaq` bundle id, `AppIcon` icon key, and utilities category,
+  and produced a packaged executable that reports `gromaq 0.1.0`
 - packaged macOS app LaunchServices launch via
   `open -W -n -o target/macos-open-proof.stdout --stderr target/macos-open-proof.stderr target/dist/Gromaq.app --args --window-smoke`,
   which returned 0 and captured `window smoke: ok`
