@@ -5,7 +5,7 @@ use super::support::relative_path;
 const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "scripts/prove-local-ci-parity.sh",
     "git diff --cached --check",
-    "theme, welcome, README screenshot freshness, current-host compatibility",
+    "theme, avatar asset freshness, welcome, README screenshot",
 ];
 
 const REQUIRED_LOCAL_VERIFICATION_DOC_MARKERS: &[(&str, &str)] = &[

@@ -20,6 +20,7 @@ run_step "staged whitespace" git diff --cached --check
 run_step "clippy" cargo clippy --all-targets --all-features -- -D warnings
 run_step "tests" cargo test --all
 run_step "theme preview proof" scripts/prove-theme-preview.sh
+run_step "avatar asset freshness proof" node images/avatar/generate.mjs --check
 run_step "welcome preview proof" scripts/prove-welcome-preview.sh
 run_step "README welcome preview freshness proof" scripts/prove-readme-welcome-preview.sh
 run_step "current-host compatibility proof" scripts/prove-current-host-compatibility.sh

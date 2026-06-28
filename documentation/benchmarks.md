@@ -175,6 +175,14 @@ cargo bench --bench parser_throughput -- --list
 cargo bench
 ```
 
+`scripts/prove-local-ci-parity.sh` runs formatting, unstaged and staged
+whitespace checks, clippy with denied warnings, the full test suite, theme
+proof, avatar asset freshness, welcome/readme visual proof helpers,
+current-host compatibility proof, and the parser benchmark inventory. It does
+not replace the full `cargo bench` command when changing parser, PTY pump,
+render planning, glyph cache, rasterization, frame preparation, or other
+measured hot paths.
+
 The benchmark list should include:
 
 - `parser_large_output`
