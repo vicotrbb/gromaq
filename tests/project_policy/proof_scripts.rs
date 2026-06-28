@@ -17,6 +17,8 @@ fn welcome_preview_proof_keeps_default_visual_quality_floors() {
         "require_ppm_dimensions \"${ppm_path}\" 1468 820",
         "run_logged \"${log_path}\" cargo run -- --welcome-preview-snapshot",
         "summary.txt",
+        "metrics.txt",
+        "Metric: ${line}",
         "Welcome preview proof: ok",
     ] {
         assert!(

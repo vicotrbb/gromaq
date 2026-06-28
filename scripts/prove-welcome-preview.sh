@@ -7,9 +7,10 @@ ppm_path="${GROMAQ_WELCOME_PREVIEW_PPM:-${proof_dir}/gromaq-welcome-preview.ppm}
 png_path="${GROMAQ_WELCOME_PREVIEW_PNG:-${proof_dir}/gromaq-welcome-preview.png}"
 log_path="${proof_dir}/welcome-preview.log"
 summary_path="${proof_dir}/summary.txt"
+metrics_path="${proof_dir}/metrics.txt"
 
 mkdir -p "${proof_dir}"
-rm -f "${ppm_path}" "${png_path}" "${log_path}" "${summary_path}"
+rm -f "${ppm_path}" "${png_path}" "${log_path}" "${summary_path}" "${metrics_path}"
 
 cd "${root}"
 
@@ -97,6 +98,21 @@ if [ "$(head -c 2 "${ppm_path}")" != "P6" ]; then
 fi
 require_ppm_dimensions "${ppm_path}" 1468 820
 
+write_metric() {
+  label="$1"
+  printf '%s=%s\n' "${label}" "$(metric_value "${label}")"
+}
+
+{
+  write_metric "frame size"
+  write_metric "terminal cells"
+  write_metric "high contrast text pixels"
+  write_metric "avatar color pixels"
+  write_metric "glyph quads"
+  write_metric "cursor quads"
+  write_metric "atlas bytes"
+} > "${metrics_path}"
+
 if command -v sips >/dev/null 2>&1; then
   sips -s format png "${ppm_path}" --out "${png_path}" >/dev/null
   if [ ! -s "${png_path}" ]; then
@@ -113,6 +129,11 @@ fi
   printf '%s\n' "PPM artifact: ${ppm_path}"
   if [ -s "${png_path}" ]; then
     printf '%s\n' "PNG artifact: ${png_path}"
+  fi
+  if [ -s "${metrics_path}" ]; then
+    while IFS= read -r line; do
+      printf '%s\n' "Metric: ${line}"
+    done < "${metrics_path}"
   fi
   printf '%s\n' "Proof log: ${log_path}"
 } | tee "${summary_path}"
