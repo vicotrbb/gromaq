@@ -255,9 +255,11 @@ and checks the installed binary plus desktop identity payloads under
 `target/release-install-proof`. The macOS `rust` job is configured to run
 `scripts/prove-current-host-compatibility.sh` and upload
 `target/compatibility-proof/*` as the
-`gromaq-current-host-compatibility-proof` artifact; helper-backed remote proof
-for that artifact is pending the next pushed run. CI also runs
-`bash -n packaging/arch/PKGBUILD`.
+`gromaq-current-host-compatibility-proof` artifact. CI also has a Linux
+compatibility job that installs common Ubuntu shell/editor/TUI tools, runs the
+same helper, and uploads `gromaq-linux-compatibility-proof`; helper-backed
+remote proof for those compatibility artifacts is pending the next pushed run.
+CI also runs `bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
 generation with

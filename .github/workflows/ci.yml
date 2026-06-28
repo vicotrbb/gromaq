@@ -121,6 +121,21 @@ jobs:
       - run: GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install" scripts/prove-linux-release-install.sh
       - run: test -x target/release-install-proof/bin/gromaq
 
+  linux-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y bash zsh fish vim neovim tmux less procps htop btop openssh-client
+      - run: scripts/prove-current-host-compatibility.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gromaq-linux-compatibility-proof
+          path: target/compatibility-proof/*
+
   arch-packaging:
     runs-on: ubuntu-latest
     container: archlinux:base-devel

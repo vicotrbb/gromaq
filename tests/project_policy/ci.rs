@@ -120,6 +120,15 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "test -x target/release-install-proof/bin/gromaq",
 ];
 
+const REQUIRED_LINUX_COMPATIBILITY_CI_MARKERS: &[&str] = &[
+    "linux-compatibility:",
+    "runs-on: ubuntu-latest",
+    "sudo apt-get install -y bash zsh fish vim neovim tmux less procps htop btop openssh-client",
+    "scripts/prove-current-host-compatibility.sh",
+    "gromaq-linux-compatibility-proof",
+    "target/compatibility-proof/*",
+];
+
 const REQUIRED_ARCH_PACKAGING_CI_MARKERS: &[&str] = &[
     "arch-packaging:",
     "container: archlinux:base-devel",
@@ -213,6 +222,20 @@ fn linux_packaging_job_runs_release_install_proof_helper() {
         "{} linux-packaging job must run the release install proof helper",
         relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
     );
+}
+
+#[test]
+fn ci_runs_linux_compatibility_checks() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+
+    for marker in REQUIRED_LINUX_COMPATIBILITY_CI_MARKERS {
+        assert!(
+            workflow.contains(marker),
+            "{} must include Linux compatibility marker `{marker}`",
+            relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+        );
+    }
 }
 
 #[test]
