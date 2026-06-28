@@ -22,6 +22,8 @@ fn runtime_perf_budget_rejects_render_p95_over_144hz_budget() {
         expected_samples: 1,
         metrics: crate::app::NativeRuntimePerfSnapshot {
             render_time_p95_ns: RUNTIME_RENDER_P95_BUDGET_NS + 1,
+            render_time_max_ns: 8_000_000,
+            render_time_samples: 20,
             input_to_render_p95_ns: RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS,
             ..Default::default()
         },
@@ -30,8 +32,7 @@ fn runtime_perf_budget_rejects_render_p95_over_144hz_budget() {
     assert_eq!(
         runtime_perf_budget_failure(&probe),
         Some(
-            "render p95 exceeded 144Hz frame budget: measured 6940001 ns, budget 6940000 ns"
-                .to_owned()
+            "render p95 exceeded 144Hz frame budget: measured 6940001 ns, budget 6940000 ns, max 8000000 ns, samples 20".to_owned()
         )
     );
 }
@@ -44,6 +45,8 @@ fn runtime_perf_budget_rejects_input_to_render_p95_over_latency_budget() {
         metrics: crate::app::NativeRuntimePerfSnapshot {
             render_time_p95_ns: RUNTIME_RENDER_P95_BUDGET_NS,
             input_to_render_p95_ns: RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS + 1,
+            input_to_render_max_ns: 16_000_000,
+            input_to_render_samples: 20,
             ..Default::default()
         },
     };
@@ -51,8 +54,7 @@ fn runtime_perf_budget_rejects_input_to_render_p95_over_latency_budget() {
     assert_eq!(
         runtime_perf_budget_failure(&probe),
         Some(
-            "input-to-render p95 exceeded latency budget: measured 10000001 ns, budget 10000000 ns"
-                .to_owned()
+            "input-to-render p95 exceeded latency budget: measured 10000001 ns, budget 10000000 ns, max 16000000 ns, samples 20".to_owned()
         )
     );
 }
