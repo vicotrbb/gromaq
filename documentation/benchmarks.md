@@ -167,6 +167,7 @@ Run from the repository root:
 scripts/prove-local-ci-parity.sh
 cargo fmt --check
 git diff --check
+git diff --cached --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 cargo test --all -- --list | rg "^[a-zA-Z0-9_].*: test$" | wc -l

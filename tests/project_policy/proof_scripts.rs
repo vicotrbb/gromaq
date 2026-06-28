@@ -58,6 +58,7 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
     for marker in [
         "cargo fmt --check",
         "git diff --check",
+        "git diff --cached --check",
         "cargo clippy --all-targets --all-features -- -D warnings",
         "cargo test --all",
         "scripts/prove-theme-preview.sh",

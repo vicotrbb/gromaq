@@ -16,6 +16,7 @@ cd "${root}"
 
 run_step "format" cargo fmt --check
 run_step "whitespace" git diff --check
+run_step "staged whitespace" git diff --cached --check
 run_step "clippy" cargo clippy --all-targets --all-features -- -D warnings
 run_step "tests" cargo test --all
 run_step "theme preview proof" scripts/prove-theme-preview.sh
