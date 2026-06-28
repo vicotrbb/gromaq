@@ -271,12 +271,12 @@ both `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof` so
 theme, prepared welcome preview, and README screenshot freshness proof artifacts
 are retained together after a green run reaches both visual proof steps. The
-local theme helper now writes a compact `summary.txt` artifact, pending the next
-10-commit push batch. CI run `28314822034` uploaded the theme artifact and the
-default welcome preview diagnostics, but the README freshness proof was skipped
-after the welcome proof failed on the macOS 26 text-pixel floor; the local
-threshold fix plus compact welcome and README freshness `summary.txt` artifacts
-are pending the next 10-commit push batch. The
+theme helper writes a compact `summary.txt` artifact. CI run `28315342470`
+uploaded the theme artifact and the default welcome preview diagnostics, but the
+README freshness proof was skipped after the welcome proof failed when macOS 26
+rendered 126112 avatar color pixels against the then-current 150000 floor; the
+local avatar-floor fix plus compact welcome and README freshness `summary.txt`
+artifacts are pending the next 10-commit push batch. The
 welcome and theme preview artifact uploads use `if: always()` so diagnostic
 visual artifacts survive proof-command or later macOS job failures when files
 were written before the failure.
