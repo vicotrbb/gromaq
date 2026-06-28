@@ -167,18 +167,6 @@ pub(crate) fn output_contains_any(output: &str, expected_any: &[&str]) -> bool {
         .any(|expected| output.contains(expected))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::output_contains_any;
-
-    #[test]
-    fn output_contains_any_accepts_linux_top_snapshot_header() {
-        let output = "top - 04:48:43 up 1 min\r\nTasks: 193 total\r\n";
-
-        assert!(output_contains_any(output, &["Processes", "Tasks"]));
-    }
-}
-
 pub(crate) fn assert_shell_command_enters_and_leaves_alternate_screen_when_available(
     program_name: &str,
     command: String,
@@ -229,4 +217,16 @@ pub(crate) fn spawn_shell_pty_command(command: String) -> PtySession {
     };
 
     PtySession::spawn(config).unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::output_contains_any;
+
+    #[test]
+    fn output_contains_any_accepts_linux_top_snapshot_header() {
+        let output = "top - 04:48:43 up 1 min\r\nTasks: 193 total\r\n";
+
+        assert!(output_contains_any(output, &["Processes", "Tasks"]));
+    }
 }
