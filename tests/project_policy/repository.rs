@@ -148,6 +148,7 @@ fn distribution_assets_keep_desktop_identity() {
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
+    let arch_install = fs::read_to_string(root.join("packaging/arch/gromaq.install")).unwrap();
     let desktop =
         fs::read_to_string(root.join("packaging/linux/dev.gromaq.Gromaq.desktop")).unwrap();
     let metainfo =
@@ -191,9 +192,14 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(arch_pkgbuild.contains("packaging/linux/dev.gromaq.Gromaq.desktop"));
     assert!(arch_pkgbuild.contains("dev.gromaq.Gromaq.metainfo.xml"));
     assert!(arch_pkgbuild.contains("logo-icon-256.png"));
+    assert!(arch_pkgbuild.contains("install=gromaq.install"));
     assert!(arch_srcinfo.contains("pkgbase = gromaq-git"));
     assert!(arch_srcinfo.contains("pkgname = gromaq-git"));
     assert!(arch_srcinfo.contains("source = git+https://github.com/vicotrbb/gromaq.git"));
+    assert!(arch_srcinfo.contains("install = gromaq.install"));
+    assert!(arch_install.contains("post_install()"));
+    assert!(arch_install.contains("update-desktop-database /usr/share/applications"));
+    assert!(arch_install.contains("gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor"));
     assert!(checksum_script.contains("SHA256SUMS"));
     assert!(checksum_script.contains("GROMAQ_CHECKSUM_EXTRA_FILES"));
     assert!(checksum_script.contains(".tar.gz"));
@@ -230,6 +236,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(macos_identity_script.contains("macOS app identity proof: ok"));
     assert!(arch_proof_script.contains("archlinux:base-devel"));
     assert!(arch_proof_script.contains("packaging/arch/PKGBUILD"));
+    assert!(arch_proof_script.contains("packaging/arch/gromaq.install"));
     assert!(arch_proof_script.contains("makepkg --noconfirm"));
     assert!(arch_proof_script.contains("pacman -U --noconfirm"));
     assert!(arch_proof_script.contains("/usr/bin/gromaq --version"));

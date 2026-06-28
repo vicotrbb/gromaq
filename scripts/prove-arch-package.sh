@@ -27,6 +27,7 @@ useradd -m builder
 install -d -o builder -g builder /build
 cp /work/packaging/arch/PKGBUILD /build/PKGBUILD
 cp /work/packaging/arch/.SRCINFO /build/.SRCINFO
+cp /work/packaging/arch/gromaq.install /build/gromaq.install
 chown -R builder:builder /build
 
 su builder -c "cd /build && makepkg --noconfirm"

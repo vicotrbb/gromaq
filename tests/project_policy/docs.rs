@@ -88,6 +88,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "GROMAQ_CHECKSUM_EXTRA_FILES"),
     ("README.md", "packaging/arch/PKGBUILD"),
     ("README.md", "packaging/arch/.SRCINFO"),
+    ("README.md", "packaging/arch/gromaq.install"),
     ("README.md", "arch-packaging"),
     ("README.md", "makepkg --nobuild"),
     ("README.md", "makepkg --noconfirm"),
@@ -124,6 +125,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/release.md", "GROMAQ_CHECKSUM_EXTRA_FILES"),
     ("documentation/release.md", "packaging/arch/PKGBUILD"),
     ("documentation/release.md", "packaging/arch/.SRCINFO"),
+    ("documentation/release.md", "packaging/arch/gromaq.install"),
     ("documentation/release.md", "arch-packaging"),
     ("documentation/release.md", "makepkg --nobuild"),
     ("documentation/release.md", "makepkg --noconfirm"),
@@ -154,6 +156,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     (
         "documentation/compatibility.md",
         "Debian `postinst`/`postrm` desktop metadata refresh",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Arch `gromaq.install` desktop metadata refresh",
     ),
     (
         "documentation/compatibility.md",

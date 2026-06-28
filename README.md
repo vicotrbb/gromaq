@@ -134,13 +134,17 @@ scripts/package-macos-app.sh
 scripts/prove-macos-app-identity.sh
 scripts/prove-arch-package.sh
 bash -n packaging/arch/PKGBUILD
+sh -n packaging/arch/gromaq.install
 ```
 
-`packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO` provide an Arch
-`makepkg` source-package recipe that builds from the public Git repository and
-installs the binary, desktop file, AppStream metainfo, hicolor icon, README, and
-license. CI and repository policy syntax-check the recipe. On 2026-06-27, CI
-run `28303175039` completed green for commit `12a38e8`, including the
+`packaging/arch/PKGBUILD`, `packaging/arch/.SRCINFO`, and
+`packaging/arch/gromaq.install` provide an Arch `makepkg` source-package recipe
+that builds from the public Git repository, installs the binary, desktop file,
+AppStream metainfo, hicolor icon, README, and license, and refreshes desktop
+metadata from Arch package install/upgrade/remove hooks when the relevant
+desktop utilities are available. CI and repository policy syntax-check the
+recipe. On 2026-06-27, CI run `28303175039` completed green for commit `12a38e8`,
+including the
 `arch-packaging` job under `archlinux:base-devel` that ran
 `makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
 user. On 2026-06-28 UTC, CI run `28308158338` completed green for commit
@@ -155,7 +159,8 @@ install, `gromaq --version`, and installed-payload checks in an
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
-`.SRCINFO`, and a zipped macOS `.app` bundle as GitHub Actions artifacts.
+`.SRCINFO` plus `gromaq.install`, and a zipped macOS `.app` bundle as GitHub
+Actions artifacts.
 Tag-triggered runs also create or reuse the matching GitHub Release and upload
 release assets. The remote GitHub Actions release workflow completed green on
 2026-06-27 as run `28303243197` for commit `12a38e8`, uploading the Linux
@@ -169,7 +174,7 @@ installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured to install from the locally generated Linux release
 tarball plus checksum manifest before accepting packaging success. The checksum
 script also accepts
-`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO"`,
+`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
 and the Linux packaging and release workflows use that path so the Arch recipe
 metadata is covered by the Linux checksum manifest when it is uploaded. CI run
 `28303175039` completed green for commit `12a38e8`, including that checksum
@@ -205,8 +210,9 @@ Implemented and covered by automated tests or deterministic smoke commands:
 - Criterion benchmark harness and repository policy tests for native-only Rust,
   public metadata, docs, CI commands, and module-size discipline
 - GitHub Actions release workflow that is configured to build and upload the
-  Linux tarball, Debian `.deb`, Arch `PKGBUILD`/`.SRCINFO`, and macOS `.app`
-  release artifacts with SHA256SUMS manifests on tag and manual dispatch;
+  Linux tarball, Debian `.deb`, Arch `PKGBUILD`/`.SRCINFO`/`gromaq.install`,
+  and macOS `.app` release artifacts with SHA256SUMS manifests on tag and manual
+  dispatch;
   remote proof covers the tarball, Debian package, Arch metadata, macOS `.app`,
   and checksum workflow-artifact uploads
 - Linux desktop database refresh when `update-desktop-database` is available,

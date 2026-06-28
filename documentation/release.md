@@ -128,11 +128,12 @@ directly so package assembly is testable on normal Unix CI hosts. Use
 
 ## Arch Package Recipe
 
-`packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO` provide an Arch
-`makepkg` source-package recipe:
+`packaging/arch/PKGBUILD`, `packaging/arch/.SRCINFO`, and
+`packaging/arch/gromaq.install` provide an Arch `makepkg` source-package recipe:
 
 ```bash
 bash -n packaging/arch/PKGBUILD
+sh -n packaging/arch/gromaq.install
 scripts/prove-arch-package.sh
 ```
 
@@ -145,6 +146,8 @@ The recipe builds from the public Git repository with
 - Linux desktop file
 - AppStream metainfo
 - hicolor app icon
+- Arch package install/upgrade/remove hooks that refresh the desktop database
+  and hicolor icon cache when the relevant desktop utilities are available
 
 CI and repository policy syntax-check the recipe and assert the expected desktop
 identity payload markers. The local CI workflow now includes an
@@ -201,14 +204,15 @@ uploads workflow artifacts for both trigger types:
 
 - a Linux tarball from `scripts/package-linux-tarball.sh`
 - a Debian package from `scripts/package-debian-deb.sh`
-- the Arch `packaging/arch/PKGBUILD` and `packaging/arch/.SRCINFO`
-  source-package metadata
+- the Arch `packaging/arch/PKGBUILD`, `packaging/arch/.SRCINFO`, and
+  `packaging/arch/gromaq.install` source-package metadata and install hook
 - a zipped macOS `.app` bundle from `scripts/package-macos-app.sh`
 
 On tag-triggered runs, the workflow also creates or reuses the matching GitHub
 Release and uploads the Linux tarball, Debian package, Arch `PKGBUILD`,
-`.SRCINFO`, macOS `.app` zip, and platform-specific checksum manifests as
-release assets. The checksum files are copied to `SHA256SUMS-linux-x86_64` and
+`.SRCINFO`, `gromaq.install`, macOS `.app` zip, and platform-specific checksum
+manifests as release assets. The checksum files are copied to
+`SHA256SUMS-linux-x86_64` and
 `SHA256SUMS-macos-app` before release upload so the Linux and macOS manifests
 do not collide as GitHub Release asset names.
 
@@ -223,9 +227,10 @@ assembly on `ubuntu-latest`. The job is also configured to copy `SHA256SUMS` to
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
 generation with
-`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO"`,
+`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
 so the uploaded Linux checksum manifest covers the Arch source-package recipe
-and `.SRCINFO` metadata as well as the Linux tarball and Debian package.
+metadata, `.SRCINFO`, and install hook as well as the Linux tarball and Debian
+package.
 
 ## Current Proof Boundary
 

@@ -13,6 +13,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/prove-macos-app-identity.sh",
     "sh -n scripts/prove-arch-package.sh",
     "bash -n packaging/arch/PKGBUILD",
+    "sh -n packaging/arch/gromaq.install",
     "cargo fmt --check",
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
@@ -57,7 +58,7 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "scripts/package-debian-deb.sh",
     "scripts/package-macos-app.sh",
     "scripts/generate-checksums.sh",
-    "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO\" scripts/generate-checksums.sh",
+    "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install\" scripts/generate-checksums.sh",
     "actions/upload-artifact@v4",
     "include-hidden-files: true",
     "target/dist/SHA256SUMS",
@@ -65,6 +66,7 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "target/dist/*.deb",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
+    "packaging/arch/gromaq.install",
     "target/dist/Gromaq-macos-app.zip",
 ];
 
@@ -76,6 +78,7 @@ const REQUIRED_TAG_RELEASE_UPLOAD_MARKERS: &[&str] = &[
     "gh release upload",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
+    "packaging/arch/gromaq.install",
     "SHA256SUMS-linux-x86_64",
     "SHA256SUMS-macos-app",
     "GH_TOKEN: ${{ github.token }}",
@@ -89,7 +92,7 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT=\"$PWD\" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh",
     "scripts/package-linux-tarball.sh",
     "scripts/package-debian-deb.sh",
-    "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO\" scripts/generate-checksums.sh",
+    "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install\" scripts/generate-checksums.sh",
     "bash -n packaging/arch/PKGBUILD",
     "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0",
     "GROMAQ_RELEASE_BASE=\"file://$PWD/target/dist\"",
@@ -114,6 +117,7 @@ const REQUIRED_ARCH_PACKAGING_CI_MARKERS: &[&str] = &[
     "/usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png",
     "su builder -c \"cd '$PWD/packaging/arch' && makepkg --printsrcinfo\"",
     "test -s packaging/arch/.SRCINFO",
+    "test -s packaging/arch/gromaq.install",
 ];
 
 #[test]

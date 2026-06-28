@@ -23,6 +23,7 @@ jobs:
       - run: sh -n scripts/prove-macos-app-identity.sh
       - run: sh -n scripts/prove-arch-package.sh
       - run: bash -n packaging/arch/PKGBUILD
+      - run: sh -n packaging/arch/gromaq.install
       - run: cargo fmt --check
       - run: git diff --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
@@ -87,7 +88,7 @@ jobs:
       - run: GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh
       - run: scripts/package-linux-tarball.sh
       - run: scripts/package-debian-deb.sh
-      - run: GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO" scripts/generate-checksums.sh
+      - run: GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install" scripts/generate-checksums.sh
       - run: cp target/dist/SHA256SUMS target/dist/SHA256SUMS-linux-x86_64
       - run: GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0 GROMAQ_RELEASE_BASE="file://$PWD/target/dist" GROMAQ_RELEASE_TARGET=linux-x86_64 GROMAQ_BIN_DIR=target/release-install-proof/bin GROMAQ_INSTALL_ROOT=target/release-install-proof sh scripts/install.sh
       - run: test -x target/release-install-proof/bin/gromaq
@@ -100,6 +101,7 @@ jobs:
       - run: pacman -Syu --noconfirm git rust
       - run: bash -n packaging/arch/PKGBUILD
       - run: test -s packaging/arch/.SRCINFO
+      - run: test -s packaging/arch/gromaq.install
       - run: useradd -m builder
       - run: chown -R builder:builder "$PWD"
       - run: su builder -c "cd '$PWD/packaging/arch' && makepkg --nobuild --noconfirm"

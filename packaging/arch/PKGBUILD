@@ -7,6 +7,7 @@ arch=("x86_64" "aarch64")
 url="https://gromaq.dev"
 license=("MIT")
 makedepends=("git" "rust")
+install=gromaq.install
 source=("git+https://github.com/vicotrbb/gromaq.git")
 sha256sums=("SKIP")
 
