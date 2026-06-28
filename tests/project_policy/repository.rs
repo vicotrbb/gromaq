@@ -27,6 +27,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-macos-app-identity.sh",
     "scripts/prove-arch-package.sh",
     "scripts/prove-debian-package.sh",
+    "scripts/prove-linux-release-install.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
@@ -148,6 +149,8 @@ fn distribution_assets_keep_desktop_identity() {
     let arch_proof_script = fs::read_to_string(root.join("scripts/prove-arch-package.sh")).unwrap();
     let debian_proof_script =
         fs::read_to_string(root.join("scripts/prove-debian-package.sh")).unwrap();
+    let linux_release_proof_script =
+        fs::read_to_string(root.join("scripts/prove-linux-release-install.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
@@ -249,6 +252,10 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(debian_proof_script.contains("dpkg -i"));
     assert!(debian_proof_script.contains("\"/usr/bin/${package}\" --version"));
     assert!(debian_proof_script.contains("dpkg -L \"${package}\""));
+    assert!(linux_release_proof_script.contains("scripts/package-linux-tarball.sh"));
+    assert!(linux_release_proof_script.contains("scripts/generate-checksums.sh"));
+    assert!(linux_release_proof_script.contains("GROMAQ_INSTALL_METHOD=release"));
+    assert!(linux_release_proof_script.contains("GROMAQ_RELEASE_BASE=\"file://"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));

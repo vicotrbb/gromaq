@@ -13,6 +13,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/prove-macos-app-identity.sh",
     "sh -n scripts/prove-arch-package.sh",
     "sh -n scripts/prove-debian-package.sh",
+    "sh -n scripts/prove-linux-release-install.sh",
     "bash -n packaging/arch/PKGBUILD",
     "sh -n packaging/arch/gromaq.install",
     "cargo fmt --check",

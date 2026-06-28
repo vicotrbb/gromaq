@@ -95,6 +95,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "pacman -U"),
     ("README.md", "scripts/prove-arch-package.sh"),
     ("README.md", "scripts/prove-debian-package.sh"),
+    ("README.md", "scripts/prove-linux-release-install.sh"),
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "README.md",
@@ -139,6 +140,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     (
         "documentation/release.md",
         "scripts/prove-debian-package.sh",
+    ),
+    (
+        "documentation/release.md",
+        "scripts/prove-linux-release-install.sh",
     ),
     ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
     (

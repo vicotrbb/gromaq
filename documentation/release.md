@@ -88,6 +88,7 @@ Build a tarball from the current checkout:
 
 ```bash
 scripts/package-linux-tarball.sh
+scripts/prove-linux-release-install.sh
 ```
 
 The archive includes:
@@ -100,6 +101,11 @@ The archive includes:
 - hicolor app icon
 
 Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary.
+On Linux hosts, `scripts/prove-linux-release-install.sh` packages the tarball,
+generates checksums, installs through `GROMAQ_INSTALL_METHOD=release` from a
+local `file://` release base into `target/release-install-proof`, and verifies
+the installed binary plus desktop identity payloads without writing to the
+user's home directory.
 
 ## Debian Package
 
