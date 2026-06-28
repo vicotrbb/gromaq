@@ -364,12 +364,13 @@ Full local verification:
 scripts/prove-local-ci-parity.sh
 ```
 
-The helper runs formatting, staged and unstaged whitespace checks, clippy with
-denied warnings, the full test suite, theme proof, avatar asset freshness,
-welcome/readme visual proof helpers, current-host compatibility proof, and the
-parser benchmark inventory. Run full `cargo bench` when changing parser, PTY
-pump, render planning, glyph cache, rasterization, frame preparation, or other
-measured hot paths.
+The helper runs shell syntax checks, formatting, staged and unstaged whitespace
+checks, clippy with denied warnings, the full test suite, avatar asset
+freshness, theme proof, welcome/readme visual proof helpers, current-host
+compatibility proof, and the parser benchmark inventory. Run full `cargo bench`
+when changing parser, PTY pump, render planning, glyph cache, rasterization,
+frame preparation, or other measured hot paths.
+Avatar asset freshness is part of local parity.
 
 ## Configuration
 

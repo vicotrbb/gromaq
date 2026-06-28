@@ -12,8 +12,17 @@ run_step() {
   "$@"
 }
 
+run_shell_syntax_checks() {
+  for script in scripts/*.sh; do
+    run_step "shell syntax: ${script}" sh -n "${script}"
+  done
+  run_step "Arch PKGBUILD syntax" bash -n packaging/arch/PKGBUILD
+  run_step "Arch install hook syntax" sh -n packaging/arch/gromaq.install
+}
+
 cd "${root}"
 
+run_shell_syntax_checks
 run_step "format" cargo fmt --check
 run_step "whitespace" git diff --check
 run_step "staged whitespace" git diff --cached --check

@@ -5,12 +5,17 @@ use super::support::relative_path;
 const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "scripts/prove-local-ci-parity.sh",
     "git diff --cached --check",
-    "theme, avatar asset freshness, welcome, README screenshot",
+    "shell syntax checks",
+    "avatar asset freshness",
+    "README screenshot freshness",
+    "current-host compatibility",
 ];
 
 const REQUIRED_LOCAL_VERIFICATION_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "scripts/prove-local-ci-parity.sh"),
-    ("README.md", "staged and unstaged whitespace checks"),
+    ("README.md", "staged and"),
+    ("README.md", "unstaged whitespace"),
+    ("README.md", "Avatar asset freshness"),
     (
         "documentation/benchmarks.md",
         "scripts/prove-local-ci-parity.sh",

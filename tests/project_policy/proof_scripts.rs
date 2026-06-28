@@ -60,6 +60,10 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
     let source = fs::read_to_string(&path).unwrap();
 
     for marker in [
+        "for script in scripts/*.sh",
+        "sh -n \"${script}\"",
+        "bash -n packaging/arch/PKGBUILD",
+        "sh -n packaging/arch/gromaq.install",
         "cargo fmt --check",
         "git diff --check",
         "git diff --cached --check",
