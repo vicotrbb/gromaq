@@ -40,14 +40,15 @@ under `target/compatibility-proof`. A refreshed local run under
 `tools_present=8`, `tools_missing=5`, `pty_tests_passed=44`, and runtime smoke
 summary counts of `runtime_tool_workflow_checked=15`,
 `runtime_tool_workflow_passed=10`, `runtime_tool_workflow_skipped=5`, and
-`runtime_tool_workflow_failed=0`.
+`runtime_tool_workflow_failed=0`, plus passed/skipped workflow name lists.
 Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
 single bundle. The helper records the current host's tool inventory and writes
 the `cargo test --test pty -- --nocapture` and
 `cargo run -- --runtime-tool-workflow-smoke` logs under
 `target/compatibility-proof` along with a compact `summary.txt` success marker
 that includes present/missing tool inventory counts, PTY tests passed, and
-runtime tool workflow checked, passed, skipped, and failed counts.
+runtime tool workflow checked, passed, skipped, and failed counts plus
+passed/skipped workflow names.
 `.github/workflows/ci.yml` is configured to run the helper in the macOS `rust`
 job and upload `target/compatibility-proof/*` as the
 `gromaq-current-host-compatibility-proof` artifact. The workflow is also

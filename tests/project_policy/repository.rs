@@ -80,7 +80,6 @@ fn repository_keeps_required_release_readiness_files() {
 #[test]
 fn repository_keeps_single_documentation_tree() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-
     assert!(
         root.join("documentation").is_dir(),
         "repository documentation must live under documentation/"
@@ -94,7 +93,6 @@ fn repository_keeps_single_documentation_tree() {
 fn repository_keeps_required_issue_labels() {
     let labels_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/labels.yml");
     let labels = fs::read_to_string(&labels_path).unwrap();
-
     for label in REQUIRED_ISSUE_LABELS {
         let marker = format!("- name: {label}");
         assert!(
@@ -329,6 +327,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("runtime_tool_workflow_passed="));
     assert!(compatibility_proof_script.contains("runtime_tool_workflow_skipped="));
     assert!(compatibility_proof_script.contains("runtime_tool_workflow_failed="));
+    assert!(compatibility_proof_script.contains("runtime_tool_workflow_passed_names="));
+    assert!(compatibility_proof_script.contains("runtime_tool_workflow_skipped_names="));
     assert!(compatibility_proof_script.contains("Current-host compatibility proof: ok"));
     assert!(pty_tools.contains("\"--output=yaml\""));
     assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));

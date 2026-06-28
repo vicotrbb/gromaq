@@ -74,10 +74,17 @@ extract_runtime_metric() {
   printf '%s' "${value}"
 }
 
+extract_runtime_result_names() {
+  status="$1"
+  sed -n "s/^\([^:][^:]*\): ${status},.*/\1/p" "${runtime_log}" | paste -sd, -
+}
+
 runtime_tool_workflow_checked="$(extract_runtime_metric "tools checked")"
 runtime_tool_workflow_passed="$(extract_runtime_metric "passed")"
 runtime_tool_workflow_skipped="$(extract_runtime_metric "skipped")"
 runtime_tool_workflow_failed="$(extract_runtime_metric "failed")"
+runtime_tool_workflow_passed_names="$(extract_runtime_result_names "passed")"
+runtime_tool_workflow_skipped_names="$(extract_runtime_result_names "skipped")"
 
 {
   printf '%s\n' "Current-host compatibility proof: ok"
@@ -89,6 +96,8 @@ runtime_tool_workflow_failed="$(extract_runtime_metric "failed")"
   printf 'runtime_tool_workflow_passed=%s\n' "${runtime_tool_workflow_passed}"
   printf 'runtime_tool_workflow_skipped=%s\n' "${runtime_tool_workflow_skipped}"
   printf 'runtime_tool_workflow_failed=%s\n' "${runtime_tool_workflow_failed}"
+  printf 'runtime_tool_workflow_passed_names=%s\n' "${runtime_tool_workflow_passed_names}"
+  printf 'runtime_tool_workflow_skipped_names=%s\n' "${runtime_tool_workflow_skipped_names}"
   printf 'inventory=%s\n' "${inventory}"
   printf 'pty_log=%s\n' "${pty_log}"
   printf 'runtime_tool_workflow_log=%s\n' "${runtime_log}"
