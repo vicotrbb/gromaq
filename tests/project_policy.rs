@@ -4,6 +4,8 @@ mod ci;
 mod docs;
 #[path = "project_policy/line_limits.rs"]
 mod line_limits;
+#[path = "project_policy/local_verification_docs.rs"]
+mod local_verification_docs;
 #[path = "project_policy/native.rs"]
 mod native;
 #[path = "project_policy/proof_scripts.rs"]

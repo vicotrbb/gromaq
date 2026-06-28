@@ -277,7 +277,10 @@ Follow high-quality Rust engineering standards:
 Required commands must pass before completion:
 
 ```bash
+scripts/prove-local-ci-parity.sh
 cargo fmt --check
+git diff --check
+git diff --cached --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 cargo bench
