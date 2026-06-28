@@ -11,12 +11,13 @@ config_ppm="${proof_dir}/gromaq-theme-preview-config.ppm"
 config_png="${proof_dir}/gromaq-theme-preview-config.png"
 config_log="${proof_dir}/theme-preview-config.log"
 summary_path="${proof_dir}/summary.txt"
+metrics_path="${proof_dir}/metrics.txt"
 
 mkdir -p "${proof_dir}"
 rm -f \
   "${default_ppm}" "${default_png}" "${default_log}" \
   "${config_path}" "${config_ppm}" "${config_png}" "${config_log}" \
-  "${summary_path}"
+  "${summary_path}" "${metrics_path}"
 
 cd "${root}"
 
@@ -141,6 +142,30 @@ require_ppm_artifact "${config_ppm}"
 require_ppm_dimensions "${default_ppm}" 1036 292
 require_ppm_dimensions "${config_ppm}" 1036 292
 
+write_metric() {
+  scope="$1"
+  log_path="$2"
+  label="$3"
+  printf '%s.%s=%s\n' "${scope}" "${label}" "$(metric_value "${log_path}" "${label}")"
+}
+
+{
+  for label in \
+    "frame size" \
+    "font size px" \
+    "background opacity percent" \
+    "cursor opacity percent" \
+    "selection opacity percent" \
+    "high contrast text pixels" \
+    "selection pixels" \
+    "cursor pixels" \
+    "prepared quads" \
+    "atlas bytes"; do
+    write_metric "default" "${default_log}" "${label}"
+    write_metric "configured" "${config_log}" "${label}"
+  done
+} > "${metrics_path}"
+
 if command -v sips >/dev/null 2>&1; then
   sips -s format png "${default_ppm}" --out "${default_png}" >/dev/null
   sips -s format png "${config_ppm}" --out "${config_png}" >/dev/null
@@ -163,6 +188,11 @@ fi
   printf '%s\n' "Configured PPM artifact: ${config_ppm}"
   if [ -s "${config_png}" ]; then
     printf '%s\n' "Configured PNG artifact: ${config_png}"
+  fi
+  if [ -s "${metrics_path}" ]; then
+    while IFS= read -r line; do
+      printf '%s\n' "Metric: ${line}"
+    done < "${metrics_path}"
   fi
   printf '%s\n' "Default proof log: ${default_log}"
   printf '%s\n' "Configured proof log: ${config_log}"
