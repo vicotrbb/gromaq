@@ -144,13 +144,13 @@ identity payload markers. The local CI workflow now includes an
 `rust`, switches to an unprivileged builder user, and runs
 `makepkg --nobuild --noconfirm` plus `makepkg --printsrcinfo` from
 `packaging/arch`; it also checks that `packaging/arch/.SRCINFO` is present.
-The workflow is now configured to continue through full `makepkg --noconfirm`,
-`pacman -U` package installation, `/usr/bin/gromaq --version`, and
-`pacman -Ql gromaq-git` payload checks for the binary, README, license, desktop
-file, AppStream metainfo, and hicolor icon. GitHub Actions CI runs
-`28301610408` and `28302521484` proved the earlier metadata-only job remotely;
-the added full build/install steps still need a green remote run before they
-count as live Arch proof.
+On 2026-06-28 UTC, GitHub Actions CI run `28308158338` completed green for
+commit `5d204f2`; its `arch-packaging` job continued through full
+`makepkg --noconfirm`, `pacman -U` package installation,
+`/usr/bin/gromaq --version`, and `pacman -Ql gromaq-git` payload checks for the
+binary, README, license, desktop file, AppStream metainfo, and hicolor icon.
+GitHub Actions CI runs `28301610408` and `28302521484` proved the earlier
+metadata-only job remotely.
 Maintainers with a working Docker daemon can run
 `scripts/prove-arch-package.sh` to perform the same full package build,
 `pacman -U` install, `/usr/bin/gromaq --version`, and installed-payload checks
@@ -243,6 +243,14 @@ Proven remotely:
   checksum-extra, and local release-method install proof, and the macOS `rust`
   job passed formatting, whitespace, clippy, `cargo test --all`, the
   runtime/theme/GPU smoke suite, and `cargo bench --bench parser_throughput -- --list`.
+- GitHub Actions CI run `28308158338` completed successfully on 2026-06-28 UTC
+  for commit `5d204f2`. The `arch-packaging` job ran in
+  `archlinux:base-devel`, passed `makepkg --nobuild --noconfirm`, then passed
+  full `makepkg --noconfirm`, `pacman -U --noconfirm`,
+  `test -x /usr/bin/gromaq`, `/usr/bin/gromaq --version`,
+  `pacman -Ql gromaq-git`, and `makepkg --printsrcinfo`, proving the Arch
+  package build, install, executable launch metadata, and installed payload
+  listing remotely.
 - GitHub Actions release workflow run `28302556353` completed successfully on
   2026-06-27 for commit `c4bb4f1`. The downloaded Linux workflow artifact
   contained `target/dist/gromaq-0.1.0-linux-x86_64.tar.gz`,
@@ -341,9 +349,9 @@ Proven locally:
   command, desktop file, AppStream metainfo, hicolor icon payload, and source
   metadata
 - Arch `arch-packaging` CI job policy coverage for `makepkg --nobuild` and
-  `makepkg --printsrcinfo`; the workflow is also configured for full
+  `makepkg --printsrcinfo`; repository policy also guards the full
   `makepkg --noconfirm`, `pacman -U`, `gromaq --version`, and installed payload
-  checks, with remote green-run proof still pending
+  check markers
 - tag-triggered GitHub Release publication path is configured locally in
   `.github/workflows/release.yml` and guarded by
   `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
@@ -362,7 +370,6 @@ Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
-- live Arch `makepkg` build/install
 - Developer ID signed and notarized macOS app distribution
 - live Linux desktop menu refresh
 - manual macOS Dock/Finder UI behavior from a launched packaged app

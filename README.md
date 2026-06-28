@@ -139,11 +139,11 @@ license. CI and repository policy syntax-check the recipe. On 2026-06-27, CI
 run `28303175039` completed green for commit `12a38e8`, including the
 `arch-packaging` job under `archlinux:base-devel` that ran
 `makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
-user. The workflow is now configured to continue through full
+user. On 2026-06-28 UTC, CI run `28308158338` completed green for commit
+`5d204f2`; its `arch-packaging` job continued through full
 `makepkg --noconfirm`, `pacman -U` package installation, `gromaq --version`,
 and `pacman -Ql` payload checks for the binary, README, license, desktop file,
-AppStream metainfo, and hicolor icon. Those full build/install steps still
-need a green remote run before they count as live Arch proof.
+AppStream metainfo, and hicolor icon.
 Maintainers with a working Docker daemon can run
 `scripts/prove-arch-package.sh` to reproduce the full Arch build, package
 install, `gromaq --version`, and installed-payload checks in an
@@ -212,7 +212,6 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
-- live Arch `makepkg` build/install
 - live Linux desktop menu refresh
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts

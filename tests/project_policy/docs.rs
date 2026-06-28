@@ -107,7 +107,6 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "live Linux release-method install from GitHub Release assets",
     ),
-    ("README.md", "live Arch `makepkg` build/install"),
     ("README.md", "live Linux desktop menu refresh"),
     ("README.md", "signed/notarized macOS app distribution"),
     ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
@@ -151,10 +150,6 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/compatibility.md",
-        "Add live Arch `makepkg` build/install proof.",
-    ),
-    (
-        "documentation/compatibility.md",
         "Add live Linux desktop menu refresh proof.",
     ),
     (
@@ -166,6 +161,9 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "Add Developer ID signed and notarized macOS app distribution proof.",
     ),
     ("documentation/release.md", "28301610408"),
+    ("README.md", "28308158338"),
+    ("documentation/release.md", "28308158338"),
+    ("documentation/compatibility.md", "28308158338"),
     ("documentation/compatibility.md", "28301610408"),
 ];
 
@@ -175,7 +173,6 @@ const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
     "live desktop screenshot proof across supported platforms",
     "live tag-triggered GitHub Release asset publication",
     "live Linux release-method install from GitHub Release assets",
-    "live Arch `makepkg` build/install",
     "live Linux desktop menu refresh",
     "wider compatibility matrix coverage across shells, editors, multiplexers",
     "Developer ID signed/notarized macOS app distribution",
