@@ -88,10 +88,12 @@ pub(super) fn runtime_osc52_clipboard_smoke_exit<C: HostClipboard>(clipboard: &m
     let observed = clipboard.read_text();
     let restored_previous_text =
         restore_clipboard_after_smoke(clipboard, previous_text, RUNTIME_OSC52_CLIPBOARD_SMOKE_TEXT);
+    let repeat_sync_suppressed = !runtime.sync_terminal_clipboard(clipboard);
     let metrics = runtime.dump_runtime_perf_metrics();
 
     if pumped_bytes != expected_output_bytes
         || !synced
+        || !repeat_sync_suppressed
         || observed.as_deref() != Some(RUNTIME_OSC52_CLIPBOARD_SMOKE_TEXT)
         || metrics.pty_input_writes != 0
         || runtime
@@ -110,10 +112,11 @@ pub(super) fn runtime_osc52_clipboard_smoke_exit<C: HostClipboard>(clipboard: &m
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime OSC 52 clipboard smoke: ok\npumped bytes: {}\ndecoded bytes: {}\nclipboard synced: {}\npty input writes: {}\nprevious text restored: {}\n",
+            "runtime OSC 52 clipboard smoke: ok\npumped bytes: {}\ndecoded bytes: {}\nclipboard synced: {}\nrepeat sync suppressed: {}\npty input writes: {}\nprevious text restored: {}\n",
             pumped_bytes,
             RUNTIME_OSC52_CLIPBOARD_SMOKE_TEXT.len(),
             synced,
+            repeat_sync_suppressed,
             metrics.pty_input_writes,
             restored_previous_text
         ),

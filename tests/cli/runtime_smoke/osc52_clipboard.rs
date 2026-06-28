@@ -22,6 +22,7 @@ fn runtime_osc52_clipboard_smoke_cli_syncs_terminal_clipboard_to_host_clipboard(
     assert!(exit.stdout.contains("pumped bytes: 44"));
     assert!(exit.stdout.contains("decoded bytes: 26"));
     assert!(exit.stdout.contains("clipboard synced: true"));
+    assert!(exit.stdout.contains("repeat sync suppressed: true"));
     assert!(exit.stdout.contains("pty input writes: 0"));
     assert!(exit.stdout.contains("previous text restored: true"));
     assert!(exit.stderr.is_empty());
