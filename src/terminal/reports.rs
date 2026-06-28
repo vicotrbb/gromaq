@@ -1,6 +1,6 @@
 mod decrqss;
 
-use super::Terminal;
+use super::{MAX_TITLE_STACK_DEPTH, Terminal};
 
 impl Terminal {
     fn mode_state(&self, mode: u16) -> Option<bool> {
@@ -66,8 +66,8 @@ impl Terminal {
         }
     }
 
-    pub(super) fn report_window_manipulation(&mut self, mode: u16) {
-        match mode {
+    pub(super) fn report_window_manipulation(&mut self, operation: u16, target: u16) {
+        match operation {
             11 => self.pending_response_bytes.extend_from_slice(b"\x1b[1t"),
             13 => self
                 .pending_response_bytes
@@ -108,6 +108,8 @@ impl Terminal {
                 }
                 self.pending_response_bytes.extend_from_slice(b"\x1b\\");
             }
+            22 if target == 0 => self.save_title_and_icon_label(),
+            23 if target == 0 => self.restore_title_and_icon_label(),
             _ => {}
         }
     }
@@ -130,4 +132,25 @@ impl Terminal {
     pub(super) fn report_decid(&mut self) {
         self.report_primary_device_attributes(0);
     }
+
+    fn save_title_and_icon_label(&mut self) {
+        push_bounded(&mut self.title_stack, self.title.clone());
+        push_bounded(&mut self.icon_label_stack, self.icon_label.clone());
+    }
+
+    fn restore_title_and_icon_label(&mut self) {
+        if let Some(title) = self.title_stack.pop() {
+            self.title = title;
+        }
+        if let Some(icon_label) = self.icon_label_stack.pop() {
+            self.icon_label = icon_label;
+        }
+    }
+}
+
+fn push_bounded(stack: &mut Vec<Option<String>>, value: Option<String>) {
+    if stack.len() == MAX_TITLE_STACK_DEPTH {
+        stack.remove(0);
+    }
+    stack.push(value);
 }

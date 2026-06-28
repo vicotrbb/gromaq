@@ -58,7 +58,7 @@ impl Terminal {
             'r' => self.set_csi_scroll_region(params),
             's' if intermediates == b"?" => self.save_private_modes(first_values(params)),
             's' => self.save_cursor(),
-            't' if intermediates.is_empty() => self.report_window_manipulation(first),
+            't' if intermediates.is_empty() => self.dispatch_window_manipulation(params),
             'u' => self.restore_cursor(),
             'x' if intermediates.is_empty() => self.report_terminal_parameters(first),
             'h' if intermediates.is_empty() => self.set_ansi_modes(params, true),
@@ -79,6 +79,12 @@ impl Terminal {
         let top = first_value(params, 0).unwrap_or(1);
         let bottom = first_value(params, 1).unwrap_or(self.config.rows);
         self.set_scroll_region(top, bottom);
+    }
+
+    fn dispatch_window_manipulation(&mut self, params: &Params) {
+        let operation = first_value(params, 0).unwrap_or(0);
+        let target = first_value(params, 1).unwrap_or(0);
+        self.report_window_manipulation(operation, target);
     }
 
     fn set_ansi_modes(&mut self, params: &Params, enabled: bool) {

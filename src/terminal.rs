@@ -42,6 +42,7 @@ const MAX_OSC8_HYPERLINK_BYTES: usize = 4096;
 const MAX_METADATA_IDS: usize = 4096;
 const MAX_OSC8_HYPERLINKS: usize = MAX_METADATA_IDS;
 const MAX_DCS_PAYLOAD_BYTES: usize = 64;
+const MAX_TITLE_STACK_DEPTH: usize = 16;
 
 /// Deterministic terminal emulator state.
 pub struct Terminal {
@@ -76,6 +77,8 @@ pub struct Terminal {
     mouse: MouseReportState,
     title: Option<String>,
     icon_label: Option<String>,
+    title_stack: Vec<Option<String>>,
+    icon_label_stack: Vec<Option<String>>,
     clipboard_text: Option<String>,
     hyperlinks: Vec<String>,
     current_hyperlink_id: u16,
@@ -124,6 +127,8 @@ impl Terminal {
             mouse: MouseReportState::default(),
             title: None,
             icon_label: None,
+            title_stack: Vec::new(),
+            icon_label_stack: Vec::new(),
             clipboard_text: None,
             hyperlinks: Vec::new(),
             current_hyperlink_id: 0,
