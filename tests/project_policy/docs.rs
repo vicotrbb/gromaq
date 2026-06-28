@@ -107,7 +107,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "live Linux release-method install from GitHub Release assets",
     ),
-    ("README.md", "live Linux desktop menu refresh"),
+    (
+        "README.md",
+        "Linux desktop database refresh when `update-desktop-database` is available",
+    ),
     ("README.md", "signed/notarized macOS app distribution"),
     ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
     ("documentation/release.md", "GROMAQ_DRY_RUN=1"),
@@ -150,7 +153,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/compatibility.md",
-        "Add live Linux desktop menu refresh proof.",
+        "Add live Linux desktop menu UI discovery proof.",
     ),
     (
         "documentation/compatibility.md",
@@ -173,7 +176,7 @@ const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
     "live desktop screenshot proof across supported platforms",
     "live tag-triggered GitHub Release asset publication",
     "live Linux release-method install from GitHub Release assets",
-    "live Linux desktop menu refresh",
+    "live Linux desktop menu UI discovery",
     "wider compatibility matrix coverage across shells, editors, multiplexers",
     "Developer ID signed/notarized macOS app distribution",
 ];

@@ -77,9 +77,13 @@ run before becoming the default installer path.
 On Linux, the installer also installs user-local desktop assets by default:
 `dev.gromaq.Gromaq.desktop`, the project icon under the hicolor icon theme, and
 AppStream metainfo under `${XDG_DATA_HOME:-~/.local/share}`. Set
-`GROMAQ_INSTALL_DESKTOP_ASSETS=0` to install only the binary.
+`GROMAQ_INSTALL_DESKTOP_ASSETS=0` to install only the binary. When
+`update-desktop-database` is available, the installer refreshes the Linux
+desktop database for the installed applications directory and reports the
+refresh path.
 
-Maintainers can prove Linux desktop asset placement without network or home
+Maintainers can prove Linux desktop asset placement and Linux desktop database
+refresh when `update-desktop-database` is available without network or home
 directory writes:
 
 ```bash
@@ -202,6 +206,9 @@ Implemented and covered by automated tests or deterministic smoke commands:
   release artifacts with SHA256SUMS manifests on tag and manual dispatch;
   remote proof covers the tarball, Debian package, Arch metadata, macOS `.app`,
   and checksum workflow-artifact uploads
+- Linux desktop database refresh when `update-desktop-database` is available,
+  with deterministic installer coverage and Ubuntu CI configured to install the
+  desktop-file utility before the Linux install-root proof
 - macOS `.app` ad-hoc signing support plus a notarization helper with dry-run
   archive proof
 
@@ -212,7 +219,7 @@ Not yet proven enough to call complete:
 - live desktop screenshot proof across supported platforms
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
-- live Linux desktop menu refresh
+- live Linux desktop menu UI discovery after install
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 - Developer ID signed/notarized macOS app distribution

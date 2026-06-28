@@ -80,6 +80,9 @@ jobs:
       - run: sh -n scripts/package-debian-deb.sh
       - run: sh -n scripts/generate-checksums.sh
       - run: bash -n packaging/arch/PKGBUILD
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y desktop-file-utils
       - run: cargo test --test project_policy
       - run: GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh
       - run: scripts/package-linux-tarball.sh

@@ -167,6 +167,17 @@ install_required_file() {
   exit 1
 }
 
+refresh_linux_desktop_database() {
+  applications_dir="$1"
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    if update-desktop-database "${applications_dir}" >/dev/null 2>&1; then
+      printf '%s\n' "Refreshed Linux desktop database under ${applications_dir}."
+    else
+      printf '%s\n' "warning: update-desktop-database failed for ${applications_dir}; continuing." >&2
+    fi
+  fi
+}
+
 install_linux_desktop_assets() {
   data_home="$(linux_data_home)"
   install_file "images/logos/logo-icon-256.png" \
@@ -175,9 +186,7 @@ install_linux_desktop_assets() {
     "${data_home}/applications/dev.gromaq.Gromaq.desktop"
   install_file "packaging/linux/dev.gromaq.Gromaq.metainfo.xml" \
     "${data_home}/metainfo/dev.gromaq.Gromaq.metainfo.xml"
-  if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database "${data_home}/applications" >/dev/null 2>&1 || true
-  fi
+  refresh_linux_desktop_database "${data_home}/applications"
   printf '%s\n' "Installed Linux desktop assets under ${data_home}."
 }
 
@@ -194,9 +203,7 @@ install_linux_desktop_assets_from_release() {
     "${data_home}/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
   cp "${release_root}/share/metainfo/dev.gromaq.Gromaq.metainfo.xml" \
     "${data_home}/metainfo/dev.gromaq.Gromaq.metainfo.xml"
-  if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database "${data_home}/applications" >/dev/null 2>&1 || true
-  fi
+  refresh_linux_desktop_database "${data_home}/applications"
   installed_linux_desktop_assets=1
   printf '%s\n' "Installed Linux desktop assets under ${data_home}."
 }

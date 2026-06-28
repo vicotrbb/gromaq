@@ -156,6 +156,57 @@ mod unix {
     }
 
     #[test]
+    fn install_script_refreshes_linux_desktop_database_when_available() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let install_root = TempPath::new("gromaq-linux-desktop-refresh-root");
+        let tools_dir = TempPath::new("gromaq-linux-desktop-refresh-tools");
+        let refresh_log = TempPath::new("gromaq-linux-desktop-refresh-log");
+        fs::create_dir_all(tools_dir.path()).unwrap();
+        let refresh_tool = tools_dir.path().join("update-desktop-database");
+        fs::write(
+            &refresh_tool,
+            "#!/bin/sh\nprintf '%s\\n' \"$1\" > \"$GROMAQ_DESKTOP_REFRESH_LOG\"\n",
+        )
+        .unwrap();
+        fs::set_permissions(&refresh_tool, fs::Permissions::from_mode(0o755)).unwrap();
+        let path = format!(
+            "{}:{}",
+            tools_dir.path().display(),
+            std::env::var("PATH").unwrap_or_default()
+        );
+
+        let output = Command::new("sh")
+            .arg(root.join("scripts/install.sh"))
+            .env("GROMAQ_SKIP_CARGO_INSTALL", "1")
+            .env("GROMAQ_PLATFORM", "Linux")
+            .env("GROMAQ_ASSET_ROOT", root)
+            .env("GROMAQ_INSTALL_ROOT", install_root.path())
+            .env("GROMAQ_DESKTOP_REFRESH_LOG", refresh_log.path())
+            .env("PATH", path)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "desktop refresh install failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let applications_dir = install_root.path().join("share/applications");
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains(&format!(
+                "Refreshed Linux desktop database under {}.",
+                applications_dir.display()
+            )),
+            "installer should report the desktop database refresh:\n{stdout}"
+        );
+        assert_eq!(
+            fs::read_to_string(refresh_log.path()).unwrap().trim(),
+            applications_dir.to_string_lossy()
+        );
+    }
+
+    #[test]
     fn install_script_dry_run_reports_macos_app_bundle_without_writing_app_dir() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let app_dir = TempPath::new("gromaq-macos-dry-run");

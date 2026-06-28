@@ -84,6 +84,7 @@ const REQUIRED_TAG_RELEASE_UPLOAD_MARKERS: &[&str] = &[
 const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "linux-packaging:",
     "runs-on: ubuntu-latest",
+    "sudo apt-get install -y desktop-file-utils",
     "cargo test --test project_policy",
     "GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT=\"$PWD\" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh",
     "scripts/package-linux-tarball.sh",

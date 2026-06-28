@@ -63,6 +63,11 @@ default:
 - `share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png`
 - `share/metainfo/dev.gromaq.Gromaq.metainfo.xml`
 
+When `update-desktop-database` is available, the installer refreshes the Linux
+desktop database for `share/applications` and reports the refreshed directory.
+The deterministic installer test uses a fake command on `PATH` to prove the
+hook is invoked without requiring a live Linux desktop session.
+
 Disable desktop asset installation with:
 
 ```bash
@@ -205,11 +210,12 @@ release assets. The checksum files are copied to `SHA256SUMS-linux-x86_64` and
 do not collide as GitHub Release asset names.
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
-repository policy checks, Linux user-local desktop asset install proof, and
-Linux tarball plus Debian package assembly on `ubuntu-latest`. The job is also
-configured to copy `SHA256SUMS` to `SHA256SUMS-linux-x86_64` and install from
-the generated local tarball through `GROMAQ_INSTALL_METHOD=release` before
-checking that `target/release-install-proof/bin/gromaq` exists. CI also runs
+repository policy checks, installs `desktop-file-utils`, runs Linux user-local
+desktop asset install proof, and runs Linux tarball plus Debian package
+assembly on `ubuntu-latest`. The job is also configured to copy `SHA256SUMS` to
+`SHA256SUMS-linux-x86_64` and install from the generated local tarball through
+`GROMAQ_INSTALL_METHOD=release` before checking that
+`target/release-install-proof/bin/gromaq` exists. CI also runs
 `bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
@@ -371,5 +377,5 @@ Not yet proven:
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
 - Developer ID signed and notarized macOS app distribution
-- live Linux desktop menu refresh
+- live Linux desktop menu UI discovery after install
 - manual macOS Dock/Finder UI behavior from a launched packaged app
