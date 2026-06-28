@@ -18,6 +18,12 @@ pub(super) const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
         expected: "fish",
     },
     ToolWorkflowSpec {
+        name: "nu-command",
+        program: "nu",
+        args: &["-c", "print gromaq-nu-workflow"],
+        expected: "gromaq-nu-workflow",
+    },
+    ToolWorkflowSpec {
         name: "vim-version",
         program: "vim",
         args: &["--version"],
