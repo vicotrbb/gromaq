@@ -58,6 +58,28 @@ fn theme_preview_proof_keeps_configured_visual_quality_path() {
 }
 
 #[test]
+fn readme_welcome_preview_proof_writes_artifact_summary() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-readme-welcome-preview.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "scripts/prove-welcome-preview.sh",
+        "README welcome preview pixels: ok",
+        "summary.txt",
+        "README welcome preview proof: ok",
+        "Committed PNG: ${readme_png}",
+        "Generated PPM: ${ppm_path}",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must keep `{marker}` so README screenshot freshness proof has stable artifact handles",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
 fn local_ci_parity_proof_runs_clippy_before_completion() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("scripts/prove-local-ci-parity.sh");

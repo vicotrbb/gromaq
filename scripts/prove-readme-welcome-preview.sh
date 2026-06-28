@@ -6,6 +6,7 @@ proof_dir="${GROMAQ_README_WELCOME_PREVIEW_PROOF_DIR:-${root}/target/readme-welc
 ppm_path="${proof_dir}/gromaq-welcome-preview.ppm"
 png_path="${proof_dir}/gromaq-welcome-preview.png"
 readme_png="${root}/images/screenshots/gromaq-welcome-preview.png"
+summary_path="${proof_dir}/summary.txt"
 
 if ! command -v python3 >/dev/null 2>&1; then
   printf '%s\n' "error: python3 is required to compare README welcome preview pixels" >&2
@@ -164,6 +165,12 @@ if ppm_pixels != png_pixels:
 print(f"README welcome preview pixels: ok ({ppm_width}x{ppm_height})")
 PY
 
-printf '%s\n' "README welcome preview proof: ok"
-printf '%s\n' "Committed PNG: ${readme_png}"
-printf '%s\n' "Generated PPM: ${ppm_path}"
+{
+  printf '%s\n' "README welcome preview proof: ok"
+  printf '%s\n' "Committed PNG: ${readme_png}"
+  printf '%s\n' "Generated PPM: ${ppm_path}"
+  if [ -s "${png_path}" ]; then
+    printf '%s\n' "Generated PNG: ${png_path}"
+  fi
+  printf '%s\n' "Welcome proof log: ${proof_dir}/welcome-preview.log"
+} | tee "${summary_path}"

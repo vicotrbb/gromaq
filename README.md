@@ -310,8 +310,8 @@ proof upload uses `if: always()` so logs and artifacts are preserved when a
 later CI step fails or a proof command fails after writing diagnostic output.
 Run `28314822034` uploaded the default welcome preview diagnostics after the
 macOS 26 text-pixel floor failure, but the README freshness step was skipped;
-the local threshold fix and compact welcome `summary.txt` artifact are pending
-the next 10-commit push batch.
+the local threshold fix plus compact welcome and README freshness `summary.txt`
+artifacts are pending the next 10-commit push batch.
 
 Current-host compatibility proof bundle:
 

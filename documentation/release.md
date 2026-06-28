@@ -274,8 +274,8 @@ local theme helper now writes a compact `summary.txt` artifact, pending the next
 10-commit push batch. CI run `28314822034` uploaded the theme artifact and the
 default welcome preview diagnostics, but the README freshness proof was skipped
 after the welcome proof failed on the macOS 26 text-pixel floor; the local
-threshold fix and compact welcome `summary.txt` artifact are pending the next
-10-commit push batch. The
+threshold fix plus compact welcome and README freshness `summary.txt` artifacts
+are pending the next 10-commit push batch. The
 welcome and theme preview artifact uploads use `if: always()` so diagnostic
 visual artifacts survive proof-command or later macOS job failures when files
 were written before the failure.
