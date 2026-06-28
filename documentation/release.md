@@ -152,7 +152,8 @@ directly so package assembly is testable on normal Unix CI hosts. Use
 On Debian/Ubuntu hosts, `scripts/prove-debian-package.sh` builds the package,
 installs it with `dpkg -i`, runs `/usr/bin/gromaq --version`, and checks the
 installed binary, README, copyright, desktop file, AppStream metainfo, and
-hicolor icon payloads.
+hicolor icon payloads. The helper writes
+`target/dist/gromaq-debian-proof-summary.txt` after those checks pass.
 
 ## Arch Package Recipe
 

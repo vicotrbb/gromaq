@@ -197,7 +197,8 @@ that conditionally run `update-desktop-database` and refresh the hicolor icon
 cache when those desktop utilities are available. On Debian/Ubuntu hosts,
 maintainers can run `scripts/prove-debian-package.sh` to build the `.deb`,
 install it with `dpkg -i`, run `/usr/bin/gromaq --version`, and record
-installed-payload checks.
+installed-payload checks. The helper writes
+`target/dist/gromaq-debian-proof-summary.txt` after those checks pass.
 On Linux hosts, `scripts/prove-linux-release-install.sh` packages the release
 tarball, writes checksums, installs through `GROMAQ_INSTALL_METHOD=release`
 from a local `file://` release base, and verifies the binary plus desktop

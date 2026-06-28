@@ -4,6 +4,8 @@ set -eu
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 package="${GROMAQ_PACKAGE:-gromaq}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
+payload_path="${dist_dir}/${package}-debian-payload.txt"
+summary_path="${dist_dir}/${package}-debian-proof-summary.txt"
 
 if ! command -v dpkg >/dev/null 2>&1; then
   printf '%s\n' "error: dpkg is required for Debian package proof." >&2
@@ -27,12 +29,17 @@ sudo dpkg -i "$1"
 test -x "/usr/bin/${package}"
 "/usr/bin/${package}" --version
 
-dpkg -L "${package}" | tee "${dist_dir}/${package}-debian-payload.txt"
-grep -F "/usr/bin/${package}" "${dist_dir}/${package}-debian-payload.txt"
-grep -F "/usr/share/doc/${package}/README.md" "${dist_dir}/${package}-debian-payload.txt"
-grep -F "/usr/share/doc/${package}/copyright" "${dist_dir}/${package}-debian-payload.txt"
-grep -F "/usr/share/applications/dev.gromaq.Gromaq.desktop" "${dist_dir}/${package}-debian-payload.txt"
-grep -F "/usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml" "${dist_dir}/${package}-debian-payload.txt"
-grep -F "/usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png" "${dist_dir}/${package}-debian-payload.txt"
+dpkg -L "${package}" | tee "${payload_path}"
+grep -F "/usr/bin/${package}" "${payload_path}"
+grep -F "/usr/share/doc/${package}/README.md" "${payload_path}"
+grep -F "/usr/share/doc/${package}/copyright" "${payload_path}"
+grep -F "/usr/share/applications/dev.gromaq.Gromaq.desktop" "${payload_path}"
+grep -F "/usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml" "${payload_path}"
+grep -F "/usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png" "${payload_path}"
 
-printf '%s\n' "Debian package proof: ok"
+{
+  printf '%s\n' "Debian package proof: ok"
+  printf '%s\n' "Package artifact: $1"
+  printf '%s\n' "Installed binary: /usr/bin/${package}"
+  printf '%s\n' "Payload list: ${payload_path}"
+} | tee "${summary_path}"
