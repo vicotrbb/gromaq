@@ -193,6 +193,9 @@ wait "${app_pid}" || app_status="$?"
   printf '%s\n' "macOS window sharing state: ${window_sharing_state}"
   printf '%s\n' "macOS window layer: ${window_layer}"
   printf '%s\n' "macOS window alpha: ${window_alpha}"
+  if [ "${window_sharing_state}" = "0" ]; then
+    printf '%s\n' "macOS window content is not shareable; targeted capture may be blocked by privacy/compositor policy."
+  fi
   printf '%s\n' "macOS capture method: ${capture_method}"
   if [ "${window_capture_status}" -ne 0 ]; then
     printf '%s\n' "window-id capture failed; attempted bounded region capture: ${window_region}"
