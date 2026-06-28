@@ -89,6 +89,50 @@ fn csi_window_title_stack_restores_saved_icon_label_and_title() {
 }
 
 #[test]
+fn csi_window_title_stack_restores_icon_label_without_changing_title() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str(
+            "\x1b]0;Initial\x07\
+             \x1b[22;1t\
+             \x1b]1;Changed Icon\x07\
+             \x1b]2;Changed Title\x07\
+             \x1b[23;1t\
+             \x1b[20t\
+             \x1b[21t",
+        )
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]LInitial\x1b\\\x1b]lChanged Title\x1b\\"
+    );
+}
+
+#[test]
+fn csi_window_title_stack_restores_title_without_changing_icon_label() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str(
+            "\x1b]0;Initial\x07\
+             \x1b[22;2t\
+             \x1b]1;Changed Icon\x07\
+             \x1b]2;Changed Title\x07\
+             \x1b[23;2t\
+             \x1b[20t\
+             \x1b[21t",
+        )
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]LChanged Icon\x1b\\\x1b]lInitial\x1b\\"
+    );
+}
+
+#[test]
 fn overlong_osc_title_is_ignored_without_clearing_previous_title() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     let overlong_title = "x".repeat(MAX_OSC_TITLE_BYTES + 1);

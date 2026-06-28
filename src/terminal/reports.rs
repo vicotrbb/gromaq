@@ -108,8 +108,8 @@ impl Terminal {
                 }
                 self.pending_response_bytes.extend_from_slice(b"\x1b\\");
             }
-            22 if target == 0 => self.save_title_and_icon_label(),
-            23 if target == 0 => self.restore_title_and_icon_label(),
+            22 => self.save_title_state(target),
+            23 => self.restore_title_state(target),
             _ => {}
         }
     }
@@ -133,17 +133,47 @@ impl Terminal {
         self.report_primary_device_attributes(0);
     }
 
-    fn save_title_and_icon_label(&mut self) {
-        push_bounded(&mut self.title_stack, self.title.clone());
+    fn save_title_state(&mut self, target: u16) {
+        match target {
+            0 => {
+                self.save_icon_label();
+                self.save_title();
+            }
+            1 => self.save_icon_label(),
+            2 => self.save_title(),
+            _ => {}
+        }
+    }
+
+    fn restore_title_state(&mut self, target: u16) {
+        match target {
+            0 => {
+                self.restore_icon_label();
+                self.restore_title();
+            }
+            1 => self.restore_icon_label(),
+            2 => self.restore_title(),
+            _ => {}
+        }
+    }
+
+    fn save_icon_label(&mut self) {
         push_bounded(&mut self.icon_label_stack, self.icon_label.clone());
     }
 
-    fn restore_title_and_icon_label(&mut self) {
-        if let Some(title) = self.title_stack.pop() {
-            self.title = title;
-        }
+    fn save_title(&mut self) {
+        push_bounded(&mut self.title_stack, self.title.clone());
+    }
+
+    fn restore_icon_label(&mut self) {
         if let Some(icon_label) = self.icon_label_stack.pop() {
             self.icon_label = icon_label;
+        }
+    }
+
+    fn restore_title(&mut self) {
+        if let Some(title) = self.title_stack.pop() {
+            self.title = title;
         }
     }
 }
