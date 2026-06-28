@@ -243,9 +243,11 @@ manifests as release assets. The checksum files are copied to
 do not collide as GitHub Release asset names.
 
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
-repository policy checks, installs `desktop-file-utils`, runs Linux user-local
-desktop asset install proof, and runs Linux tarball plus Debian package
-assembly on `ubuntu-latest`. The job is also configured for Debian package install, `gromaq --version`, and installed-payload checks.
+repository policy checks, installs `desktop-file-utils`, `appstream`, and
+`gtk-update-icon-cache`, runs Linux user-local desktop asset install proof, runs
+the Linux desktop metadata/cache discovery helper, and runs Linux tarball plus
+Debian package assembly on `ubuntu-latest`. The job is also configured for
+Debian package install, `gromaq --version`, and installed-payload checks.
 It then runs `scripts/prove-linux-release-install.sh` with Arch metadata
 checksum extras, which packages the local tarball, writes
 `SHA256SUMS-linux-x86_64`, installs through `GROMAQ_INSTALL_METHOD=release`,
@@ -408,7 +410,9 @@ Proven locally:
 - Linux desktop metadata/cache discovery proof helper
   `scripts/prove-linux-desktop-discovery.sh`, which is Linux-only and validates
   installed desktop identity metadata under an isolated proof root when the
-  relevant desktop metadata tools are available; it still does not prove live
+  relevant desktop metadata tools are available. The Ubuntu `linux-packaging`
+  job is configured to run it after installing those tools, but helper-backed
+  remote CI proof is pending the next pushed run; it still does not prove live
   menu UI rendering
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary

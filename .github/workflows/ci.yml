@@ -94,9 +94,10 @@ jobs:
       - run: bash -n packaging/arch/PKGBUILD
       - run: |
           sudo apt-get update
-          sudo apt-get install -y desktop-file-utils
+          sudo apt-get install -y desktop-file-utils appstream gtk-update-icon-cache
       - run: cargo test --test project_policy
       - run: GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh
+      - run: scripts/prove-linux-desktop-discovery.sh
       - run: scripts/package-linux-tarball.sh
       - run: scripts/package-debian-deb.sh
       - run: sudo dpkg -i target/dist/gromaq_*.deb

@@ -96,9 +96,10 @@ const REQUIRED_TAG_RELEASE_UPLOAD_MARKERS: &[&str] = &[
 const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "linux-packaging:",
     "runs-on: ubuntu-latest",
-    "sudo apt-get install -y desktop-file-utils",
+    "sudo apt-get install -y desktop-file-utils appstream gtk-update-icon-cache",
     "cargo test --test project_policy",
     "GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux GROMAQ_ASSET_ROOT=\"$PWD\" GROMAQ_INSTALL_ROOT=target/install-proof sh scripts/install.sh",
+    "scripts/prove-linux-desktop-discovery.sh",
     "scripts/package-linux-tarball.sh",
     "scripts/package-debian-deb.sh",
     "sudo dpkg -i target/dist/gromaq_*.deb",
