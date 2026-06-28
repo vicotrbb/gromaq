@@ -318,6 +318,9 @@ the generated welcome preview and committed README screenshot freshness proof
 are retained together after the visual proof steps run. The visual proof upload
 uses `if: always()` so logs and artifacts are preserved when a later CI step
 fails or a proof command fails after writing diagnostic output. Run
+`scripts/prove-welcome-preview.sh` also writes `metrics.txt` and a compact
+summary; the refreshed local 33x17 avatar proof records `avatar rows=17`
+alongside the rendered text, avatar-color, glyph, cursor, and atlas metrics. Run
 `28315944025` passed the default welcome preview proof on macOS 26 with 126062
 avatar color pixels, then failed the README freshness proof because exact
 decoded pixels differed from the committed local PNG. Run `28316513803` then

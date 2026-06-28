@@ -15,10 +15,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "cargo run -- --theme-export gromaq-ghostty"),
     ("README.md", "cargo run -- --runtime-text-zoom-smoke"),
     ("README.md", "cargo run -- --theme-legibility-smoke"),
-    (
-        "README.md",
-        "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm",
-    ),
+    ("README.md", "cargo run -- --theme-preview-snapshot"),
     ("README.md", "cargo run -- --theme-preview-config"),
     (
         "README.md",
@@ -27,6 +24,7 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "node images/avatar/generate.mjs --check"),
     ("README.md", "scripts/prove-welcome-preview.sh"),
     ("README.md", "scripts/prove-readme-welcome-preview.sh"),
+    ("README.md", "avatar rows=17"),
     ("README.md", "selection opacity, before adopting it"),
     ("documentation/theme.md", "32 px font size"),
     ("documentation/theme.md", "44 px line height"),
