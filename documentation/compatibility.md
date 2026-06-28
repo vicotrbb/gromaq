@@ -19,7 +19,12 @@ workflows passed all 4 runtime tool checks with 0 skips: `ssh-version`
 produced 31 bytes containing `OpenSSH`, `ssh-config` produced 4226 bytes
 containing `hostname localhost`, `kubectl-version` produced 276 bytes
 containing `clientVersion`, and `kubectl-config` produced 6 bytes containing
-`Config`.
+`Config`. A later refreshed local run after adding safe `vim --version`,
+`tmux -V`, and `less --version` workflows passed all 7 runtime tool checks
+with 0 skips: `vim-version` produced 2912 bytes containing `VIM`,
+`tmux-version` produced 11 bytes containing `tmux`, `less-version` produced
+296 bytes containing `less`, and the existing `ssh` and `kubectl` checks kept
+passing with the same expected markers.
 `scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
 writing the host inventory, PTY test log, and runtime external-tool smoke log
 under `target/compatibility-proof`. That fresh bundle again passed all 37 PTY
@@ -59,15 +64,15 @@ welcome-preview threshold step.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| `vim` launch and navigation workflows | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `vim --version` and scripted edit workflows. A refreshed focused run passed `pty_session_runs_vim_search_navigation_when_available`, proving slash-search navigation to `gromaq-vim-line-040` and command-mode result capture through the PTY. | Proven on current host for launch, edit, and search navigation; conditional elsewhere |
+| `vim` launch and navigation workflows | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `vim --version` and scripted edit workflows. A refreshed focused run passed `pty_session_runs_vim_search_navigation_when_available`, proving slash-search navigation to `gromaq-vim-line-040` and command-mode result capture through the PTY. A refreshed `cargo run -- --runtime-tool-workflow-smoke` also passed `vim-version` with 2912 output bytes containing `VIM`. | Proven on current host for launch, edit, search navigation, and runtime version smoke; conditional elsewhere |
 | `vim` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host Vim alternate-screen enter/exit proof. | Proven on current host; conditional elsewhere |
 | `vim` SGR mouse split selection | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host Vim SGR mouse split-window selection proof. | Proven on current host; conditional elsewhere |
 | `nvim` launch workflow | Real PTY command workflow when available. On 2026-06-27, the current host did not have `nvim` on PATH, so this workflow remains unproven locally. | Conditional on host binary; not proven on current host |
 | `nvim` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-27, the current host did not have `nvim` on PATH, so this workflow remains unproven locally. | Conditional on host binary; not proven on current host |
 | `nvim` SGR mouse split selection | Scripted real PTY workflow when available. On 2026-06-27, the current host did not have `nvim` on PATH, so this workflow remains unproven locally. | Conditional on host binary; not proven on current host |
-| `tmux` launch and prefix-key workflows | Real PTY command and interactive pane workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `tmux -V` and interactive pane checks. A refreshed focused run passed `pty_session_runs_tmux_prefix_split_pane_when_available`, proving `Ctrl-b %` split-pane command routing through the PTY into an isolated tmux server. | Proven on current host for launch, interactive shell, and prefix split-pane workflows; conditional elsewhere |
+| `tmux` launch and prefix-key workflows | Real PTY command and interactive pane workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `tmux -V` and interactive pane checks. A refreshed focused run passed `pty_session_runs_tmux_prefix_split_pane_when_available`, proving `Ctrl-b %` split-pane command routing through the PTY into an isolated tmux server. A refreshed `cargo run -- --runtime-tool-workflow-smoke` also passed `tmux-version` with 11 output bytes containing `tmux`. | Proven on current host for launch, interactive shell, prefix split-pane workflows, and runtime version smoke; conditional elsewhere |
 | `tmux` SGR mouse pane selection | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host tmux SGR mouse pane-selection proof. | Proven on current host; conditional elsewhere |
-| `less` launch and paging workflows | Real PTY command, interactive search, and paging-navigation workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `less --version` and search checks. A refreshed focused run passed `pty_session_runs_less_paging_navigation_when_available`, proving `G` paging navigation to the generated final line through the PTY. | Proven on current host for launch, search, and paging navigation; conditional elsewhere |
+| `less` launch and paging workflows | Real PTY command, interactive search, and paging-navigation workflows when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `less --version` and search checks. A refreshed focused run passed `pty_session_runs_less_paging_navigation_when_available`, proving `G` paging navigation to the generated final line through the PTY. A refreshed `cargo run -- --runtime-tool-workflow-smoke` also passed `less-version` with 296 output bytes containing `less`. | Proven on current host for launch, search, paging navigation, and runtime version smoke; conditional elsewhere |
 | `less` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host less alternate-screen enter/exit proof. | Proven on current host; conditional elsewhere |
 
 ## CLI and TUI Programs

@@ -16,6 +16,24 @@ use crate::pty::{PtyConfig, PtySession, ShellCommand};
 const TOOL_WORKFLOW_TIMEOUT: Duration = Duration::from_secs(5);
 const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
     ToolWorkflowSpec {
+        name: "vim-version",
+        program: "vim",
+        args: &["--version"],
+        expected: "VIM",
+    },
+    ToolWorkflowSpec {
+        name: "tmux-version",
+        program: "tmux",
+        args: &["-V"],
+        expected: "tmux",
+    },
+    ToolWorkflowSpec {
+        name: "less-version",
+        program: "less",
+        args: &["--version"],
+        expected: "less",
+    },
+    ToolWorkflowSpec {
         name: "ssh-version",
         program: "ssh",
         args: &["-V"],
