@@ -11,4 +11,5 @@ await generateAssetSet({
   terminalRows: 15,
   terminalMode: 'quadrant-block',
   terminalCellAspect: 18 / 44,
+  check: process.argv.includes('--check'),
 });

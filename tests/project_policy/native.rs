@@ -99,6 +99,20 @@ fn cargo_dependencies_do_not_add_webview_or_javascript_runtimes() {
     );
 }
 
+#[test]
+fn image_asset_generators_keep_deterministic_check_mode() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let avatar_generator = fs::read_to_string(root.join("images/avatar/generate.mjs")).unwrap();
+    let image_tool = fs::read_to_string(root.join("images/tools/gromaq-image-assets.mjs")).unwrap();
+
+    assert!(avatar_generator.contains("process.argv.includes('--check')"));
+    assert!(avatar_generator.contains("check:"));
+    assert!(image_tool.contains("check = false"));
+    assert!(image_tool.contains("checkOutput"));
+    assert!(image_tool.contains("avatar-welcome.ansi is stale"));
+    assert!(image_tool.contains("Gromaq avatar assets are current"));
+}
+
 fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Vec<String>) {
     for entry in fs::read_dir(dir).unwrap() {
         let entry = entry.unwrap();

@@ -26,6 +26,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo test --all",
     "cargo run -- --theme-legibility-smoke",
     "cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm",
+    "node images/avatar/generate.mjs --check",
     "scripts/prove-welcome-preview.sh",
     "gromaq-welcome-preview-proof",
     "target/welcome-preview-proof/*",

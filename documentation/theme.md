@@ -45,9 +45,12 @@ be disabled with `[welcome] enabled = false` when users prefer a blank
 shell-first launch. `cargo run -- --welcome-preview-snapshot
 target/gromaq-welcome-preview.ppm` writes a deterministic PPM artifact for the
 default welcome screen through the same prepared glyph-frame path used for
-theme preview snapshots. `scripts/prove-welcome-preview.sh` wraps that command,
-checks the reported high-contrast text, avatar-color, glyph, cursor, and atlas
-metrics, and writes proof artifacts under `target/welcome-preview-proof`.
+theme preview snapshots. `node images/avatar/generate.mjs --check` verifies
+that the committed welcome avatar PNG/RGBA/ANSI assets are current with the
+source image and generator settings. `scripts/prove-welcome-preview.sh` wraps
+the preview command, checks the reported high-contrast text, avatar-color,
+glyph, cursor, and atlas metrics, and writes proof artifacts under
+`target/welcome-preview-proof`.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:

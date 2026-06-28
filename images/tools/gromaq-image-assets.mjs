@@ -10,6 +10,8 @@ const DEFAULT_CELL_ASPECT = 18 / 44;
 // Dark source cells otherwise render near this luminance and disappear.
 const TERMINAL_BACKGROUND_RGB = [0x10, 0x12, 0x16];
 const TERMINAL_AVATAR_MIN_CONTRAST = 3.0;
+const STALE_AVATAR_ANSI_MESSAGE = 'avatar-welcome.ansi is stale';
+const CURRENT_AVATAR_ASSETS_MESSAGE = 'Gromaq avatar assets are current';
 const OUTPUTS = {
   avatar: [
     ['avatar-transparent.png', 768],
@@ -33,6 +35,7 @@ export async function generateAssetSet({
   terminalCrop,
   terminalMode = 'half-block',
   terminalCellAspect = DEFAULT_CELL_ASPECT,
+  check = false,
 }) {
   const dir = join(ROOT, folder);
   const sourcePath = join(dir, source);
@@ -51,34 +54,58 @@ export async function generateAssetSet({
   console.log(`input: ${decoded.width}x${decoded.height}`);
   console.log(`trimmed: ${trimmed.width}x${trimmed.height}`);
 
+  const generated = new Map();
+
   for (const [name, size] of OUTPUTS[kind]) {
     const image = contain(trimmed, size, size);
-    writePng(join(outputDir, name), image);
+    const bytes = pngBytes(image);
+    generated.set(name, bytes);
+    if (!check) {
+      writeFileSync(join(outputDir, name), bytes);
+    }
     console.log(`wrote ${name} ${image.width}x${image.height}`);
   }
 
   if (kind === 'logo') {
     const windowIcon = contain(trimmed, 128, 128);
-    writeFileSync(join(outputDir, 'logo-icon-128.rgba'), windowIcon.rgba);
+    generated.set('logo-icon-128.rgba', windowIcon.rgba);
+    if (!check) {
+      writeFileSync(join(outputDir, 'logo-icon-128.rgba'), windowIcon.rgba);
+    }
     console.log(`wrote logo-icon-128.rgba ${windowIcon.width}x${windowIcon.height}`);
   }
 
   if (kind === 'avatar') {
     const splash = contain(trimmed, 320, 320);
-    writeFileSync(join(outputDir, 'avatar-splash.rgba'), splashRgba(splash));
+    const splashBytes = splashRgba(splash);
+    generated.set('avatar-splash.rgba', splashBytes);
+    if (!check) {
+      writeFileSync(join(outputDir, 'avatar-splash.rgba'), splashBytes);
+    }
     console.log(`wrote avatar-splash.rgba ${splash.width}x${splash.height}`);
   }
 
   const terminalSource = terminalCrop ? cropFraction(trimmed, terminalCrop) : trimmed;
   const terminal = terminalAnsi(terminalSource, terminalColumns, terminalRows, terminalMode, terminalCellAspect);
   const ansiName = kind === 'avatar' ? 'avatar-welcome.ansi' : 'logo-terminal.ansi';
-  writeFileSync(join(outputDir, ansiName), terminal, 'utf8');
+  generated.set(ansiName, Buffer.from(terminal, 'utf8'));
+  if (!check) {
+    writeFileSync(join(outputDir, ansiName), terminal, 'utf8');
+  }
   console.log(`wrote ${ansiName} ${terminalColumns}x${terminalRows} cells`);
 
   const graphite = compositeOnBackground(contain(trimmed, 768, 768), [13, 17, 23, 255]);
   const graphiteName = kind === 'avatar' ? 'avatar-on-graphite.png' : 'logo-on-graphite.png';
-  writePng(join(outputDir, graphiteName), graphite);
+  const graphiteBytes = pngBytes(graphite);
+  generated.set(graphiteName, graphiteBytes);
+  if (!check) {
+    writeFileSync(join(outputDir, graphiteName), graphiteBytes);
+  }
   console.log(`wrote ${graphiteName} ${graphite.width}x${graphite.height}`);
+
+  if (check) {
+    checkOutputs(outputDir, kind, generated);
+  }
 }
 
 function readPng(path) {
@@ -171,6 +198,10 @@ function paeth(left, up, upLeft) {
 }
 
 function writePng(path, image) {
+  writeFileSync(path, pngBytes(image));
+}
+
+function pngBytes(image) {
   const rawStride = image.width * 4;
   const raw = Buffer.alloc((rawStride + 1) * image.height);
   for (let y = 0; y < image.height; y++) {
@@ -184,7 +215,37 @@ function writePng(path, image) {
     chunk('IDAT', deflateSync(raw, { level: 9 })),
     chunk('IEND', Buffer.alloc(0)),
   ];
-  writeFileSync(path, Buffer.concat([PNG_SIGNATURE, ...chunks]));
+  return Buffer.concat([PNG_SIGNATURE, ...chunks]);
+}
+
+function checkOutputs(outputDir, kind, generated) {
+  const stale = [];
+  for (const [name, expected] of generated) {
+    const path = join(outputDir, name);
+    if (!existsSync(path) || !readFileSync(path).equals(expected)) {
+      stale.push(name);
+    }
+  }
+  if (stale.length > 0) {
+    throw new Error(
+      `${stale.map(staleOutputMessage).join('; ')}; rerun images/${kind}/generate.mjs`,
+    );
+  }
+  console.log(currentAssetsMessage(kind));
+}
+
+function staleOutputMessage(name) {
+  if (name === 'avatar-welcome.ansi') {
+    return STALE_AVATAR_ANSI_MESSAGE;
+  }
+  return `${name} is stale`;
+}
+
+function currentAssetsMessage(kind) {
+  if (kind === 'avatar') {
+    return CURRENT_AVATAR_ASSETS_MESSAGE;
+  }
+  return `Gromaq ${kind} assets are current`;
 }
 
 function ihdr(width, height) {
