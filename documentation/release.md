@@ -445,7 +445,12 @@ Proven locally:
   `LSDisplayName=Gromaq`, `pgrep` observed the bundled
   `Contents/MacOS/gromaq --window-screenshot-smoke` process, and the smoke
   completed with 900 presented frames. The helper writes `summary.txt` under
-  `target/macos-app-identity-proof` after all checks pass.
+  `target/macos-app-identity-proof` after all checks pass. A later current-host
+  rerun found the bundled process and LaunchServices identity but did not
+  refresh that summary because `--window-screenshot-smoke` reported 3600 redraw
+  attempts, 0 timeouts, and 3600 fully occluded surface acquisitions; the helper
+  now reports that condition directly instead of collapsing it into a generic
+  missing-success error.
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes

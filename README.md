@@ -384,7 +384,10 @@ scripts/prove-macos-app-identity.sh
 
 The identity helper writes live LaunchServices, System Events, process, package,
 and smoke handles under `target/macos-app-identity-proof`, including
-`summary.txt`.
+`summary.txt`. It fails closed if the packaged app launches but the macOS
+compositor reports every attempted surface frame as occluded; in that case
+check `target/macos-app-identity-proof/open.stderr` and rerun from a visible
+desktop session.
 
 The screenshot script launches bounded `--window-screenshot-smoke`, locates the
 visible `Gromaq` window through macOS window metadata, captures that specific
