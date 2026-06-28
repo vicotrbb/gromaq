@@ -25,18 +25,19 @@ with 0 skips: `vim-version` produced 2912 bytes containing `VIM`,
 `tmux-version` produced 11 bytes containing `tmux`, `less-version` produced
 296 bytes containing `less`, and the existing `ssh` and `kubectl` checks kept
 passing with the same expected markers. A later refreshed local run after
-adding safe `fish --version`, `nvim --version`, `htop --version`, and
-`btop --version` workflows checked 11 runtime tool workflows, passed the same
-7 present tools, skipped `fish-version`, `nvim-version`, `htop-version`, and
-`btop-version` because those binaries were not on PATH, and recorded 0
-failures.
+adding safe `fish --version`, `nvim --version`, `top` snapshot,
+`htop --version`, and `btop --version` workflows checked 12 runtime tool
+workflows, passed 8 present tools, skipped `fish-version`, `nvim-version`,
+`htop-version`, and `btop-version` because those binaries were not on PATH,
+passed `top-snapshot` with 2120 output bytes containing `Processes`, and
+recorded 0 failures.
 `scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
 writing the host inventory, PTY test log, and runtime external-tool smoke log
 under `target/compatibility-proof`. A refreshed local run under
-`target/compatibility-pty-count-proof` passed all 44 PTY tests, recorded
+`target/compatibility-top-proof` passed all 44 PTY tests, recorded
 `tools_present=8`, `tools_missing=5`, `pty_tests_passed=44`, and runtime smoke
-summary counts of `runtime_tool_workflow_checked=11`,
-`runtime_tool_workflow_passed=7`, `runtime_tool_workflow_skipped=4`, and
+summary counts of `runtime_tool_workflow_checked=12`,
+`runtime_tool_workflow_passed=8`, `runtime_tool_workflow_skipped=4`, and
 `runtime_tool_workflow_failed=0`.
 Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
 single bundle. The helper records the current host's tool inventory and writes
@@ -86,7 +87,7 @@ welcome-preview threshold step.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| `top` launch workflow | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `top` snapshot check. | Proven on current host; conditional elsewhere |
+| `top` launch workflow | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `top` snapshot check. A refreshed `cargo run -- --runtime-tool-workflow-smoke` also passed `top-snapshot` with 2120 output bytes containing `Processes` on macOS. | Proven on current host for PTY snapshot and runtime snapshot smoke; conditional elsewhere |
 | `htop`, `btop` launch workflows | Real PTY command workflows when available. On 2026-06-27, the current host did not have `htop` or `btop` on PATH, so these workflows remain unproven locally. `cargo run -- --runtime-tool-workflow-smoke` now includes `htop-version` and `btop-version` checks that pass when their `--version` output contains the matching tool name and report skips when the binaries are absent; the current host skips keep these unproven locally. | Conditional on host binaries; not proven on current host |
 | `ssh` launch workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `ssh -V` in a native PTY and requires `OpenSSH` output when the binary is present. It also runs the safe non-network `ssh -G localhost` config-dump workflow and requires `hostname localhost` output. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `ssh -V` workflow, and a refreshed local focused PTY run passed `pty_session_runs_ssh_config_dump_when_available`. A refreshed `cargo run -- --runtime-tool-workflow-smoke` passed `ssh-version` with 31 output bytes and `ssh-config` with 4226 output bytes. | Proven for current-host client/version and non-network config-dump workflows; smoke reports pass or skip elsewhere |
 | `kubectl` output workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `kubectl version --client=true --output=yaml` in a native PTY and requires `clientVersion` output when the binary is present. It also runs the safe local `kubectl config view --output=jsonpath={.kind}` workflow and requires `Config` output without contacting a cluster. On 2026-06-28, `cargo test --test pty -- --nocapture` passed the current-host `kubectl version --client=true --output=yaml` workflow, and a refreshed local focused PTY run passed `pty_session_runs_kubectl_config_view_when_available`. A refreshed `cargo run -- --runtime-tool-workflow-smoke` passed `kubectl-version` with 276 output bytes and `kubectl-config` with 6 output bytes. | Proven for current-host client/version and non-network local config-view workflows; smoke reports pass or skip elsewhere |
