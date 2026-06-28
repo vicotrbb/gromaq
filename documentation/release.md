@@ -258,8 +258,9 @@ and checks the installed binary plus desktop identity payloads under
 `gromaq-current-host-compatibility-proof` artifact. CI also has a Linux
 compatibility job that installs common Ubuntu shell/editor/TUI tools, runs the
 same helper, sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so expected installed tools
-fail closed, and uploads `gromaq-linux-compatibility-proof`; helper-backed
-remote proof for those compatibility artifacts is pending the next pushed run.
+fail closed, and uploads `gromaq-linux-compatibility-proof`. CI run
+`28314822034` passed and uploaded both compatibility artifacts before the
+overall run failed later in the macOS welcome-preview threshold step.
 CI also runs `bash -n packaging/arch/PKGBUILD`.
 The macOS `rust` job is configured to run `scripts/prove-theme-preview.sh`,
 `scripts/prove-welcome-preview.sh`, and
@@ -268,10 +269,13 @@ The macOS `rust` job is configured to run `scripts/prove-theme-preview.sh`,
 both `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof` so
 theme, prepared welcome preview, and README screenshot freshness proof artifacts
-are retained together after the next pushed run. The welcome and theme preview
-artifact uploads use `if: always()` so diagnostic visual artifacts survive
-proof-command or later macOS job failures when files were written before the
-failure.
+are retained together after a green run reaches both visual proof steps. CI run
+`28314822034` uploaded the theme artifact and the default welcome preview
+diagnostics, but the README freshness proof was skipped after the welcome proof
+failed on the macOS 26 text-pixel floor; the local threshold fix is pending the
+next 10-commit push batch. The welcome and theme preview artifact uploads use
+`if: always()` so diagnostic visual artifacts survive proof-command or later
+macOS job failures when files were written before the failure.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
 generation with
@@ -428,10 +432,9 @@ Proven locally:
 - Linux desktop metadata/cache discovery proof helper
   `scripts/prove-linux-desktop-discovery.sh`, which is Linux-only and validates
   installed desktop identity metadata under an isolated proof root when the
-  relevant desktop metadata tools are available. The Ubuntu `linux-packaging`
-  job is configured to run it after installing those tools, but helper-backed
-  remote CI proof is pending the next pushed run; it still does not prove live
-  menu UI rendering
+  relevant desktop metadata tools are available. CI run `28314822034` passed it
+  in the Ubuntu `linux-packaging` job after installing those tools; it still
+  does not prove live menu UI rendering
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - Debian `.deb` archive structure with a supplied binary, canonical
