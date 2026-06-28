@@ -98,6 +98,10 @@ if [ "${open_status}" -ne 0 ]; then
 fi
 
 if ! grep -q "window screenshot smoke: ok" "${open_stdout}"; then
+  if grep -q "surface occluded" "${open_stderr}"; then
+    printf '%s\n' "error: packaged app smoke never presented a surface frame because the macOS window was fully surface occluded; see ${open_stderr}." >&2
+    exit 1
+  fi
   printf '%s\n' "error: packaged app smoke did not report success; see ${open_stdout}." >&2
   exit 1
 fi
