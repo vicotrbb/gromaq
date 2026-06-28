@@ -297,9 +297,11 @@ scripts/prove-readme-welcome-preview.sh
 
 CI is configured to run `scripts/prove-theme-preview.sh` and upload the default
 and configured theme preview PPMs, PNGs, logs, and config under
-`target/theme-preview-proof/*` as `gromaq-theme-preview-proof`. CI run
-`28314822034` uploaded that artifact after the theme proof passed, even though
-the overall run later failed in the welcome-preview step.
+`target/theme-preview-proof/*` as `gromaq-theme-preview-proof`, including a
+compact `summary.txt`. CI run `28314822034` uploaded that artifact after the
+theme proof passed, even though the overall run later failed in the
+welcome-preview step; the summary artifact is pending the next 10-commit push
+batch.
 CI is also configured to upload both `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof`, so
 the generated welcome preview and committed README screenshot freshness proof

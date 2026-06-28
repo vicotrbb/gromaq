@@ -46,6 +46,8 @@ fn theme_preview_proof_keeps_configured_visual_quality_path() {
         "require_ppm_dimensions \"${default_ppm}\" 1036 292",
         "require_ppm_dimensions \"${config_ppm}\" 1036 292",
         "require_min_metric \"${log_path}\" \"prepared quads\" 100",
+        "summary.txt",
+        "Theme preview proof: ok",
     ] {
         assert!(
             source.contains(marker),

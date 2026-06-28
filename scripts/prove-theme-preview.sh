@@ -10,11 +10,13 @@ config_path="${proof_dir}/gromaq-theme-preview-config.toml"
 config_ppm="${proof_dir}/gromaq-theme-preview-config.ppm"
 config_png="${proof_dir}/gromaq-theme-preview-config.png"
 config_log="${proof_dir}/theme-preview-config.log"
+summary_path="${proof_dir}/summary.txt"
 
 mkdir -p "${proof_dir}"
 rm -f \
   "${default_ppm}" "${default_png}" "${default_log}" \
-  "${config_path}" "${config_ppm}" "${config_png}" "${config_log}"
+  "${config_path}" "${config_ppm}" "${config_png}" "${config_log}" \
+  "${summary_path}"
 
 cd "${root}"
 
@@ -152,8 +154,17 @@ else
   printf '%s\n' "theme preview PNG: skipped (sips not available)"
 fi
 
-printf '%s\n' "Theme preview proof: ok"
-printf '%s\n' "Default PPM artifact: ${default_ppm}"
-printf '%s\n' "Configured PPM artifact: ${config_ppm}"
-printf '%s\n' "Default proof log: ${default_log}"
-printf '%s\n' "Configured proof log: ${config_log}"
+{
+  printf '%s\n' "Theme preview proof: ok"
+  printf '%s\n' "Default PPM artifact: ${default_ppm}"
+  if [ -s "${default_png}" ]; then
+    printf '%s\n' "Default PNG artifact: ${default_png}"
+  fi
+  printf '%s\n' "Configured PPM artifact: ${config_ppm}"
+  if [ -s "${config_png}" ]; then
+    printf '%s\n' "Configured PNG artifact: ${config_png}"
+  fi
+  printf '%s\n' "Default proof log: ${default_log}"
+  printf '%s\n' "Configured proof log: ${config_log}"
+  printf '%s\n' "Configured proof config: ${config_path}"
+} | tee "${summary_path}"
