@@ -15,6 +15,15 @@ fn pty_session_runs_bash_interactive_workflow_when_available() {
 }
 
 #[test]
+fn pty_session_runs_bash_cwd_workflow_when_available() {
+    let expected = std::env::current_dir()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
+    assert_interactive_shell_outputs_when_available("bash", b"pwd\nexit\n", &expected);
+}
+
+#[test]
 fn pty_session_runs_zsh_command_when_available() {
     assert_shell_command_outputs("zsh", "gromaq-zsh");
 }
@@ -26,6 +35,15 @@ fn pty_session_runs_zsh_interactive_workflow_when_available() {
         b"printf 'gromaq-zsh-interactive\\n'\nexit\n",
         "gromaq-zsh-interactive",
     );
+}
+
+#[test]
+fn pty_session_runs_zsh_cwd_workflow_when_available() {
+    let expected = std::env::current_dir()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
+    assert_interactive_shell_outputs_when_available("zsh", b"pwd\nexit\n", &expected);
 }
 
 #[test]
