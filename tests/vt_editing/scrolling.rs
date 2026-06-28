@@ -105,6 +105,22 @@ fn decstbm_constrains_linefeed_scrolling_to_region() {
 }
 
 #[test]
+fn decstbm_zero_parameters_reset_scroll_region_to_full_viewport() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[2;4r\x1b[0;0r\x1bP$qr\x1b\\")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1bP1$r1;5r\x1b\\"
+    );
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 0);
+}
+
+#[test]
 fn dec_origin_mode_positions_cursor_relative_to_scroll_region() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
 

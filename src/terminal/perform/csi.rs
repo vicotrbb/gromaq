@@ -76,8 +76,14 @@ impl Terminal {
     }
 
     fn set_csi_scroll_region(&mut self, params: &Params) {
-        let top = first_value(params, 0).unwrap_or(1);
-        let bottom = first_value(params, 1).unwrap_or(self.config.rows);
+        let top = match first_value(params, 0) {
+            Some(0) | None => 1,
+            Some(value) => value,
+        };
+        let bottom = match first_value(params, 1) {
+            Some(0) | None => self.config.rows,
+            Some(value) => value,
+        };
         self.set_scroll_region(top, bottom);
     }
 
