@@ -38,11 +38,13 @@ cp "${root}/images/logos/logo-icon-256.png" \
   "${staging_dir}/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
 
 tar -C "${dist_dir}" -czf "${archive_path}" "$(basename "${staging_dir}")"
+payload_files="$(find "${staging_dir}" -type f | wc -l | tr -d ' ')"
 
 {
   printf '%s\n' "Linux tarball package: ok"
   printf '%s\n' "Archive: ${archive_path}"
   printf '%s\n' "Staging dir: ${staging_dir}"
+  printf '%s\n' "Payload files: ${payload_files}"
   printf '%s\n' "Binary: ${staging_dir}/bin/${package}"
   printf '%s\n' "Desktop file: ${staging_dir}/share/applications/dev.gromaq.Gromaq.desktop"
   printf '%s\n' "AppStream metainfo: ${staging_dir}/share/metainfo/dev.gromaq.Gromaq.metainfo.xml"

@@ -18,7 +18,6 @@ mod unix {
         let listing = tar_listing(&archive);
         let summary = fs::read_to_string(dist.path().join("gromaq-linux-tarball-summary.txt"))
             .expect("linux tarball summary must be written");
-
         for required in [
             "/bin/gromaq",
             "/README.md",
@@ -35,9 +34,10 @@ mod unix {
                 listing.join("\n")
             );
         }
-        assert!(summary.contains("Linux tarball package: ok"));
+        assert!(
+            summary.contains("Linux tarball package: ok") && summary.contains("Payload files: 6")
+        );
     }
-
     #[test]
     fn debian_package_script_assembles_installable_desktop_package_from_stub_binary() {
         let dist = run_packaging_script(
