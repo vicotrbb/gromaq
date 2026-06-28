@@ -134,6 +134,7 @@ scripts/package-macos-app.sh
 scripts/prove-macos-app-identity.sh
 scripts/prove-debian-package.sh
 scripts/prove-linux-release-install.sh
+scripts/prove-github-release-install.sh
 scripts/prove-arch-package.sh
 bash -n packaging/arch/PKGBUILD
 sh -n packaging/arch/gromaq.install
@@ -199,6 +200,11 @@ On Linux hosts, `scripts/prove-linux-release-install.sh` packages the release
 tarball, writes checksums, installs through `GROMAQ_INSTALL_METHOD=release`
 from a local `file://` release base, and verifies the binary plus desktop
 identity payloads under `target/release-install-proof`.
+After a tagged GitHub Release publishes the Linux tarball and
+`SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
+`scripts/prove-github-release-install.sh` to exercise the real GitHub Release
+download path into `target/github-release-install-proof`; this live proof has
+not passed yet.
 
 ## Status
 

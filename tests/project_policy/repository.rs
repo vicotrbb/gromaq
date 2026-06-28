@@ -28,6 +28,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-arch-package.sh",
     "scripts/prove-debian-package.sh",
     "scripts/prove-linux-release-install.sh",
+    "scripts/prove-github-release-install.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
@@ -151,6 +152,8 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/prove-debian-package.sh")).unwrap();
     let linux_release_proof_script =
         fs::read_to_string(root.join("scripts/prove-linux-release-install.sh")).unwrap();
+    let github_release_proof_script =
+        fs::read_to_string(root.join("scripts/prove-github-release-install.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
@@ -256,6 +259,19 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_release_proof_script.contains("scripts/generate-checksums.sh"));
     assert!(linux_release_proof_script.contains("GROMAQ_INSTALL_METHOD=release"));
     assert!(linux_release_proof_script.contains("GROMAQ_RELEASE_BASE=\"file://"));
+    assert!(github_release_proof_script.contains("Linux"));
+    assert!(github_release_proof_script.contains("GROMAQ_INSTALL_METHOD=release"));
+    assert!(github_release_proof_script.contains("GROMAQ_VERSION"));
+    assert!(
+        github_release_proof_script
+            .contains("https://github.com/vicotrbb/gromaq/releases/download")
+    );
+    assert!(github_release_proof_script.contains("GROMAQ_RELEASE_PROOF_ROOT"));
+    assert!(github_release_proof_script.contains("GROMAQ_BIN_DIR=\"${proof_root}/bin\""));
+    assert!(github_release_proof_script.contains("GROMAQ_INSTALL_ROOT=\"${proof_root}\""));
+    assert!(github_release_proof_script.contains("GROMAQ_VERIFY_CHECKSUMS=1"));
+    assert!(github_release_proof_script.contains("share/applications/dev.gromaq.Gromaq.desktop"));
+    assert!(github_release_proof_script.contains("GitHub release install proof: ok"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));

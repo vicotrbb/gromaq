@@ -89,6 +89,7 @@ Build a tarball from the current checkout:
 ```bash
 scripts/package-linux-tarball.sh
 scripts/prove-linux-release-install.sh
+scripts/prove-github-release-install.sh
 ```
 
 The archive includes:
@@ -106,6 +107,12 @@ generates checksums, installs through `GROMAQ_INSTALL_METHOD=release` from a
 local `file://` release base into `target/release-install-proof`, and verifies
 the installed binary plus desktop identity payloads without writing to the
 user's home directory.
+After a tagged GitHub Release publishes the Linux tarball and
+`SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
+`scripts/prove-github-release-install.sh` to install from the real GitHub
+Release URL into `target/github-release-install-proof` with checksum
+verification enabled. That helper is present for the live download proof, but
+the proof is still unrun until release assets exist.
 
 ## Debian Package
 
@@ -374,6 +381,10 @@ Proven locally:
   `tests/install_dry_run.rs::install_script_installs_linux_release_tarball_from_local_base`
   against a locally generated tarball and matching checksum manifest without
   network or home writes
+- live GitHub Release installer proof helper
+  `scripts/prove-github-release-install.sh`, which is Linux-only and installs
+  real GitHub Release assets into `target/github-release-install-proof` with
+  checksum verification enabled once tagged release assets exist
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - Debian `.deb` archive structure with a supplied binary, canonical
