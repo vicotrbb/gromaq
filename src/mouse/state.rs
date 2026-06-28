@@ -3,6 +3,11 @@ use super::{
 };
 
 impl MouseReportState {
+    /// Enable or disable X10 button-press reporting.
+    pub fn set_x10_reporting(&mut self, enabled: bool) {
+        self.x10_reporting = enabled;
+    }
+
     /// Enable or disable button-event reporting.
     pub fn set_button_reporting(&mut self, enabled: bool) {
         self.button_reporting = enabled;
@@ -30,6 +35,11 @@ impl MouseReportState {
     /// Whether DECSET 1000 button-event reporting is enabled.
     pub fn button_reporting_enabled(self) -> bool {
         self.button_reporting
+    }
+
+    /// Whether DECSET 9 X10 button-press reporting is enabled.
+    pub fn x10_reporting_enabled(self) -> bool {
+        self.x10_reporting
     }
 
     /// Whether DECSET 1002 button-motion reporting is enabled.
@@ -62,6 +72,8 @@ impl MouseReportState {
             MouseReportMode::ButtonMotion
         } else if self.button_reporting {
             MouseReportMode::Button
+        } else if self.x10_reporting {
+            MouseReportMode::X10
         } else {
             MouseReportMode::Disabled
         }
@@ -72,6 +84,11 @@ impl MouseReportMode {
     fn reports(self, kind: MouseEventKind) -> bool {
         match (self, kind) {
             (Self::Disabled, _) => false,
+            (Self::X10, MouseEventKind::Press) => true,
+            (
+                Self::X10,
+                MouseEventKind::Release | MouseEventKind::Drag | MouseEventKind::Motion,
+            ) => false,
             (Self::Button, MouseEventKind::Press | MouseEventKind::Release) => true,
             (Self::Button, MouseEventKind::Drag | MouseEventKind::Motion) => false,
             (Self::ButtonMotion, MouseEventKind::Motion) => false,

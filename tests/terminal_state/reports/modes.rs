@@ -83,3 +83,17 @@ fn dec_private_mode_reports_include_mouse_and_focus_state() {
           \x1b[?1000;1$y\x1b[?1002;1$y\x1b[?1003;1$y\x1b[?1004;1$y\x1b[?1006;1$y"
     );
 }
+
+#[test]
+fn dec_private_mode_reports_include_x10_mouse_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[?9$p\x1b[?9h\x1b[?9$p\x1b[?9l\x1b[?9$p")
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[?9;2$y\x1b[?9;1$y\x1b[?9;2$y"
+    );
+}

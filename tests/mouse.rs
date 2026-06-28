@@ -37,6 +37,24 @@ fn default_mouse_protocol_reports_press_and_release_when_sgr_is_disabled() {
 }
 
 #[test]
+fn x10_mouse_mode_reports_button_presses_only() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+    terminal.write_str("\x1b[?9h").unwrap();
+
+    let press = MouseEvent::new(MouseEventKind::Press, MouseButton::Left, 2, 1);
+    let release = MouseEvent::new(MouseEventKind::Release, MouseButton::Left, 2, 1);
+    let drag = MouseEvent::new(MouseEventKind::Drag, MouseButton::Left, 2, 1);
+
+    assert_eq!(terminal.encode_mouse_event(press).unwrap(), b"\x1b[M #\"");
+    assert_eq!(terminal.encode_mouse_event(release), None);
+    assert_eq!(terminal.encode_mouse_event(drag), None);
+
+    terminal.write_str("\x1b[?9l").unwrap();
+
+    assert_eq!(terminal.encode_mouse_event(press), None);
+}
+
+#[test]
 fn disabling_mouse_reporting_stops_encoding_events() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     terminal.write_str("\x1b[?1000h\x1b[?1006h").unwrap();

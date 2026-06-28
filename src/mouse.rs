@@ -17,6 +17,7 @@ pub enum MouseProtocol {
 /// Mouse reporting state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MouseReportState {
+    x10_reporting: bool,
     button_reporting: bool,
     button_motion_reporting: bool,
     any_motion_reporting: bool,
@@ -26,6 +27,7 @@ pub struct MouseReportState {
 impl Default for MouseReportState {
     fn default() -> Self {
         Self {
+            x10_reporting: false,
             button_reporting: false,
             button_motion_reporting: false,
             any_motion_reporting: false,
@@ -39,6 +41,8 @@ impl Default for MouseReportState {
 pub enum MouseReportMode {
     /// No mouse reports.
     Disabled,
+    /// X10 button press reports.
+    X10,
     /// Button press/release reports.
     Button,
     /// Button press/release plus drag reports.
