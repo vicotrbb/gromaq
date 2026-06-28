@@ -151,6 +151,14 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "Add live Linux desktop menu refresh proof.",
     ),
+    (
+        "documentation/compatibility.md",
+        "Add live desktop OS paste-menu workflow proof.",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Add Developer ID signed and notarized macOS app distribution proof.",
+    ),
     ("documentation/release.md", "28301610408"),
     ("documentation/compatibility.md", "28301610408"),
 ];

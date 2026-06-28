@@ -123,6 +123,8 @@ were skipped because those binaries were not on PATH.
 - Add live Linux release-method install proof from GitHub Release assets.
 - Add live Arch `makepkg` build/install proof.
 - Add live Linux desktop menu refresh proof.
+- Add live desktop OS paste-menu workflow proof.
+- Add Developer ID signed and notarized macOS app distribution proof.
 - Expand editor/multiplexer interaction beyond the current scripted edit,
   alternate-screen, search, and mouse workflows.
 - Expand `ssh` and `kubectl` beyond current safe local client/version commands
