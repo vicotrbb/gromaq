@@ -293,13 +293,17 @@ then proved the bounded-delta README freshness helper and README freshness
 commit `84740e3` after rerunning avatar freshness, default welcome proof,
 README screenshot freshness proof, and the full packaging/compatibility CI job
 set for the refreshed 33x17 block avatar. CI run `28326188288` completed green
-for commit `0dfed64` after rerunning the same helper set for the current 33x17
+for commit `0dfed64` after rerunning the same helper set for the previous 33x17
 Braille avatar; the macOS welcome proof accepted 20509 high-contrast text
 pixels, 25966 avatar color pixels, 654 glyph quads, 0 cursor quads, 576576
-atlas bytes, and `Metric: avatar rows=17`. The welcome and theme preview
-artifact uploads use `if: always()` so diagnostic visual artifacts survive
-proof-command or later macOS job failures when files were written before the
-failure.
+atlas bytes, and `Metric: avatar rows=17`. The refreshed local
+36x17-sampled Braille avatar proof accepted 25564 high-contrast text pixels,
+36299 avatar color pixels, 692 glyph quads, 0 cursor quads, and
+624624 atlas bytes. The committed README PNG freshness proof passed with
+matching 1468x820 dimensions, 22 changed pixels, and mean delta 0.00. The
+welcome and theme preview artifact uploads use `if: always()` so diagnostic
+visual artifacts survive proof-command or later macOS job failures when files
+were written before the failure.
 Release jobs also run `scripts/generate-checksums.sh`, report the checksum
 entry count, and upload `SHA256SUMS` next to each artifact set. The Linux
 packaging and release jobs run checksum generation with

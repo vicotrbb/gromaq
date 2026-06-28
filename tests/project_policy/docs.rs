@@ -92,6 +92,10 @@ const REQUIRED_VISUAL_CONTRACT_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "runtime perf p95 smoke: ok",
     ),
+    ("documentation/release.md", "36x17-sampled Braille avatar"),
+    ("documentation/release.md", "36299 avatar color pixels"),
+    ("documentation/release.md", "692 glyph quads"),
+    ("documentation/release.md", "624624 atlas bytes"),
 ];
 
 const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
@@ -274,7 +278,6 @@ const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
 #[test]
 fn public_docs_keep_default_visual_contract_and_proof_commands() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-
     for (relative, marker) in REQUIRED_VISUAL_CONTRACT_DOC_MARKERS {
         let path = root.join(relative);
         let source = fs::read_to_string(&path).unwrap();
@@ -289,7 +292,6 @@ fn public_docs_keep_default_visual_contract_and_proof_commands() {
 #[test]
 fn public_docs_keep_release_install_boundaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-
     for (relative, marker) in REQUIRED_RELEASE_DOC_MARKERS {
         let path = root.join(relative);
         let source = fs::read_to_string(&path).unwrap();
