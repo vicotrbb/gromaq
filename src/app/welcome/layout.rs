@@ -1,5 +1,5 @@
 const SECTION_RULE_WIDTH: usize = 36;
-const WELCOME_GAP_WIDTH: usize = 2;
+const WELCOME_GAP_WIDTH: usize = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct WelcomeStyle {

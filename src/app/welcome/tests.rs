@@ -46,9 +46,9 @@ fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_block_glyphs() 
     let widths: Vec<_> = lines.iter().map(|line| ansi_visible_width(line)).collect();
     let max_width = widths.iter().copied().max().unwrap_or(0);
 
-    assert_eq!(lines.len(), 15);
-    assert_eq!(max_width, 31);
-    assert!(widths.iter().all(|width| *width == 31));
+    assert_eq!(lines.len(), 16);
+    assert_eq!(max_width, 33);
+    assert!(widths.iter().all(|width| *width == 33));
     assert!(WELCOME_AVATAR_ANSI.chars().any(is_terminal_block));
 
     // The avatar is baked for the default gromaq cell (18x44px). A near-square
@@ -65,12 +65,12 @@ fn default_welcome_avatar_keeps_dense_color_detail() {
     let unique_colors: HashSet<_> = colors.iter().copied().collect();
 
     assert!(
-        colors.len() >= 240,
+        colors.len() >= 260,
         "avatar foreground detail too sparse: {} colored cells",
         colors.len()
     );
     assert!(
-        unique_colors.len() >= 230,
+        unique_colors.len() >= 250,
         "avatar color detail too low: {} unique foreground colors",
         unique_colors.len()
     );
@@ -115,6 +115,7 @@ fn default_welcome_text_does_not_wrap_at_narrow_runtime_width() {
     assert_eq!(lines.len(), WELCOME_AVATAR_ANSI.lines().count());
     assert!(lines.iter().all(|line| ansi_visible_width(line) <= 69));
     assert!(text.contains("69x17 cells"));
+    assert!(text.contains("native Rust GPU terminal"));
 }
 
 #[test]
