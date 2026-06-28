@@ -206,8 +206,9 @@ On Linux desktop hosts with `desktop-file-validate`, `appstreamcli`,
 `update-desktop-database`, and `gtk-update-icon-cache` available,
 `scripts/prove-linux-desktop-discovery.sh` installs the desktop identity
 payloads into an isolated proof root, validates the `.desktop` and AppStream
-metadata, refreshes the desktop database and hicolor icon cache there, and
-records that this metadata/cache proof does not prove live menu UI rendering.
+metadata, refreshes the desktop database and hicolor icon cache there, writes
+`summary.txt`, and records that this metadata/cache proof does not prove live
+menu UI rendering.
 After a tagged GitHub Release publishes the Linux tarball and
 `SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
 `scripts/prove-github-release-install.sh` to exercise the real GitHub Release

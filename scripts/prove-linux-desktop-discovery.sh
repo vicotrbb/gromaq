@@ -10,6 +10,7 @@ icon_theme_dir="${data_home}/icons/hicolor"
 desktop_file="${applications_dir}/dev.gromaq.Gromaq.desktop"
 metainfo_file="${data_home}/metainfo/dev.gromaq.Gromaq.metainfo.xml"
 icon_file="${icon_theme_dir}/256x256/apps/dev.gromaq.Gromaq.png"
+summary_path="${proof_root}/summary.txt"
 
 require_command() {
   command_name="$1"
@@ -71,7 +72,12 @@ update-desktop-database "${applications_dir}" >> "${log_path}" 2>&1
 write_hicolor_index_if_missing
 gtk-update-icon-cache -q -t -f "${icon_theme_dir}" >> "${log_path}" 2>&1
 
-printf '%s\n' "Linux desktop discovery proof: ok"
-printf '%s\n' "Proof root: ${proof_root}"
-printf '%s\n' "Proof log: ${log_path}"
-printf '%s\n' "This validates installed desktop metadata and caches; it does not prove live menu UI rendering."
+{
+  printf '%s\n' "Linux desktop discovery proof: ok"
+  printf '%s\n' "Proof root: ${proof_root}"
+  printf '%s\n' "Proof log: ${log_path}"
+  printf '%s\n' "Desktop file: ${desktop_file}"
+  printf '%s\n' "AppStream metainfo: ${metainfo_file}"
+  printf '%s\n' "Icon file: ${icon_file}"
+  printf '%s\n' "This validates installed desktop metadata and caches; it does not prove live menu UI rendering."
+} | tee "${summary_path}"

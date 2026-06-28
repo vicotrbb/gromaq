@@ -119,8 +119,8 @@ desktop identity payloads into `target/linux-desktop-discovery-proof` by
 default, requires `desktop-file-validate`, `appstreamcli`,
 `update-desktop-database`, and `gtk-update-icon-cache`, validates the desktop
 file and AppStream metadata, refreshes the proof-root desktop database and
-hicolor icon cache, and records that this metadata/cache proof does not prove
-live menu UI rendering.
+hicolor icon cache, writes `summary.txt`, and records that this metadata/cache
+proof does not prove live menu UI rendering.
 
 ## Debian Package
 

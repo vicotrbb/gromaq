@@ -299,6 +299,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_desktop_discovery_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(linux_desktop_discovery_script.contains("dev.gromaq.Gromaq.metainfo.xml"));
     assert!(linux_desktop_discovery_script.contains("dev.gromaq.Gromaq.png"));
+    assert!(linux_desktop_discovery_script.contains("summary.txt"));
+    assert!(linux_desktop_discovery_script.contains("Linux desktop discovery proof: ok"));
     assert!(linux_desktop_discovery_script.contains("does not prove live menu UI rendering"));
     assert!(compatibility_proof_script.contains("target/compatibility-proof"));
     assert!(compatibility_proof_script.contains("cargo test --test pty -- --nocapture"));
