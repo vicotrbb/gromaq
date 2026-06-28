@@ -297,14 +297,18 @@ scripts/prove-readme-welcome-preview.sh
 
 CI is configured to run `scripts/prove-theme-preview.sh` and upload the default
 and configured theme preview PPMs, PNGs, logs, and config under
-`target/theme-preview-proof/*` as `gromaq-theme-preview-proof`; helper-backed
-remote proof for that artifact is pending the next pushed run.
+`target/theme-preview-proof/*` as `gromaq-theme-preview-proof`. CI run
+`28314822034` uploaded that artifact after the theme proof passed, even though
+the overall run later failed in the welcome-preview step.
 CI is also configured to upload both `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof`, so
 the generated welcome preview and committed README screenshot freshness proof
-are retained together after the next pushed run. The visual proof upload uses
-`if: always()` so logs and artifacts are preserved when a later CI step fails
-or a proof command fails after writing diagnostic output.
+are retained together after a green run reaches both proof steps. The visual
+proof upload uses `if: always()` so logs and artifacts are preserved when a
+later CI step fails or a proof command fails after writing diagnostic output.
+Run `28314822034` uploaded the default welcome preview diagnostics after the
+macOS 26 text-pixel floor failure, but the README freshness step was skipped;
+the local threshold fix is pending the next 10-commit push batch.
 
 Current-host compatibility proof bundle:
 
@@ -320,8 +324,9 @@ macOS `rust` job and upload `target/compatibility-proof/*` as the
 a Linux compatibility job that installs common Ubuntu shell/editor/TUI tools,
 runs the same helper, and uploads `gromaq-linux-compatibility-proof`;
 that Linux job sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so the proof fails if any
-expected installed tool is absent. Helper-backed remote proof for both new
-artifacts is pending the next pushed run.
+expected installed tool is absent. CI run `28314822034` passed and uploaded
+both the macOS current-host compatibility artifact and the Linux compatibility
+artifact before the overall run failed later in the welcome-preview step.
 
 Manual live-window screenshot proof on macOS:
 
