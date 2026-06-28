@@ -366,8 +366,9 @@ and smoke handles under `target/macos-app-identity-proof`, including
 
 The screenshot script launches bounded `--window-screenshot-smoke`, locates the
 visible `Gromaq` window through macOS window metadata, captures that specific
-window under `target/`, and waits for the app process to exit. If macOS cannot
-capture the window id directly, it can fall back to the detected window bounds,
+window under `target/`, writes `gromaq-live-window-proof-summary.txt` after
+validation accepts the capture, and waits for the app process to exit. If macOS
+cannot capture the window id directly, it can fall back to the detected window bounds,
 then validates that the screenshot contains Gromaq's default terminal
 background and foreground text colors before accepting it. Rejected captures
 are removed. It is intentionally manual because desktop screenshots can include

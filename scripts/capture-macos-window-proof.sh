@@ -131,6 +131,7 @@ SWIFT
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 output="${1:-${root}/target/gromaq-live-window-proof.png}"
 log_path="${GROMAQ_WINDOW_PROOF_LOG:-${root}/target/gromaq-live-window-proof.log}"
+summary_path="${GROMAQ_WINDOW_PROOF_SUMMARY:-${root}/target/gromaq-live-window-proof-summary.txt}"
 window_capture_stderr="${log_path}.window-capture"
 region_capture_stderr="${log_path}.region-capture"
 validation_stderr="${log_path}.validation"
@@ -141,8 +142,8 @@ min_foreground_pixels="${GROMAQ_SCREENSHOT_MIN_FOREGROUND_PIXELS:-20}"
 window_lookup_attempts="${GROMAQ_WINDOW_LOOKUP_ATTEMPTS:-20}"
 window_lookup_interval="${GROMAQ_WINDOW_LOOKUP_INTERVAL_SECONDS:-0.2}"
 
-mkdir -p "$(dirname "${output}")" "$(dirname "${log_path}")"
-rm -f "${window_capture_stderr}" "${region_capture_stderr}" "${validation_stderr}"
+mkdir -p "$(dirname "${output}")" "$(dirname "${log_path}")" "$(dirname "${summary_path}")"
+rm -f "${window_capture_stderr}" "${region_capture_stderr}" "${validation_stderr}" "${summary_path}"
 : > "${log_path}"
 
 if ! preflight_screen_capture_access >> "${log_path}" 2>&1; then
@@ -248,5 +249,12 @@ if [ "${validation_status}" -ne 0 ]; then
   exit "${validation_status}"
 fi
 
-printf '%s\n' "Wrote screenshot proof: ${output}"
-printf '%s\n' "Wrote window smoke log: ${log_path}"
+{
+  printf '%s\n' "macOS live-window screenshot proof: ok"
+  printf '%s\n' "Screenshot proof: ${output}"
+  printf '%s\n' "Window smoke log: ${log_path}"
+  printf '%s\n' "Window id: ${window_id}"
+  printf '%s\n' "Window region: ${window_region}"
+  printf '%s\n' "Window sharing state: ${window_sharing_state}"
+  printf '%s\n' "Capture method: ${capture_method}"
+} | tee "${summary_path}"
