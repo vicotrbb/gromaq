@@ -163,6 +163,18 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/compatibility.md", "28301610408"),
 ];
 
+const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
+    "live desktop OS paste-menu workflow",
+    "hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display",
+    "live desktop screenshot proof across supported platforms",
+    "live tag-triggered GitHub Release asset publication",
+    "live Linux release-method install from GitHub Release assets",
+    "live Arch `makepkg` build/install",
+    "live Linux desktop menu refresh",
+    "wider compatibility matrix coverage across shells, editors, multiplexers",
+    "Developer ID signed/notarized macOS app distribution",
+];
+
 #[test]
 fn public_docs_keep_default_visual_contract_and_proof_commands() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -188,6 +200,21 @@ fn public_docs_keep_release_install_boundaries() {
         assert!(
             source.contains(marker),
             "{} must document `{marker}` for public install and release boundaries",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
+fn readme_keeps_known_completion_gaps_visible() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("README.md");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in REQUIRED_README_COMPLETION_GAP_MARKERS {
+        assert!(
+            source.contains(marker),
+            "{} must keep `{marker}` visible in the not-yet-complete proof list",
             relative_path(root, &path)
         );
     }
