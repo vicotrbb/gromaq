@@ -12,10 +12,14 @@ summary="${proof_dir}/summary.txt"
 printf '%s\n' "Current-host compatibility proof" | tee -a "${inventory}"
 printf 'timestamp_utc=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" | tee -a "${inventory}"
 
+tools_present=0
+tools_missing=0
 for tool in bash zsh fish nu vim nvim tmux less top htop btop ssh kubectl; do
   if command -v "${tool}" >/dev/null 2>&1; then
+    tools_present=$((tools_present + 1))
     printf '%s=%s\n' "${tool}" "$(command -v "${tool}")" | tee -a "${inventory}"
   else
+    tools_missing=$((tools_missing + 1))
     printf '%s=missing\n' "${tool}" | tee -a "${inventory}"
   fi
 done
@@ -55,6 +59,8 @@ run_and_capture runtime-tool-workflow cargo run -- --runtime-tool-workflow-smoke
 {
   printf '%s\n' "Current-host compatibility proof: ok"
   printf 'proof_dir=%s\n' "${proof_dir}"
+  printf 'tools_present=%s\n' "${tools_present}"
+  printf 'tools_missing=%s\n' "${tools_missing}"
   printf 'inventory=%s\n' "${inventory}"
   printf 'pty_log=%s\n' "${proof_dir}/pty.log"
   printf 'runtime_tool_workflow_log=%s\n' "${proof_dir}/runtime-tool-workflow.log"

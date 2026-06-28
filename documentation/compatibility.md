@@ -18,12 +18,15 @@ containing `clientVersion`.
 writing the host inventory, PTY test log, and runtime external-tool smoke log
 under `target/compatibility-proof`. That fresh bundle again passed all 37 PTY
 tests, passed both runtime tool checks with 0 skips, and recorded `fish`, `nu`,
-`nvim`, `htop`, and `btop` as missing on the current host.
+`nvim`, `htop`, and `btop` as missing on the current host. A refreshed local
+run under `target/tool-count-compatibility-proof` recorded `tools_present=8`
+and `tools_missing=5` in `summary.txt` with the same PTY/runtime success.
 Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
 single bundle. The helper records the current host's tool inventory and writes
 the `cargo test --test pty -- --nocapture` and
 `cargo run -- --runtime-tool-workflow-smoke` logs under
-`target/compatibility-proof` along with a compact `summary.txt` success marker.
+`target/compatibility-proof` along with a compact `summary.txt` success marker
+that includes present and missing tool counts.
 `.github/workflows/ci.yml` is configured to run the helper in the macOS `rust`
 job and upload `target/compatibility-proof/*` as the
 `gromaq-current-host-compatibility-proof` artifact. The workflow is also
