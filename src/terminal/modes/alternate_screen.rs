@@ -26,6 +26,7 @@ impl Terminal {
             application_keypad: self.application_keypad,
             focus_event_reporting: self.focus_event_reporting,
             mouse: self.mouse,
+            bracketed_paste: self.bracketed_paste,
             insert_mode: self.insert_mode,
             linefeed_newline_mode: self.linefeed_newline_mode,
             g0_dec_special_graphics: self.g0_dec_special_graphics,
@@ -51,6 +52,7 @@ impl Terminal {
         self.application_keypad = false;
         self.focus_event_reporting = false;
         self.mouse = MouseReportState::default();
+        self.bracketed_paste = false;
         self.insert_mode = false;
         self.linefeed_newline_mode = false;
         self.g0_dec_special_graphics = false;
@@ -78,6 +80,7 @@ impl Terminal {
             self.application_keypad = saved.application_keypad;
             self.focus_event_reporting = saved.focus_event_reporting;
             self.mouse = saved.mouse;
+            self.bracketed_paste = saved.bracketed_paste;
             self.insert_mode = saved.insert_mode;
             self.linefeed_newline_mode = saved.linefeed_newline_mode;
             self.g0_dec_special_graphics = saved.g0_dec_special_graphics;

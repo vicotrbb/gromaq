@@ -104,6 +104,17 @@ fn alternate_screen_mouse_modes_do_not_leak_to_primary_screen() {
 }
 
 #[test]
+fn alternate_screen_bracketed_paste_does_not_leak_to_primary_screen() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[?1049h\x1b[?2004h\x1b[?1049l\x1b[?2004$p")
+        .unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[?2004;2$y");
+}
+
+#[test]
 fn repeated_1049_enter_keeps_original_primary_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 
