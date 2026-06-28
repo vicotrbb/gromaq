@@ -254,3 +254,31 @@ fn resize_preserves_visible_text_and_clamps_cursor() {
     assert!(terminal.dump_cursor().row < 3);
     assert!(terminal.dump_cursor().col < 4);
 }
+
+#[test]
+fn resize_clamps_saved_sco_cursor_before_restore() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
+
+    terminal.write_str("\x1b[4;8H\x1b[s").unwrap();
+    terminal.resize(4, 2).unwrap();
+    terminal.write_str("\x1b[uZ").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(1), "   Z");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}
+
+#[test]
+fn resize_clamps_saved_dec_cursor_before_restore() {
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 4).unwrap());
+
+    terminal.write_str("\x1b[4;8H\x1b7").unwrap();
+    terminal.resize(4, 2).unwrap();
+    terminal.write_str("\x1b8Z").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(1), "   Z");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 3);
+}

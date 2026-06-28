@@ -59,8 +59,13 @@ impl Terminal {
         self.tab_stops = default_tab_stops(config.cols);
         self.scroll_top = 0;
         self.scroll_bottom = config.rows - 1;
-        self.cursor.row = self.cursor.row.min(config.rows - 1);
-        self.cursor.col = self.cursor.col.min(config.cols - 1);
+        self.cursor.clamp_to(config.cols, config.rows);
+        if let Some(saved) = &mut self.saved_cursor {
+            saved.clamp_to(config.cols, config.rows);
+        }
+        if let Some(saved) = &mut self.saved_dec_cursor {
+            saved.cursor.clamp_to(config.cols, config.rows);
+        }
         if self.config.cursor_shape != config.cursor_shape
             || self.config.cursor_blinking != config.cursor_blinking
         {

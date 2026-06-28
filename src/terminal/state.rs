@@ -14,6 +14,13 @@ pub(super) struct Cursor {
     pub(super) blinking: bool,
 }
 
+impl Cursor {
+    pub(super) fn clamp_to(&mut self, cols: u16, rows: u16) {
+        self.row = self.row.min(rows - 1);
+        self.col = self.col.min(cols - 1);
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum CharacterSet {
     G0,

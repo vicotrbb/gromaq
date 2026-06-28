@@ -16,7 +16,8 @@ impl Terminal {
     }
 
     pub(in crate::terminal) fn restore_cursor(&mut self) {
-        if let Some(saved) = self.saved_cursor {
+        if let Some(mut saved) = self.saved_cursor {
+            saved.clamp_to(self.config.cols, self.config.rows);
             self.cursor = saved;
         }
     }

@@ -16,7 +16,8 @@ impl Terminal {
     }
 
     pub(super) fn restore_dec_cursor(&mut self) {
-        if let Some(saved) = self.saved_dec_cursor {
+        if let Some(mut saved) = self.saved_dec_cursor {
+            saved.cursor.clamp_to(self.config.cols, self.config.rows);
             self.cursor = saved.cursor;
             self.style = saved.style;
             self.origin_mode = saved.origin_mode;
