@@ -42,6 +42,11 @@ mod unix {
             "checksum generation failed: {}",
             String::from_utf8_lossy(&output.stderr)
         );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains("Checksum entries: 4"),
+            "stdout should report the manifest entry count: {stdout}"
+        );
 
         let manifest = fs::read_to_string(dist.path().join("SHA256SUMS")).unwrap();
         assert!(

@@ -36,12 +36,14 @@ mkdir -p "${dist_dir}"
 : > "${tmp_manifest}"
 tool="$(checksum_command)"
 found=0
+entry_count=0
 
 for artifact in "${dist_dir}"/*.tar.gz "${dist_dir}"/*.deb "${dist_dir}"/*.zip; do
   [ -f "${artifact}" ] || continue
   checksum="$(hash_file "${tool}" "${artifact}")"
   printf '%s  %s\n' "${checksum}" "$(basename "${artifact}")" >> "${tmp_manifest}"
   found=1
+  entry_count=$((entry_count + 1))
 done
 
 for artifact in ${GROMAQ_CHECKSUM_EXTRA_FILES:-}; do
@@ -53,6 +55,7 @@ for artifact in ${GROMAQ_CHECKSUM_EXTRA_FILES:-}; do
   checksum="$(hash_file "${tool}" "${artifact}")"
   printf '%s  %s\n' "${checksum}" "$(basename "${artifact}")" >> "${tmp_manifest}"
   found=1
+  entry_count=$((entry_count + 1))
 done
 
 if [ "${found}" -eq 0 ]; then
@@ -65,3 +68,4 @@ sort "${tmp_manifest}" > "${manifest}"
 rm -f "${tmp_manifest}"
 
 printf '%s\n' "Wrote ${manifest}"
+printf '%s\n' "Checksum entries: ${entry_count}"
