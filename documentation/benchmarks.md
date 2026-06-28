@@ -164,6 +164,7 @@ measurements.
 Run from the repository root:
 
 ```bash
+scripts/prove-local-ci-parity.sh
 cargo fmt --check
 git diff --check
 cargo clippy --all-targets --all-features -- -D warnings

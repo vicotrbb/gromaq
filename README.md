@@ -361,15 +361,14 @@ content, the helper fails instead of accepting a desktop-only image.
 Full local verification:
 
 ```bash
-cargo fmt --check
-git diff --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all
-cargo bench --bench parser_throughput -- --list
+scripts/prove-local-ci-parity.sh
 ```
 
-Run `cargo bench` when changing parser, PTY pump, render planning, glyph cache,
-rasterization, frame preparation, or other measured hot paths.
+The helper runs formatting, whitespace, clippy with denied warnings, the full
+test suite, theme/welcome/readme visual proof helpers, current-host
+compatibility proof, and the parser benchmark inventory. Run full `cargo bench`
+when changing parser, PTY pump, render planning, glyph cache, rasterization,
+frame preparation, or other measured hot paths.
 
 ## Configuration
 

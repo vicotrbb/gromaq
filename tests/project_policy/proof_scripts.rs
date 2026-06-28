@@ -48,3 +48,28 @@ fn theme_preview_proof_keeps_configured_visual_quality_path() {
         );
     }
 }
+
+#[test]
+fn local_ci_parity_proof_runs_clippy_before_completion() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-local-ci-parity.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "cargo fmt --check",
+        "git diff --check",
+        "cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo test --all",
+        "scripts/prove-theme-preview.sh",
+        "scripts/prove-welcome-preview.sh",
+        "scripts/prove-readme-welcome-preview.sh",
+        "scripts/prove-current-host-compatibility.sh",
+        "cargo bench --bench parser_throughput -- --list",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must keep `{marker}` so local push proof stays aligned with CI gates",
+            relative_path(root, &path)
+        );
+    }
+}
