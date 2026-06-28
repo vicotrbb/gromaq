@@ -58,6 +58,17 @@ exit(1)
 SWIFT
 }
 
+preflight_screen_capture_access() {
+  swift - <<'SWIFT'
+import CoreGraphics
+import Foundation
+
+let allowed = CGPreflightScreenCaptureAccess()
+print("macOS screen capture access preflight: \(allowed)")
+exit(allowed ? 0 : 1)
+SWIFT
+}
+
 validate_screenshot_contains_terminal_background() {
   swift - "${1}" "${2}" "${3}" <<'SWIFT'
 import AppKit
@@ -132,11 +143,17 @@ window_lookup_interval="${GROMAQ_WINDOW_LOOKUP_INTERVAL_SECONDS:-0.2}"
 
 mkdir -p "$(dirname "${output}")" "$(dirname "${log_path}")"
 rm -f "${window_capture_stderr}" "${region_capture_stderr}" "${validation_stderr}"
+: > "${log_path}"
+
+if ! preflight_screen_capture_access >> "${log_path}" 2>&1; then
+  printf '%s\n' "error: macOS Screen Recording permission is required for live screenshot proof; see ${log_path}." >&2
+  exit 1
+fi
 
 (
   cd "${root}"
   cargo build
-) > "${log_path}" 2>&1
+) >> "${log_path}" 2>&1
 
 (
   "${root}/target/debug/gromaq" --window-screenshot-smoke
