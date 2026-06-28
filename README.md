@@ -300,7 +300,10 @@ scripts/prove-current-host-compatibility.sh
 
 This records the host tool inventory, runs `cargo test --test pty -- --nocapture`,
 and runs `cargo run -- --runtime-tool-workflow-smoke`, writing logs under
-`target/compatibility-proof`.
+`target/compatibility-proof`. CI is configured to run the same helper in the
+macOS `rust` job and upload `target/compatibility-proof/*` as the
+`gromaq-current-host-compatibility-proof` artifact; helper-backed remote proof
+is pending the next pushed run.
 
 Manual live-window screenshot proof on macOS:
 

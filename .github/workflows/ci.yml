@@ -37,6 +37,11 @@ jobs:
       - run: cargo run -- --theme-legibility-smoke
       - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
       - run: node images/avatar/generate.mjs --check
+      - run: scripts/prove-current-host-compatibility.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gromaq-current-host-compatibility-proof
+          path: target/compatibility-proof/*
       - run: scripts/prove-welcome-preview.sh
       - uses: actions/upload-artifact@v4
         with:
