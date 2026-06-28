@@ -58,7 +58,7 @@ fn stat_budget(cols: u16, avatar: &str) -> usize {
 
 fn metric_line(style: WelcomeStyle, label: &str, value: &str, max_width: usize) -> String {
     let prefix_width = 2 + label.len() + 2;
-    let value = clipped_plain(value, max_width.saturating_sub(prefix_width));
+    let value = clipped_metric_value(value, max_width.saturating_sub(prefix_width));
     format!(
         "  {}{label}\x1b[0m  {}{value}\x1b[0m",
         bold_foreground(style.title),
@@ -111,6 +111,19 @@ fn push_ansi_clipped(output: &mut String, value: &str, max_width: usize) {
 
 fn clipped_plain(value: &str, max_width: usize) -> String {
     value.chars().take(max_width).collect()
+}
+
+fn clipped_metric_value(value: &str, max_width: usize) -> String {
+    let mut chars = value.chars();
+    let visible: String = chars.by_ref().take(max_width).collect();
+    if chars.next().is_none() {
+        return visible;
+    }
+    if max_width <= 3 {
+        return ".".repeat(max_width);
+    }
+    let keep = max_width - 3;
+    format!("{}...", visible.chars().take(keep).collect::<String>())
 }
 
 fn foreground([red, green, blue]: [u8; 3]) -> String {
