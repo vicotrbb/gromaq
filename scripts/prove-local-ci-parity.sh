@@ -2,6 +2,7 @@
 set -eu
 
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
+proof_dir="${root}/target/local-ci-parity-proof"
 
 run_step() {
   label="$1"
@@ -21,6 +22,7 @@ run_shell_syntax_checks() {
 }
 
 cd "${root}"
+mkdir -p "${proof_dir}"
 
 run_shell_syntax_checks
 run_step "format" cargo fmt --check
@@ -33,6 +35,8 @@ run_step "theme preview proof" scripts/prove-theme-preview.sh
 run_step "avatar asset freshness proof" node images/avatar/generate.mjs --check
 run_step "welcome preview proof" scripts/prove-welcome-preview.sh
 run_step "README welcome preview freshness proof" scripts/prove-readme-welcome-preview.sh
+run_step "GPU welcome image snapshot proof" \
+  cargo run -- --welcome-image-snapshot "${proof_dir}/gromaq-welcome-image.ppm"
 run_step "current-host compatibility proof" scripts/prove-current-host-compatibility.sh
 run_step "parser benchmark inventory" cargo bench --bench parser_throughput -- --list
 

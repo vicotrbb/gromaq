@@ -74,6 +74,9 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         "node images/avatar/generate.mjs --check",
         "scripts/prove-welcome-preview.sh",
         "scripts/prove-readme-welcome-preview.sh",
+        "cargo run -- --welcome-image-snapshot",
+        "target/local-ci-parity-proof",
+        "gromaq-welcome-image.ppm",
         "scripts/prove-current-host-compatibility.sh",
         "cargo bench --bench parser_throughput -- --list",
     ] {
