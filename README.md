@@ -319,7 +319,7 @@ are retained together after the visual proof steps run. The visual proof upload
 uses `if: always()` so logs and artifacts are preserved when a later CI step
 fails or a proof command fails after writing diagnostic output. Run
 `scripts/prove-welcome-preview.sh` also writes `metrics.txt` and a compact
-summary; the refreshed local 33x17 avatar proof records `avatar rows=17`
+summary; the refreshed local 33x17 Braille avatar proof records `avatar rows=17`
 alongside the rendered text, avatar-color, glyph, cursor, and atlas metrics. Run
 `28315944025` passed the default welcome preview proof on macOS 26 with 126062
 avatar color pixels, then failed the README freshness proof because exact
@@ -327,7 +327,10 @@ decoded pixels differed from the committed local PNG. Run `28316513803` then
 proved the bounded decoded-pixel README freshness helper remotely, and run
 `28321082609` completed green for commit `84740e3` after rerunning avatar
 freshness, default welcome proof, and README screenshot freshness proof for the
-refreshed 33x17 avatar. The helper keeps dimension gates and bounded
+previous 33x17 block avatar. The current local Braille-avatar proof reports
+25591 high-contrast text pixels, 28497 avatar color pixels, 653 glyph quads,
+0 cursor quads, and 576576 atlas bytes; remote CI proof for this refreshed
+avatar still needs the next push run. The helper keeps dimension gates and bounded
 visual-delta gates so host font-rasterization variance does not require exact
 decoded-pixel identity.
 

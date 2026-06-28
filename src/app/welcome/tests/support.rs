@@ -1,5 +1,5 @@
-pub(super) fn is_terminal_block(ch: char) -> bool {
-    "▀▄█▘▝▖▗▌▐▚▞▛▜▙▟".contains(ch)
+pub(super) fn is_braille_cell(ch: char) -> bool {
+    ('\u{2801}'..='\u{28ff}').contains(&ch)
 }
 
 pub(super) fn strip_ansi(value: &str) -> String {

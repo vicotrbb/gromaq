@@ -290,7 +290,10 @@ then proved the bounded-delta README freshness helper and README freshness
 `summary.txt` artifact remotely. CI run `28321082609` completed green for
 commit `84740e3` after rerunning avatar freshness, default welcome proof,
 README screenshot freshness proof, and the full packaging/compatibility CI job
-set for the refreshed 33x17 avatar. The
+set for the refreshed 33x17 block avatar. The current local Braille-avatar
+refresh passes the same helpers with 25591 high-contrast text pixels, 28497
+avatar color pixels, 653 glyph quads, 0 cursor quads, and 576576 atlas bytes;
+remote CI proof for that refreshed asset still needs the next push run. The
 welcome and theme preview artifact uploads use `if: always()` so diagnostic
 visual artifacts survive proof-command or later macOS job failures when files
 were written before the failure.

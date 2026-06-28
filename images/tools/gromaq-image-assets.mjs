@@ -422,6 +422,9 @@ function sampleBilinear(image, x, y, out, offset) {
 }
 
 function terminalAnsi(image, columns, rows, mode, cellAspect) {
+  if (mode === 'braille') {
+    return terminalBrailleAnsi(image, columns, rows, cellAspect);
+  }
   if (mode === 'quadrant-block') {
     return terminalQuadrantBlockAnsi(image, columns, rows, cellAspect);
   }
@@ -470,6 +473,20 @@ function terminalQuadrantBlockAnsi(image, columns, rows, cellAspect) {
   return normalizedTerminalLines(lines);
 }
 
+function terminalBrailleAnsi(image, columns, rows, cellAspect) {
+  const { sampleWidth, cellHeight } = terminalSampleSize(cellAspect);
+  const sampled = contain(image, columns * sampleWidth, rows * cellHeight);
+  const lines = [];
+  for (let row = 0; row < rows; row++) {
+    let line = '';
+    for (let col = 0; col < columns; col++) {
+      line += terminalBrailleCell(sampled, col * sampleWidth, row * cellHeight, sampleWidth, cellHeight);
+    }
+    lines.push(line);
+  }
+  return normalizedTerminalLines(lines);
+}
+
 const QUADRANT_BLOCKS = [
   ' ',
   '▘',
@@ -487,6 +504,17 @@ const QUADRANT_BLOCKS = [
   '▙',
   '▟',
   '█',
+];
+
+const BRAILLE_DOTS = [
+  [0, 0, 0x01],
+  [0, 1, 0x02],
+  [0, 2, 0x04],
+  [0, 3, 0x40],
+  [1, 0, 0x08],
+  [1, 1, 0x10],
+  [1, 2, 0x20],
+  [1, 3, 0x80],
 ];
 
 function terminalQuadrantBlockCell(image, left, top, halfWidth, halfHeight) {
@@ -507,6 +535,30 @@ function terminalQuadrantBlockCell(image, left, top, halfWidth, halfHeight) {
   if (mask === 0) return ' ';
   const color = averageWeightedColors(visibleQuadrants);
   return `${fg(color)}${QUADRANT_BLOCKS[mask]}`;
+}
+
+function terminalBrailleCell(image, left, top, sampleWidth, cellHeight) {
+  let mask = 0;
+  const visibleDots = [];
+  for (const [dotX, dotY, bit] of BRAILLE_DOTS) {
+    const sampleLeft = left + Math.floor((dotX * sampleWidth) / 2);
+    const sampleRight = left + Math.floor(((dotX + 1) * sampleWidth) / 2);
+    const sampleTop = top + Math.floor((dotY * cellHeight) / 4);
+    const sampleBottom = top + Math.floor(((dotY + 1) * cellHeight) / 4);
+    const sample = terminalBlockSample(
+      image,
+      sampleLeft,
+      sampleTop,
+      Math.max(1, sampleRight - sampleLeft),
+      Math.max(1, sampleBottom - sampleTop),
+    );
+    if (!sample.visible) continue;
+    mask |= bit;
+    visibleDots.push(sample);
+  }
+  if (mask === 0) return ' ';
+  const color = averageWeightedColors(visibleDots);
+  return `${fg(color)}${String.fromCodePoint(0x2800 + mask)}`;
 }
 
 function normalizedTerminalLines(lines) {

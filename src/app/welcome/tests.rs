@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 mod support;
 
-use support::{avatar_sgr_rgb_colors, contrast_ratio, is_terminal_block, strip_ansi};
+use support::{avatar_sgr_rgb_colors, contrast_ratio, is_braille_cell, strip_ansi};
 
 #[test]
 fn default_welcome_text_reports_terminal_and_renderer_stats() {
@@ -49,7 +49,7 @@ fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_glyphs() {
     assert_eq!(lines.len(), 17);
     assert_eq!(max_width, 33);
     assert!(widths.iter().all(|width| *width == 33));
-    assert!(WELCOME_AVATAR_ANSI.chars().any(is_terminal_block));
+    assert!(WELCOME_AVATAR_ANSI.chars().any(is_braille_cell));
 
     // The avatar is baked for the default gromaq cell (18x44px). A near-square
     // source must render wider-than-tall in cell counts to avoid the vertical
@@ -74,6 +74,19 @@ fn default_welcome_avatar_keeps_dense_color_detail() {
         unique_colors.len() >= 250,
         "avatar color detail too low: {} unique foreground colors",
         unique_colors.len()
+    );
+}
+
+#[test]
+fn default_welcome_avatar_uses_subcell_glyph_detail() {
+    let braille_cells = WELCOME_AVATAR_ANSI
+        .chars()
+        .filter(|ch| is_braille_cell(*ch))
+        .count();
+
+    assert!(
+        braille_cells >= 260,
+        "welcome avatar is still too blocky: {braille_cells} braille cells"
     );
 }
 
