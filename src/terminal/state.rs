@@ -44,6 +44,7 @@ pub(super) struct SavedScreen {
     pub(super) cursor: Cursor,
     pub(super) saved_cursor: Option<Cursor>,
     pub(super) saved_dec_cursor: Option<SavedCursorState>,
+    pub(super) saved_private_modes: Vec<(u16, bool)>,
     pub(super) hard_breaks: Vec<bool>,
     pub(super) tab_stops: Vec<bool>,
     pub(super) wrap_pending: bool,

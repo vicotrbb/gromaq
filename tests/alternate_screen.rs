@@ -76,6 +76,17 @@ fn alternate_screen_sco_save_cursor_does_not_replace_primary_saved_cursor() {
 }
 
 #[test]
+fn alternate_screen_private_mode_save_does_not_replace_primary_saved_mode() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("\x1b[?7l\x1b[?7s\x1b[?1049h\x1b[?7h\x1b[?7s\x1b[?1049l\x1b[?7r\x1b[?7$p")
+        .unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[?7;2$y");
+}
+
+#[test]
 fn repeated_1049_enter_keeps_original_primary_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 
