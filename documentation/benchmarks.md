@@ -14,10 +14,14 @@ upload/readback, font-backed text-atlas GPU upload/readback, offscreen
 textured-quad GPU draw/readback, offscreen terminal text GPU draw/readback, and
 repeated offscreen terminal text GPU draw/readback timing.
 
-They do not prove the full performance acceptance target by themselves. Hardware
-backed 144Hz frame pacing on a 144Hz-capable display, live p95 frame time, live
-input latency, live-window idle CPU, live-window long-session memory growth, and
-broader live window runtime proof still require separate live measurements.
+They do not prove the full performance acceptance target by themselves.
+Hardware backed 144Hz frame pacing on a 144Hz-capable display, live p95 frame
+time, live-window idle CPU, live-window long-session memory growth, and broader
+live window runtime proof still require separate live measurements. The
+`scripts/prove-144hz-window-perf.sh` helper now bundles the existing
+`--runtime-perf-p95-smoke` input-to-render budget gate with the live 144Hz
+frame-pacing gate, but live-window input-latency instrumentation remains a
+separate measurement gap.
 The native runtime exposes bounded render-time and app-input-to-render latency
 counters, including sample count, total, average, max, and bucketed p95
 estimates, plus rendered dirty-region/cell counters, so live-window measurements

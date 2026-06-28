@@ -394,11 +394,14 @@ scripts/prove-144hz-window-perf.sh
 ```
 
 This runs `cargo run -- --window-perf-smoke`, records
-`target/144hz-window-perf-proof/window-perf.log` plus `summary.txt`, and fails
-unless the native window reports a monitor refresh of at least `144000` mHz, an
-unrestricted 144 FPS frame target, zero dropped frames, and accepted frame
-pacing. It is intentionally manual because CI and ordinary 60/120 Hz desktops
-are not valid proof surfaces for the 144 Hz hardware requirement.
+`target/144hz-window-perf-proof/window-perf.log`, then runs
+`cargo run -- --runtime-perf-p95-smoke` into
+`target/144hz-window-perf-proof/runtime-perf-p95.log`. It fails unless the
+native window reports a monitor refresh of at least `144000` mHz, an
+unrestricted 144 FPS frame target, zero dropped frames, accepted frame pacing,
+and the runtime p95 input-to-render budget remains `10000000` ns. It is
+intentionally manual because CI and ordinary 60/120 Hz desktops are not valid
+proof surfaces for the 144 Hz hardware requirement.
 
 Manual packaged-app identity proof on macOS:
 

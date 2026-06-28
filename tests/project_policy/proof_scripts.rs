@@ -134,3 +134,24 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         );
     }
 }
+
+#[test]
+fn high_refresh_window_perf_proof_includes_input_latency_gate() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-144hz-window-perf.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "runtime-perf-p95.log",
+        "cargo run -- --runtime-perf-p95-smoke",
+        "runtime perf p95 smoke: ok",
+        "input-to-render p95 budget ns: 10000000",
+        "Input latency proof log:",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must keep `{marker}` so the 144Hz proof includes the latency budget gate",
+            relative_path(root, &path)
+        );
+    }
+}

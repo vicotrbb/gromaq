@@ -4,11 +4,12 @@ set -eu
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 proof_dir="${GROMAQ_144HZ_WINDOW_PERF_PROOF_DIR:-${root}/target/144hz-window-perf-proof}"
 log_path="${proof_dir}/window-perf.log"
+latency_log_path="${proof_dir}/runtime-perf-p95.log"
 summary_path="${proof_dir}/summary.txt"
 minimum_refresh_mhz=144000
 
 mkdir -p "${proof_dir}"
-rm -f "${log_path}" "${log_path}.tmp" "${summary_path}"
+rm -f "${log_path}" "${log_path}.tmp" "${latency_log_path}" "${latency_log_path}.tmp" "${summary_path}"
 
 cd "${root}"
 printf '%s\n' "$ cargo run -- --window-perf-smoke" | tee "${log_path}"
@@ -37,6 +38,14 @@ require_log_marker() {
   fi
 }
 
+require_latency_log_marker() {
+  marker="$1"
+  if ! grep -Fqx "${marker}" "${latency_log_path}"; then
+    printf '%s\n' "error: 144Hz window perf proof missing latency log marker: ${marker}" >&2
+    exit 1
+  fi
+}
+
 monitor_refresh_mhz="$(metric_value "monitor refresh mhz")"
 case "${monitor_refresh_mhz}" in
   ''|*[!0-9]*)
@@ -57,9 +66,26 @@ require_log_marker "frame interval target limited by monitor: false"
 require_log_marker "dropped frames: 0"
 require_log_marker "frame pacing accepted: true"
 
+printf '%s\n' "$ cargo run -- --runtime-perf-p95-smoke" | tee "${latency_log_path}"
+set +e
+cargo run -- --runtime-perf-p95-smoke >"${latency_log_path}.tmp" 2>&1
+latency_status="$?"
+set -e
+cat "${latency_log_path}.tmp" | tee -a "${latency_log_path}"
+rm -f "${latency_log_path}.tmp"
+
+if [ "${latency_status}" -ne 0 ]; then
+  printf '%s\n' "error: runtime input-latency proof failed with exit ${latency_status}; see ${latency_log_path}" >&2
+  exit "${latency_status}"
+fi
+
+require_latency_log_marker "runtime perf p95 smoke: ok"
+require_latency_log_marker "input-to-render p95 budget ns: 10000000"
+
 {
   printf '%s\n' "144Hz window perf proof: ok"
   printf '%s\n' "Proof log: ${log_path}"
+  printf '%s\n' "Input latency proof log: ${latency_log_path}"
   printf '%s\n' "Monitor refresh mhz: ${monitor_refresh_mhz}"
   printf '%s\n' "Minimum refresh mhz: ${minimum_refresh_mhz}"
 } | tee "${summary_path}"
