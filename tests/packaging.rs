@@ -16,6 +16,8 @@ mod unix {
         let archive = single_tarball(dist.path());
         let stem = archive_stem(&archive);
         let listing = tar_listing(&archive);
+        let summary = fs::read_to_string(dist.path().join("gromaq-linux-tarball-summary.txt"))
+            .expect("linux tarball summary must be written");
 
         for required in [
             "/bin/gromaq",
@@ -33,6 +35,7 @@ mod unix {
                 listing.join("\n")
             );
         }
+        assert!(summary.contains("Linux tarball package: ok"));
     }
 
     #[test]

@@ -13,6 +13,7 @@ binary_path="${GROMAQ_BINARY_PATH:-${root}/target/release/${package}}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
 staging_dir="${dist_dir}/${package}-${version}-${target_name}"
 archive_path="${dist_dir}/${package}-${version}-${target_name}.tar.gz"
+summary_path="${dist_dir}/${package}-linux-tarball-summary.txt"
 
 if [ ! -x "${binary_path}" ]; then
   cargo build --release
@@ -38,4 +39,12 @@ cp "${root}/images/logos/logo-icon-256.png" \
 
 tar -C "${dist_dir}" -czf "${archive_path}" "$(basename "${staging_dir}")"
 
-printf '%s\n' "Packaged ${archive_path}"
+{
+  printf '%s\n' "Linux tarball package: ok"
+  printf '%s\n' "Archive: ${archive_path}"
+  printf '%s\n' "Staging dir: ${staging_dir}"
+  printf '%s\n' "Binary: ${staging_dir}/bin/${package}"
+  printf '%s\n' "Desktop file: ${staging_dir}/share/applications/dev.gromaq.Gromaq.desktop"
+  printf '%s\n' "AppStream metainfo: ${staging_dir}/share/metainfo/dev.gromaq.Gromaq.metainfo.xml"
+  printf '%s\n' "Icon file: ${staging_dir}/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
+} | tee "${summary_path}"

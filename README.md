@@ -167,6 +167,8 @@ Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
 `.SRCINFO` plus `gromaq.install`, and a zipped macOS `.app` bundle as GitHub
 Actions artifacts.
+The Linux tarball packager writes `target/dist/gromaq-linux-tarball-summary.txt`
+after archive assembly succeeds.
 Tag-triggered runs also create or reuse the matching GitHub Release and upload
 release assets. The remote GitHub Actions release workflow completed green on
 2026-06-27 as run `28303243197` for commit `12a38e8`, uploading the Linux

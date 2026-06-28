@@ -103,6 +103,8 @@ The archive includes:
 - hicolor app icon
 
 Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary.
+The packager writes `target/dist/gromaq-linux-tarball-summary.txt` after
+archive assembly succeeds.
 On Linux hosts, `scripts/prove-linux-release-install.sh` packages the tarball,
 generates checksums, installs through `GROMAQ_INSTALL_METHOD=release` from a
 local `file://` release base into `target/release-install-proof`, and verifies
