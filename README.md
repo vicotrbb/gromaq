@@ -297,6 +297,10 @@ scripts/prove-readme-welcome-preview.sh
 CI is configured to upload the default and configured theme preview PPMs plus
 the CI theme config as `gromaq-theme-preview-proof`; helper-backed remote proof
 for that artifact is pending the next pushed run.
+CI is also configured to upload both `target/welcome-preview-proof/*` and
+`target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof`, so
+the generated welcome preview and committed README screenshot freshness proof
+are retained together after the next pushed run.
 
 Current-host compatibility proof bundle:
 
