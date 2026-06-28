@@ -86,6 +86,14 @@ impl Terminal {
                 )
                 .as_bytes(),
             ),
+            16 => self.pending_response_bytes.extend_from_slice(
+                format!(
+                    "\x1b[6;{};{}t",
+                    self.config.pixel_height / self.config.rows,
+                    self.config.pixel_width / self.config.cols
+                )
+                .as_bytes(),
+            ),
             18 => self.pending_response_bytes.extend_from_slice(
                 format!("\x1b[8;{};{}t", self.config.rows, self.config.cols).as_bytes(),
             ),

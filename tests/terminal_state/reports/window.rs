@@ -61,3 +61,16 @@ fn pixel_screen_size_report_uses_configured_pixel_dimensions() {
 
     assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[5;540;960t");
 }
+
+#[test]
+fn character_cell_size_report_uses_configured_pixels_per_cell() {
+    let config = TerminalConfig::new(12, 5)
+        .unwrap()
+        .with_pixel_size(960, 540)
+        .unwrap();
+    let mut terminal = Terminal::new(config);
+
+    terminal.write_str("\x1b[16t").unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[6;108;80t");
+}
