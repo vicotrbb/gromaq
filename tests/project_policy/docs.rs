@@ -135,6 +135,22 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "tests/checksums.rs::checksum_script_can_include_additional_release_assets",
     ),
+    (
+        "documentation/compatibility.md",
+        "Add live tag-triggered GitHub Release publication proof.",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Add live Linux release-method install proof from GitHub Release assets.",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Add live Arch `makepkg` build/install proof.",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Add live Linux desktop menu refresh proof.",
+    ),
     ("documentation/release.md", "28301610408"),
     ("documentation/compatibility.md", "28301610408"),
 ];

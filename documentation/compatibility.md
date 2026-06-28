@@ -119,6 +119,10 @@ were skipped because those binaries were not on PATH.
 - Run the current-host scripted workflows on a broader host matrix.
 - Add live screenshot artifacts for the native window path.
 - Add 144Hz hardware proof on a 144Hz-capable monitor.
+- Add live tag-triggered GitHub Release publication proof.
+- Add live Linux release-method install proof from GitHub Release assets.
+- Add live Arch `makepkg` build/install proof.
+- Add live Linux desktop menu refresh proof.
 - Expand editor/multiplexer interaction beyond the current scripted edit,
   alternate-screen, search, and mouse workflows.
 - Expand `ssh` and `kubectl` beyond current safe local client/version commands
