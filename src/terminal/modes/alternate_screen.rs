@@ -1,4 +1,5 @@
 use crate::grid::Grid;
+use crate::mouse::MouseReportState;
 
 use super::Terminal;
 use crate::terminal::params::default_tab_stops;
@@ -24,6 +25,7 @@ impl Terminal {
             application_cursor_keys: self.application_cursor_keys,
             application_keypad: self.application_keypad,
             focus_event_reporting: self.focus_event_reporting,
+            mouse: self.mouse,
             insert_mode: self.insert_mode,
             linefeed_newline_mode: self.linefeed_newline_mode,
             g0_dec_special_graphics: self.g0_dec_special_graphics,
@@ -48,6 +50,7 @@ impl Terminal {
         self.application_cursor_keys = false;
         self.application_keypad = false;
         self.focus_event_reporting = false;
+        self.mouse = MouseReportState::default();
         self.insert_mode = false;
         self.linefeed_newline_mode = false;
         self.g0_dec_special_graphics = false;
@@ -74,6 +77,7 @@ impl Terminal {
             self.application_cursor_keys = saved.application_cursor_keys;
             self.application_keypad = saved.application_keypad;
             self.focus_event_reporting = saved.focus_event_reporting;
+            self.mouse = saved.mouse;
             self.insert_mode = saved.insert_mode;
             self.linefeed_newline_mode = saved.linefeed_newline_mode;
             self.g0_dec_special_graphics = saved.g0_dec_special_graphics;

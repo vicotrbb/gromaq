@@ -87,6 +87,23 @@ fn alternate_screen_private_mode_save_does_not_replace_primary_saved_mode() {
 }
 
 #[test]
+fn alternate_screen_mouse_modes_do_not_leak_to_primary_screen() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str(
+            "\x1b[?1049h\x1b[?9h\x1b[?1000h\x1b[?1002h\x1b[?1003h\x1b[?1006h\
+             \x1b[?1049l\x1b[?9$p\x1b[?1000$p\x1b[?1002$p\x1b[?1003$p\x1b[?1006$p",
+        )
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b[?9;2$y\x1b[?1000;2$y\x1b[?1002;2$y\x1b[?1003;2$y\x1b[?1006;2$y"
+    );
+}
+
+#[test]
 fn repeated_1049_enter_keeps_original_primary_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 

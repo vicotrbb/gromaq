@@ -2,6 +2,7 @@
 
 use crate::cell::Style;
 use crate::grid::Grid;
+use crate::mouse::MouseReportState;
 
 use super::CursorShape;
 
@@ -53,6 +54,7 @@ pub(super) struct SavedScreen {
     pub(super) application_cursor_keys: bool,
     pub(super) application_keypad: bool,
     pub(super) focus_event_reporting: bool,
+    pub(super) mouse: MouseReportState,
     pub(super) insert_mode: bool,
     pub(super) linefeed_newline_mode: bool,
     pub(super) g0_dec_special_graphics: bool,
