@@ -8,5 +8,7 @@ mod shells;
 mod support;
 #[path = "pty/terminal_apps.rs"]
 mod terminal_apps;
+#[path = "pty/tmux.rs"]
+mod tmux;
 #[path = "pty/tools.rs"]
 mod tools;

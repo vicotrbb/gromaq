@@ -36,6 +36,23 @@ pub(crate) fn wait_for_tmux_active_pane_index(
     active_pane
 }
 
+pub(crate) fn wait_for_tmux_window_pane_count(
+    socket_name: &str,
+    expected: &str,
+    attempts: usize,
+    pause: Duration,
+) -> String {
+    let mut pane_count = String::new();
+    for _ in 0..attempts {
+        pane_count = tmux_window_pane_count(socket_name);
+        if pane_count.trim() == expected {
+            break;
+        }
+        std::thread::sleep(pause);
+    }
+    pane_count
+}
+
 pub(crate) fn tmux_active_pane_index(socket_name: &str) -> String {
     let output = Command::new("tmux")
         .args(["-L", socket_name, "display-message", "-p", "#{pane_index}"])
@@ -44,6 +61,25 @@ pub(crate) fn tmux_active_pane_index(socket_name: &str) -> String {
     assert!(
         output.status.success(),
         "tmux display-message failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout).unwrap()
+}
+
+pub(crate) fn tmux_window_pane_count(socket_name: &str) -> String {
+    let output = Command::new("tmux")
+        .args([
+            "-L",
+            socket_name,
+            "display-message",
+            "-p",
+            "#{window_panes}",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "tmux pane count failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
     String::from_utf8(output.stdout).unwrap()
