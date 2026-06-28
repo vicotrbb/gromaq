@@ -264,15 +264,17 @@ Implemented and covered by automated tests or deterministic smoke commands:
 
 Not yet proven enough to call complete:
 
-- live desktop OS paste-menu workflow
+- accepted live desktop visual inspection/screenshot proof for the default
+  native window
 - hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display
-- live desktop screenshot proof across supported platforms
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
-- live Linux desktop menu UI discovery after install
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
-- Developer ID signed/notarized macOS app distribution
+
+Post-v1 deferred work includes live desktop OS paste-menu proof, live Linux
+desktop menu UI discovery, and Developer ID signed/notarized macOS app
+distribution.
 
 Current proof details live in
 [`documentation/compatibility.md`](documentation/compatibility.md).

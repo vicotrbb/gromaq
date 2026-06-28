@@ -139,7 +139,7 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "Linux desktop database refresh when `update-desktop-database` is available",
     ),
-    ("README.md", "signed/notarized macOS app distribution"),
+    ("README.md", "Developer ID signed/notarized macOS app"),
     ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
     ("documentation/release.md", "GROMAQ_DRY_RUN=1"),
     ("documentation/release.md", "GROMAQ_INSTALL_METHOD=release"),
@@ -243,15 +243,11 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/compatibility.md",
-        "Add live Linux desktop menu UI discovery proof.",
+        "Add accepted live desktop visual inspection/screenshot artifacts",
     ),
     (
         "documentation/compatibility.md",
-        "Add live desktop OS paste-menu workflow proof.",
-    ),
-    (
-        "documentation/compatibility.md",
-        "Add Developer ID signed and notarized macOS app distribution proof.",
+        "Post-v1 deferred work includes",
     ),
     ("documentation/release.md", "28301610408"),
     ("README.md", "28308158338"),
@@ -261,12 +257,10 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
 ];
 
 pub(super) const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
-    "live desktop OS paste-menu workflow",
+    "accepted live desktop visual inspection/screenshot proof",
     "hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display",
-    "live desktop screenshot proof across supported platforms",
     "live tag-triggered GitHub Release asset publication",
     "live Linux release-method install from GitHub Release assets",
-    "live Linux desktop menu UI discovery",
     "wider compatibility matrix coverage across shells, editors, multiplexers",
-    "Developer ID signed/notarized macOS app distribution",
+    "Post-v1 deferred work includes live desktop OS paste-menu proof",
 ];

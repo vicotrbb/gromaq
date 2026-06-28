@@ -530,6 +530,7 @@ Not yet proven:
 
 - live tag-triggered GitHub Release asset publication
 - live Linux release-method install from GitHub Release assets
-- Developer ID signed and notarized macOS app distribution
-- live Linux desktop menu UI discovery after install
-- manual macOS Dock/Finder UI behavior from a launched packaged app
+
+Post-v1 deferred work includes Developer ID signed/notarized macOS app
+distribution, live Linux desktop menu UI discovery after install, and manual
+macOS Dock/Finder UI behavior from a launched packaged app.
