@@ -12,10 +12,14 @@ fn runtime_tool_workflow_smoke_cli_reports_external_tool_pass_or_skip() {
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("runtime tool workflow smoke: ok"));
-    assert!(exit.stdout.contains("tools checked: 7"));
+    assert!(exit.stdout.contains("tools checked: 11"));
+    assert!(exit.stdout.contains("fish-version:"));
     assert!(exit.stdout.contains("vim-version:"));
+    assert!(exit.stdout.contains("nvim-version:"));
     assert!(exit.stdout.contains("tmux-version:"));
     assert!(exit.stdout.contains("less-version:"));
+    assert!(exit.stdout.contains("htop-version:"));
+    assert!(exit.stdout.contains("btop-version:"));
     assert!(exit.stdout.contains("ssh-version:"));
     assert!(exit.stdout.contains("ssh-config:"));
     assert!(exit.stdout.contains("kubectl-version:"));
