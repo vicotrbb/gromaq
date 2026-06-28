@@ -16,12 +16,20 @@ use crate::pty::{PtyConfig, PtySession, ShellCommand};
 const TOOL_WORKFLOW_TIMEOUT: Duration = Duration::from_secs(5);
 const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
     ToolWorkflowSpec {
-        name: "ssh",
+        name: "ssh-version",
+        program: "ssh",
         args: &["-V"],
         expected: "OpenSSH",
     },
     ToolWorkflowSpec {
+        name: "ssh-config",
+        program: "ssh",
+        args: &["-G", "localhost"],
+        expected: "hostname localhost",
+    },
+    ToolWorkflowSpec {
         name: "kubectl",
+        program: "kubectl",
         args: &["version", "--client=true", "--output=yaml"],
         expected: "clientVersion",
     },
@@ -47,6 +55,7 @@ pub(super) fn runtime_tool_workflow_smoke_exit() -> CliExit {
 #[derive(Debug, Clone, Copy)]
 pub(super) struct ToolWorkflowSpec {
     name: &'static str,
+    program: &'static str,
     args: &'static [&'static str],
     expected: &'static str,
 }
@@ -88,7 +97,7 @@ fn run_tool_workflows(specs: &[ToolWorkflowSpec]) -> ToolWorkflowReport {
 }
 
 fn run_tool_workflow(spec: &ToolWorkflowSpec) -> ToolWorkflowResult {
-    let Some(program) = find_program(spec.name) else {
+    let Some(program) = find_program(spec.program) else {
         return ToolWorkflowResult::Skipped { name: spec.name };
     };
     match run_pty_command(&program, spec.args) {

@@ -13,6 +13,10 @@ were skipped because those binaries were not on PATH.
 The same run, `cargo run -- --runtime-tool-workflow-smoke` passed both
 current-host tool checks with 0 skips: `ssh -V` produced 31 bytes containing
 `OpenSSH`, and `kubectl version --client=true --output=yaml` produced output
+containing `clientVersion`. A refreshed local run after adding the safe
+`ssh -G localhost` workflow passed all 3 runtime tool checks with 0 skips:
+`ssh-version` produced 31 bytes containing `OpenSSH`, `ssh-config` produced
+4226 bytes containing `hostname localhost`, and `kubectl` produced 276 bytes
 containing `clientVersion`.
 `scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
 writing the host inventory, PTY test log, and runtime external-tool smoke log
@@ -70,7 +74,7 @@ welcome-preview threshold step.
 | --- | --- | --- |
 | `top` launch workflow | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `top` snapshot check. | Proven on current host; conditional elsewhere |
 | `htop`, `btop` launch workflows | Real PTY command workflows when available. On 2026-06-27, the current host did not have `htop` or `btop` on PATH, so these workflows remain unproven locally. | Conditional on host binaries; not proven on current host |
-| `ssh` launch workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `ssh -V` in a native PTY and requires `OpenSSH` output when the binary is present. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `ssh -V` workflow, and `cargo run -- --runtime-tool-workflow-smoke` passed the current-host runtime-tool workflow with 31 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
+| `ssh` launch workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `ssh -V` in a native PTY and requires `OpenSSH` output when the binary is present. It also runs the safe non-network `ssh -G localhost` config-dump workflow and requires `hostname localhost` output. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `ssh -V` workflow, and a refreshed local focused PTY run passed `pty_session_runs_ssh_config_dump_when_available`. A refreshed `cargo run -- --runtime-tool-workflow-smoke` passed `ssh-version` with 31 output bytes and `ssh-config` with 4226 output bytes. | Proven for current-host client/version and non-network config-dump workflows; smoke reports pass or skip elsewhere |
 | `kubectl` output workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `kubectl version --client=true --output=yaml` in a native PTY and requires `clientVersion` output when the binary is present. On 2026-06-28, `cargo test --test pty -- --nocapture` passed the current-host `kubectl version --client=true --output=yaml` workflow, and `cargo run -- --runtime-tool-workflow-smoke` passed the current-host runtime-tool workflow with 276 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
 | `cargo test -- --nocapture` output | Real PTY fixture workflow with deterministic large output. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host quiet and large-output cargo fixture checks. | Proven on current host |
 
@@ -158,5 +162,6 @@ welcome-preview threshold step.
 - Add Developer ID signed and notarized macOS app distribution proof.
 - Expand editor/multiplexer interaction beyond the current scripted edit,
   alternate-screen, search, and mouse workflows.
-- Expand `ssh` and `kubectl` beyond current safe local client/version commands
-  into real but safe target scenarios.
+- Expand `kubectl` beyond current safe local client/version commands into real
+  but safe target scenarios, and expand `ssh` beyond version plus config-dump
+  workflows when safe targets exist.
