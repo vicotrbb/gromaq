@@ -266,7 +266,9 @@ and `scripts/prove-readme-welcome-preview.sh`, then upload both
 `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof` so
 the prepared welcome preview and README screenshot freshness proof are retained
-together after the next pushed run.
+together after the next pushed run. The welcome and theme preview artifact
+uploads use `if: always()` so diagnostic visual artifacts survive proof-command
+or later macOS job failures when files were written before the failure.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
 generation with

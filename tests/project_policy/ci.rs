@@ -253,13 +253,15 @@ fn ci_runs_linux_compatibility_checks() {
 }
 
 #[test]
-fn ci_uploads_compatibility_proof_artifacts_after_failures() {
+fn ci_uploads_proof_artifacts_after_failures() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
     let workflow = fs::read_to_string(&workflow_path).unwrap();
 
     for artifact_name in [
         "gromaq-current-host-compatibility-proof",
         "gromaq-linux-compatibility-proof",
+        "gromaq-welcome-preview-proof",
+        "gromaq-theme-preview-proof",
     ] {
         let artifact_block = workflow
             .split(artifact_name)

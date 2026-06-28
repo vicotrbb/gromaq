@@ -48,6 +48,7 @@ jobs:
       - run: scripts/prove-welcome-preview.sh
       - run: scripts/prove-readme-welcome-preview.sh
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: gromaq-welcome-preview-proof
           path: |
@@ -57,6 +58,7 @@ jobs:
           printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' 'cursor_opacity = 0.5' 'selection_opacity = 0.25' > target/gromaq-theme-preview-config-ci.toml
           cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: gromaq-theme-preview-proof
           path: |
