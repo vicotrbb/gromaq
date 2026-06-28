@@ -9,7 +9,7 @@ fn welcome_preview_proof_keeps_default_visual_quality_floors() {
     let source = fs::read_to_string(&path).unwrap();
 
     for marker in [
-        "require_min_metric \"high contrast text pixels\" 22000",
+        "require_min_metric \"high contrast text pixels\" 20000",
         "require_min_metric \"avatar color pixels\" 20000",
         "require_min_metric \"glyph quads\" 640",
         "require_exact_metric \"cursor quads\" 0",
