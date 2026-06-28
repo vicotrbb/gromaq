@@ -108,6 +108,7 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         "cargo clippy --all-targets --all-features -- -D warnings",
         "cargo test --all",
         "cargo run -- --font-symbol-fallback-smoke",
+        "cargo run -- --runtime-osc52-clipboard-smoke",
         "cargo run -- --runtime-bracketed-paste-smoke",
         "cargo run -- --runtime-selection-copy-smoke",
         "cargo run -- --runtime-committed-text-smoke",

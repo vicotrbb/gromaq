@@ -293,6 +293,7 @@ cargo run -- --welcome-image-snapshot target/gromaq-welcome-image.ppm
 cargo run -- --runtime-real-shell-smoke
 cargo run -- --runtime-real-shell-command-output-smoke
 cargo run -- --runtime-tool-workflow-smoke
+cargo run -- --runtime-osc52-clipboard-smoke
 cargo run -- --runtime-bracketed-paste-smoke
 cargo run -- --runtime-selection-copy-smoke
 cargo run -- --runtime-committed-text-smoke
@@ -416,7 +417,7 @@ scripts/prove-local-ci-parity.sh
 The helper runs shell syntax checks, formatting, staged and unstaged whitespace
 checks, clippy with denied warnings, the full test suite, avatar asset
 freshness, font symbol fallback smoke, theme legibility and preview proof,
-runtime bracketed paste, selection copy, and committed text smokes,
+runtime OSC 52 clipboard, bracketed paste, selection copy, and committed text smokes,
 welcome/readme visual proof helpers, GPU welcome image snapshot proof, GPU terminal text smoke,
 current-host compatibility proof, frame scheduler smoke, and the parser
 benchmark inventory. Run full `cargo bench` when changing

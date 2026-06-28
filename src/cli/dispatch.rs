@@ -19,6 +19,7 @@ use super::runtime_input_smoke::{
     runtime_idle_smoke_exit, runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit,
     runtime_perf_p95_smoke_exit, runtime_perf_smoke_exit, runtime_response_smoke_exit,
 };
+use super::runtime_osc52_clipboard_smoke::runtime_osc52_clipboard_smoke_exit;
 use super::runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
     runtime_large_output_smoke_exit, runtime_memory_smoke_exit,
@@ -103,6 +104,7 @@ where
         CliCommand::ClipboardSmoke => clipboard_smoke_exit(clipboard),
         CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),
+        CliCommand::RuntimeOsc52ClipboardSmoke => runtime_osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeBracketedPasteSmoke => runtime_bracketed_paste_smoke_exit(),
         CliCommand::RuntimeSelectionCopySmoke => runtime_selection_copy_smoke_exit(clipboard),
         CliCommand::RuntimeGlyphFrameSmoke => runtime_glyph_frame_smoke_exit(),

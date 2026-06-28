@@ -63,6 +63,7 @@ jobs:
           name: gromaq-theme-preview-proof
           path: target/theme-preview-proof/*
       - run: cargo run -- --runtime-clipboard-paste-smoke
+      - run: cargo run -- --runtime-osc52-clipboard-smoke
       - run: cargo run -- --runtime-bracketed-paste-smoke
       - run: cargo run -- --runtime-selection-copy-smoke
       - run: cargo run -- --runtime-glyph-frame-smoke

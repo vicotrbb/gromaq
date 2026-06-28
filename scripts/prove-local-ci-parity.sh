@@ -33,6 +33,7 @@ run_step "staged whitespace" git diff --cached --check
 run_step "clippy" cargo clippy --all-targets --all-features -- -D warnings
 run_step "tests" cargo test --all
 run_step "font symbol fallback smoke" cargo run -- --font-symbol-fallback-smoke
+run_step "runtime OSC 52 clipboard smoke" cargo run -- --runtime-osc52-clipboard-smoke
 run_step "runtime bracketed paste smoke" cargo run -- --runtime-bracketed-paste-smoke
 run_step "runtime selection copy smoke" cargo run -- --runtime-selection-copy-smoke
 run_step "runtime committed text smoke" cargo run -- --runtime-committed-text-smoke

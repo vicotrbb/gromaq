@@ -43,6 +43,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "target/welcome-preview-proof/*",
     "target/readme-welcome-preview-proof/*",
     "cargo run -- --runtime-clipboard-paste-smoke",
+    "cargo run -- --runtime-osc52-clipboard-smoke",
     "cargo run -- --runtime-bracketed-paste-smoke",
     "cargo run -- --runtime-selection-copy-smoke",
     "cargo run -- --runtime-glyph-frame-smoke",

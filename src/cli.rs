@@ -13,6 +13,7 @@ mod runtime_clipboard_smoke;
 mod runtime_config_reload_smoke;
 mod runtime_glyph_frame_smoke;
 mod runtime_input_smoke;
+mod runtime_osc52_clipboard_smoke;
 mod runtime_output_smoke;
 mod runtime_real_shell_smoke;
 mod runtime_reflow_smoke;
