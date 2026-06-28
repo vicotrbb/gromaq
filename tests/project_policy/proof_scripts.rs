@@ -16,6 +16,8 @@ fn welcome_preview_proof_keeps_default_visual_quality_floors() {
         "require_log_marker \"frame size: 1468x820\"",
         "require_ppm_dimensions \"${ppm_path}\" 1468 820",
         "run_logged \"${log_path}\" cargo run -- --welcome-preview-snapshot",
+        "summary.txt",
+        "Welcome preview proof: ok",
     ] {
         assert!(
             source.contains(marker),

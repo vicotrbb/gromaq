@@ -6,9 +6,10 @@ proof_dir="${GROMAQ_WELCOME_PREVIEW_PROOF_DIR:-${root}/target/welcome-preview-pr
 ppm_path="${GROMAQ_WELCOME_PREVIEW_PPM:-${proof_dir}/gromaq-welcome-preview.ppm}"
 png_path="${GROMAQ_WELCOME_PREVIEW_PNG:-${proof_dir}/gromaq-welcome-preview.png}"
 log_path="${proof_dir}/welcome-preview.log"
+summary_path="${proof_dir}/summary.txt"
 
 mkdir -p "${proof_dir}"
-rm -f "${ppm_path}" "${png_path}" "${log_path}"
+rm -f "${ppm_path}" "${png_path}" "${log_path}" "${summary_path}"
 
 cd "${root}"
 
@@ -107,6 +108,11 @@ else
   printf '%s\n' "welcome preview PNG: skipped (sips not available)"
 fi
 
-printf '%s\n' "Welcome preview proof: ok"
-printf '%s\n' "PPM artifact: ${ppm_path}"
-printf '%s\n' "Proof log: ${log_path}"
+{
+  printf '%s\n' "Welcome preview proof: ok"
+  printf '%s\n' "PPM artifact: ${ppm_path}"
+  if [ -s "${png_path}" ]; then
+    printf '%s\n' "PNG artifact: ${png_path}"
+  fi
+  printf '%s\n' "Proof log: ${log_path}"
+} | tee "${summary_path}"

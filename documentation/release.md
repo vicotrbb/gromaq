@@ -272,10 +272,11 @@ theme, prepared welcome preview, and README screenshot freshness proof artifacts
 are retained together after a green run reaches both visual proof steps. CI run
 `28314822034` uploaded the theme artifact and the default welcome preview
 diagnostics, but the README freshness proof was skipped after the welcome proof
-failed on the macOS 26 text-pixel floor; the local threshold fix is pending the
-next 10-commit push batch. The welcome and theme preview artifact uploads use
-`if: always()` so diagnostic visual artifacts survive proof-command or later
-macOS job failures when files were written before the failure.
+failed on the macOS 26 text-pixel floor; the local threshold fix and compact
+welcome `summary.txt` artifact are pending the next 10-commit push batch. The
+welcome and theme preview artifact uploads use `if: always()` so diagnostic
+visual artifacts survive proof-command or later macOS job failures when files
+were written before the failure.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
 next to each artifact set. The Linux packaging and release jobs run checksum
 generation with
