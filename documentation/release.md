@@ -89,6 +89,7 @@ Build a tarball from the current checkout:
 ```bash
 scripts/package-linux-tarball.sh
 scripts/prove-linux-release-install.sh
+scripts/prove-github-release-publication.sh
 scripts/prove-github-release-install.sh
 scripts/prove-linux-desktop-discovery.sh
 ```
@@ -111,8 +112,11 @@ local `file://` release base into `target/release-install-proof`, and verifies
 the installed binary plus desktop identity payloads without writing to the
 user's home directory. The helper writes `summary.txt` in the proof root after
 the install and payload checks pass.
-After a tagged GitHub Release publishes the Linux tarball and
-`SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
+After a tagged release workflow completes,
+`scripts/prove-github-release-publication.sh` verifies the GitHub Release is
+published, non-draft, non-prerelease, and contains the Linux tarball, Debian
+package, Arch metadata files, macOS app zip, and platform checksum manifests.
+After that publication proof passes, Linux maintainers can run
 `scripts/prove-github-release-install.sh` to install from the real GitHub
 Release URL into `target/github-release-install-proof` with checksum
 verification enabled. Before installing, the helper uses `gh release view` to
@@ -524,6 +528,11 @@ Proven locally:
   which checks the required `gh release create`, `gh release upload`, token
   permission, tag-only condition, Arch `PKGBUILD` plus `.SRCINFO` upload, and
   unique checksum manifest markers
+- live GitHub Release publication proof helper
+  `scripts/prove-github-release-publication.sh`, which verifies the published
+  release tag, draft/prerelease status, Linux tarball, Debian package, Arch
+  metadata files, macOS app zip, and platform checksum manifests before writing
+  `target/github-release-publication-proof/summary.txt`
 - release checksum manifest generation for local tarball, Debian package,
   optional extra release assets such as the Arch `PKGBUILD` and `.SRCINFO`, and
   macOS zip artifacts

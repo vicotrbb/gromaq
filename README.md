@@ -137,6 +137,7 @@ scripts/package-macos-app.sh
 scripts/prove-macos-app-identity.sh
 scripts/prove-debian-package.sh
 scripts/prove-linux-release-install.sh
+scripts/prove-github-release-publication.sh
 scripts/prove-github-release-install.sh
 scripts/prove-linux-desktop-discovery.sh
 scripts/prove-144hz-window-perf.sh
@@ -181,6 +182,10 @@ and checksum manifests as workflow artifacts. The downloaded macOS zip includes
 an app `Info.plist` with `LSApplicationCategoryType=public.app-category.utilities`.
 Tag-triggered GitHub Release asset publication is configured but still needs a
 live tag-run proof.
+After a tagged release workflow completes, maintainers can run
+`scripts/prove-github-release-publication.sh` to verify the GitHub Release is
+published, non-draft, non-prerelease, and contains the Linux tarball, Debian
+package, Arch metadata files, macOS app zip, and platform checksum manifests.
 CI also runs a focused Ubuntu packaging job for repository policy and Linux
 installer asset placement plus Linux tarball and Debian package assembly. The
 job is now configured for Debian package install, `gromaq --version`, and installed-payload checks.
@@ -219,8 +224,9 @@ payloads into an isolated proof root, validates the `.desktop` and AppStream
 metadata, refreshes the desktop database and hicolor icon cache there, writes
 `summary.txt`, and records that this metadata/cache proof does not prove live
 menu UI rendering.
-After a tagged GitHub Release publishes the Linux tarball and
-`SHA256SUMS-linux-<arch>` assets, Linux maintainers with `gh` available can run
+After `scripts/prove-github-release-publication.sh` proves the tagged GitHub
+Release contains the expected asset set, Linux maintainers with `gh` available
+can run
 `scripts/prove-github-release-install.sh` to exercise the real GitHub Release
 download path into `target/github-release-install-proof`. Before installing,
 the helper verifies the release includes the Linux tarball, Debian package,
