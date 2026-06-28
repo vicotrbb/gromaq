@@ -100,4 +100,17 @@ pub(super) const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
         ],
         expected: "test result: ok",
     },
+    ToolWorkflowSpec {
+        name: "cargo-large-output",
+        program: "cargo",
+        args: &[
+            "test",
+            "--manifest-path",
+            "tests/fixtures/tiny_cargo_project/Cargo.toml",
+            "fixture_emits_large_test_output",
+            "--",
+            "--nocapture",
+        ],
+        expected: "gromaq-cargo-output-255",
+    },
 ];
