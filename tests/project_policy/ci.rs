@@ -44,6 +44,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "target/readme-welcome-preview-proof/*",
     "cargo run -- --runtime-clipboard-paste-smoke",
     "cargo run -- --runtime-bracketed-paste-smoke",
+    "cargo run -- --runtime-selection-copy-smoke",
     "cargo run -- --runtime-glyph-frame-smoke",
     "cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm",
     "cargo run -- --runtime-scrollback-smoke",

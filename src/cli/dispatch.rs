@@ -31,6 +31,7 @@ use super::runtime_real_shell_smoke::{
 use super::runtime_reflow_smoke::runtime_reflow_smoke_exit;
 use super::runtime_repaint_smoke::runtime_repaint_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
+use super::runtime_selection_copy_smoke::runtime_selection_copy_smoke_exit;
 use super::runtime_text_zoom_smoke::runtime_text_zoom_smoke_exit;
 use super::runtime_tool_workflow_smoke::runtime_tool_workflow_smoke_exit;
 use super::theme_smoke::{theme_legibility_smoke_exit, theme_list_exit};
@@ -103,6 +104,7 @@ where
         CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),
         CliCommand::RuntimeBracketedPasteSmoke => runtime_bracketed_paste_smoke_exit(),
+        CliCommand::RuntimeSelectionCopySmoke => runtime_selection_copy_smoke_exit(clipboard),
         CliCommand::RuntimeGlyphFrameSmoke => runtime_glyph_frame_smoke_exit(),
         CliCommand::RuntimeGlyphFrameSnapshot => unreachable!(),
         CliCommand::RuntimeScrollbackSmoke => runtime_scrollback_smoke_exit(),

@@ -39,6 +39,8 @@ pub(super) enum CliCommand<'a> {
     RuntimeClipboardPasteSmoke,
     /// Runtime bracketed-paste smoke command.
     RuntimeBracketedPasteSmoke,
+    /// Runtime visible selection copy smoke command.
+    RuntimeSelectionCopySmoke,
     /// Runtime glyph-frame smoke command.
     RuntimeGlyphFrameSmoke,
     /// Runtime glyph-frame snapshot export command.
@@ -137,6 +139,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--osc52-clipboard-smoke" => Some(CliCommand::Osc52ClipboardSmoke),
         "--runtime-clipboard-paste-smoke" => Some(CliCommand::RuntimeClipboardPasteSmoke),
         "--runtime-bracketed-paste-smoke" => Some(CliCommand::RuntimeBracketedPasteSmoke),
+        "--runtime-selection-copy-smoke" => Some(CliCommand::RuntimeSelectionCopySmoke),
         "--runtime-glyph-frame-smoke" => Some(CliCommand::RuntimeGlyphFrameSmoke),
         "--runtime-glyph-frame-snapshot" => Some(CliCommand::RuntimeGlyphFrameSnapshot),
         "--runtime-scrollback-smoke" => Some(CliCommand::RuntimeScrollbackSmoke),

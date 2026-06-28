@@ -11,6 +11,7 @@ pub(in crate::cli) fn usage() -> String {
         "--window-screenshot-smoke|",
         "--window-glyph-frame-snapshot <path>|--osc52-clipboard-smoke|",
         "--runtime-clipboard-paste-smoke|--runtime-bracketed-paste-smoke|",
+        "--runtime-selection-copy-smoke|",
         "--runtime-glyph-frame-smoke|",
         "--runtime-glyph-frame-snapshot <path>|--runtime-scrollback-smoke|",
         "--runtime-perf-smoke|--runtime-perf-budget-smoke|--runtime-perf-p95-smoke|",

@@ -178,8 +178,8 @@ cargo bench
 `scripts/prove-local-ci-parity.sh` runs shell syntax checks, formatting,
 unstaged and staged whitespace checks, clippy with denied warnings, the full
 test suite, font symbol fallback smoke, theme legibility and preview proof,
-avatar asset freshness, runtime bracketed paste and committed text smokes,
-welcome/readme visual proof helpers, GPU welcome image snapshot proof, GPU
+avatar asset freshness, runtime bracketed paste, selection copy, and committed
+text smokes, welcome/readme visual proof helpers, GPU welcome image snapshot proof, GPU
 terminal text smoke, current-host compatibility proof, frame scheduler smoke,
 and the parser benchmark inventory. It does not replace the full `cargo bench`
 command when changing parser, PTY pump, render planning,

@@ -12,6 +12,8 @@ mod glyph_frame;
 mod output_volume;
 #[path = "runtime_smoke/performance.rs"]
 mod performance;
+#[path = "runtime_smoke/selection_copy.rs"]
+mod selection_copy;
 #[path = "runtime_smoke/tool_workflow.rs"]
 mod tool_workflow;
 #[test]
