@@ -8,6 +8,7 @@ mod font_smoke;
 mod frame_scheduler_smoke;
 mod gpu;
 mod runtime_alternate_screen_smoke;
+mod runtime_bracketed_paste_smoke;
 mod runtime_clipboard_smoke;
 mod runtime_config_reload_smoke;
 mod runtime_glyph_frame_smoke;

@@ -10,6 +10,7 @@ use super::font_smoke::font_symbol_fallback_smoke_exit;
 use super::frame_scheduler_smoke::frame_scheduler_smoke_exit;
 use super::gpu::{GpuCommandContext, gpu_command_exit};
 use super::runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
+use super::runtime_bracketed_paste_smoke::runtime_bracketed_paste_smoke_exit;
 use super::runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use super::runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
 use super::runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
@@ -101,6 +102,7 @@ where
         CliCommand::ClipboardSmoke => clipboard_smoke_exit(clipboard),
         CliCommand::Osc52ClipboardSmoke => osc52_clipboard_smoke_exit(clipboard),
         CliCommand::RuntimeClipboardPasteSmoke => runtime_clipboard_paste_smoke_exit(clipboard),
+        CliCommand::RuntimeBracketedPasteSmoke => runtime_bracketed_paste_smoke_exit(),
         CliCommand::RuntimeGlyphFrameSmoke => runtime_glyph_frame_smoke_exit(),
         CliCommand::RuntimeGlyphFrameSnapshot => unreachable!(),
         CliCommand::RuntimeScrollbackSmoke => runtime_scrollback_smoke_exit(),

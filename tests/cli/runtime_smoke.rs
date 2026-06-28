@@ -37,6 +37,27 @@ fn runtime_clipboard_paste_smoke_cli_routes_clipboard_text_to_runtime_pty() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(clipboard.read_text().as_deref(), Some("previous clipboard"));
 }
+
+#[test]
+fn runtime_bracketed_paste_smoke_cli_wraps_multiline_utf8_payload_without_gpu_bootstrap() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-bracketed-paste-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime bracketed paste smoke: ok"));
+    assert!(exit.stdout.contains("payload bytes: 14"));
+    assert!(exit.stdout.contains("encoded bytes: 26"));
+    assert!(exit.stdout.contains("paste bytes: 14"));
+    assert!(exit.stdout.contains("pty input writes: 1"));
+    assert!(exit.stdout.contains("pty input bytes: 26"));
+    assert!(exit.stdout.contains("bracketed: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
 #[test]
 fn runtime_repaint_smoke_cli_preserves_shell_output_after_prompt_repaint() {
     let backend = MockBackend {

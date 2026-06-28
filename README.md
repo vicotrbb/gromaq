@@ -293,6 +293,7 @@ cargo run -- --welcome-image-snapshot target/gromaq-welcome-image.ppm
 cargo run -- --runtime-real-shell-smoke
 cargo run -- --runtime-real-shell-command-output-smoke
 cargo run -- --runtime-tool-workflow-smoke
+cargo run -- --runtime-bracketed-paste-smoke
 cargo run -- --runtime-perf-budget-smoke
 cargo run -- --runtime-perf-p95-smoke
 cargo run -- --runtime-text-zoom-smoke
