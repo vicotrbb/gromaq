@@ -29,9 +29,10 @@ mod unix {
             .env(
                 "GROMAQ_CHECKSUM_EXTRA_FILES",
                 format!(
-                    "{} {}",
+                    "{} {} {}",
                     root.join("packaging/arch/PKGBUILD").display(),
-                    root.join("packaging/arch/.SRCINFO").display()
+                    root.join("packaging/arch/.SRCINFO").display(),
+                    root.join("packaging/arch/gromaq.install").display()
                 ),
             )
             .output()
@@ -54,6 +55,10 @@ mod unix {
         assert!(
             manifest.contains(".SRCINFO"),
             "manifest missing extra .SRCINFO asset:\n{manifest}"
+        );
+        assert!(
+            manifest.contains("gromaq.install"),
+            "manifest missing extra Arch install hook asset:\n{manifest}"
         );
     }
 

@@ -163,6 +163,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/compatibility.md",
+        "can include `PKGBUILD`, `.SRCINFO`, and `gromaq.install`",
+    ),
+    (
+        "documentation/compatibility.md",
         "Debian `postinst`/`postrm` desktop metadata refresh",
     ),
     (
