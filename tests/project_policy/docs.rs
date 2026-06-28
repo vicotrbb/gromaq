@@ -185,15 +185,15 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "README.md",
-        "helper-backed Linux packaging proof is configured but awaits the next remote run",
+        "CI run `28309262840` completed green for commit `461006d`",
     ),
     (
         "documentation/release.md",
-        "helper-backed Linux packaging proof is configured but awaits the next remote run",
+        "CI run `28309262840` completed green for commit `461006d`",
     ),
     (
         "documentation/compatibility.md",
-        "helper-backed Linux packaging proof is configured but awaits the next remote run",
+        "CI run `28309262840` completed green for commit `461006d`",
     ),
     (
         "documentation/compatibility.md",

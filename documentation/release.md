@@ -243,12 +243,22 @@ generation with
 `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
 so the uploaded Linux checksum manifest covers the Arch source-package recipe
 metadata, `.SRCINFO`, and install hook as well as the Linux tarball and Debian
-package. The helper-backed Linux packaging proof is configured but awaits the next remote run.
+package.
 
 ## Current Proof Boundary
 
 Proven remotely:
 
+- GitHub Actions CI run `28309262840` completed green for commit `461006d` on
+  2026-06-28 UTC. The `linux-packaging` job passed
+  Debian package install and payload checks, then ran
+  `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install" scripts/prove-linux-release-install.sh`
+  and verified `target/release-install-proof/bin/gromaq` exists. The
+  `arch-packaging` job passed full `makepkg --noconfirm`, `pacman -U`,
+  `/usr/bin/gromaq --version`, `pacman -Ql gromaq-git`, and
+  `makepkg --printsrcinfo`; the macOS `rust` job passed formatting,
+  whitespace, clippy, `cargo test --all`, the runtime/theme/GPU smoke suite,
+  and `cargo bench --bench parser_throughput -- --list`.
 - GitHub Actions release workflow run `28303243197` completed successfully on
   2026-06-27 for commit `12a38e8`. The Linux workflow artifact contained
   `target/dist/gromaq-0.1.0-linux-x86_64.tar.gz`,

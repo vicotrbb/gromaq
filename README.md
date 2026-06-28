@@ -180,8 +180,9 @@ tarball, checksum manifest, binary install, and desktop identity payloads are
 verified before accepting packaging success. The checksum script also accepts
 `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
 and the Linux packaging and release workflows use that path so the Arch recipe
-metadata is covered by the Linux checksum manifest when it is uploaded. The
-helper-backed Linux packaging proof is configured but awaits the next remote run.
+metadata is covered by the Linux checksum manifest when it is uploaded. CI run `28309262840` completed green for commit `461006d`, including the
+helper-backed Linux packaging proof, Debian package install and payload checks,
+Arch package build/install proof, and the full macOS Rust smoke suite.
 CI run
 `28303175039` completed green for commit `12a38e8`, including that checksum
 path, Debian package assembly, and the release-method tarball install step on
