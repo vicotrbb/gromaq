@@ -51,6 +51,13 @@ jobs:
       - run: |
           printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' 'cursor_opacity = 0.5' 'selection_opacity = 0.25' > target/gromaq-theme-preview-config-ci.toml
           cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gromaq-theme-preview-proof
+          path: |
+            target/gromaq-theme-preview-ci.ppm
+            target/gromaq-theme-preview-config-ci.ppm
+            target/gromaq-theme-preview-config-ci.toml
       - run: cargo run -- --runtime-clipboard-paste-smoke
       - run: cargo run -- --runtime-glyph-frame-smoke
       - run: cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm

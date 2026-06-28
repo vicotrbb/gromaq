@@ -293,6 +293,10 @@ node images/avatar/generate.mjs --check
 scripts/prove-welcome-preview.sh
 ```
 
+CI is configured to upload the default and configured theme preview PPMs plus
+the CI theme config as `gromaq-theme-preview-proof`; helper-backed remote proof
+for that artifact is pending the next pushed run.
+
 Current-host compatibility proof bundle:
 
 ```bash
