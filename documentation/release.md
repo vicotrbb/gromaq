@@ -419,7 +419,8 @@ Proven locally:
   `lsappinfo` reported `CFBundleIdentifier=dev.gromaq.Gromaq` and
   `LSDisplayName=Gromaq`, `pgrep` observed the bundled
   `Contents/MacOS/gromaq --window-screenshot-smoke` process, and the smoke
-  completed with 900 presented frames
+  completed with 900 presented frames. The helper writes `summary.txt` under
+  `target/macos-app-identity-proof` after all checks pass.
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes

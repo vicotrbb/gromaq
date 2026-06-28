@@ -257,6 +257,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(macos_identity_script.contains("lsappinfo"));
     assert!(macos_identity_script.contains("LSDisplayName"));
     assert!(macos_identity_script.contains("Contents/MacOS/gromaq"));
+    assert!(macos_identity_script.contains("summary.txt"));
     assert!(macos_identity_script.contains("macOS app identity proof: ok"));
     assert!(arch_proof_script.contains("archlinux:base-devel"));
     assert!(arch_proof_script.contains("packaging/arch/PKGBUILD"));

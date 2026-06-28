@@ -360,6 +360,10 @@ Manual packaged-app identity proof on macOS:
 scripts/prove-macos-app-identity.sh
 ```
 
+The identity helper writes live LaunchServices, System Events, process, package,
+and smoke handles under `target/macos-app-identity-proof`, including
+`summary.txt`.
+
 The screenshot script launches bounded `--window-screenshot-smoke`, locates the
 visible `Gromaq` window through macOS window metadata, captures that specific
 window under `target/`, and waits for the app process to exit. If macOS cannot

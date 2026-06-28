@@ -26,6 +26,7 @@ package_log="${proof_dir}/package.log"
 system_events_log="${proof_dir}/system-events.txt"
 lsappinfo_log="${proof_dir}/lsappinfo.txt"
 pgrep_log="${proof_dir}/pgrep.txt"
+summary_path="${proof_dir}/summary.txt"
 launch_delay="${GROMAQ_MACOS_IDENTITY_DELAY_SECONDS:-1}"
 
 mkdir -p "${proof_dir}" "${dist_dir}"
@@ -35,7 +36,8 @@ rm -f \
   "${package_log}" \
   "${system_events_log}" \
   "${lsappinfo_log}" \
-  "${pgrep_log}"
+  "${pgrep_log}" \
+  "${summary_path}"
 
 (
   cd "${root}"
@@ -104,9 +106,13 @@ if ! grep -q "presented frame limit: 900" "${open_stdout}"; then
   exit 1
 fi
 
-printf '%s\n' "macOS app identity proof: ok"
-printf '%s\n' "App bundle: ${app_path}"
-printf '%s\n' "System Events proof: ${system_events_log}"
-printf '%s\n' "lsappinfo proof: ${lsappinfo_log}"
-printf '%s\n' "process proof: ${pgrep_log}"
-printf '%s\n' "LaunchServices smoke stdout: ${open_stdout}"
+{
+  printf '%s\n' "macOS app identity proof: ok"
+  printf '%s\n' "App bundle: ${app_path}"
+  printf '%s\n' "System Events proof: ${system_events_log}"
+  printf '%s\n' "lsappinfo proof: ${lsappinfo_log}"
+  printf '%s\n' "process proof: ${pgrep_log}"
+  printf '%s\n' "LaunchServices smoke stdout: ${open_stdout}"
+  printf '%s\n' "LaunchServices smoke stderr: ${open_stderr}"
+  printf '%s\n' "Package log: ${package_log}"
+} | tee "${summary_path}"
