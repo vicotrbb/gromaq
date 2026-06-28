@@ -7,6 +7,7 @@ ppm_path="${proof_dir}/gromaq-welcome-preview.ppm"
 png_path="${proof_dir}/gromaq-welcome-preview.png"
 readme_png="${root}/images/screenshots/gromaq-welcome-preview.png"
 summary_path="${proof_dir}/summary.txt"
+delta_path="${proof_dir}/pixel-delta.txt"
 
 if ! command -v python3 >/dev/null 2>&1; then
   printf '%s\n' "error: python3 is required to compare README welcome preview pixels" >&2
@@ -14,6 +15,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 mkdir -p "${proof_dir}"
+rm -f "${delta_path}"
 cd "${root}"
 
 GROMAQ_WELCOME_PREVIEW_PROOF_DIR="${proof_dir}" \
@@ -21,7 +23,7 @@ GROMAQ_WELCOME_PREVIEW_PROOF_DIR="${proof_dir}" \
   GROMAQ_WELCOME_PREVIEW_PNG="${png_path}" \
   scripts/prove-welcome-preview.sh
 
-python3 - "${ppm_path}" "${readme_png}" <<'PY'
+python3 - "${ppm_path}" "${readme_png}" "${delta_path}" <<'PY'
 import struct
 import sys
 import zlib
@@ -144,7 +146,7 @@ def read_png_rgb(path):
     return width, height, bytes(rgb)
 
 
-ppm_path, png_path = sys.argv[1], sys.argv[2]
+ppm_path, png_path, delta_path = sys.argv[1], sys.argv[2], sys.argv[3]
 ppm_width, ppm_height, ppm_pixels = read_ppm(ppm_path)
 png_width, png_height, png_pixels = read_png_rgb(png_path)
 if (ppm_width, ppm_height) != (png_width, png_height):
@@ -176,7 +178,15 @@ for offset in range(0, len(ppm_pixels), 3):
             )
 
 mean_abs_delta = total_delta / len(ppm_pixels)
-if changed_pixels > max_changed_pixels or mean_abs_delta > max_mean_abs_delta:
+within_tolerance = changed_pixels <= max_changed_pixels and mean_abs_delta <= max_mean_abs_delta
+with open(delta_path, "w", encoding="utf-8") as delta:
+    print(f"status={'ok' if within_tolerance else 'failed'}", file=delta)
+    print(f"dimensions={ppm_width}x{ppm_height}", file=delta)
+    print(f"changed_pixels={changed_pixels}", file=delta)
+    print(f"max_changed_pixels={max_changed_pixels}", file=delta)
+    print(f"mean_abs_delta={mean_abs_delta:.2f}", file=delta)
+    print(f"max_mean_abs_delta={max_mean_abs_delta:.2f}", file=delta)
+if not within_tolerance:
     if first_difference is None:
         first_difference = (0, 0, b"", b"")
     x, y, committed, generated = first_difference
@@ -198,6 +208,11 @@ PY
   printf '%s\n' "Generated PPM: ${ppm_path}"
   if [ -s "${png_path}" ]; then
     printf '%s\n' "Generated PNG: ${png_path}"
+  fi
+  if [ -s "${delta_path}" ]; then
+    while IFS= read -r line; do
+      printf '%s\n' "Pixel delta: ${line}"
+    done < "${delta_path}"
   fi
   printf '%s\n' "Welcome proof log: ${proof_dir}/welcome-preview.log"
 } | tee "${summary_path}"

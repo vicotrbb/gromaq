@@ -70,6 +70,8 @@ fn readme_welcome_preview_proof_writes_artifact_summary() {
         "max_mean_abs_delta = 8.0",
         "changed_pixels",
         "mean_abs_delta",
+        "pixel-delta.txt",
+        "Pixel delta: ${line}",
         "summary.txt",
         "README welcome preview proof: ok",
         "Committed PNG: ${readme_png}",
