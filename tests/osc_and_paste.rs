@@ -133,6 +133,27 @@ fn csi_window_title_stack_restores_title_without_changing_icon_label() {
 }
 
 #[test]
+fn full_reset_clears_saved_window_title_stack() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str(
+            "\x1b]0;Initial\x07\
+             \x1b[22;0t\
+             \x1bc\
+             \x1b[23;0t\
+             \x1b[20t\
+             \x1b[21t",
+        )
+        .unwrap();
+
+    assert_eq!(
+        terminal.take_pending_response_bytes(),
+        b"\x1b]L\x1b\\\x1b]l\x1b\\"
+    );
+}
+
+#[test]
 fn overlong_osc_title_is_ignored_without_clearing_previous_title() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
     let overlong_title = "x".repeat(MAX_OSC_TITLE_BYTES + 1);

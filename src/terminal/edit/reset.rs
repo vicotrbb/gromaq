@@ -84,6 +84,8 @@ impl Terminal {
         self.mouse = MouseReportState::default();
         self.title = None;
         self.icon_label = None;
+        self.title_stack.clear();
+        self.icon_label_stack.clear();
         self.clipboard_text = None;
         self.hyperlinks.clear();
         self.current_hyperlink_id = 0;
