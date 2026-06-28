@@ -181,7 +181,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/compatibility.md",
-        "Debian package install proof is configured",
+        "Debian package install and payload checks",
     ),
     (
         "README.md",
@@ -237,6 +237,19 @@ const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
     "Developer ID signed/notarized macOS app distribution",
 ];
 
+const REQUIRED_COMPLETED_LINUX_PACKAGING_DOC_MARKERS: &[&str] = &[
+    "Linux desktop database refresh hook",
+    "CI run `28309262840` completed green for commit `461006d`",
+    "desktop-file-utils",
+    "Debian package install and payload checks",
+    "Arch `gromaq.install`",
+];
+
+const STALE_LINUX_PACKAGING_DOC_MARKERS: &[&str] = &[
+    "CI real-utility proof is configured but pending the next remote run",
+    "current Debian package install proof is configured but pending the next remote run",
+];
+
 #[test]
 fn public_docs_keep_default_visual_contract_and_proof_commands() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -262,6 +275,29 @@ fn public_docs_keep_release_install_boundaries() {
         assert!(
             source.contains(marker),
             "{} must document `{marker}` for public install and release boundaries",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
+fn compatibility_matrix_records_completed_linux_packaging_ci_proof() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("documentation/compatibility.md");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in REQUIRED_COMPLETED_LINUX_PACKAGING_DOC_MARKERS {
+        assert!(
+            source.contains(marker),
+            "{} must document completed Linux packaging CI proof marker `{marker}`",
+            relative_path(root, &path)
+        );
+    }
+
+    for marker in STALE_LINUX_PACKAGING_DOC_MARKERS {
+        assert!(
+            !source.contains(marker),
+            "{} must remove stale Linux packaging proof boundary `{marker}`",
             relative_path(root, &path)
         );
     }
