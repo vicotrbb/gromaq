@@ -6,6 +6,7 @@ use super::{
 };
 
 const RUNTIME_MOUSE_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1000h\x1b[?1002h\x1b[?1003h\x1b[?1006h";
+const RUNTIME_MOUSE_SMOKE_ENABLE_X10: &str = "\x1b[?9h";
 
 pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
     let mut runtime = match runtime_protocol_smoke_runtime() {
@@ -67,14 +68,50 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
         Ok(wheel) => wheel,
         Err(error) => return runtime_mouse_smoke_error(error),
     };
+    let mut x10_runtime = match runtime_protocol_smoke_runtime() {
+        Ok(runtime) => runtime,
+        Err(error) => return runtime_mouse_smoke_error(error),
+    };
+    let x10_spawner =
+        RuntimeInputCaptureSmokePtySpawner::new(RUNTIME_MOUSE_SMOKE_ENABLE_X10.as_bytes());
+    if let Err(error) = x10_runtime.start_shell(&x10_spawner) {
+        return runtime_mouse_smoke_error(error);
+    }
+    if let Err(error) = x10_runtime.pump_pty_output() {
+        return runtime_mouse_smoke_error(error);
+    }
+    let x10_pressed = match x10_runtime.send_mouse_input(MouseEvent::new(
+        MouseEventKind::Press,
+        MouseButton::Left,
+        2,
+        1,
+    )) {
+        Ok(pressed) => pressed,
+        Err(error) => return runtime_mouse_smoke_error(error),
+    };
+    let x10_released = match x10_runtime.send_mouse_input(MouseEvent::new(
+        MouseEventKind::Release,
+        MouseButton::Left,
+        2,
+        1,
+    )) {
+        Ok(released) => released,
+        Err(error) => return runtime_mouse_smoke_error(error),
+    };
     let metrics = runtime.dump_runtime_perf_metrics();
-    let input = captured_shell_input(&runtime);
+    let x10_metrics = x10_runtime.dump_runtime_perf_metrics();
+    let input = [
+        captured_shell_input(&runtime),
+        captured_shell_input(&x10_runtime),
+    ]
+    .concat();
     let expected_input = [
         b"\x1b[<0;3;2M".as_slice(),
         b"\x1b[<0;3;2m".as_slice(),
         b"\x1b[<32;5;3M".as_slice(),
         b"\x1b[<35;7;2M".as_slice(),
         b"\x1b[<64;1;1M".as_slice(),
+        b"\x1b[M #\"".as_slice(),
     ]
     .concat();
 
@@ -84,10 +121,12 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
         || !dragged
         || !motion
         || !wheel
+        || !x10_pressed
+        || x10_released
         || input != expected_input
-        || metrics.mouse_inputs != 5
-        || metrics.pty_input_writes != 5
-        || metrics.pty_input_bytes != expected_input.len() as u64
+        || metrics.mouse_inputs + x10_metrics.mouse_inputs != 6
+        || metrics.pty_input_writes + x10_metrics.pty_input_writes != 6
+        || metrics.pty_input_bytes + x10_metrics.pty_input_bytes != expected_input.len() as u64
     {
         return CliExit {
             code: 1,
@@ -100,16 +139,18 @@ pub(in crate::cli) fn runtime_mouse_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime mouse smoke: ok\npumped bytes: {}\npress reported: {}\nrelease reported: {}\ndrag reported: {}\nmotion reported: {}\nwheel reported: {}\nmouse inputs: {}\npty input writes: {}\npty input bytes: {}\n",
+            "runtime mouse smoke: ok\npumped bytes: {}\npress reported: {}\nrelease reported: {}\ndrag reported: {}\nmotion reported: {}\nwheel reported: {}\nx10 press reported: {}\nx10 release suppressed: {}\nmouse inputs: {}\npty input writes: {}\npty input bytes: {}\n",
             pumped_bytes,
             pressed,
             released,
             dragged,
             motion,
             wheel,
-            metrics.mouse_inputs,
-            metrics.pty_input_writes,
-            metrics.pty_input_bytes
+            x10_pressed,
+            !x10_released,
+            metrics.mouse_inputs + x10_metrics.mouse_inputs,
+            metrics.pty_input_writes + x10_metrics.pty_input_writes,
+            metrics.pty_input_bytes + x10_metrics.pty_input_bytes
         ),
         stderr: String::new(),
     }
