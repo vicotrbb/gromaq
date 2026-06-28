@@ -325,6 +325,10 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("summary.txt"));
     assert!(compatibility_proof_script.contains("tools_present="));
     assert!(compatibility_proof_script.contains("tools_missing="));
+    assert!(compatibility_proof_script.contains("runtime_tool_workflow_checked="));
+    assert!(compatibility_proof_script.contains("runtime_tool_workflow_passed="));
+    assert!(compatibility_proof_script.contains("runtime_tool_workflow_skipped="));
+    assert!(compatibility_proof_script.contains("runtime_tool_workflow_failed="));
     assert!(compatibility_proof_script.contains("Current-host compatibility proof: ok"));
     assert!(pty_tools.contains("\"--output=yaml\""));
     assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));

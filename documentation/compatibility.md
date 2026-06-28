@@ -5,7 +5,7 @@ tests, real PTY workflows, scripted interaction, and live smoke commands. It is
 not a claim of full daily-driver compatibility yet; it is a proof map for the
 remaining terminal-core work.
 
-On 2026-06-28, `cargo test --test pty -- --nocapture` passed all 37 PTY tests
+On 2026-06-28, `cargo test --test pty -- --nocapture` passed all 44 PTY tests
 on the current macOS host. The captured output confirmed live current-host
 coverage for bash, zsh, vim, tmux, less, top, ssh, kubectl, and the tiny cargo
 fixture workflows, and also confirmed that fish, nushell, nvim, htop, and btop
@@ -32,17 +32,18 @@ adding safe `fish --version`, `nvim --version`, `htop --version`, and
 failures.
 `scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
 writing the host inventory, PTY test log, and runtime external-tool smoke log
-under `target/compatibility-proof`. That fresh bundle again passed all 37 PTY
-tests, passed both runtime tool checks with 0 skips, and recorded `fish`, `nu`,
-`nvim`, `htop`, and `btop` as missing on the current host. A refreshed local
-run under `target/tool-count-compatibility-proof` recorded `tools_present=8`
-and `tools_missing=5` in `summary.txt` with the same PTY/runtime success.
+under `target/compatibility-proof`. A refreshed local run under
+`target/compatibility-summary-proof` passed all 44 PTY tests, recorded
+`tools_present=8` and `tools_missing=5`, and wrote runtime smoke summary counts
+of `runtime_tool_workflow_checked=11`, `runtime_tool_workflow_passed=7`,
+`runtime_tool_workflow_skipped=4`, and `runtime_tool_workflow_failed=0`.
 Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
 single bundle. The helper records the current host's tool inventory and writes
 the `cargo test --test pty -- --nocapture` and
 `cargo run -- --runtime-tool-workflow-smoke` logs under
 `target/compatibility-proof` along with a compact `summary.txt` success marker
-that includes present and missing tool counts.
+that includes present/missing tool inventory counts plus runtime tool workflow
+checked, passed, skipped, and failed counts.
 `.github/workflows/ci.yml` is configured to run the helper in the macOS `rust`
 job and upload `target/compatibility-proof/*` as the
 `gromaq-current-host-compatibility-proof` artifact. The workflow is also
@@ -102,7 +103,7 @@ welcome-preview threshold step.
 | Selection/copy and OSC 52 clipboard | Unit tests cover visible-grid copy, displayed scrollback copy, displayed styled scrollback with wide-cell text, soft-wrap versus hard-break newlines, emoji clusters, wide-cell trailing-half selection, viewport clamping, stale-selection clearing, and native clipboard smoke paths. `cargo run -- --runtime-selection-copy-smoke` verifies deterministic runtime PTY output can be visibly selected across rows including a wide cell, copied into the injected host clipboard, recognizes dedicated Copy, Control+Insert, Control+Shift+C, and Super+C as native copy shortcuts, and leaves PTY input writes at zero. `cargo run -- --runtime-osc52-clipboard-smoke` verifies OSC 52 emitted by runtime PTY output syncs terminal-owned clipboard text into the injected host clipboard, suppresses a repeated sync of the same terminal-owned text, restores prior host clipboard text, and leaves PTY input writes at zero. | Proven for covered paths plus deterministic runtime selection copy, native copy shortcuts, and runtime OSC 52 host sync |
 | Structured test/control API | `TerminalTestApi` covers key encoding, paste, resize, visible grid, scrollback, cursor, performance counters, OSC title, OSC 52 clipboard text, terminal-generated response-byte draining, and deterministic one-pixel-per-cell screenshots | Proven for covered terminal snapshots and response bytes |
 | Terminal-generated status and window reports | Terminal-state tests cover primary and secondary device attributes, status reports, DECRQSS mode/style reports, cursor-position reports, OSC title/icon-label reports, and xterm window queries for open state, window position, text-area pixel size, screen pixel size via `CSI 15 t`, and character dimensions. The `CSI 15 t` screen-pixel response uses the configured terminal pixel height/width and returns `CSI 5 ; height ; width t`, matching the xterm report shape. OSC/window tests also cover `CSI 22;0/1/2 t` plus `CSI 23;0/1/2 t` save/restore of both the current icon label and window title, only the icon label, or only the window title. | Proven for covered terminal response bytes; live native screen geometry fidelity remains bounded by configured pixel dimensions |
-| PTY background reader EOF handling | `cargo test --lib pty_reader_` proves that Unix PTY `EIO` from the background reader is treated as EOF while other read errors remain fatal; `cargo test --test pty` passed all 37 PTY workflow tests on 2026-06-28 after the fix | Proven for covered PTY reader and real-workflow paths |
+| PTY background reader EOF handling | `cargo test --lib pty_reader_` proves that Unix PTY `EIO` from the background reader is treated as EOF while other read errors remain fatal; `cargo test --test pty` passed all 44 PTY workflow tests on 2026-06-28 after the fix | Proven for covered PTY reader and real-workflow paths |
 | Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, committed text, and native shortcuts, including bracketed and plain runtime paste, dedicated Paste, Shift+Insert, Control+V, and Super+V paste routing. On 2026-06-27, `cargo run -- --runtime-clipboard-paste-smoke` recognized `dedicated-paste`, `shift-insert`, `control-v`, and `super-v`, wrote 30 clipboard bytes to the PTY, recorded 1 clipboard paste, and restored the previous clipboard text. `cargo run -- --runtime-bracketed-paste-smoke` verifies that runtime PTY output enabling bracketed paste causes multiline UTF-8 paste text to be wrapped with `CSI 200~` / `CSI 201~` before PTY writeback while preserving payload byte accounting. `cargo run -- --runtime-committed-text-smoke` verifies that committed Unicode text writes its UTF-8 payload to the PTY through the committed-text path without counting as native key input or paste. | Proven for covered keys, deterministic clipboard paste routing, bracketed paste writeback, and committed UTF-8 text input |
 | Browser-style terminal text zoom | Native shortcut mapping tests plus native app renderer/grid reconfiguration tests for increase, decrease, reset, shifted plus, modifier-wheel, and dedicated OS/browser zoom-key policy; `cargo run -- --runtime-text-zoom-smoke` verifies default 32/18/44 px metrics zoom to 37/21/51 px, reduces the visible grid, and resets without a live GPU window | Proven for covered controls |
 | Mouse reporting modes | Runtime mouse smoke now covers SGR press, release, drag, any-motion, wheel report writeback, default-protocol press/release writeback, and X10 press-only writeback through the PTY input path; unit and terminal-state tests cover default protocol reporting plus X10 DECRQM state reports; app-runtime tests cover direct SGR, default-protocol, and X10 send-mouse-input writeback, and alternate-screen mouse tests cover runtime app paths | Proven for default, X10, and SGR covered paths |
