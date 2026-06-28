@@ -47,6 +47,7 @@ impl Terminal {
                 blinking: self.config.cursor_blinking,
             },
             style: Style::default(),
+            origin_mode: false,
             g0_dec_special_graphics: false,
             g1_dec_special_graphics: false,
             active_charset: CharacterSet::G0,

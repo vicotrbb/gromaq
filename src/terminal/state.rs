@@ -24,6 +24,7 @@ pub(super) enum CharacterSet {
 pub(super) struct SavedCursorState {
     pub(super) cursor: Cursor,
     pub(super) style: Style,
+    pub(super) origin_mode: bool,
     pub(super) g0_dec_special_graphics: bool,
     pub(super) g1_dec_special_graphics: bool,
     pub(super) active_charset: CharacterSet,

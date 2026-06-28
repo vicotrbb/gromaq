@@ -195,3 +195,14 @@ fn dec_origin_mode_disable_returns_cursor_addressing_to_viewport() {
     assert_eq!(terminal.dump_cursor().row, 0);
     assert_eq!(terminal.dump_cursor().col, 1);
 }
+
+#[test]
+fn dec_save_restore_cursor_restores_origin_mode() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 5).unwrap());
+
+    terminal
+        .write_str("\x1b[2;4r\x1b[?6h\x1b7\x1b[?6l\x1b8\x1b[?6$p")
+        .unwrap();
+
+    assert_eq!(terminal.take_pending_response_bytes(), b"\x1b[?6;1$y");
+}

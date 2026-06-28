@@ -8,6 +8,7 @@ impl Terminal {
         self.saved_dec_cursor = Some(SavedCursorState {
             cursor: self.cursor,
             style: self.style,
+            origin_mode: self.origin_mode,
             g0_dec_special_graphics: self.g0_dec_special_graphics,
             g1_dec_special_graphics: self.g1_dec_special_graphics,
             active_charset: self.active_charset,
@@ -18,6 +19,7 @@ impl Terminal {
         if let Some(saved) = self.saved_dec_cursor {
             self.cursor = saved.cursor;
             self.style = saved.style;
+            self.origin_mode = saved.origin_mode;
             self.g0_dec_special_graphics = saved.g0_dec_special_graphics;
             self.g1_dec_special_graphics = saved.g1_dec_special_graphics;
             self.active_charset = saved.active_charset;
