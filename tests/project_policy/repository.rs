@@ -268,6 +268,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(arch_proof_script.contains("/usr/bin/gromaq --version"));
     assert!(arch_proof_script.contains("pacman -Ql gromaq-git"));
     assert!(arch_proof_script.contains("dev.gromaq.Gromaq.desktop"));
+    assert!(arch_proof_script.contains("summary.txt"));
     assert!(debian_proof_script.contains("scripts/package-debian-deb.sh"));
     assert!(debian_proof_script.contains("dpkg -i"));
     assert!(debian_proof_script.contains("\"/usr/bin/${package}\" --version"));

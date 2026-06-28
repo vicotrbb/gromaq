@@ -4,6 +4,7 @@ set -eu
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 image="${GROMAQ_ARCH_PROOF_IMAGE:-archlinux:base-devel}"
 platform="${GROMAQ_ARCH_PROOF_PLATFORM:-linux/amd64}"
+summary_path="${GROMAQ_ARCH_PROOF_SUMMARY:-${root}/target/arch-package-proof-summary.txt}"
 
 if ! command -v docker >/dev/null 2>&1; then
   printf '%s\n' "error: docker is required for Arch package proof." >&2
@@ -44,4 +45,12 @@ grep -F /usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml /tmp/gromaq-arch-payl
 grep -F /usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png /tmp/gromaq-arch-payload.txt
 '
 
-printf '%s\n' "Arch package proof: ok"
+mkdir -p "$(dirname "${summary_path}")"
+{
+  printf '%s\n' "Arch package proof: ok"
+  printf '%s\n' "Container image: ${image}"
+  printf '%s\n' "Container platform: ${platform}"
+  printf '%s\n' "PKGBUILD: ${root}/packaging/arch/PKGBUILD"
+  printf '%s\n' ".SRCINFO: ${root}/packaging/arch/.SRCINFO"
+  printf '%s\n' "Install hook: ${root}/packaging/arch/gromaq.install"
+} | tee "${summary_path}"

@@ -160,7 +160,8 @@ AppStream metainfo, and hicolor icon.
 Maintainers with a working Docker daemon can run
 `scripts/prove-arch-package.sh` to reproduce the full Arch build, package
 install, `gromaq --version`, and installed-payload checks in an
-`archlinux:base-devel` container.
+`archlinux:base-devel` container. The helper writes
+`target/arch-package-proof-summary.txt` after success.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus

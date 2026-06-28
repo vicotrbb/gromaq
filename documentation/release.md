@@ -194,7 +194,8 @@ metadata-only job remotely.
 Maintainers with a working Docker daemon can run
 `scripts/prove-arch-package.sh` to perform the same full package build,
 `pacman -U` install, `/usr/bin/gromaq --version`, and installed-payload checks
-inside an `archlinux:base-devel` container.
+inside an `archlinux:base-devel` container. The helper writes
+`target/arch-package-proof-summary.txt` after success.
 
 ## macOS App Bundle
 
