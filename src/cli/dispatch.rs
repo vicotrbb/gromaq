@@ -6,6 +6,7 @@ mod arguments;
 use super::args::{CliCommand, command_for, usage};
 use super::clipboard_smoke::{clipboard_smoke_exit, osc52_clipboard_smoke_exit};
 use super::config_commands::{NativeAppLaunchConfig, launch_native_app_exit};
+use super::font_smoke::font_symbol_fallback_smoke_exit;
 use super::frame_scheduler_smoke::frame_scheduler_smoke_exit;
 use super::gpu::{GpuCommandContext, gpu_command_exit};
 use super::runtime_alternate_screen_smoke::runtime_alternate_screen_smoke_exit;
@@ -125,6 +126,7 @@ where
         CliCommand::RuntimeTextZoomSmoke => runtime_text_zoom_smoke_exit(),
         CliCommand::RuntimeRepaintSmoke => runtime_repaint_smoke_exit(),
         CliCommand::RuntimeToolWorkflowSmoke => runtime_tool_workflow_smoke_exit(),
+        CliCommand::FontSymbolFallbackSmoke => font_symbol_fallback_smoke_exit(),
         CliCommand::ThemeList => theme_list_exit(),
         CliCommand::ThemeLegibilitySmoke => theme_legibility_smoke_exit(),
         CliCommand::ThemePreviewSnapshot => unreachable!(),

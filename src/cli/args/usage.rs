@@ -21,6 +21,7 @@ pub(in crate::cli) fn usage() -> String {
         "--runtime-alternate-screen-smoke|--runtime-reflow-smoke|",
         "--runtime-config-reload-smoke|--runtime-text-zoom-smoke|",
         "--runtime-repaint-smoke|--runtime-tool-workflow-smoke|",
+        "--font-symbol-fallback-smoke|",
         "--theme-list|--theme-export <preset> <path>|",
         "--theme-legibility-smoke|--theme-preview-snapshot <path>|",
         "--theme-preview-config <config> <path>|",

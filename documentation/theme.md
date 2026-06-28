@@ -25,6 +25,9 @@ exposes them.
 from 32/18/44 px font/cell/line-height to 37/21/51 px, reduce the visible
 grid from 59x15 to 52x13, and reset back to the default metrics without a live
 GPU window.
+`cargo run -- --font-symbol-fallback-smoke` verifies that the default native
+font stack can plan and rasterize a Braille symbol through the automatic symbol
+fallback path without bootstrapping a live GPU window.
 `cargo run -- --theme-legibility-smoke` verifies the shipped default theme from
 the CLI, including default font metrics, foreground/background contrast,
 selection contrast, cursor contrast, and readable ANSI color contrast gates.

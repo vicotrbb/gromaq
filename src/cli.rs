@@ -4,6 +4,7 @@ mod args;
 mod clipboard_smoke;
 mod config_commands;
 mod dispatch;
+mod font_smoke;
 mod frame_scheduler_smoke;
 mod gpu;
 mod runtime_alternate_screen_smoke;

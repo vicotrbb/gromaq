@@ -296,6 +296,7 @@ cargo run -- --runtime-tool-workflow-smoke
 cargo run -- --runtime-perf-budget-smoke
 cargo run -- --runtime-perf-p95-smoke
 cargo run -- --runtime-text-zoom-smoke
+cargo run -- --font-symbol-fallback-smoke
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm

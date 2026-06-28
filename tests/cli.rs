@@ -13,6 +13,8 @@ use gromaq::native_gpu::GpuBootstrapBackend;
 mod clipboard;
 #[path = "cli/config/mod.rs"]
 mod config;
+#[path = "cli/font_smoke.rs"]
+mod font_smoke;
 #[path = "cli/gpu_smoke.rs"]
 mod gpu_smoke;
 #[path = "cli/gpu_welcome_image.rs"]
@@ -120,6 +122,7 @@ fn help_cli_reports_usage_without_gpu_bootstrap() {
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.starts_with("usage: gromaq ["));
     assert!(exit.stdout.contains("--version"));
+    assert!(exit.stdout.contains("--font-symbol-fallback-smoke"));
     assert!(exit.stdout.contains("--welcome-preview-snapshot <path>"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
