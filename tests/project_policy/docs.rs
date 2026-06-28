@@ -92,6 +92,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "makepkg --nobuild"),
     ("README.md", "makepkg --noconfirm"),
     ("README.md", "pacman -U"),
+    ("README.md", "scripts/prove-arch-package.sh"),
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "README.md",
@@ -121,6 +122,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/release.md", "makepkg --nobuild"),
     ("documentation/release.md", "makepkg --noconfirm"),
     ("documentation/release.md", "pacman -U"),
+    ("documentation/release.md", "scripts/prove-arch-package.sh"),
     ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "documentation/release.md",

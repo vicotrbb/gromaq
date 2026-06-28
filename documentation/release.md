@@ -125,6 +125,7 @@ directly so package assembly is testable on normal Unix CI hosts. Use
 
 ```bash
 bash -n packaging/arch/PKGBUILD
+scripts/prove-arch-package.sh
 ```
 
 The recipe builds from the public Git repository with
@@ -150,6 +151,10 @@ file, AppStream metainfo, and hicolor icon. GitHub Actions CI runs
 `28301610408` and `28302521484` proved the earlier metadata-only job remotely;
 the added full build/install steps still need a green remote run before they
 count as live Arch proof.
+Maintainers with a working Docker daemon can run
+`scripts/prove-arch-package.sh` to perform the same full package build,
+`pacman -U` install, `/usr/bin/gromaq --version`, and installed-payload checks
+inside an `archlinux:base-devel` container.
 
 ## macOS App Bundle
 

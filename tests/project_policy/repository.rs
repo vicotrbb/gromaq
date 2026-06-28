@@ -25,6 +25,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/notarize-macos-app.sh",
     "scripts/capture-macos-window-proof.sh",
     "scripts/prove-macos-app-identity.sh",
+    "scripts/prove-arch-package.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
@@ -143,6 +144,7 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/capture-macos-window-proof.sh")).unwrap();
     let macos_identity_script =
         fs::read_to_string(root.join("scripts/prove-macos-app-identity.sh")).unwrap();
+    let arch_proof_script = fs::read_to_string(root.join("scripts/prove-arch-package.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
@@ -223,6 +225,13 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(macos_identity_script.contains("LSDisplayName"));
     assert!(macos_identity_script.contains("Contents/MacOS/gromaq"));
     assert!(macos_identity_script.contains("macOS app identity proof: ok"));
+    assert!(arch_proof_script.contains("archlinux:base-devel"));
+    assert!(arch_proof_script.contains("packaging/arch/PKGBUILD"));
+    assert!(arch_proof_script.contains("makepkg --noconfirm"));
+    assert!(arch_proof_script.contains("pacman -U --noconfirm"));
+    assert!(arch_proof_script.contains("/usr/bin/gromaq --version"));
+    assert!(arch_proof_script.contains("pacman -Ql gromaq-git"));
+    assert!(arch_proof_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));

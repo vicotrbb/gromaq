@@ -128,6 +128,7 @@ scripts/package-linux-tarball.sh
 scripts/package-debian-deb.sh
 scripts/package-macos-app.sh
 scripts/prove-macos-app-identity.sh
+scripts/prove-arch-package.sh
 bash -n packaging/arch/PKGBUILD
 ```
 
@@ -143,6 +144,10 @@ user. The workflow is now configured to continue through full
 and `pacman -Ql` payload checks for the binary, README, license, desktop file,
 AppStream metainfo, and hicolor icon. Those full build/install steps still
 need a green remote run before they count as live Arch proof.
+Maintainers with a working Docker daemon can run
+`scripts/prove-arch-package.sh` to reproduce the full Arch build, package
+install, `gromaq --version`, and installed-payload checks in an
+`archlinux:base-devel` container.
 
 Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
 upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
