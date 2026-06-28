@@ -254,7 +254,7 @@ checksum extras, which packages the local tarball, writes
 and checks the installed binary plus desktop identity payloads under
 `target/release-install-proof`. The macOS `rust` job is configured to run
 `scripts/prove-current-host-compatibility.sh` and upload
-`target/compatibility-proof/*` as the
+`target/compatibility-proof/*`, including `summary.txt`, as the
 `gromaq-current-host-compatibility-proof` artifact. CI also has a Linux
 compatibility job that installs common Ubuntu shell/editor/TUI tools, runs the
 same helper, sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so expected installed tools

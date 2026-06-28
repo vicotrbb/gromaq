@@ -306,6 +306,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("command -v"));
     assert!(compatibility_proof_script.contains("GROMAQ_REQUIRED_COMPAT_TOOLS"));
     assert!(compatibility_proof_script.contains("required compatibility tool missing"));
+    assert!(compatibility_proof_script.contains("summary.txt"));
+    assert!(compatibility_proof_script.contains("Current-host compatibility proof: ok"));
     assert!(pty_tools.contains("\"--output=yaml\""));
     assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));
     assert!(window_perf_proof_script.contains("cargo run -- --window-perf-smoke"));

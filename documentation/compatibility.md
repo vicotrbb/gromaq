@@ -23,9 +23,10 @@ Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
 single bundle. The helper records the current host's tool inventory and writes
 the `cargo test --test pty -- --nocapture` and
 `cargo run -- --runtime-tool-workflow-smoke` logs under
-`target/compatibility-proof`. `.github/workflows/ci.yml` is configured to run
-the helper in the macOS `rust` job and upload `target/compatibility-proof/*` as
-the `gromaq-current-host-compatibility-proof` artifact. The workflow is also
+`target/compatibility-proof` along with a compact `summary.txt` success marker.
+`.github/workflows/ci.yml` is configured to run the helper in the macOS `rust`
+job and upload `target/compatibility-proof/*` as the
+`gromaq-current-host-compatibility-proof` artifact. The workflow is also
 configured with a Linux compatibility job that installs common Ubuntu
 shell/editor/TUI tools, runs the same helper, and uploads
 `gromaq-linux-compatibility-proof`; that job sets

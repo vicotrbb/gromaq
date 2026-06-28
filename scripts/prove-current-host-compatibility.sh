@@ -7,6 +7,7 @@ proof_dir="${GROMAQ_COMPATIBILITY_PROOF_DIR:-${root}/target/compatibility-proof}
 mkdir -p "${proof_dir}"
 
 inventory="${proof_dir}/tool-inventory.txt"
+summary="${proof_dir}/summary.txt"
 : >"${inventory}"
 printf '%s\n' "Current-host compatibility proof" | tee -a "${inventory}"
 printf 'timestamp_utc=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" | tee -a "${inventory}"
@@ -51,4 +52,10 @@ cd "${root}"
 run_and_capture pty cargo test --test pty -- --nocapture
 run_and_capture runtime-tool-workflow cargo run -- --runtime-tool-workflow-smoke
 
-printf '%s\n' "Current-host compatibility proof: ok"
+{
+  printf '%s\n' "Current-host compatibility proof: ok"
+  printf 'proof_dir=%s\n' "${proof_dir}"
+  printf 'inventory=%s\n' "${inventory}"
+  printf 'pty_log=%s\n' "${proof_dir}/pty.log"
+  printf 'runtime_tool_workflow_log=%s\n' "${proof_dir}/runtime-tool-workflow.log"
+} | tee "${summary}"
