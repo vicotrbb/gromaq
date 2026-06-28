@@ -51,7 +51,7 @@ fn native_terminal_runtime_encodes_mouse_input_to_pty_when_reporting_is_enabled(
 }
 
 #[test]
-fn native_terminal_runtime_encodes_default_mouse_protocol_to_pty() {
+fn native_terminal_runtime_encodes_default_mouse_protocol_press_and_release_to_pty() {
     let spawner = MockPtySpawner::default();
     let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 20,
@@ -88,11 +88,23 @@ fn native_terminal_runtime_encodes_default_mouse_protocol_to_pty() {
             ))
             .unwrap()
     );
+    assert!(
+        runtime
+            .send_mouse_input(MouseEvent::new(
+                MouseEventKind::Release,
+                MouseButton::Left,
+                2,
+                1,
+            ))
+            .unwrap()
+    );
 
     let session = runtime.shell_session().unwrap();
+    assert_eq!(session.input.borrow().len(), 2);
+    assert_eq!(session.input.borrow()[0].as_slice(), b"\x1b[M #\"");
     assert_eq!(
         session.input.borrow().last().unwrap().as_slice(),
-        b"\x1b[M #\""
+        b"\x1b[M##\""
     );
 }
 
