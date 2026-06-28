@@ -22,6 +22,7 @@ jobs:
       - run: sh -n scripts/capture-macos-window-proof.sh
       - run: sh -n scripts/prove-macos-app-identity.sh
       - run: sh -n scripts/prove-arch-package.sh
+      - run: sh -n scripts/prove-debian-package.sh
       - run: bash -n packaging/arch/PKGBUILD
       - run: sh -n packaging/arch/gromaq.install
       - run: cargo fmt --check

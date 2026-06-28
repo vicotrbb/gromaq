@@ -132,6 +132,7 @@ scripts/package-linux-tarball.sh
 scripts/package-debian-deb.sh
 scripts/package-macos-app.sh
 scripts/prove-macos-app-identity.sh
+scripts/prove-debian-package.sh
 scripts/prove-arch-package.sh
 bash -n packaging/arch/PKGBUILD
 sh -n packaging/arch/gromaq.install
@@ -184,7 +185,10 @@ structure.
 Release artifacts include a `SHA256SUMS` manifest.
 The Debian package includes Debian `postinst`/`postrm` desktop refresh hooks
 that conditionally run `update-desktop-database` and refresh the hicolor icon
-cache when those desktop utilities are available.
+cache when those desktop utilities are available. On Debian/Ubuntu hosts,
+maintainers can run `scripts/prove-debian-package.sh` to build the `.deb`,
+install it with `dpkg -i`, run `/usr/bin/gromaq --version`, and record
+installed-payload checks.
 
 ## Status
 

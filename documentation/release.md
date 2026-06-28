@@ -107,6 +107,7 @@ Build a Debian package from the current checkout:
 
 ```bash
 scripts/package-debian-deb.sh
+scripts/prove-debian-package.sh
 ```
 
 The `.deb` installs:
@@ -125,6 +126,10 @@ The script does not require `dpkg-deb`; it writes the Debian ar/tar members
 directly so package assembly is testable on normal Unix CI hosts. Use
 `GROMAQ_BINARY_PATH=<path>` to package an already-built binary and
 `GROMAQ_DEB_ARCH=<arch>` to override the detected Debian architecture.
+On Debian/Ubuntu hosts, `scripts/prove-debian-package.sh` builds the package,
+installs it with `dpkg -i`, runs `/usr/bin/gromaq --version`, and checks the
+installed binary, README, copyright, desktop file, AppStream metainfo, and
+hicolor icon payloads.
 
 ## Arch Package Recipe
 
