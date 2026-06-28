@@ -261,8 +261,9 @@ Debian package assembly on `ubuntu-latest`. The job is also configured for
 Debian package install, `gromaq --version`, and installed-payload checks.
 It then runs `scripts/prove-linux-release-install.sh` with Arch metadata
 checksum extras, which packages the local tarball, writes
-`SHA256SUMS-linux-x86_64`, installs through `GROMAQ_INSTALL_METHOD=release`,
-and checks the installed binary plus desktop identity payloads under
+`SHA256SUMS-linux-x86_64` with the generated checksum entry count, installs
+through `GROMAQ_INSTALL_METHOD=release`, and checks the installed binary plus
+desktop identity payloads under
 `target/release-install-proof`. The macOS `rust` job is configured to run
 `scripts/prove-current-host-compatibility.sh` and upload
 `target/compatibility-proof/*`, including `summary.txt`, as the
@@ -290,9 +291,9 @@ artifacts are pending the next 10-commit push batch. The
 welcome and theme preview artifact uploads use `if: always()` so diagnostic
 visual artifacts survive proof-command or later macOS job failures when files
 were written before the failure.
-Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
-next to each artifact set. The Linux packaging and release jobs run checksum
-generation with
+Release jobs also run `scripts/generate-checksums.sh`, report the checksum
+entry count, and upload `SHA256SUMS` next to each artifact set. The Linux
+packaging and release jobs run checksum generation with
 `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
 so the uploaded Linux checksum manifest covers the Arch source-package recipe
 metadata, `.SRCINFO`, and install hook as well as the Linux tarball and Debian
