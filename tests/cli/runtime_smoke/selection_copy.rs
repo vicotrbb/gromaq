@@ -19,6 +19,9 @@ fn runtime_selection_copy_smoke_cli_copies_visible_selection_to_clipboard() {
 
     assert_eq!(exit.code, 0);
     assert!(exit.stdout.contains("runtime selection copy smoke: ok"));
+    assert!(exit.stdout.contains(
+        "recognized native copy shortcuts: dedicated-copy, control-insert, control-shift-c, super-c"
+    ));
     assert!(exit.stdout.contains("pumped bytes: 22"));
     assert!(exit.stdout.contains("copied text bytes: 14"));
     assert!(exit.stdout.contains("clipboard updated: true"));

@@ -2,11 +2,13 @@
 
 use std::collections::VecDeque;
 
+use winit::keyboard::{Key, ModifiersState, NamedKey};
+
 use super::CliExit;
 use crate::SelectionRange;
 use crate::app::{
     NativePtyResize, NativePtySessionIo, NativePtySpawner, NativeTerminalRuntime,
-    NativeTerminalRuntimeConfig,
+    NativeTerminalRuntimeConfig, is_native_copy_shortcut,
 };
 use crate::clipboard::HostClipboard;
 use crate::pty::{PtyConfig, PtyError, ShellCommand};
@@ -56,6 +58,17 @@ impl NativePtySessionIo for RuntimeSelectionCopySmokePtySession {
 }
 
 pub(super) fn runtime_selection_copy_smoke_exit<C: HostClipboard>(clipboard: &mut C) -> CliExit {
+    let recognized_copy_shortcuts = recognized_native_copy_shortcuts();
+    if recognized_copy_shortcuts.len() != NATIVE_COPY_SHORTCUT_COUNT {
+        return CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!(
+                "runtime selection copy smoke failed: recognized native copy shortcuts: {}\n",
+                recognized_copy_shortcuts.join(", ")
+            ),
+        };
+    }
     let mut runtime = match NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 24,
         terminal_rows: 4,
@@ -107,7 +120,8 @@ pub(super) fn runtime_selection_copy_smoke_exit<C: HostClipboard>(clipboard: &mu
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime selection copy smoke: ok\npumped bytes: {}\ncopied text bytes: {}\nclipboard updated: {}\npty input writes: {}\n",
+            "runtime selection copy smoke: ok\nrecognized native copy shortcuts: {}\npumped bytes: {}\ncopied text bytes: {}\nclipboard updated: {}\npty input writes: {}\n",
+            recognized_copy_shortcuts.join(", "),
             pumped_bytes,
             RUNTIME_SELECTION_COPY_SMOKE_TEXT.len(),
             copied,
@@ -115,6 +129,32 @@ pub(super) fn runtime_selection_copy_smoke_exit<C: HostClipboard>(clipboard: &mu
         ),
         stderr: String::new(),
     }
+}
+
+const NATIVE_COPY_SHORTCUT_COUNT: usize = 4;
+
+fn recognized_native_copy_shortcuts() -> Vec<&'static str> {
+    [
+        (
+            "dedicated-copy",
+            Key::Named(NamedKey::Copy),
+            ModifiersState::empty(),
+        ),
+        (
+            "control-insert",
+            Key::Named(NamedKey::Insert),
+            ModifiersState::CONTROL,
+        ),
+        (
+            "control-shift-c",
+            Key::Character("c".into()),
+            ModifiersState::CONTROL | ModifiersState::SHIFT,
+        ),
+        ("super-c", Key::Character("c".into()), ModifiersState::SUPER),
+    ]
+    .into_iter()
+    .filter_map(|(label, key, modifiers)| is_native_copy_shortcut(&key, modifiers).then_some(label))
+    .collect()
 }
 
 fn runtime_selection_copy_smoke_error(error: impl std::fmt::Display) -> CliExit {
