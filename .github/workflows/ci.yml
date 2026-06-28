@@ -20,6 +20,7 @@ jobs:
       - run: sh -n scripts/generate-checksums.sh
       - run: sh -n scripts/notarize-macos-app.sh
       - run: sh -n scripts/capture-macos-window-proof.sh
+      - run: sh -n scripts/prove-macos-app-identity.sh
       - run: bash -n packaging/arch/PKGBUILD
       - run: cargo fmt --check
       - run: git diff --check

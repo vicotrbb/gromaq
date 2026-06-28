@@ -127,6 +127,7 @@ Release artifact helpers:
 scripts/package-linux-tarball.sh
 scripts/package-debian-deb.sh
 scripts/package-macos-app.sh
+scripts/prove-macos-app-identity.sh
 bash -n packaging/arch/PKGBUILD
 ```
 
@@ -243,6 +244,12 @@ Manual live-window screenshot proof on macOS:
 
 ```bash
 scripts/capture-macos-window-proof.sh target/gromaq-live-window-proof.png
+```
+
+Manual packaged-app identity proof on macOS:
+
+```bash
+scripts/prove-macos-app-identity.sh
 ```
 
 The screenshot script launches bounded `--window-screenshot-smoke`, locates the

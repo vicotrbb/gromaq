@@ -24,6 +24,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/generate-checksums.sh",
     "scripts/notarize-macos-app.sh",
     "scripts/capture-macos-window-proof.sh",
+    "scripts/prove-macos-app-identity.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
@@ -140,6 +141,8 @@ fn distribution_assets_keep_desktop_identity() {
     let checksum_script = fs::read_to_string(root.join("scripts/generate-checksums.sh")).unwrap();
     let screenshot_script =
         fs::read_to_string(root.join("scripts/capture-macos-window-proof.sh")).unwrap();
+    let macos_identity_script =
+        fs::read_to_string(root.join("scripts/prove-macos-app-identity.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
@@ -211,6 +214,14 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_MIN_FOREGROUND_PIXELS"));
     assert!(screenshot_script.contains("foreground sampled pixels"));
     assert!(screenshot_script.contains("rm -f \"${output}\""));
+    assert!(macos_identity_script.contains("scripts/package-macos-app.sh"));
+    assert!(macos_identity_script.contains("--window-screenshot-smoke"));
+    assert!(macos_identity_script.contains("dev.gromaq.Gromaq"));
+    assert!(macos_identity_script.contains("System Events"));
+    assert!(macos_identity_script.contains("lsappinfo"));
+    assert!(macos_identity_script.contains("LSDisplayName"));
+    assert!(macos_identity_script.contains("Contents/MacOS/gromaq"));
+    assert!(macos_identity_script.contains("macOS app identity proof: ok"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
