@@ -291,6 +291,7 @@ cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-prev
 cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
 node images/avatar/generate.mjs --check
 scripts/prove-welcome-preview.sh
+scripts/prove-readme-welcome-preview.sh
 ```
 
 CI is configured to upload the default and configured theme preview PPMs plus

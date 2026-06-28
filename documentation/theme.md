@@ -50,7 +50,10 @@ that the committed welcome avatar PNG/RGBA/ANSI assets are current with the
 source image and generator settings. `scripts/prove-welcome-preview.sh` wraps
 the preview command, checks the reported high-contrast text, avatar-color,
 glyph, cursor, and atlas metrics, and writes proof artifacts under
-`target/welcome-preview-proof`.
+`target/welcome-preview-proof`. `scripts/prove-readme-welcome-preview.sh`
+also compares the generated preview pixels against the committed README
+screenshot so `images/screenshots/gromaq-welcome-preview.png` cannot drift
+silently.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:

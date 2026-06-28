@@ -29,6 +29,7 @@ jobs:
       - run: sh -n scripts/prove-current-host-compatibility.sh
       - run: sh -n scripts/prove-144hz-window-perf.sh
       - run: sh -n scripts/prove-welcome-preview.sh
+      - run: sh -n scripts/prove-readme-welcome-preview.sh
       - run: bash -n packaging/arch/PKGBUILD
       - run: sh -n packaging/arch/gromaq.install
       - run: cargo fmt --check
@@ -45,6 +46,7 @@ jobs:
           name: gromaq-current-host-compatibility-proof
           path: target/compatibility-proof/*
       - run: scripts/prove-welcome-preview.sh
+      - run: scripts/prove-readme-welcome-preview.sh
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-welcome-preview-proof

@@ -33,6 +33,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-current-host-compatibility.sh",
     "scripts/prove-144hz-window-perf.sh",
     "scripts/prove-welcome-preview.sh",
+    "scripts/prove-readme-welcome-preview.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
