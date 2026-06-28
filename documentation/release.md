@@ -285,9 +285,9 @@ are retained together after the visual proof steps run. The theme helper writes
 a compact `summary.txt` artifact. CI run `28315944025` passed the default
 welcome proof on macOS 26 with 126062 avatar color pixels and uploaded compact
 welcome diagnostics, but the README freshness proof failed because exact
-decoded pixels differed from the committed local PNG; the local bounded-delta
-freshness fix plus README freshness `summary.txt`
-artifacts are pending the next 10-commit push batch. The
+decoded pixels differed from the committed local PNG. CI run `28316513803`
+then proved the bounded-delta README freshness helper and README freshness
+`summary.txt` artifact remotely. The
 welcome and theme preview artifact uploads use `if: always()` so diagnostic
 visual artifacts survive proof-command or later macOS job failures when files
 were written before the failure.

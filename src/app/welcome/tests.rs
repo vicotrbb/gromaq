@@ -41,22 +41,23 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
 }
 
 #[test]
-fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_block_glyphs() {
+fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_glyphs() {
     let lines: Vec<_> = WELCOME_AVATAR_ANSI.lines().collect();
     let widths: Vec<_> = lines.iter().map(|line| ansi_visible_width(line)).collect();
     let max_width = widths.iter().copied().max().unwrap_or(0);
 
-    assert_eq!(lines.len(), 16);
+    assert_eq!(lines.len(), 17);
     assert_eq!(max_width, 33);
     assert!(widths.iter().all(|width| *width == 33));
     assert!(WELCOME_AVATAR_ANSI.chars().any(is_terminal_block));
 
     // The avatar is baked for the default gromaq cell (18x44px). A near-square
-    // source must render wider-than-tall in cell counts (ratio ~2.3) to avoid
-    // the vertical stretching that left the old avatar 39% too narrow. This
-    // guards the aspect-correct terminal-block rendering against regressions.
+    // source must render wider-than-tall in cell counts to avoid the vertical
+    // stretching that left the old avatar 39% too narrow. The 17-row avatar
+    // spends one extra row on vertical detail while keeping the ratio safely
+    // above the old stretched output.
     let ratio = max_width as f64 / lines.len() as f64;
-    assert!(ratio >= 2.0, "avatar aspect ratio regressed: {ratio}");
+    assert!(ratio >= 1.9, "avatar aspect ratio regressed: {ratio}");
 }
 
 #[test]

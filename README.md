@@ -320,9 +320,10 @@ uses `if: always()` so logs and artifacts are preserved when a later CI step
 fails or a proof command fails after writing diagnostic output. Run
 `28315944025` passed the default welcome preview proof on macOS 26 with 126062
 avatar color pixels, then failed the README freshness proof because exact
-decoded pixels differed from the committed local PNG; the helper now uses
-bounded decoded-pixel drift for host font-rasterization variance while keeping
-dimension and visual-delta gates.
+decoded pixels differed from the committed local PNG. Run `28316513803` then
+proved the bounded decoded-pixel README freshness helper remotely. The helper
+keeps dimension gates and bounded visual-delta gates so host font-rasterization
+variance does not require exact decoded-pixel identity.
 
 Current-host compatibility proof bundle:
 
