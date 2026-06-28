@@ -176,7 +176,7 @@ fn pty_session_runs_less_alternate_screen_enter_exit_when_available() {
 
 #[test]
 fn pty_session_runs_top_snapshot_when_available() {
-    assert_program_outputs_when_available("top", top_snapshot_args(), "Processes");
+    assert_program_outputs_any_when_available("top", top_snapshot_args(), &["Processes", "Tasks"]);
 }
 
 #[test]

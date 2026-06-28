@@ -110,6 +110,10 @@ export async function generateAssetSet({
 
 function readPng(path) {
   const file = readFileSync(path);
+  return decodePngBytes(path, file);
+}
+
+function decodePngBytes(path, file) {
   if (!file.subarray(0, 8).equals(PNG_SIGNATURE)) {
     throw new Error(`${path} is not a PNG file`);
   }
@@ -222,7 +226,7 @@ function checkOutputs(outputDir, kind, generated) {
   const stale = [];
   for (const [name, expected] of generated) {
     const path = join(outputDir, name);
-    if (!existsSync(path) || !readFileSync(path).equals(expected)) {
+    if (!existsSync(path) || !outputMatches(name, path, expected)) {
       stale.push(name);
     }
   }
@@ -232,6 +236,21 @@ function checkOutputs(outputDir, kind, generated) {
     );
   }
   console.log(currentAssetsMessage(kind));
+}
+
+function outputMatches(name, path, expected) {
+  if (name.endsWith('.png')) {
+    return pngOutputsMatchPixels(path, expected);
+  }
+  return readFileSync(path).equals(expected);
+}
+
+function pngOutputsMatchPixels(path, expected) {
+  const actual = readPng(path);
+  const expectedImage = decodePngBytes(`${path} generated`, expected);
+  return actual.width === expectedImage.width
+    && actual.height === expectedImage.height
+    && actual.rgba.equals(expectedImage.rgba);
 }
 
 function staleOutputMessage(name) {

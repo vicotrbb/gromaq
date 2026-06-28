@@ -100,6 +100,33 @@ pub(crate) fn assert_program_outputs_when_available_with_timeout(
     expected: &str,
     timeout: Duration,
 ) {
+    assert_program_outputs_any_when_available_with_timeout(
+        program_name,
+        args,
+        &[expected],
+        timeout,
+    );
+}
+
+pub(crate) fn assert_program_outputs_any_when_available(
+    program_name: &str,
+    args: &[&str],
+    expected_any: &[&str],
+) {
+    assert_program_outputs_any_when_available_with_timeout(
+        program_name,
+        args,
+        expected_any,
+        Duration::from_secs(5),
+    );
+}
+
+pub(crate) fn assert_program_outputs_any_when_available_with_timeout(
+    program_name: &str,
+    args: &[&str],
+    expected_any: &[&str],
+    timeout: Duration,
+) {
     let Some(program) = find_program(program_name) else {
         eprintln!(
             "skipping {program_name} PTY workflow test because {program_name} is not on PATH"
@@ -123,8 +150,8 @@ pub(crate) fn assert_program_outputs_when_available_with_timeout(
     let normalized_output = strip_ansi_sequences(&output);
 
     assert!(
-        normalized_output.contains(expected),
-        "{program_name} output did not contain {expected:?}: {output:?}"
+        output_contains_any(&normalized_output, expected_any),
+        "{program_name} output did not contain any of {expected_any:?}: {output:?}"
     );
     assert!(
         session
@@ -132,6 +159,24 @@ pub(crate) fn assert_program_outputs_when_available_with_timeout(
             .unwrap()
             .is_some()
     );
+}
+
+pub(crate) fn output_contains_any(output: &str, expected_any: &[&str]) -> bool {
+    expected_any
+        .iter()
+        .any(|expected| output.contains(expected))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::output_contains_any;
+
+    #[test]
+    fn output_contains_any_accepts_linux_top_snapshot_header() {
+        let output = "top - 04:48:43 up 1 min\r\nTasks: 193 total\r\n";
+
+        assert!(output_contains_any(output, &["Processes", "Tasks"]));
+    }
 }
 
 pub(crate) fn assert_shell_command_enters_and_leaves_alternate_screen_when_available(

@@ -109,6 +109,8 @@ fn image_asset_generators_keep_deterministic_check_mode() {
     assert!(avatar_generator.contains("check:"));
     assert!(image_tool.contains("check = false"));
     assert!(image_tool.contains("checkOutput"));
+    assert!(image_tool.contains("pngOutputsMatchPixels"));
+    assert!(image_tool.contains("actual.rgba.equals(expectedImage.rgba)"));
     assert!(image_tool.contains("avatar-welcome.ansi is stale"));
     assert!(image_tool.contains("Gromaq avatar assets are current"));
 }
