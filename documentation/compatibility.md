@@ -5,18 +5,18 @@ tests, real PTY workflows, scripted interaction, and live smoke commands. It is
 not a claim of full daily-driver compatibility yet; it is a proof map for the
 remaining terminal-core work.
 
-On 2026-06-27, `cargo test --test pty -- --nocapture` passed all 36 PTY tests
+On 2026-06-28, `cargo test --test pty -- --nocapture` passed all 37 PTY tests
 on the current macOS host. The captured output confirmed live current-host
 coverage for bash, zsh, vim, tmux, less, top, ssh, kubectl, and the tiny cargo
 fixture workflows, and also confirmed that fish, nushell, nvim, htop, and btop
 were skipped because those binaries were not on PATH.
-The same day, `cargo run -- --runtime-tool-workflow-smoke` passed both
+The same run, `cargo run -- --runtime-tool-workflow-smoke` passed both
 current-host tool checks with 0 skips: `ssh -V` produced 31 bytes containing
 `OpenSSH`, and `kubectl version --client=true` produced 52 bytes containing
 `Client`.
 `scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
 writing the host inventory, PTY test log, and runtime external-tool smoke log
-under `target/compatibility-proof`. That fresh bundle again passed all 36 PTY
+under `target/compatibility-proof`. That fresh bundle again passed all 37 PTY
 tests, passed both runtime tool checks with 0 skips, and recorded `fish`, `nu`,
 `nvim`, `htop`, and `btop` as missing on the current host.
 Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
@@ -79,7 +79,7 @@ paths is pending the next pushed run.
 | Scrollback retention and viewport navigation | Unit/integration tests and runtime scrollback smoke | Proven |
 | Selection/copy and OSC 52 clipboard | Unit tests cover visible-grid copy, displayed scrollback copy, displayed styled scrollback with wide-cell text, soft-wrap versus hard-break newlines, emoji clusters, wide-cell trailing-half selection, viewport clamping, stale-selection clearing, and native clipboard smoke paths | Proven for covered paths |
 | Structured test/control API | `TerminalTestApi` covers key encoding, paste, resize, visible grid, scrollback, cursor, performance counters, OSC title, OSC 52 clipboard text, terminal-generated response-byte draining, and deterministic one-pixel-per-cell screenshots | Proven for covered terminal snapshots and response bytes |
-| PTY background reader EOF handling | `cargo test --lib pty_reader_` proves that Unix PTY `EIO` from the background reader is treated as EOF while other read errors remain fatal; `cargo test --test pty` passed all 36 PTY workflow tests on 2026-06-27 after the fix | Proven for covered PTY reader and real-workflow paths |
+| PTY background reader EOF handling | `cargo test --lib pty_reader_` proves that Unix PTY `EIO` from the background reader is treated as EOF while other read errors remain fatal; `cargo test --test pty` passed all 37 PTY workflow tests on 2026-06-28 after the fix | Proven for covered PTY reader and real-workflow paths |
 | Keyboard input modes | Unit/integration tests for common, application cursor, keypad, focus, paste, and native shortcuts, including bracketed and plain runtime paste, dedicated Paste, Shift+Insert, Control+V, and Super+V paste routing. On 2026-06-27, `cargo run -- --runtime-clipboard-paste-smoke` recognized `dedicated-paste`, `shift-insert`, `control-v`, and `super-v`, wrote 30 clipboard bytes to the PTY, recorded 1 clipboard paste, and restored the previous clipboard text. | Proven for covered keys and deterministic clipboard paste routing |
 | Browser-style terminal text zoom | Native shortcut mapping tests plus native app renderer/grid reconfiguration tests for increase, decrease, reset, shifted plus, modifier-wheel, and dedicated OS/browser zoom-key policy; `cargo run -- --runtime-text-zoom-smoke` verifies default 32/18/44 px metrics zoom to 37/21/51 px, reduces the visible grid, and resets without a live GPU window | Proven for covered controls |
 | Mouse reporting modes | Runtime mouse smoke now covers SGR press, release, drag, any-motion, and wheel report writeback; alternate-screen mouse tests cover runtime app paths | Proven for default and SGR covered paths |
