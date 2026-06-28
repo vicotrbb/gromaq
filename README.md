@@ -283,6 +283,16 @@ cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-prev
 cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
 ```
 
+Current-host compatibility proof bundle:
+
+```bash
+scripts/prove-current-host-compatibility.sh
+```
+
+This records the host tool inventory, runs `cargo test --test pty -- --nocapture`,
+and runs `cargo run -- --runtime-tool-workflow-smoke`, writing logs under
+`target/compatibility-proof`.
+
 Manual live-window screenshot proof on macOS:
 
 ```bash

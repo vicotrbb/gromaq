@@ -97,6 +97,7 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ("README.md", "scripts/prove-debian-package.sh"),
     ("README.md", "scripts/prove-linux-release-install.sh"),
     ("README.md", "scripts/prove-github-release-install.sh"),
+    ("README.md", "scripts/prove-current-host-compatibility.sh"),
     ("README.md", "GROMAQ_MACOS_APP_DIR"),
     (
         "README.md",
@@ -149,6 +150,14 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     (
         "documentation/release.md",
         "scripts/prove-github-release-install.sh",
+    ),
+    (
+        "documentation/compatibility.md",
+        "scripts/prove-current-host-compatibility.sh",
+    ),
+    (
+        "documentation/compatibility.md",
+        "scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC",
     ),
     ("documentation/release.md", "GROMAQ_MACOS_APP_DIR"),
     (

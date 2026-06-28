@@ -14,6 +14,16 @@ The same day, `cargo run -- --runtime-tool-workflow-smoke` passed both
 current-host tool checks with 0 skips: `ssh -V` produced 31 bytes containing
 `OpenSSH`, and `kubectl version --client=true` produced 52 bytes containing
 `Client`.
+`scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
+writing the host inventory, PTY test log, and runtime external-tool smoke log
+under `target/compatibility-proof`. That fresh bundle again passed all 36 PTY
+tests, passed both runtime tool checks with 0 skips, and recorded `fish`, `nu`,
+`nvim`, `htop`, and `btop` as missing on the current host.
+Use `scripts/prove-current-host-compatibility.sh` to refresh this proof as a
+single bundle. The helper records the current host's tool inventory and writes
+the `cargo test --test pty -- --nocapture` and
+`cargo run -- --runtime-tool-workflow-smoke` logs under
+`target/compatibility-proof`.
 
 ## Shells
 

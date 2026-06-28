@@ -29,6 +29,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-debian-package.sh",
     "scripts/prove-linux-release-install.sh",
     "scripts/prove-github-release-install.sh",
+    "scripts/prove-current-host-compatibility.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
     "packaging/linux/dev.gromaq.Gromaq.desktop",
@@ -154,6 +155,8 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/prove-linux-release-install.sh")).unwrap();
     let github_release_proof_script =
         fs::read_to_string(root.join("scripts/prove-github-release-install.sh")).unwrap();
+    let compatibility_proof_script =
+        fs::read_to_string(root.join("scripts/prove-current-host-compatibility.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
@@ -272,6 +275,10 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(github_release_proof_script.contains("GROMAQ_VERIFY_CHECKSUMS=1"));
     assert!(github_release_proof_script.contains("share/applications/dev.gromaq.Gromaq.desktop"));
     assert!(github_release_proof_script.contains("GitHub release install proof: ok"));
+    assert!(compatibility_proof_script.contains("target/compatibility-proof"));
+    assert!(compatibility_proof_script.contains("cargo test --test pty -- --nocapture"));
+    assert!(compatibility_proof_script.contains("cargo run -- --runtime-tool-workflow-smoke"));
+    assert!(compatibility_proof_script.contains("command -v"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));

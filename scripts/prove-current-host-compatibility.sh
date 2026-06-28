@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+
+root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
+proof_dir="${GROMAQ_COMPATIBILITY_PROOF_DIR:-${root}/target/compatibility-proof}"
+
+mkdir -p "${proof_dir}"
+
+inventory="${proof_dir}/tool-inventory.txt"
+: >"${inventory}"
+printf '%s\n' "Current-host compatibility proof" | tee -a "${inventory}"
+printf 'timestamp_utc=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" | tee -a "${inventory}"
+
+for tool in bash zsh fish nu vim nvim tmux less top htop btop ssh kubectl; do
+  if command -v "${tool}" >/dev/null 2>&1; then
+    printf '%s=%s\n' "${tool}" "$(command -v "${tool}")" | tee -a "${inventory}"
+  else
+    printf '%s=missing\n' "${tool}" | tee -a "${inventory}"
+  fi
+done
+
+run_and_capture() {
+  name="$1"
+  shift
+  log="${proof_dir}/${name}.log"
+  tmp="${log}.tmp"
+
+  printf '$ %s\n' "$*" | tee "${log}"
+  set +e
+  "$@" >"${tmp}" 2>&1
+  status="$?"
+  set -e
+  cat "${tmp}" | tee -a "${log}"
+  rm -f "${tmp}"
+  if [ "${status}" -ne 0 ]; then
+    printf '%s\n' "error: ${name} failed with exit ${status}; see ${log}" >&2
+    exit "${status}"
+  fi
+}
+
+cd "${root}"
+run_and_capture pty cargo test --test pty -- --nocapture
+run_and_capture runtime-tool-workflow cargo run -- --runtime-tool-workflow-smoke
+
+printf '%s\n' "Current-host compatibility proof: ok"
