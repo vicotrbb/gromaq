@@ -28,6 +28,7 @@ jobs:
       - run: sh -n scripts/prove-linux-desktop-discovery.sh
       - run: sh -n scripts/prove-current-host-compatibility.sh
       - run: sh -n scripts/prove-144hz-window-perf.sh
+      - run: sh -n scripts/prove-theme-preview.sh
       - run: sh -n scripts/prove-welcome-preview.sh
       - run: sh -n scripts/prove-readme-welcome-preview.sh
       - run: bash -n packaging/arch/PKGBUILD
@@ -37,7 +38,7 @@ jobs:
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all
       - run: cargo run -- --theme-legibility-smoke
-      - run: cargo run -- --theme-preview-snapshot target/gromaq-theme-preview-ci.ppm
+      - run: scripts/prove-theme-preview.sh
       - run: node images/avatar/generate.mjs --check
       - run: scripts/prove-current-host-compatibility.sh
       - uses: actions/upload-artifact@v4
@@ -54,17 +55,11 @@ jobs:
           path: |
             target/welcome-preview-proof/*
             target/readme-welcome-preview-proof/*
-      - run: |
-          printf '%s\n' '[theme]' 'preset = "gromaq-graphite"' 'background_opacity = 0.75' 'cursor_opacity = 0.5' 'selection_opacity = 0.25' > target/gromaq-theme-preview-config-ci.toml
-          cargo run -- --theme-preview-config target/gromaq-theme-preview-config-ci.toml target/gromaq-theme-preview-config-ci.ppm
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: gromaq-theme-preview-proof
-          path: |
-            target/gromaq-theme-preview-ci.ppm
-            target/gromaq-theme-preview-config-ci.ppm
-            target/gromaq-theme-preview-config-ci.toml
+          path: target/theme-preview-proof/*
       - run: cargo run -- --runtime-clipboard-paste-smoke
       - run: cargo run -- --runtime-glyph-frame-smoke
       - run: cargo run -- --runtime-glyph-frame-snapshot target/gromaq-runtime-glyph-frame-ci.ppm

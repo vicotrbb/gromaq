@@ -38,6 +38,10 @@ PPM.
 `cargo run -- --theme-preview-config path/to/gromaq.toml target/theme.ppm`
 uses the same deterministic prepared-frame path for a user config, including
 explicit theme overrides plus background, cursor, and selection opacity.
+`scripts/prove-theme-preview.sh` wraps both the default preview and a configured
+`gromaq-graphite` opacity preview, checks the reported visual metrics, writes
+PPM/PNG/log/config proof artifacts under `target/theme-preview-proof`, and is
+the CI-backed proof path for theme preview artifacts.
 
 The native app also shows a default welcome screen with system, terminal,
 renderer, and theme stats before shell output. It is enabled by default and can

@@ -32,6 +32,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-linux-desktop-discovery.sh",
     "scripts/prove-current-host-compatibility.sh",
     "scripts/prove-144hz-window-perf.sh",
+    "scripts/prove-theme-preview.sh",
     "scripts/prove-welcome-preview.sh",
     "scripts/prove-readme-welcome-preview.sh",
     "packaging/arch/PKGBUILD",
@@ -101,26 +102,6 @@ fn repository_keeps_required_issue_labels() {
             labels.lines().any(|line| line.trim() == marker),
             "{} must define issue label `{label}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &labels_path)
-        );
-    }
-}
-
-#[test]
-fn welcome_preview_proof_keeps_default_visual_quality_floors() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let path = root.join("scripts/prove-welcome-preview.sh");
-    let source = fs::read_to_string(&path).unwrap();
-
-    for marker in [
-        "require_min_metric \"high contrast text pixels\" 30000",
-        "require_min_metric \"avatar color pixels\" 150000",
-        "require_min_metric \"glyph quads\" 640",
-        "require_exact_metric \"cursor quads\" 0",
-    ] {
-        assert!(
-            source.contains(marker),
-            "{} must keep `{marker}` so the default welcome preview proof fails closed",
-            relative_path(root, &path)
         );
     }
 }

@@ -288,15 +288,17 @@ cargo run -- --runtime-text-zoom-smoke
 cargo run -- --theme-legibility-smoke
 cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
 cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm
+scripts/prove-theme-preview.sh
 cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
 node images/avatar/generate.mjs --check
 scripts/prove-welcome-preview.sh
 scripts/prove-readme-welcome-preview.sh
 ```
 
-CI is configured to upload the default and configured theme preview PPMs plus
-the CI theme config as `gromaq-theme-preview-proof`; helper-backed remote proof
-for that artifact is pending the next pushed run.
+CI is configured to run `scripts/prove-theme-preview.sh` and upload the default
+and configured theme preview PPMs, PNGs, logs, and config under
+`target/theme-preview-proof/*` as `gromaq-theme-preview-proof`; helper-backed
+remote proof for that artifact is pending the next pushed run.
 CI is also configured to upload both `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof`, so
 the generated welcome preview and committed README screenshot freshness proof
