@@ -18,8 +18,19 @@ rm -f \
 
 cd "${root}"
 
-cargo run -- --theme-preview-snapshot "${default_ppm}" > "${default_log}" 2>&1
-cat "${default_log}"
+run_logged() {
+  log_path="$1"
+  shift
+  if "$@" > "${log_path}" 2>&1; then
+    cat "${log_path}"
+    return 0
+  fi
+  status="$?"
+  cat "${log_path}" >&2
+  return "${status}"
+}
+
+run_logged "${default_log}" cargo run -- --theme-preview-snapshot "${default_ppm}"
 
 printf '%s\n' \
   '[theme]' \
@@ -27,8 +38,7 @@ printf '%s\n' \
   'background_opacity = 0.75' \
   'cursor_opacity = 0.5' \
   'selection_opacity = 0.25' > "${config_path}"
-cargo run -- --theme-preview-config "${config_path}" "${config_ppm}" > "${config_log}" 2>&1
-cat "${config_log}"
+run_logged "${config_log}" cargo run -- --theme-preview-config "${config_path}" "${config_ppm}"
 
 require_log_marker() {
   log_path="$1"
