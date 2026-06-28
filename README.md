@@ -136,6 +136,7 @@ scripts/prove-debian-package.sh
 scripts/prove-linux-release-install.sh
 scripts/prove-github-release-install.sh
 scripts/prove-linux-desktop-discovery.sh
+scripts/prove-144hz-window-perf.sh
 scripts/prove-arch-package.sh
 bash -n packaging/arch/PKGBUILD
 sh -n packaging/arch/gromaq.install
@@ -310,6 +311,19 @@ Manual live-window screenshot proof on macOS:
 ```bash
 scripts/capture-macos-window-proof.sh target/gromaq-live-window-proof.png
 ```
+
+Manual hardware-backed 144 Hz window pacing proof:
+
+```bash
+scripts/prove-144hz-window-perf.sh
+```
+
+This runs `cargo run -- --window-perf-smoke`, records
+`target/144hz-window-perf-proof/window-perf.log`, and fails unless the native
+window reports a monitor refresh of at least `144000` mHz, an unrestricted
+144 FPS frame target, zero dropped frames, and accepted frame pacing. It is
+intentionally manual because CI and ordinary 60/120 Hz desktops are not valid
+proof surfaces for the 144 Hz hardware requirement.
 
 Manual packaged-app identity proof on macOS:
 

@@ -31,6 +31,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-github-release-install.sh",
     "scripts/prove-linux-desktop-discovery.sh",
     "scripts/prove-current-host-compatibility.sh",
+    "scripts/prove-144hz-window-perf.sh",
     "scripts/prove-welcome-preview.sh",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
@@ -161,6 +162,8 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/prove-linux-desktop-discovery.sh")).unwrap();
     let compatibility_proof_script =
         fs::read_to_string(root.join("scripts/prove-current-host-compatibility.sh")).unwrap();
+    let window_perf_proof_script =
+        fs::read_to_string(root.join("scripts/prove-144hz-window-perf.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
     let arch_pkgbuild = fs::read_to_string(root.join("packaging/arch/PKGBUILD")).unwrap();
     let arch_srcinfo = fs::read_to_string(root.join("packaging/arch/.SRCINFO")).unwrap();
@@ -298,6 +301,14 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("cargo test --test pty -- --nocapture"));
     assert!(compatibility_proof_script.contains("cargo run -- --runtime-tool-workflow-smoke"));
     assert!(compatibility_proof_script.contains("command -v"));
+    assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));
+    assert!(window_perf_proof_script.contains("cargo run -- --window-perf-smoke"));
+    assert!(window_perf_proof_script.contains("monitor refresh mhz"));
+    assert!(window_perf_proof_script.contains("144000"));
+    assert!(window_perf_proof_script.contains("frame interval target limited by monitor: false"));
+    assert!(window_perf_proof_script.contains("frame pacing accepted: true"));
+    assert!(window_perf_proof_script.contains("dropped frames: 0"));
+    assert!(window_perf_proof_script.contains("144Hz window perf proof: ok"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
