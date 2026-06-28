@@ -183,6 +183,8 @@ GPU terminal text smoke, current-host compatibility proof, frame scheduler
 smoke, and the parser benchmark inventory. It does not replace the full
 `cargo bench` command when changing parser, PTY pump, render planning, glyph
 cache, rasterization, frame preparation, or other measured hot paths.
+After all steps pass, it writes
+`target/local-ci-parity-proof/summary.txt` with proof artifact handles.
 
 The benchmark list should include:
 

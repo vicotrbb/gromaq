@@ -107,6 +107,8 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         "cargo run -- --frame-scheduler-smoke",
         "scripts/prove-current-host-compatibility.sh",
         "cargo bench --bench parser_throughput -- --list",
+        "summary.txt",
+        "Local CI parity proof: ok",
     ] {
         assert!(
             source.contains(marker),

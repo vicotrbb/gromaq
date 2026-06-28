@@ -3,6 +3,7 @@ set -eu
 
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 proof_dir="${root}/target/local-ci-parity-proof"
+summary_path="${proof_dir}/summary.txt"
 
 run_step() {
   label="$1"
@@ -23,6 +24,7 @@ run_shell_syntax_checks() {
 
 cd "${root}"
 mkdir -p "${proof_dir}"
+rm -f "${summary_path}"
 
 run_shell_syntax_checks
 run_step "format" cargo fmt --check
@@ -42,4 +44,12 @@ run_step "frame scheduler smoke" cargo run -- --frame-scheduler-smoke
 run_step "current-host compatibility proof" scripts/prove-current-host-compatibility.sh
 run_step "parser benchmark inventory" cargo bench --bench parser_throughput -- --list
 
-printf '\n%s\n' "Local CI parity proof: ok"
+{
+  printf '%s\n' "Local CI parity proof: ok"
+  printf '%s\n' "Proof dir: ${proof_dir}"
+  printf '%s\n' "Welcome image snapshot: ${proof_dir}/gromaq-welcome-image.ppm"
+  printf '%s\n' "Theme proof summary: ${root}/target/theme-preview-proof/summary.txt"
+  printf '%s\n' "Welcome proof summary: ${root}/target/welcome-preview-proof/summary.txt"
+  printf '%s\n' "README welcome proof summary: ${root}/target/readme-welcome-preview-proof/summary.txt"
+  printf '%s\n' "Compatibility proof summary: ${root}/target/compatibility-proof/summary.txt"
+} | tee "${summary_path}"

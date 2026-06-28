@@ -286,6 +286,9 @@ cargo test --all
 cargo bench
 ```
 
+When `scripts/prove-local-ci-parity.sh` passes, it writes
+`target/local-ci-parity-proof/summary.txt` with proof artifact handles.
+
 ## Repository Quality
 
 The repository must include:

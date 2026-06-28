@@ -70,6 +70,8 @@ freshness, welcome, README screenshot freshness, GPU welcome image snapshot,
 GPU terminal text smoke, current-host compatibility, frame scheduler smoke, and
 benchmark inventory proof helpers. Use the expanded command list when you need
 to rerun or debug an individual gate.
+After all steps pass, the helper writes
+`target/local-ci-parity-proof/summary.txt` with the proof artifact handles.
 Avatar asset freshness is part of local parity.
 
 Run full Criterion benchmarks when changing parser, PTY pump, render planning,

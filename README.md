@@ -391,6 +391,8 @@ current-host compatibility proof, frame scheduler smoke, and the parser
 benchmark inventory. Run full `cargo bench` when changing parser, PTY pump,
 render planning, glyph cache, rasterization, frame preparation, or other
 measured hot paths.
+After all steps pass, the helper writes
+`target/local-ci-parity-proof/summary.txt` with the proof artifact handles.
 Avatar asset freshness is part of local parity.
 
 ## Configuration
