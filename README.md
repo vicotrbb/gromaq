@@ -414,9 +414,10 @@ scripts/prove-local-ci-parity.sh
 The helper runs shell syntax checks, formatting, staged and unstaged whitespace
 checks, clippy with denied warnings, the full test suite, avatar asset
 freshness, font symbol fallback smoke, theme legibility and preview proof,
-welcome/readme visual proof helpers, GPU welcome image snapshot proof, GPU
-terminal text smoke, current-host compatibility proof, frame scheduler smoke,
-and the parser benchmark inventory. Run full `cargo bench` when changing
+runtime bracketed paste smoke, welcome/readme visual proof helpers, GPU welcome
+image snapshot proof, GPU terminal text smoke, current-host compatibility
+proof, frame scheduler smoke, and the parser benchmark inventory. Run full
+`cargo bench` when changing
 parser, PTY pump, render planning, glyph cache, rasterization, frame
 preparation, or other measured hot paths.
 After all steps pass, the helper writes

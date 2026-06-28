@@ -33,6 +33,7 @@ run_step "staged whitespace" git diff --cached --check
 run_step "clippy" cargo clippy --all-targets --all-features -- -D warnings
 run_step "tests" cargo test --all
 run_step "font symbol fallback smoke" cargo run -- --font-symbol-fallback-smoke
+run_step "runtime bracketed paste smoke" cargo run -- --runtime-bracketed-paste-smoke
 run_step "theme legibility smoke" cargo run -- --theme-legibility-smoke
 run_step "theme preview proof" scripts/prove-theme-preview.sh
 run_step "avatar asset freshness proof" node images/avatar/generate.mjs --check
