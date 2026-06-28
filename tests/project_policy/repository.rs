@@ -290,6 +290,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(github_release_proof_script.contains("GROMAQ_INSTALL_ROOT=\"${proof_root}\""));
     assert!(github_release_proof_script.contains("GROMAQ_VERIFY_CHECKSUMS=1"));
     assert!(github_release_proof_script.contains("share/applications/dev.gromaq.Gromaq.desktop"));
+    assert!(github_release_proof_script.contains("summary.txt"));
     assert!(github_release_proof_script.contains("GitHub release install proof: ok"));
     assert!(
         linux_desktop_discovery_script.contains("Linux desktop discovery proof must run on Linux")
