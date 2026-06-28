@@ -324,9 +324,12 @@ alongside the rendered text, avatar-color, glyph, cursor, and atlas metrics. Run
 `28315944025` passed the default welcome preview proof on macOS 26 with 126062
 avatar color pixels, then failed the README freshness proof because exact
 decoded pixels differed from the committed local PNG. Run `28316513803` then
-proved the bounded decoded-pixel README freshness helper remotely. The helper
-keeps dimension gates and bounded visual-delta gates so host font-rasterization
-variance does not require exact decoded-pixel identity.
+proved the bounded decoded-pixel README freshness helper remotely, and run
+`28321082609` completed green for commit `84740e3` after rerunning avatar
+freshness, default welcome proof, and README screenshot freshness proof for the
+refreshed 33x17 avatar. The helper keeps dimension gates and bounded
+visual-delta gates so host font-rasterization variance does not require exact
+decoded-pixel identity.
 
 Current-host compatibility proof bundle:
 

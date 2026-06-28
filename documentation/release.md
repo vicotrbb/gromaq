@@ -287,7 +287,10 @@ welcome proof on macOS 26 with 126062 avatar color pixels and uploaded compact
 welcome diagnostics, but the README freshness proof failed because exact
 decoded pixels differed from the committed local PNG. CI run `28316513803`
 then proved the bounded-delta README freshness helper and README freshness
-`summary.txt` artifact remotely. The
+`summary.txt` artifact remotely. CI run `28321082609` completed green for
+commit `84740e3` after rerunning avatar freshness, default welcome proof,
+README screenshot freshness proof, and the full packaging/compatibility CI job
+set for the refreshed 33x17 avatar. The
 welcome and theme preview artifact uploads use `if: always()` so diagnostic
 visual artifacts survive proof-command or later macOS job failures when files
 were written before the failure.
@@ -303,6 +306,17 @@ package.
 
 Proven remotely:
 
+- GitHub Actions CI run `28321082609` completed green for commit `84740e3` on
+  2026-06-28 UTC. The macOS `rust` job passed formatting, whitespace, clippy,
+  `cargo test --all`, avatar asset freshness, theme proof, current-host
+  compatibility proof, welcome preview proof, README screenshot freshness
+  proof, the runtime/theme/GPU smoke suite, and
+  `cargo bench --bench parser_throughput -- --list`. The `linux-packaging`
+  job passed Debian package install and payload checks plus the helper-backed
+  Linux release-install proof with Arch metadata checksum extras. The
+  `linux-compatibility` job passed the required-tool compatibility helper, and
+  `arch-packaging` passed full `makepkg --noconfirm`, package install,
+  `/usr/bin/gromaq --version`, payload listing, and `.SRCINFO` generation.
 - GitHub Actions CI run `28310371344` completed green for commit `3474653` on
   2026-06-28 UTC. The macOS `rust` job ran `sh -n
   scripts/prove-welcome-preview.sh`, ran `scripts/prove-welcome-preview.sh`,
