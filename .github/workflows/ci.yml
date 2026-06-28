@@ -38,6 +38,7 @@ jobs:
       - run: git diff --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all
+      - run: cargo run -- --font-symbol-fallback-smoke
       - run: cargo run -- --theme-legibility-smoke
       - run: scripts/prove-theme-preview.sh
       - run: node images/avatar/generate.mjs --check

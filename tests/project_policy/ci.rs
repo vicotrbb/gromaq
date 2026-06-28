@@ -28,6 +28,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "git diff --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo test --all",
+    "cargo run -- --font-symbol-fallback-smoke",
     "cargo run -- --theme-legibility-smoke",
     "scripts/prove-theme-preview.sh",
     "gromaq-theme-preview-proof",
