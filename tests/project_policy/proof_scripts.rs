@@ -77,6 +77,7 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         "cargo run -- --welcome-image-snapshot",
         "target/local-ci-parity-proof",
         "gromaq-welcome-image.ppm",
+        "cargo run -- --gpu-terminal-text-smoke",
         "cargo run -- --frame-scheduler-smoke",
         "scripts/prove-current-host-compatibility.sh",
         "cargo bench --bench parser_throughput -- --list",

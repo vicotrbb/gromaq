@@ -179,10 +179,10 @@ cargo bench
 unstaged and staged whitespace checks, clippy with denied warnings, the full
 test suite, theme legibility and preview proof, avatar asset freshness,
 welcome/readme visual proof helpers, GPU welcome image snapshot proof,
-current-host compatibility proof, frame scheduler smoke, and the parser
-benchmark inventory. It does not replace the full `cargo bench` command when
-changing parser, PTY pump, render planning, glyph cache, rasterization, frame
-preparation, or other measured hot paths.
+GPU terminal text smoke, current-host compatibility proof, frame scheduler
+smoke, and the parser benchmark inventory. It does not replace the full
+`cargo bench` command when changing parser, PTY pump, render planning, glyph
+cache, rasterization, frame preparation, or other measured hot paths.
 
 The benchmark list should include:
 
