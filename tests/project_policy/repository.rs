@@ -199,6 +199,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(macos_script.contains("GROMAQ_CODESIGN_IDENTITY"));
     assert!(macos_script.contains("codesign --force --deep"));
     assert!(macos_script.contains("--options runtime --timestamp"));
+    assert!(macos_script.contains("summary.txt"));
     assert!(linux_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(linux_script.contains("logo-icon-256.png"));
     assert!(linux_script.contains(".tar.gz"));

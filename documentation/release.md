@@ -211,7 +211,10 @@ open target/dist/Gromaq.app
 The script builds a release binary when needed, creates `AppIcon.icns` from the
 generated logo assets, writes `CFBundleIconFile` and
 `LSApplicationCategoryType=public.app-category.utilities`, and derives bundle
-version metadata from `Cargo.toml`.
+version metadata from `Cargo.toml`. It writes
+`target/dist/Gromaq-macos-app-summary.txt` after successful packaging with the
+bundle path, identifier, executable, plist, icon, and signing identity when one
+was supplied.
 
 Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Set
 `GROMAQ_CODESIGN_IDENTITY=-` for local ad-hoc signing, or set

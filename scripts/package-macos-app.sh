@@ -16,6 +16,7 @@ contents_dir="${app_dir}/Contents"
 macos_dir="${contents_dir}/MacOS"
 resources_dir="${contents_dir}/Resources"
 iconset_dir="${dist_dir}/${app_name}.iconset"
+summary_path="${dist_dir}/${app_name}-macos-app-summary.txt"
 
 if [ "$(uname -s)" != "Darwin" ]; then
   printf '%s\n' "error: macOS app bundle packaging requires Darwin." >&2
@@ -34,6 +35,7 @@ if [ ! -x "${binary_path}" ]; then
 fi
 
 rm -rf "${app_dir}" "${iconset_dir}"
+rm -f "${summary_path}"
 mkdir -p "${macos_dir}" "${resources_dir}" "${iconset_dir}"
 
 copy_icon() {
@@ -116,4 +118,14 @@ if [ -n "${codesign_identity}" ]; then
   printf '%s\n' "Codesigned ${app_dir}"
 fi
 
-printf '%s\n' "Packaged ${app_dir}"
+{
+  printf '%s\n' "macOS app package: ok"
+  printf '%s\n' "App bundle: ${app_dir}"
+  printf '%s\n' "Bundle identifier: ${bundle_id}"
+  printf '%s\n' "Executable: ${macos_dir}/${binary_name}"
+  printf '%s\n' "Info.plist: ${contents_dir}/Info.plist"
+  printf '%s\n' "Icon: ${resources_dir}/AppIcon.icns"
+  if [ -n "${codesign_identity}" ]; then
+    printf '%s\n' "Codesign identity: ${codesign_identity}"
+  fi
+} | tee "${summary_path}"

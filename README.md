@@ -100,6 +100,9 @@ scripts/package-macos-app.sh
 open target/dist/Gromaq.app
 ```
 
+The packager also writes `target/dist/Gromaq-macos-app-summary.txt` after a
+successful bundle build so release runs have a compact proof handoff.
+
 To sign the bundle during packaging, set `GROMAQ_CODESIGN_IDENTITY`. Use `-`
 for local ad-hoc signing, or a Developer ID Application identity for release
 signing:
