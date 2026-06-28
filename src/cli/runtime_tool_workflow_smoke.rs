@@ -28,10 +28,16 @@ const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
         expected: "hostname localhost",
     },
     ToolWorkflowSpec {
-        name: "kubectl",
+        name: "kubectl-version",
         program: "kubectl",
         args: &["version", "--client=true", "--output=yaml"],
         expected: "clientVersion",
+    },
+    ToolWorkflowSpec {
+        name: "kubectl-config",
+        program: "kubectl",
+        args: &["config", "view", "--output=jsonpath={.kind}"],
+        expected: "Config",
     },
 ];
 

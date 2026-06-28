@@ -22,6 +22,15 @@ fn pty_session_runs_kubectl_client_version_when_available() {
 }
 
 #[test]
+fn pty_session_runs_kubectl_config_view_when_available() {
+    assert_program_outputs_when_available(
+        "kubectl",
+        &["config", "view", "--output=jsonpath={.kind}"],
+        "Config",
+    );
+}
+
+#[test]
 fn pty_session_runs_cargo_test_workflow_when_available() {
     assert_program_outputs_when_available_with_timeout(
         "cargo",
