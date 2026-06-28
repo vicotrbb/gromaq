@@ -304,6 +304,13 @@ Proven locally:
 - packaged macOS app LaunchServices launch via
   `open -W -n -o target/macos-open-proof.stdout --stderr target/macos-open-proof.stderr target/dist/Gromaq.app --args --window-smoke`,
   which returned 0 and captured `window smoke: ok`
+- live packaged macOS app identity registration via
+  `open -W -n -o target/macos-app-identity-proof/open.stdout --stderr target/macos-app-identity-proof/open.stderr target/macos-app-identity-proof/dist/Gromaq.app --args --window-screenshot-smoke`;
+  while the app was running, System Events returned `gromaq` for bundle
+  identifier `dev.gromaq.Gromaq`, `lsappinfo` reported
+  `CFBundleIdentifier=dev.gromaq.Gromaq` and `LSDisplayName=Gromaq`, `pgrep`
+  observed the bundled `Contents/MacOS/gromaq --window-screenshot-smoke`
+  process, and the smoke completed with 900 presented frames
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes
