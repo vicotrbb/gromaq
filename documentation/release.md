@@ -219,9 +219,9 @@ do not collide as GitHub Release asset names.
 `.github/workflows/ci.yml` also has a focused `linux-packaging` job that runs
 repository policy checks, installs `desktop-file-utils`, runs Linux user-local
 desktop asset install proof, and runs Linux tarball plus Debian package
-assembly on `ubuntu-latest`. The job is also configured to copy `SHA256SUMS` to
-`SHA256SUMS-linux-x86_64` and install from the generated local tarball through
-`GROMAQ_INSTALL_METHOD=release` before checking that
+assembly on `ubuntu-latest`. The job is also configured for Debian package install, `gromaq --version`, and installed-payload checks.
+It then copies `SHA256SUMS` to `SHA256SUMS-linux-x86_64`, and installs from the
+generated local tarball through `GROMAQ_INSTALL_METHOD=release` before checking that
 `target/release-install-proof/bin/gromaq` exists. CI also runs
 `bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`

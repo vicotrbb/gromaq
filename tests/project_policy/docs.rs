@@ -103,6 +103,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "README.md",
         "Debian `postinst`/`postrm` desktop refresh hooks",
     ),
+    (
+        "README.md",
+        "Debian package install, `gromaq --version`, and installed-payload checks",
+    ),
     ("README.md", "remote GitHub Actions release workflow"),
     (
         "README.md",
@@ -142,6 +146,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/release.md",
+        "Debian package install, `gromaq --version`, and installed-payload checks",
+    ),
+    (
+        "documentation/release.md",
         "tag-triggered GitHub Release publication path is configured locally",
     ),
     (
@@ -156,6 +164,10 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     (
         "documentation/compatibility.md",
         "Debian `postinst`/`postrm` desktop metadata refresh",
+    ),
+    (
+        "documentation/compatibility.md",
+        "Debian package install proof is configured",
     ),
     (
         "documentation/compatibility.md",
