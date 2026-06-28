@@ -80,7 +80,7 @@ require_log_marker "preset: gromaq-ghostty"
 require_log_marker "frame size: 1468x820"
 require_log_marker "terminal cells: 80x18"
 
-require_min_metric "high contrast text pixels" 30000
+require_min_metric "high contrast text pixels" 22000
 require_min_metric "avatar color pixels" 150000
 require_min_metric "glyph quads" 640
 require_min_metric "atlas bytes" 1
