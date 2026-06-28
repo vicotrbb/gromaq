@@ -93,6 +93,18 @@ require_ppm_artifact() {
   fi
 }
 
+require_ppm_dimensions() {
+  path="$1"
+  expected_width="$2"
+  expected_height="$3"
+  dimensions="$(sed -n '2p' "${path}")"
+  if [ "${dimensions}" != "${expected_width} ${expected_height}" ]; then
+    printf '%s\n' \
+      "error: ${path} dimensions ${dimensions:-missing} did not match ${expected_width} ${expected_height}" >&2
+    exit 1
+  fi
+}
+
 check_theme_preview_log() {
   log_path="$1"
   preset="$2"
@@ -124,6 +136,8 @@ check_theme_preview_log "${default_log}" "gromaq-ghostty" 100 100 100
 check_theme_preview_log "${config_log}" "gromaq-graphite" 75 50 25
 require_ppm_artifact "${default_ppm}"
 require_ppm_artifact "${config_ppm}"
+require_ppm_dimensions "${default_ppm}" 1036 292
+require_ppm_dimensions "${config_ppm}" 1036 292
 
 if command -v sips >/dev/null 2>&1; then
   sips -s format png "${default_ppm}" --out "${default_png}" >/dev/null

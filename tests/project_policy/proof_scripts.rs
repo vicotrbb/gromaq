@@ -41,6 +41,8 @@ fn theme_preview_proof_keeps_configured_visual_quality_path() {
         "run_logged \"${default_log}\" cargo run -- --theme-preview-snapshot",
         "run_logged \"${config_log}\" cargo run -- --theme-preview-config",
         "require_min_metric \"${log_path}\" \"high contrast text pixels\" 9000",
+        "require_ppm_dimensions \"${default_ppm}\" 1036 292",
+        "require_ppm_dimensions \"${config_ppm}\" 1036 292",
         "require_min_metric \"${log_path}\" \"prepared quads\" 100",
     ] {
         assert!(
