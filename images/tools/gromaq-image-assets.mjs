@@ -411,7 +411,7 @@ const QUADRANT_BLOCKS = [
 
 function terminalQuadrantBlockCell(image, left, top, halfWidth, halfHeight) {
   let mask = 0;
-  const colors = [];
+  const visibleQuadrants = [];
   const samples = [
     [0, 0, 1],
     [halfWidth, 0, 2],
@@ -419,13 +419,13 @@ function terminalQuadrantBlockCell(image, left, top, halfWidth, halfHeight) {
     [halfWidth, halfHeight, 8],
   ];
   for (const [x, y, bit] of samples) {
-    const sample = pixel(image, left + x, top + y);
-    if (!isTerminalVisible(sample)) continue;
+    const sample = terminalBlockSample(image, left + x, top + y, halfWidth, halfHeight);
+    if (!sample.visible) continue;
     mask |= bit;
-    colors.push(sample);
+    visibleQuadrants.push(sample);
   }
   if (mask === 0) return ' ';
-  const color = boostTerminalColor(averageVisibleColor(colors), colors.length / 4);
+  const color = averageWeightedColors(visibleQuadrants);
   return `${fg(color)}${QUADRANT_BLOCKS[mask]}`;
 }
 
@@ -488,6 +488,7 @@ function terminalBlockSample(image, left, top, width, height) {
   return {
     visible: true,
     color: boostTerminalColor(averageVisibleColor(colors), coverageRatio),
+    coverageRatio,
   };
 }
 
@@ -508,6 +509,24 @@ function averageVisibleColor(colors) {
     clamp(Math.round(green / weight), 0, 255),
     clamp(Math.round(blue / weight), 0, 255),
   ];
+}
+
+function averageWeightedColors(samples) {
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+  let weight = 0;
+  for (const sample of samples) {
+    red += sample.color[0] * sample.coverageRatio;
+    green += sample.color[1] * sample.coverageRatio;
+    blue += sample.color[2] * sample.coverageRatio;
+    weight += sample.coverageRatio;
+  }
+  return floorTerminalContrast([
+    clamp(Math.round(red / weight), 0, 255),
+    clamp(Math.round(green / weight), 0, 255),
+    clamp(Math.round(blue / weight), 0, 255),
+  ]);
 }
 
 function boostTerminalColor([red, green, blue], coverageRatio = 1) {

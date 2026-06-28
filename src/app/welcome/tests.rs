@@ -1,6 +1,8 @@
 use super::layout::ansi_visible_width;
 use super::*;
 
+use std::collections::HashSet;
+
 mod support;
 
 use support::{avatar_sgr_rgb_colors, contrast_ratio, is_terminal_block, strip_ansi};
@@ -45,8 +47,8 @@ fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_block_glyphs() 
     let max_width = widths.iter().copied().max().unwrap_or(0);
 
     assert_eq!(lines.len(), 15);
-    assert_eq!(max_width, 32);
-    assert!(widths.iter().all(|width| *width == 32));
+    assert_eq!(max_width, 31);
+    assert!(widths.iter().all(|width| *width == 31));
     assert!(WELCOME_AVATAR_ANSI.chars().any(is_terminal_block));
 
     // The avatar is baked for the default gromaq cell (18x44px). A near-square
@@ -55,6 +57,23 @@ fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_block_glyphs() 
     // guards the aspect-correct terminal-block rendering against regressions.
     let ratio = max_width as f64 / lines.len() as f64;
     assert!(ratio >= 2.0, "avatar aspect ratio regressed: {ratio}");
+}
+
+#[test]
+fn default_welcome_avatar_keeps_dense_color_detail() {
+    let colors = avatar_sgr_rgb_colors(WELCOME_AVATAR_ANSI);
+    let unique_colors: HashSet<_> = colors.iter().copied().collect();
+
+    assert!(
+        colors.len() >= 240,
+        "avatar foreground detail too sparse: {} colored cells",
+        colors.len()
+    );
+    assert!(
+        unique_colors.len() >= 230,
+        "avatar color detail too low: {} unique foreground colors",
+        unique_colors.len()
+    );
 }
 
 #[test]
