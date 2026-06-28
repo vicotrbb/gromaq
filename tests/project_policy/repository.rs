@@ -275,6 +275,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(debian_proof_script.contains("\"/usr/bin/${package}\" --version"));
     assert!(debian_proof_script.contains("dpkg -L \"${package}\""));
     assert!(debian_proof_script.contains("summary.txt"));
+    assert!(debian_proof_script.contains("Payload entries:"));
     assert!(linux_release_proof_script.contains("scripts/package-linux-tarball.sh"));
     assert!(linux_release_proof_script.contains("scripts/generate-checksums.sh"));
     assert!(linux_release_proof_script.contains("GROMAQ_INSTALL_METHOD=release"));

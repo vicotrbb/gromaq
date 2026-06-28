@@ -30,6 +30,7 @@ test -x "/usr/bin/${package}"
 "/usr/bin/${package}" --version
 
 dpkg -L "${package}" | tee "${payload_path}"
+payload_entries="$(wc -l < "${payload_path}" | tr -d ' ')"
 grep -F "/usr/bin/${package}" "${payload_path}"
 grep -F "/usr/share/doc/${package}/README.md" "${payload_path}"
 grep -F "/usr/share/doc/${package}/copyright" "${payload_path}"
@@ -42,4 +43,5 @@ grep -F "/usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png" "${payload
   printf '%s\n' "Package artifact: $1"
   printf '%s\n' "Installed binary: /usr/bin/${package}"
   printf '%s\n' "Payload list: ${payload_path}"
+  printf '%s\n' "Payload entries: ${payload_entries}"
 } | tee "${summary_path}"
