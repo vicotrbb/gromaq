@@ -90,6 +90,7 @@ Build a tarball from the current checkout:
 scripts/package-linux-tarball.sh
 scripts/prove-linux-release-install.sh
 scripts/prove-github-release-install.sh
+scripts/prove-linux-desktop-discovery.sh
 ```
 
 The archive includes:
@@ -113,6 +114,13 @@ After a tagged GitHub Release publishes the Linux tarball and
 Release URL into `target/github-release-install-proof` with checksum
 verification enabled. That helper is present for the live download proof, but
 the proof is still unrun until release assets exist.
+On Linux desktop hosts, `scripts/prove-linux-desktop-discovery.sh` installs the
+desktop identity payloads into `target/linux-desktop-discovery-proof` by
+default, requires `desktop-file-validate`, `appstreamcli`,
+`update-desktop-database`, and `gtk-update-icon-cache`, validates the desktop
+file and AppStream metadata, refreshes the proof-root desktop database and
+hicolor icon cache, and records that this metadata/cache proof does not prove
+live menu UI rendering.
 
 ## Debian Package
 
@@ -397,6 +405,11 @@ Proven locally:
   `scripts/prove-github-release-install.sh`, which is Linux-only and installs
   real GitHub Release assets into `target/github-release-install-proof` with
   checksum verification enabled once tagged release assets exist
+- Linux desktop metadata/cache discovery proof helper
+  `scripts/prove-linux-desktop-discovery.sh`, which is Linux-only and validates
+  installed desktop identity metadata under an isolated proof root when the
+  relevant desktop metadata tools are available; it still does not prove live
+  menu UI rendering
 - CI Linux install-root desktop asset proof command in the `linux-packaging` job
 - Linux tarball archive structure with a supplied binary
 - Debian `.deb` archive structure with a supplied binary, canonical

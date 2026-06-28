@@ -15,6 +15,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/prove-debian-package.sh",
     "sh -n scripts/prove-linux-release-install.sh",
     "sh -n scripts/prove-github-release-install.sh",
+    "sh -n scripts/prove-linux-desktop-discovery.sh",
     "sh -n scripts/prove-current-host-compatibility.sh",
     "sh -n scripts/prove-welcome-preview.sh",
     "bash -n packaging/arch/PKGBUILD",

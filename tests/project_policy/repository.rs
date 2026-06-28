@@ -29,6 +29,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/prove-debian-package.sh",
     "scripts/prove-linux-release-install.sh",
     "scripts/prove-github-release-install.sh",
+    "scripts/prove-linux-desktop-discovery.sh",
     "scripts/prove-current-host-compatibility.sh",
     "scripts/prove-welcome-preview.sh",
     "packaging/arch/PKGBUILD",
@@ -156,6 +157,8 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/prove-linux-release-install.sh")).unwrap();
     let github_release_proof_script =
         fs::read_to_string(root.join("scripts/prove-github-release-install.sh")).unwrap();
+    let linux_desktop_discovery_script =
+        fs::read_to_string(root.join("scripts/prove-linux-desktop-discovery.sh")).unwrap();
     let compatibility_proof_script =
         fs::read_to_string(root.join("scripts/prove-current-host-compatibility.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
@@ -278,6 +281,19 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(github_release_proof_script.contains("GROMAQ_VERIFY_CHECKSUMS=1"));
     assert!(github_release_proof_script.contains("share/applications/dev.gromaq.Gromaq.desktop"));
     assert!(github_release_proof_script.contains("GitHub release install proof: ok"));
+    assert!(
+        linux_desktop_discovery_script.contains("Linux desktop discovery proof must run on Linux")
+    );
+    assert!(linux_desktop_discovery_script.contains("desktop-file-validate"));
+    assert!(linux_desktop_discovery_script.contains("appstreamcli validate"));
+    assert!(linux_desktop_discovery_script.contains("update-desktop-database"));
+    assert!(linux_desktop_discovery_script.contains("gtk-update-icon-cache"));
+    assert!(linux_desktop_discovery_script.contains("GROMAQ_SKIP_CARGO_INSTALL=1"));
+    assert!(linux_desktop_discovery_script.contains("GROMAQ_INSTALL_ROOT"));
+    assert!(linux_desktop_discovery_script.contains("dev.gromaq.Gromaq.desktop"));
+    assert!(linux_desktop_discovery_script.contains("dev.gromaq.Gromaq.metainfo.xml"));
+    assert!(linux_desktop_discovery_script.contains("dev.gromaq.Gromaq.png"));
+    assert!(linux_desktop_discovery_script.contains("does not prove live menu UI rendering"));
     assert!(compatibility_proof_script.contains("target/compatibility-proof"));
     assert!(compatibility_proof_script.contains("cargo test --test pty -- --nocapture"));
     assert!(compatibility_proof_script.contains("cargo run -- --runtime-tool-workflow-smoke"));

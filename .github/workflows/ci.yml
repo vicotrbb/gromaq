@@ -25,6 +25,7 @@ jobs:
       - run: sh -n scripts/prove-debian-package.sh
       - run: sh -n scripts/prove-linux-release-install.sh
       - run: sh -n scripts/prove-github-release-install.sh
+      - run: sh -n scripts/prove-linux-desktop-discovery.sh
       - run: sh -n scripts/prove-current-host-compatibility.sh
       - run: sh -n scripts/prove-welcome-preview.sh
       - run: bash -n packaging/arch/PKGBUILD
