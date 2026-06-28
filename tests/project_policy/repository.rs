@@ -198,6 +198,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("screencapture -x"));
     assert!(screenshot_script.contains("CGWindowListCopyWindowInfo"));
     assert!(screenshot_script.contains("CGWindowBounds"));
+    assert!(screenshot_script.contains("kCGWindowSharingState"));
+    assert!(screenshot_script.contains("macOS window sharing state"));
     assert!(screenshot_script.contains("Gromaq"));
     assert!(screenshot_script.contains("screencapture -x -l"));
     assert!(screenshot_script.contains("screencapture -x -R"));
@@ -209,7 +211,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("GROMAQ_SCREENSHOT_MIN_FOREGROUND_PIXELS"));
     assert!(screenshot_script.contains("foreground sampled pixels"));
     assert!(screenshot_script.contains("rm -f \"${output}\""));
-    assert!(window_startup.contains("set_content_protected(false)"));
+    assert!(window_startup.contains("screen_capture_allowed"));
+    assert!(window_startup.contains("set_content_protected(!allowed)"));
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));

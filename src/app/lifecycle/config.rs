@@ -36,6 +36,8 @@ pub struct NativeAppConfig {
     pub startup_text: Option<String>,
     /// Whether the built-in welcome screen is written when no explicit startup text exists.
     pub welcome_screen: bool,
+    /// Whether platform screenshot APIs may read the native window contents.
+    pub screen_capture_allowed: bool,
 }
 
 impl Default for NativeAppConfig {
@@ -52,6 +54,7 @@ impl Default for NativeAppConfig {
             glyph_frame_snapshot_path: None,
             startup_text: None,
             welcome_screen: true,
+            screen_capture_allowed: true,
         }
     }
 }

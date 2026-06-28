@@ -85,12 +85,13 @@ fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
     assert!(exit.stderr.is_empty());
     assert!(
         exit.stdout
-            .starts_with("window screenshot smoke: ok\npresented frame limit: 300\n")
+            .starts_with("window screenshot smoke: ok\npresented frame limit: 900\n")
     );
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
-    assert_eq!(launch.app.exit_after_presented_frames, Some(300));
-    assert_eq!(launch.app.exit_after_redraw_attempts, Some(1200));
+    assert_eq!(launch.app.exit_after_presented_frames, Some(900));
+    assert_eq!(launch.app.exit_after_redraw_attempts, Some(3600));
+    assert!(launch.app.screen_capture_allowed);
     assert!(launch.app.redraw_until_presented_frame_limit);
     assert_eq!(
         launch.app.startup_text.as_deref(),

@@ -37,6 +37,9 @@ for window in windows {
   guard let bounds = window[kCGWindowBounds as String] as? [String: Any] else {
     continue
   }
+  let sharingState = Int(window[kCGWindowSharingState as String] as? Int ?? -1)
+  let layer = Int(window[kCGWindowLayer as String] as? Int ?? -1)
+  let alpha = Double(window[kCGWindowAlpha as String] as? Double ?? -1.0)
 
   if owner == targetTitle || name == targetTitle || owner.localizedCaseInsensitiveContains(targetTitle) || name.localizedCaseInsensitiveContains(targetTitle) {
     let x = Int(bounds["X"] as? Double ?? 0)
@@ -46,7 +49,7 @@ for window in windows {
     guard width > 0, height > 0 else {
       continue
     }
-    print("\(number) \(x) \(y) \(width) \(height)")
+    print("\(number) \(x) \(y) \(width) \(height) \(sharingState) \(layer) \(alpha)")
     exit(0)
   }
 }
@@ -166,6 +169,9 @@ window_x="$2"
 window_y="$3"
 window_width="$4"
 window_height="$5"
+window_sharing_state="$6"
+window_layer="$7"
+window_alpha="$8"
 window_region="${window_x},${window_y},${window_width},${window_height}"
 capture_status=0
 screencapture -x -l "${window_id}" "${output}" 2> "${window_capture_stderr}" || capture_status="$?"
@@ -184,6 +190,9 @@ wait "${app_pid}" || app_status="$?"
 {
   printf '%s\n' "macOS window id: ${window_id}"
   printf '%s\n' "macOS window region: ${window_region}"
+  printf '%s\n' "macOS window sharing state: ${window_sharing_state}"
+  printf '%s\n' "macOS window layer: ${window_layer}"
+  printf '%s\n' "macOS window alpha: ${window_alpha}"
   printf '%s\n' "macOS capture method: ${capture_method}"
   if [ "${window_capture_status}" -ne 0 ]; then
     printf '%s\n' "window-id capture failed; attempted bounded region capture: ${window_region}"

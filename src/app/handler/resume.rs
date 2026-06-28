@@ -26,6 +26,10 @@ impl NativeTerminalApp {
     ) {
         let size = window.inner_size();
         self.window_id = Some(window.id());
+        configure_window_screen_capture_policy(
+            window.as_ref(),
+            self.lifecycle.config().screen_capture_allowed,
+        );
         if let Err(error) =
             self.create_surface_for_window(Arc::clone(&window), size.width, size.height)
         {
@@ -61,8 +65,11 @@ impl NativeTerminalApp {
             return;
         }
         if let Some(window) = &self.window {
-            window.set_content_protected(false);
             window.request_redraw();
         }
     }
+}
+
+fn configure_window_screen_capture_policy(window: &winit::window::Window, allowed: bool) {
+    window.set_content_protected(!allowed);
 }

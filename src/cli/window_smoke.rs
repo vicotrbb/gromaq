@@ -43,7 +43,7 @@ where
                 if report.frames_presented == 0 {
                     window_smoke_no_surface_failure(&report)
                 } else {
-                    window_screenshot_smoke_success(&report)
+                    window_screenshot_smoke_success(&report, frame_limit)
                 }
             } else {
                 if report.frames_presented == 0 {

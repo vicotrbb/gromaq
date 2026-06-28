@@ -16,11 +16,14 @@ pub(super) fn window_smoke_success(report: &NativeAppRunReport) -> CliExit {
     }
 }
 
-pub(super) fn window_screenshot_smoke_success(report: &NativeAppRunReport) -> CliExit {
+pub(super) fn window_screenshot_smoke_success(
+    report: &NativeAppRunReport,
+    frame_limit: u64,
+) -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "window screenshot smoke: ok\npresented frame limit: 300\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame cursor quads: {}\n",
+            "window screenshot smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame cursor quads: {}\n",
             report.redraw_attempts,
             report.frames_presented,
             report.surface_frame_timeouts,
