@@ -4,8 +4,10 @@ use crate::pty::ShellCommand;
 
 use super::pty_smoke::{RuntimeInputCaptureSmokePtySession, RuntimeInputCaptureSmokePtySpawner};
 
+mod committed_text;
 mod mouse;
 
+pub(in crate::cli) use committed_text::runtime_committed_text_smoke_exit;
 pub(in crate::cli) use mouse::runtime_mouse_smoke_exit;
 
 const RUNTIME_FOCUS_SMOKE_ENABLE_REPORTING: &str = "\x1b[?1004h";

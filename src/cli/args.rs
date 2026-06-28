@@ -101,6 +101,8 @@ pub(super) enum CliCommand<'a> {
     RuntimeMouseSmoke,
     /// Runtime terminal response smoke command.
     RuntimeResponseSmoke,
+    /// Runtime committed text smoke command.
+    RuntimeCommittedTextSmoke,
     /// Runtime idle smoke command.
     RuntimeIdleSmoke,
     /// Runtime idle CPU smoke command.
@@ -172,6 +174,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-focus-smoke" => Some(CliCommand::RuntimeFocusSmoke),
         "--runtime-mouse-smoke" => Some(CliCommand::RuntimeMouseSmoke),
         "--runtime-response-smoke" => Some(CliCommand::RuntimeResponseSmoke),
+        "--runtime-committed-text-smoke" => Some(CliCommand::RuntimeCommittedTextSmoke),
         "--runtime-idle-smoke" => Some(CliCommand::RuntimeIdleSmoke),
         "--runtime-idle-cpu-smoke" => Some(CliCommand::RuntimeIdleCpuSmoke),
         "--frame-scheduler-smoke" => Some(CliCommand::FrameSchedulerSmoke),

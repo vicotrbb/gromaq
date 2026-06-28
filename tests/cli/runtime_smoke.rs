@@ -4,6 +4,8 @@ use gromaq::MemoryClipboard;
 
 use super::{MockBackend, run_with_backend, run_with_backend_and_clipboard};
 
+#[path = "runtime_smoke/committed_text.rs"]
+mod committed_text;
 #[path = "runtime_smoke/glyph_frame.rs"]
 mod glyph_frame;
 #[path = "runtime_smoke/output_volume.rs"]

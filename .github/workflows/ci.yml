@@ -84,6 +84,7 @@ jobs:
       - run: cargo run -- --runtime-focus-smoke
       - run: cargo run -- --runtime-mouse-smoke
       - run: cargo run -- --runtime-response-smoke
+      - run: cargo run -- --runtime-committed-text-smoke
       - run: cargo run -- --runtime-idle-smoke
       - run: cargo run -- --runtime-idle-cpu-smoke
       - run: cargo run -- --runtime-real-shell-smoke

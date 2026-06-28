@@ -63,6 +63,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "cargo run -- --runtime-focus-smoke",
     "cargo run -- --runtime-mouse-smoke",
     "cargo run -- --runtime-response-smoke",
+    "cargo run -- --runtime-committed-text-smoke",
     "cargo run -- --runtime-idle-smoke",
     "cargo run -- --runtime-idle-cpu-smoke",
     "cargo run -- --runtime-real-shell-smoke",

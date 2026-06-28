@@ -5,7 +5,8 @@ pub(super) use perf_smoke::{
     runtime_perf_p95_smoke_exit, runtime_perf_smoke_exit,
 };
 pub(super) use protocol_smoke::{
-    runtime_focus_smoke_exit, runtime_mouse_smoke_exit, runtime_response_smoke_exit,
+    runtime_committed_text_smoke_exit, runtime_focus_smoke_exit, runtime_mouse_smoke_exit,
+    runtime_response_smoke_exit,
 };
 
 mod perf_smoke;

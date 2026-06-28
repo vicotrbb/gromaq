@@ -15,9 +15,9 @@ use super::runtime_clipboard_smoke::runtime_clipboard_paste_smoke_exit;
 use super::runtime_config_reload_smoke::runtime_config_reload_smoke_exit;
 use super::runtime_glyph_frame_smoke::runtime_glyph_frame_smoke_exit;
 use super::runtime_input_smoke::{
-    runtime_focus_smoke_exit, runtime_idle_cpu_smoke_exit, runtime_idle_smoke_exit,
-    runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit, runtime_perf_p95_smoke_exit,
-    runtime_perf_smoke_exit, runtime_response_smoke_exit,
+    runtime_committed_text_smoke_exit, runtime_focus_smoke_exit, runtime_idle_cpu_smoke_exit,
+    runtime_idle_smoke_exit, runtime_mouse_smoke_exit, runtime_perf_budget_smoke_exit,
+    runtime_perf_p95_smoke_exit, runtime_perf_smoke_exit, runtime_response_smoke_exit,
 };
 use super::runtime_output_smoke::{
     runtime_bounded_state_smoke_exit, runtime_continuous_output_smoke_exit,
@@ -137,6 +137,7 @@ where
         CliCommand::RuntimeFocusSmoke => runtime_focus_smoke_exit(),
         CliCommand::RuntimeMouseSmoke => runtime_mouse_smoke_exit(),
         CliCommand::RuntimeResponseSmoke => runtime_response_smoke_exit(),
+        CliCommand::RuntimeCommittedTextSmoke => runtime_committed_text_smoke_exit(),
         CliCommand::RuntimeIdleSmoke => runtime_idle_smoke_exit(),
         CliCommand::RuntimeIdleCpuSmoke => runtime_idle_cpu_smoke_exit(),
         CliCommand::FrameSchedulerSmoke => frame_scheduler_smoke_exit(),

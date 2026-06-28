@@ -109,6 +109,7 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         "cargo test --all",
         "cargo run -- --font-symbol-fallback-smoke",
         "cargo run -- --runtime-bracketed-paste-smoke",
+        "cargo run -- --runtime-committed-text-smoke",
         "cargo run -- --theme-legibility-smoke",
         "scripts/prove-theme-preview.sh",
         "node images/avatar/generate.mjs --check",

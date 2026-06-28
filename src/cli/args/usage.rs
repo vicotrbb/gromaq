@@ -28,7 +28,7 @@ pub(in crate::cli) fn usage() -> String {
         "--theme-preview-config <config> <path>|",
         "--welcome-preview-snapshot <path>|",
         "--runtime-focus-smoke|--runtime-mouse-smoke|--runtime-response-smoke|",
-        "--runtime-idle-smoke|--runtime-idle-cpu-smoke|",
+        "--runtime-committed-text-smoke|--runtime-idle-smoke|--runtime-idle-cpu-smoke|",
         "--frame-scheduler-smoke]\n"
     )
     .to_owned()
