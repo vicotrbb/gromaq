@@ -201,7 +201,8 @@ installed-payload checks.
 On Linux hosts, `scripts/prove-linux-release-install.sh` packages the release
 tarball, writes checksums, installs through `GROMAQ_INSTALL_METHOD=release`
 from a local `file://` release base, and verifies the binary plus desktop
-identity payloads under `target/release-install-proof`.
+identity payloads under `target/release-install-proof`, including a compact
+`summary.txt`.
 On Linux desktop hosts with `desktop-file-validate`, `appstreamcli`,
 `update-desktop-database`, and `gtk-update-icon-cache` available,
 `scripts/prove-linux-desktop-discovery.sh` installs the desktop identity

@@ -274,6 +274,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(linux_release_proof_script.contains("scripts/generate-checksums.sh"));
     assert!(linux_release_proof_script.contains("GROMAQ_INSTALL_METHOD=release"));
     assert!(linux_release_proof_script.contains("GROMAQ_RELEASE_BASE=\"file://"));
+    assert!(linux_release_proof_script.contains("summary.txt"));
+    assert!(linux_release_proof_script.contains("Linux release install proof: ok"));
     assert!(github_release_proof_script.contains("Linux"));
     assert!(github_release_proof_script.contains("GROMAQ_INSTALL_METHOD=release"));
     assert!(github_release_proof_script.contains("GROMAQ_VERSION"));

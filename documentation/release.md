@@ -107,7 +107,8 @@ On Linux hosts, `scripts/prove-linux-release-install.sh` packages the tarball,
 generates checksums, installs through `GROMAQ_INSTALL_METHOD=release` from a
 local `file://` release base into `target/release-install-proof`, and verifies
 the installed binary plus desktop identity payloads without writing to the
-user's home directory.
+user's home directory. The helper writes `summary.txt` in the proof root after
+the install and payload checks pass.
 After a tagged GitHub Release publishes the Linux tarball and
 `SHA256SUMS-linux-<arch>` assets, Linux maintainers can run
 `scripts/prove-github-release-install.sh` to install from the real GitHub

@@ -6,6 +6,7 @@ package="${GROMAQ_PACKAGE:-gromaq}"
 version="${GROMAQ_VERSION:-v0.1.0}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
 proof_root="${GROMAQ_RELEASE_PROOF_ROOT:-${root}/target/release-install-proof}"
+summary_path="${proof_root}/summary.txt"
 
 if [ "$(uname -s)" != "Linux" ]; then
   printf '%s\n' "error: Linux release install proof must run on Linux." >&2
@@ -31,4 +32,13 @@ test -f "${proof_root}/share/applications/dev.gromaq.Gromaq.desktop"
 test -f "${proof_root}/share/metainfo/dev.gromaq.Gromaq.metainfo.xml"
 test -f "${proof_root}/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
 
-printf '%s\n' "Linux release install proof: ok"
+{
+  printf '%s\n' "Linux release install proof: ok"
+  printf '%s\n' "Proof root: ${proof_root}"
+  printf '%s\n' "Installed binary: ${proof_root}/bin/${package}"
+  printf '%s\n' "Checksum manifest: ${dist_dir}/SHA256SUMS"
+  printf '%s\n' "Platform checksum manifest: ${dist_dir}/SHA256SUMS-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/^amd64$/x86_64/;s/^arm64$/aarch64/')"
+  printf '%s\n' "Desktop file: ${proof_root}/share/applications/dev.gromaq.Gromaq.desktop"
+  printf '%s\n' "AppStream metainfo: ${proof_root}/share/metainfo/dev.gromaq.Gromaq.metainfo.xml"
+  printf '%s\n' "Icon file: ${proof_root}/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png"
+} | tee "${summary_path}"
