@@ -55,12 +55,19 @@ not a transcript dump. When adding one:
 Run from the repository root before treating a code slice as complete:
 
 ```bash
+scripts/prove-local-ci-parity.sh
 cargo fmt --check
 git diff --check
+git diff --cached --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 cargo bench --bench parser_throughput -- --list
 ```
+
+The parity helper is the default local proof command for CI-aligned slices. It
+also runs the theme, welcome, README screenshot freshness, current-host
+compatibility, and benchmark inventory proof helpers. Use the expanded command
+list when you need to rerun or debug an individual gate.
 
 Run full Criterion benchmarks when changing parser, PTY pump, render planning,
 glyph cache, rasterization, frame preparation, or other measured hot paths:
