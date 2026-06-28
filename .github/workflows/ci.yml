@@ -131,6 +131,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bash zsh fish vim neovim tmux less procps htop btop openssh-client
       - run: scripts/prove-current-host-compatibility.sh
+        env:
+          GROMAQ_REQUIRED_COMPAT_TOOLS: bash zsh fish vim nvim tmux less top htop btop ssh
       - uses: actions/upload-artifact@v4
         with:
           name: gromaq-linux-compatibility-proof

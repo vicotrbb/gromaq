@@ -121,10 +121,10 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
 ];
 
 const REQUIRED_LINUX_COMPATIBILITY_CI_MARKERS: &[&str] = &[
-    "linux-compatibility:",
     "runs-on: ubuntu-latest",
     "sudo apt-get install -y bash zsh fish vim neovim tmux less procps htop btop openssh-client",
     "scripts/prove-current-host-compatibility.sh",
+    "GROMAQ_REQUIRED_COMPAT_TOOLS: bash zsh fish vim nvim tmux less top htop btop ssh",
     "gromaq-linux-compatibility-proof",
     "target/compatibility-proof/*",
 ];
@@ -228,11 +228,18 @@ fn linux_packaging_job_runs_release_install_proof_helper() {
 fn ci_runs_linux_compatibility_checks() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
     let workflow = fs::read_to_string(&workflow_path).unwrap();
+    let linux_compatibility_job = workflow
+        .split("  arch-packaging:")
+        .next()
+        .unwrap()
+        .split("  linux-compatibility:")
+        .nth(1)
+        .unwrap();
 
     for marker in REQUIRED_LINUX_COMPATIBILITY_CI_MARKERS {
         assert!(
-            workflow.contains(marker),
-            "{} must include Linux compatibility marker `{marker}`",
+            linux_compatibility_job.contains(marker),
+            "{} linux-compatibility job must include marker `{marker}`",
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
         );
     }

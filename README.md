@@ -306,8 +306,9 @@ macOS `rust` job and upload `target/compatibility-proof/*` as the
 `gromaq-current-host-compatibility-proof` artifact. CI is also configured with
 a Linux compatibility job that installs common Ubuntu shell/editor/TUI tools,
 runs the same helper, and uploads `gromaq-linux-compatibility-proof`;
-helper-backed remote proof for both new artifacts is pending the next pushed
-run.
+that Linux job sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so the proof fails if any
+expected installed tool is absent. Helper-backed remote proof for both new
+artifacts is pending the next pushed run.
 
 Manual live-window screenshot proof on macOS:
 

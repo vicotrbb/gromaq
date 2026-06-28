@@ -301,6 +301,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("cargo test --test pty -- --nocapture"));
     assert!(compatibility_proof_script.contains("cargo run -- --runtime-tool-workflow-smoke"));
     assert!(compatibility_proof_script.contains("command -v"));
+    assert!(compatibility_proof_script.contains("GROMAQ_REQUIRED_COMPAT_TOOLS"));
+    assert!(compatibility_proof_script.contains("required compatibility tool missing"));
     assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));
     assert!(window_perf_proof_script.contains("cargo run -- --window-perf-smoke"));
     assert!(window_perf_proof_script.contains("monitor refresh mhz"));

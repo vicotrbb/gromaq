@@ -19,6 +19,15 @@ for tool in bash zsh fish nu vim nvim tmux less top htop btop ssh kubectl; do
   fi
 done
 
+for tool in ${GROMAQ_REQUIRED_COMPAT_TOOLS:-}; do
+  if ! command -v "${tool}" >/dev/null 2>&1; then
+    printf '%s\n' "error: required compatibility tool missing: ${tool}" >&2
+    printf 'required_%s=missing\n' "${tool}" | tee -a "${inventory}"
+    exit 1
+  fi
+  printf 'required_%s=present\n' "${tool}" | tee -a "${inventory}"
+done
+
 run_and_capture() {
   name="$1"
   shift

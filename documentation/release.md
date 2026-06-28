@@ -257,7 +257,8 @@ and checks the installed binary plus desktop identity payloads under
 `target/compatibility-proof/*` as the
 `gromaq-current-host-compatibility-proof` artifact. CI also has a Linux
 compatibility job that installs common Ubuntu shell/editor/TUI tools, runs the
-same helper, and uploads `gromaq-linux-compatibility-proof`; helper-backed
+same helper, sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so expected installed tools
+fail closed, and uploads `gromaq-linux-compatibility-proof`; helper-backed
 remote proof for those compatibility artifacts is pending the next pushed run.
 CI also runs `bash -n packaging/arch/PKGBUILD`.
 Release jobs also run `scripts/generate-checksums.sh` and upload `SHA256SUMS`
