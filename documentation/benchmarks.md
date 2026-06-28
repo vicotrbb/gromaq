@@ -36,16 +36,17 @@ acceptance or OS compositor screenshot correctness.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95
-counters. On 2026-06-24, `cargo run -- --runtime-perf-budget-smoke` ran the
+counters. On 2026-06-27, `cargo run -- --runtime-perf-budget-smoke` ran the
 same deterministic input-echo render path as an executable budget gate, failing
 if render p95 exceeds 6940000 ns or input-to-render p95 exceeds 10000000 ns; it
-pumped 1 byte, rendered 1 CPU-side frame, reported render p95 500000 ns, and
-reported input-to-render p95 1000000 ns. On 2026-06-24,
+pumped 1 byte, rendered 1 CPU-side frame, reported render p95 2000000 ns, and
+reported input-to-render p95 4000000 ns. On 2026-06-27,
 `cargo run -- --runtime-perf-p95-smoke` repeated that deterministic input-echo
 render path for 16 samples after the shaped-glyph placement fix, pumped 16
 bytes, rendered 16 CPU-side frames, reported render p95 2000000 ns against the
-6940000 ns budget, and reported input-to-render p95 4000000 ns against the
-10000000 ns budget. This is deterministic runtime counter evidence, not live
+6940000 ns budget, reported input-to-render p95 4000000 ns against the
+10000000 ns budget, and reported render/input max counters from the same
+bounded run. This is deterministic runtime counter evidence, not live
 windowed GPU frame pacing acceptance proof. `cargo run --
 --runtime-real-shell-perf-budget-smoke` applies the same 6.94 ms render p95
 budget as the deterministic gate, but a looser 20 ms input-to-render p95 budget
@@ -98,21 +99,23 @@ reported viewport-capped rendered dirty-region work, verified
 `gromaq-runtime-line-511` in the render plan, and reported render p95 500000 ns.
 `cargo run -- --runtime-real-shell-large-output-smoke` enforces the 6940000 ns
 render p95 budget for a real `/bin/sh` large-output transcript while proving
-bounded scrollback eviction. On this machine it pumped 7168 bytes, rendered one
-dirty frame, retained the 64-line scrollback cap, evicted the first line,
-observed the last line, and reported render p95 1000000 ns.
-On the same date, `cargo run -- --runtime-bounded-state-smoke`
+bounded scrollback eviction. On 2026-06-27 it pumped 7168 bytes from 256 lines,
+rendered 2 dirty frames, reported 2 dirty regions with 384 dirty cells max,
+retained the 64-line scrollback cap, evicted the first line, observed the last
+line, and reported render p95 1000000 ns.
+On 2026-06-23, `cargo run -- --runtime-bounded-state-smoke`
 pumped 51200 bytes from 2048 lines across 4 batches, retained 128 scrollback
 lines and 128 styled scrollback cell rows, used the runtime state snapshot to
 keep retained cell data within the 4096-cell deterministic cap for a 32-column
 bounded runtime, rendered 4 CPU-side dirty frames, reported viewport-capped
 rendered dirty-region work, and verified
-`gromaq-bounded-line-2047` in the render plan. On 2026-06-24,
+`gromaq-bounded-line-2047` in the render plan. On 2026-06-27,
 `cargo run -- --runtime-memory-smoke` extended that deterministic long-session
 path with one warmup batch, 8 measured batches, process RSS sampling through
 `ps`, a 65536 KiB RSS growth cap after warmup, and the same capped
 scrollback-state assertions; it pumped 110592 bytes from 4608 lines, rendered 9
-CPU-side frames, retained 128 scrollback lines, reported RSS growth of 1280 KiB,
+CPU-side frames, retained 128 scrollback lines and 3054 retained scrollback
+cells against the 4096-cell deterministic cap, reported RSS growth of 1344 KiB,
 and verified `gromaq-memory-line-4607` in the render plan. On 2026-06-23,
 `cargo run -- --runtime-continuous-output-smoke` pumped 6912 bytes from 256
 lines across 32 small PTY batches, rendered each dirty batch, verified the
@@ -131,9 +134,9 @@ bytes, reported 1 resize event, preserved 2 reflowed scrollback lines with
 styled metadata, rendered visible lines `klmno|pqrst`, and rendered 1 CPU-side
 dirty frame. On the same date, `cargo run -- --runtime-idle-smoke` pumped 0
 bytes, reported 16 render attempts, 16 clean-frame skips, and 0 rendered frames
-through the deterministic CPU-side path. On 2026-06-24,
+through the deterministic CPU-side path. On 2026-06-27,
 `cargo run -- --runtime-idle-cpu-smoke` sampled the same clean-frame idle path 5
-times at 50 ms intervals, reported max process CPU of 1.8% against the 5.0%
+times at 50 ms intervals, reported max process CPU of 4.0% against the 5.0%
 budget, and preserved the 16 clean-frame skips with 0 rendered frames. On
 2026-06-23, `cargo run -- --frame-scheduler-smoke` reported a 6944444 ns 144Hz
 target interval, 4944444 ns frame-paced wait, 3 presented frames, and 2 dropped
