@@ -96,6 +96,14 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "installer asset placement plus Linux tarball and Debian package assembly",
     ),
     ("README.md", "remote GitHub Actions release workflow"),
+    (
+        "README.md",
+        "live tag-triggered GitHub Release asset publication",
+    ),
+    (
+        "README.md",
+        "live Linux release-method install from GitHub Release assets",
+    ),
     ("README.md", "signed/notarized macOS app distribution"),
     ("documentation/release.md", "GROMAQ_INSTALL_APP_BUNDLE=1"),
     ("documentation/release.md", "GROMAQ_DRY_RUN=1"),

@@ -201,6 +201,8 @@ Not yet proven enough to call complete:
 - live desktop OS paste-menu workflow
 - hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display
 - live desktop screenshot proof across supported platforms
+- live tag-triggered GitHub Release asset publication
+- live Linux release-method install from GitHub Release assets
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 - Developer ID signed/notarized macOS app distribution
