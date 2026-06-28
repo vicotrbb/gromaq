@@ -332,12 +332,13 @@ decoded pixels differed from the committed local PNG. Run `28316513803` then
 proved the bounded decoded-pixel README freshness helper remotely, and run
 `28321082609` completed green for commit `84740e3` after rerunning avatar
 freshness, default welcome proof, and README screenshot freshness proof for the
-previous 33x17 block avatar. The current local Braille-avatar proof reports
-25591 high-contrast text pixels, 28497 avatar color pixels, 653 glyph quads,
-0 cursor quads, and 576576 atlas bytes; remote CI proof for this refreshed
-avatar still needs the next push run. The helper keeps dimension gates and bounded
-visual-delta gates so host font-rasterization variance does not require exact
-decoded-pixel identity.
+previous 33x17 block avatar. Run `28326188288` completed green for commit
+`0dfed64` after rerunning avatar freshness, default welcome proof, and README
+screenshot freshness proof for the current 33x17 Braille avatar; the macOS
+welcome proof accepted 20509 high-contrast text pixels, 25966 avatar color
+pixels, 654 glyph quads, 0 cursor quads, and 576576 atlas bytes. The helper
+keeps dimension gates and bounded visual-delta gates so host font-rasterization
+variance does not require exact decoded-pixel identity.
 
 Current-host compatibility proof bundle:
 

@@ -290,13 +290,14 @@ then proved the bounded-delta README freshness helper and README freshness
 `summary.txt` artifact remotely. CI run `28321082609` completed green for
 commit `84740e3` after rerunning avatar freshness, default welcome proof,
 README screenshot freshness proof, and the full packaging/compatibility CI job
-set for the refreshed 33x17 block avatar. The current local Braille-avatar
-refresh passes the same helpers with 25591 high-contrast text pixels, 28497
-avatar color pixels, 653 glyph quads, 0 cursor quads, and 576576 atlas bytes;
-remote CI proof for that refreshed asset still needs the next push run. The
-welcome and theme preview artifact uploads use `if: always()` so diagnostic
-visual artifacts survive proof-command or later macOS job failures when files
-were written before the failure.
+set for the refreshed 33x17 block avatar. CI run `28326188288` completed green
+for commit `0dfed64` after rerunning the same helper set for the current 33x17
+Braille avatar; the macOS welcome proof accepted 20509 high-contrast text
+pixels, 25966 avatar color pixels, 654 glyph quads, 0 cursor quads, 576576
+atlas bytes, and `Metric: avatar rows=17`. The welcome and theme preview
+artifact uploads use `if: always()` so diagnostic visual artifacts survive
+proof-command or later macOS job failures when files were written before the
+failure.
 Release jobs also run `scripts/generate-checksums.sh`, report the checksum
 entry count, and upload `SHA256SUMS` next to each artifact set. The Linux
 packaging and release jobs run checksum generation with
@@ -318,6 +319,17 @@ Proven remotely:
   job passed Debian package install and payload checks plus the helper-backed
   Linux release-install proof with Arch metadata checksum extras. The
   `linux-compatibility` job passed the required-tool compatibility helper, and
+  `arch-packaging` passed full `makepkg --noconfirm`, package install,
+  `/usr/bin/gromaq --version`, payload listing, and `.SRCINFO` generation.
+- GitHub Actions CI run `28326188288` completed green for commit `0dfed64` on
+  2026-06-28 UTC. The macOS `rust` job passed formatting, whitespace, clippy,
+  `cargo test --all`, avatar asset freshness, theme proof, current-host
+  compatibility proof, welcome preview proof, README screenshot freshness
+  proof, every runtime/theme/GPU smoke, and
+  `cargo bench --bench parser_throughput -- --list`. The `linux-packaging`
+  job passed Debian package install and payload checks plus the helper-backed
+  Linux release-install proof with Arch metadata checksum extras. The
+  `linux-compatibility` job passed the current-host compatibility helper, and
   `arch-packaging` passed full `makepkg --noconfirm`, package install,
   `/usr/bin/gromaq --version`, payload listing, and `.SRCINFO` generation.
 - GitHub Actions CI run `28310371344` completed green for commit `3474653` on
