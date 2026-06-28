@@ -55,9 +55,9 @@ require_log_marker "welcome preview snapshot: ok"
 require_log_marker "preset: gromaq-ghostty"
 require_log_marker "terminal cells: 80x18"
 
-require_min_metric "high contrast text pixels" 512
-require_min_metric "avatar color pixels" 256
-require_min_metric "glyph quads" 1
+require_min_metric "high contrast text pixels" 30000
+require_min_metric "avatar color pixels" 150000
+require_min_metric "glyph quads" 640
 require_min_metric "atlas bytes" 1
 require_exact_metric "cursor quads" 0
 

@@ -105,6 +105,26 @@ fn repository_keeps_required_issue_labels() {
 }
 
 #[test]
+fn welcome_preview_proof_keeps_default_visual_quality_floors() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-welcome-preview.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "require_min_metric \"high contrast text pixels\" 30000",
+        "require_min_metric \"avatar color pixels\" 150000",
+        "require_min_metric \"glyph quads\" 640",
+        "require_exact_metric \"cursor quads\" 0",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must keep `{marker}` so the default welcome preview proof fails closed",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
 fn cargo_manifest_keeps_public_open_source_metadata() {
     let manifest_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
     let manifest = fs::read_to_string(&manifest_path).unwrap();
