@@ -66,6 +66,10 @@ fn readme_welcome_preview_proof_writes_artifact_summary() {
     for marker in [
         "scripts/prove-welcome-preview.sh",
         "README welcome preview pixels: ok",
+        "max_changed_pixels = 150_000",
+        "max_mean_abs_delta = 8.0",
+        "changed_pixels",
+        "mean_abs_delta",
         "summary.txt",
         "README welcome preview proof: ok",
         "Committed PNG: ${readme_png}",

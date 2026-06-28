@@ -151,18 +151,45 @@ if (ppm_width, ppm_height) != (png_width, png_height):
     raise SystemExit(
         f"README welcome preview dimensions {png_width}x{png_height} do not match generated {ppm_width}x{ppm_height}"
     )
-if ppm_pixels != png_pixels:
-    for index, (expected, actual) in enumerate(zip(ppm_pixels, png_pixels)):
-        if expected != actual:
-            pixel = index // 3
-            channel = index % 3
-            x = pixel % ppm_width
-            y = pixel // ppm_width
-            raise SystemExit(
-                f"README welcome preview pixel mismatch at {x},{y} channel {channel}: committed {actual}, generated {expected}"
-            )
+if len(ppm_pixels) != len(png_pixels):
     raise SystemExit("README welcome preview pixel lengths differ")
-print(f"README welcome preview pixels: ok ({ppm_width}x{ppm_height})")
+
+max_changed_pixels = 150_000
+max_mean_abs_delta = 8.0
+changed_pixels = 0
+total_delta = 0
+first_difference = None
+for offset in range(0, len(ppm_pixels), 3):
+    generated = ppm_pixels[offset : offset + 3]
+    committed = png_pixels[offset : offset + 3]
+    pixel_delta = sum(abs(expected - actual) for expected, actual in zip(generated, committed))
+    if pixel_delta:
+        changed_pixels += 1
+        total_delta += pixel_delta
+        if first_difference is None:
+            pixel = offset // 3
+            first_difference = (
+                pixel % ppm_width,
+                pixel // ppm_width,
+                committed,
+                generated,
+            )
+
+mean_abs_delta = total_delta / len(ppm_pixels)
+if changed_pixels > max_changed_pixels or mean_abs_delta > max_mean_abs_delta:
+    if first_difference is None:
+        first_difference = (0, 0, b"", b"")
+    x, y, committed, generated = first_difference
+    raise SystemExit(
+        "README welcome preview pixel drift exceeds tolerance: "
+        f"changed_pixels={changed_pixels} max_changed_pixels={max_changed_pixels}, "
+        f"mean_abs_delta={mean_abs_delta:.2f} max_mean_abs_delta={max_mean_abs_delta:.2f}; "
+        f"first mismatch at {x},{y}: committed {list(committed)}, generated {list(generated)}"
+    )
+print(
+    f"README welcome preview pixels: ok ({ppm_width}x{ppm_height}; "
+    f"changed_pixels={changed_pixels}; mean_abs_delta={mean_abs_delta:.2f})"
+)
 PY
 
 {

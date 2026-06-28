@@ -307,21 +307,20 @@ scripts/prove-readme-welcome-preview.sh
 CI is configured to run `scripts/prove-theme-preview.sh` and upload the default
 and configured theme preview PPMs, PNGs, logs, and config under
 `target/theme-preview-proof/*` as `gromaq-theme-preview-proof`, including a
-compact `summary.txt`. CI run `28314822034` uploaded that artifact after the
-theme proof passed, even though the overall run later failed in the
-welcome-preview step; the summary artifact is pending the next 10-commit push
-batch.
+compact `summary.txt`. CI run `28315944025` uploaded that artifact after the
+theme proof passed, even though the overall run later failed in the README
+welcome-preview freshness step.
 CI is also configured to upload both `target/welcome-preview-proof/*` and
 `target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof`, so
 the generated welcome preview and committed README screenshot freshness proof
-are retained together after a green run reaches both proof steps. The visual
-proof upload uses `if: always()` so logs and artifacts are preserved when a
-later CI step fails or a proof command fails after writing diagnostic output.
-Run `28315342470` uploaded the default welcome preview diagnostics after macOS
-26 rendered 126112 avatar color pixels against the then-current 150000 floor;
-the README freshness step was skipped. The local avatar-floor fix plus compact
-welcome and README freshness `summary.txt` artifacts are pending the next
-10-commit push batch.
+are retained together after the visual proof steps run. The visual proof upload
+uses `if: always()` so logs and artifacts are preserved when a later CI step
+fails or a proof command fails after writing diagnostic output. Run
+`28315944025` passed the default welcome preview proof on macOS 26 with 126062
+avatar color pixels, then failed the README freshness proof because exact
+decoded pixels differed from the committed local PNG; the helper now uses
+bounded decoded-pixel drift for host font-rasterization variance while keeping
+dimension and visual-delta gates.
 
 Current-host compatibility proof bundle:
 
