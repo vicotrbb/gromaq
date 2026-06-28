@@ -32,7 +32,7 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
     assert!(!text.contains("TERMINAL"));
     assert!(!text.contains("REBORN"));
     assert!(text.contains("  [ Gromaq ]"));
-    assert!(text.contains("    \x1b[1;38;2;238;244;251mBuild"));
+    assert!(text.contains("  \x1b[1;38;2;238;244;251mBuild"));
     assert!(text.contains("\x1b[38;2;158;231;255mnative Rust GPU terminal"));
     assert_eq!(
         text.matches("\r\n").count(),
@@ -47,15 +47,15 @@ fn default_welcome_avatar_is_trimmed_and_uses_supported_terminal_glyphs() {
     let max_width = widths.iter().copied().max().unwrap_or(0);
 
     assert_eq!(lines.len(), 17);
-    assert_eq!(max_width, 33);
-    assert!(widths.iter().all(|width| *width == 33));
+    assert_eq!(max_width, 35);
+    assert!(widths.iter().all(|width| *width == 35));
     assert!(WELCOME_AVATAR_ANSI.chars().any(is_braille_cell));
 
     // The avatar is baked for the default gromaq cell (18x44px). A near-square
     // source must render wider-than-tall in cell counts to avoid the vertical
-    // stretching that left the old avatar 39% too narrow. The 17-row avatar
-    // spends one extra row on vertical detail while keeping the ratio safely
-    // above the old stretched output.
+    // stretching that left the old avatar 39% too narrow. The wider 17-row
+    // avatar keeps extra subcell detail while staying inside the narrow
+    // welcome layout.
     let ratio = max_width as f64 / lines.len() as f64;
     assert!(ratio >= 1.9, "avatar aspect ratio regressed: {ratio}");
 }
@@ -85,7 +85,7 @@ fn default_welcome_avatar_uses_subcell_glyph_detail() {
         .count();
 
     assert!(
-        braille_cells >= 260,
+        braille_cells >= 300,
         "welcome avatar is still too blocky: {braille_cells} braille cells"
     );
 }

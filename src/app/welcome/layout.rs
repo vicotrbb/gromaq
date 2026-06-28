@@ -1,5 +1,4 @@
 const SECTION_RULE_WIDTH: usize = 36;
-const WELCOME_GAP_WIDTH: usize = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct WelcomeStyle {
@@ -27,8 +26,6 @@ pub(super) fn push_welcome_row(
         output.push_str("\r\n");
         return;
     }
-    output.push_str(&" ".repeat(WELCOME_GAP_WIDTH.min(stat_budget)));
-    let stat_budget = stat_budget.saturating_sub(WELCOME_GAP_WIDTH);
     let stat = match entry {
         WelcomeEntry::Metric { label, value } => metric_line(style, label, value, stat_budget),
         WelcomeEntry::Section(label) => section_line(style, label, stat_budget),
@@ -60,10 +57,10 @@ fn stat_budget(cols: u16, avatar: &str) -> usize {
 }
 
 fn metric_line(style: WelcomeStyle, label: &str, value: &str, max_width: usize) -> String {
-    let prefix_width = 4 + label.len() + 2;
+    let prefix_width = 2 + label.len() + 2;
     let value = clipped_plain(value, max_width.saturating_sub(prefix_width));
     format!(
-        "    {}{label}\x1b[0m  {}{value}\x1b[0m",
+        "  {}{label}\x1b[0m  {}{value}\x1b[0m",
         bold_foreground(style.title),
         foreground(style.value)
     )

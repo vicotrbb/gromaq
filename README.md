@@ -326,8 +326,9 @@ are retained together after the visual proof steps run. The visual proof upload
 uses `if: always()` so logs and artifacts are preserved when a later CI step
 fails or a proof command fails after writing diagnostic output. Run
 `scripts/prove-welcome-preview.sh` also writes `metrics.txt` and a compact
-summary; the refreshed local 33x17 Braille avatar proof records `avatar rows=17`
-alongside the rendered text, avatar-color, glyph, cursor, and atlas metrics. Run
+summary; the refreshed local 36x17-sampled Braille avatar proof records
+`avatar rows=17` alongside the rendered text, avatar-color, glyph, cursor, and
+atlas metrics. Run
 `28315944025` passed the default welcome preview proof on macOS 26 with 126062
 avatar color pixels, then failed the README freshness proof because exact
 decoded pixels differed from the committed local PNG. Run `28316513803` then
@@ -336,10 +337,14 @@ proved the bounded decoded-pixel README freshness helper remotely, and run
 freshness, default welcome proof, and README screenshot freshness proof for the
 previous 33x17 block avatar. Run `28326188288` completed green for commit
 `0dfed64` after rerunning avatar freshness, default welcome proof, and README
-screenshot freshness proof for the current 33x17 Braille avatar; the macOS
+screenshot freshness proof for the previous 33x17 Braille avatar; the macOS
 welcome proof accepted 20509 high-contrast text pixels, 25966 avatar color
-pixels, 654 glyph quads, 0 cursor quads, and 576576 atlas bytes. The helper
-keeps dimension gates and bounded visual-delta gates so host font-rasterization
+pixels, 654 glyph quads, 0 cursor quads, and 576576 atlas bytes. The refreshed
+local 36x17-sampled avatar proof accepted 25564 high-contrast text pixels,
+36299 avatar color pixels, 692 glyph quads, 0 cursor quads, and 624624 atlas
+bytes, and the committed README PNG freshness proof passed with matching
+1468x820 dimensions, 22 changed pixels, and mean delta 0.00. The helper keeps
+dimension gates and bounded visual-delta gates so host font-rasterization
 variance does not require exact decoded-pixel identity.
 
 Current-host compatibility proof bundle:
