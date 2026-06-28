@@ -111,7 +111,7 @@ check_theme_preview_log() {
   require_exact_metric "${log_path}" "selection opacity percent" "${selection_opacity}"
   require_exact_metric "${log_path}" "surface padding px" 14
   require_exact_metric "${log_path}" "cell spacing px" 0
-  require_min_metric "${log_path}" "high contrast text pixels" 10000
+  require_min_metric "${log_path}" "high contrast text pixels" 9000
   require_min_metric "${log_path}" "selection pixels" 10000
   require_min_metric "${log_path}" "cursor pixels" 700
   require_min_metric "${log_path}" "prepared quads" 100

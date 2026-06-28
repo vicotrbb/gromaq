@@ -164,6 +164,7 @@ fn distribution_assets_keep_desktop_identity() {
         fs::read_to_string(root.join("scripts/prove-linux-desktop-discovery.sh")).unwrap();
     let compatibility_proof_script =
         fs::read_to_string(root.join("scripts/prove-current-host-compatibility.sh")).unwrap();
+    let pty_tools = fs::read_to_string(root.join("tests/pty/tools.rs")).unwrap();
     let window_perf_proof_script =
         fs::read_to_string(root.join("scripts/prove-144hz-window-perf.sh")).unwrap();
     let window_startup = fs::read_to_string(root.join("src/app/handler/resume.rs")).unwrap();
@@ -305,6 +306,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("command -v"));
     assert!(compatibility_proof_script.contains("GROMAQ_REQUIRED_COMPAT_TOOLS"));
     assert!(compatibility_proof_script.contains("required compatibility tool missing"));
+    assert!(pty_tools.contains("\"--output=yaml\""));
     assert!(window_perf_proof_script.contains("target/144hz-window-perf-proof"));
     assert!(window_perf_proof_script.contains("cargo run -- --window-perf-smoke"));
     assert!(window_perf_proof_script.contains("monitor refresh mhz"));

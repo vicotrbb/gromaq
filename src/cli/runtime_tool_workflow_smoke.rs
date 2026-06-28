@@ -22,8 +22,8 @@ const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
     },
     ToolWorkflowSpec {
         name: "kubectl",
-        args: &["version", "--client=true"],
-        expected: "Client",
+        args: &["version", "--client=true", "--output=yaml"],
+        expected: "clientVersion",
     },
 ];
 

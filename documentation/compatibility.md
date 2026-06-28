@@ -12,8 +12,8 @@ fixture workflows, and also confirmed that fish, nushell, nvim, htop, and btop
 were skipped because those binaries were not on PATH.
 The same run, `cargo run -- --runtime-tool-workflow-smoke` passed both
 current-host tool checks with 0 skips: `ssh -V` produced 31 bytes containing
-`OpenSSH`, and `kubectl version --client=true` produced 52 bytes containing
-`Client`.
+`OpenSSH`, and `kubectl version --client=true --output=yaml` produced output
+containing `clientVersion`.
 `scripts/prove-current-host-compatibility.sh` passed on 2026-06-28 UTC,
 writing the host inventory, PTY test log, and runtime external-tool smoke log
 under `target/compatibility-proof`. That fresh bundle again passed all 37 PTY
@@ -65,7 +65,7 @@ paths is pending the next pushed run.
 | `top` launch workflow | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `top` snapshot check. | Proven on current host; conditional elsewhere |
 | `htop`, `btop` launch workflows | Real PTY command workflows when available. On 2026-06-27, the current host did not have `htop` or `btop` on PATH, so these workflows remain unproven locally. | Conditional on host binaries; not proven on current host |
 | `ssh` launch workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `ssh -V` in a native PTY and requires `OpenSSH` output when the binary is present. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `ssh -V` workflow, and `cargo run -- --runtime-tool-workflow-smoke` passed the current-host runtime-tool workflow with 31 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
-| `kubectl` output workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `kubectl version --client=true` in a native PTY and requires `Client` output when the binary is present. On 2026-06-27, `cargo test --test pty -- --nocapture` passed the current-host `kubectl version --client=true` workflow, and `cargo run -- --runtime-tool-workflow-smoke` passed the current-host runtime-tool workflow with 52 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
+| `kubectl` output workflow | Real PTY command workflow when available plus `cargo run -- --runtime-tool-workflow-smoke`, which runs `kubectl version --client=true --output=yaml` in a native PTY and requires `clientVersion` output when the binary is present. On 2026-06-28, `cargo test --test pty -- --nocapture` passed the current-host `kubectl version --client=true --output=yaml` workflow, and `cargo run -- --runtime-tool-workflow-smoke` passed the current-host runtime-tool workflow with 276 output bytes. | Proven for current host client/version workflow; smoke reports pass or skip elsewhere |
 | `cargo test -- --nocapture` output | Real PTY fixture workflow with deterministic large output. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host quiet and large-output cargo fixture checks. | Proven on current host |
 
 ## Terminal Features

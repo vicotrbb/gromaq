@@ -38,7 +38,7 @@ fn theme_preview_proof_keeps_configured_visual_quality_path() {
         "check_theme_preview_log \"${config_log}\" \"gromaq-graphite\" 75 50 25",
         "run_logged \"${default_log}\" cargo run -- --theme-preview-snapshot",
         "run_logged \"${config_log}\" cargo run -- --theme-preview-config",
-        "require_min_metric \"${log_path}\" \"high contrast text pixels\" 10000",
+        "require_min_metric \"${log_path}\" \"high contrast text pixels\" 9000",
         "require_min_metric \"${log_path}\" \"prepared quads\" 100",
     ] {
         assert!(

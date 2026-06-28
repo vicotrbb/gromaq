@@ -9,7 +9,11 @@ fn pty_session_runs_ssh_version_when_available() {
 
 #[test]
 fn pty_session_runs_kubectl_client_version_when_available() {
-    assert_program_outputs_when_available("kubectl", &["version", "--client=true"], "Client");
+    assert_program_outputs_when_available(
+        "kubectl",
+        &["version", "--client=true", "--output=yaml"],
+        "clientVersion",
+    );
 }
 
 #[test]
