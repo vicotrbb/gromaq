@@ -155,3 +155,35 @@ fn high_refresh_window_perf_proof_includes_input_latency_gate() {
         );
     }
 }
+
+#[test]
+fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-ci-compatibility-artifacts.sh");
+    assert!(
+        path.is_file(),
+        "{} must exist so maintainers can prove uploaded compatibility artifacts",
+        relative_path(root, &path)
+    );
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "gh run list",
+        "gh run download",
+        "gromaq-current-host-compatibility-proof",
+        "gromaq-linux-compatibility-proof",
+        "host_os=Darwin",
+        "host_os=Linux",
+        "runtime_tool_workflow_failed=0",
+        "short_head_sha=",
+        "\"git_commit=${short_head_sha}\"",
+        "CI compatibility artifact proof: ok",
+        "summary.txt",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must keep `{marker}` so CI compatibility artifacts prove both host summaries",
+            relative_path(root, &path)
+        );
+    }
+}

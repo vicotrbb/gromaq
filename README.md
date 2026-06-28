@@ -375,6 +375,12 @@ that Linux job sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so the proof fails if any
 expected installed tool is absent. CI run `28314822034` passed and uploaded
 both the macOS current-host compatibility artifact and the Linux compatibility
 artifact before the overall run failed later in the welcome-preview step.
+After a pushed commit has a successful CI run, maintainers can run
+`scripts/prove-ci-compatibility-artifacts.sh` to download both compatibility
+artifacts for that exact commit with `gh`, verify the macOS summary reports
+`host_os=Darwin`, verify the Linux summary reports `host_os=Linux`, require
+zero runtime workflow failures in both, and write
+`target/ci-compatibility-proof/summary.txt`.
 
 Manual live-window screenshot proof on macOS:
 

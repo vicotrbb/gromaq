@@ -61,6 +61,11 @@ of becoming silent skips. On 2026-06-28 UTC, CI run `28314822034` passed the
 macOS current-host compatibility helper and the Linux compatibility job and
 uploaded their proof artifacts before the overall run failed later in the macOS
 welcome-preview threshold step.
+After a successful pushed CI run exists for a commit,
+`scripts/prove-ci-compatibility-artifacts.sh` can download the macOS and Linux
+compatibility artifacts for that exact commit, verify `host_os=Darwin` and
+`host_os=Linux`, require `runtime_tool_workflow_failed=0` in both summaries,
+and write `target/ci-compatibility-proof/summary.txt`.
 
 ## Shells
 
