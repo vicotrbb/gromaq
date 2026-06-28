@@ -238,7 +238,7 @@ Implemented and covered by automated tests or deterministic smoke commands:
 - native PTY runtime with shell startup, input/output pump, resize propagation,
   large-output handling, command-output redraw proof, and external-tool workflow
   smoke coverage for available `fish`, `nu`, `vim`, `nvim`, `tmux`, `less`,
-  `top`, `htop`, `btop`, `ssh`, and `kubectl`
+  `top`, `htop`, `btop`, `ssh`, `kubectl`, and a tiny Cargo test fixture
 - native `winit` app lifecycle, keyboard/mouse mapping, clipboard paste/copy,
   scrollback navigation, live config reload, text zoom, frame scheduling, FPS
   overlay, startup welcome screen, and generated logo window icon

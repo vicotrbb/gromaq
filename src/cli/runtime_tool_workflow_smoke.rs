@@ -82,7 +82,7 @@ fn run_tool_workflow(spec: &ToolWorkflowSpec) -> ToolWorkflowResult {
     let Some(program) = find_program(spec.program) else {
         return ToolWorkflowResult::Skipped { name: spec.name };
     };
-    match run_pty_command(&program, spec.args) {
+    match run_pty_command(&program, spec.args, tool_workflow_timeout(spec)) {
         Ok(output) => validate_tool_output(spec, &output),
         Err(error) => ToolWorkflowResult::Failed {
             name: spec.name,
@@ -110,7 +110,15 @@ fn validate_tool_output(spec: &ToolWorkflowSpec, output: &str) -> ToolWorkflowRe
     }
 }
 
-fn run_pty_command(program: &OsStr, args: &[&str]) -> Result<String, String> {
+fn tool_workflow_timeout(spec: &ToolWorkflowSpec) -> Duration {
+    if spec.program == "cargo" {
+        return Duration::from_secs(20);
+    }
+
+    TOOL_WORKFLOW_TIMEOUT
+}
+
+fn run_pty_command(program: &OsStr, args: &[&str], timeout: Duration) -> Result<String, String> {
     let mut session = PtySession::spawn(PtyConfig {
         rows: 24,
         cols: 80,
@@ -124,7 +132,7 @@ fn run_pty_command(program: &OsStr, args: &[&str]) -> Result<String, String> {
     })
     .map_err(|error| error.to_string())?;
     let output = session
-        .read_to_string_timeout(TOOL_WORKFLOW_TIMEOUT)
+        .read_to_string_timeout(timeout)
         .map_err(|error| error.to_string())?;
     match session
         .wait_timeout(Duration::from_secs(3))

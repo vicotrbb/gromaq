@@ -89,4 +89,15 @@ pub(super) const TOOL_WORKFLOWS: &[ToolWorkflowSpec] = &[
         args: &["config", "view", "--output=jsonpath={.kind}"],
         expected: "Config",
     },
+    ToolWorkflowSpec {
+        name: "cargo-test",
+        program: "cargo",
+        args: &[
+            "test",
+            "--manifest-path",
+            "tests/fixtures/tiny_cargo_project/Cargo.toml",
+            "--quiet",
+        ],
+        expected: "test result: ok",
+    },
 ];
