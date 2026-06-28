@@ -56,6 +56,13 @@ cd "${root}"
 run_and_capture pty cargo test --test pty -- --nocapture
 run_and_capture runtime-tool-workflow cargo run -- --runtime-tool-workflow-smoke
 
+pty_log="${proof_dir}/pty.log"
+pty_tests_passed="$(sed -n 's/^test result: ok\. \([0-9][0-9]*\) passed;.*/\1/p' "${pty_log}" | tail -n 1)"
+if [ -z "${pty_tests_passed}" ]; then
+  printf '%s\n' "error: PTY log missing passed test count" >&2
+  exit 1
+fi
+
 runtime_log="${proof_dir}/runtime-tool-workflow.log"
 extract_runtime_metric() {
   label="$1"
@@ -77,11 +84,12 @@ runtime_tool_workflow_failed="$(extract_runtime_metric "failed")"
   printf 'proof_dir=%s\n' "${proof_dir}"
   printf 'tools_present=%s\n' "${tools_present}"
   printf 'tools_missing=%s\n' "${tools_missing}"
+  printf 'pty_tests_passed=%s\n' "${pty_tests_passed}"
   printf 'runtime_tool_workflow_checked=%s\n' "${runtime_tool_workflow_checked}"
   printf 'runtime_tool_workflow_passed=%s\n' "${runtime_tool_workflow_passed}"
   printf 'runtime_tool_workflow_skipped=%s\n' "${runtime_tool_workflow_skipped}"
   printf 'runtime_tool_workflow_failed=%s\n' "${runtime_tool_workflow_failed}"
   printf 'inventory=%s\n' "${inventory}"
-  printf 'pty_log=%s\n' "${proof_dir}/pty.log"
+  printf 'pty_log=%s\n' "${pty_log}"
   printf 'runtime_tool_workflow_log=%s\n' "${runtime_log}"
 } | tee "${summary}"

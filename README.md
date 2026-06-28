@@ -351,9 +351,10 @@ This records the host tool inventory, runs `cargo test --test pty -- --nocapture
 and runs `cargo run -- --runtime-tool-workflow-smoke`, writing logs and
 `summary.txt` under `target/compatibility-proof`. The summary records
 `tools_present` and `tools_missing` inventory counts plus
-`runtime_tool_workflow_checked`, `runtime_tool_workflow_passed`,
-`runtime_tool_workflow_skipped`, and `runtime_tool_workflow_failed` so artifact
-readers can see the host coverage shape before opening full logs. CI is
+`pty_tests_passed`, `runtime_tool_workflow_checked`,
+`runtime_tool_workflow_passed`, `runtime_tool_workflow_skipped`, and
+`runtime_tool_workflow_failed` so artifact readers can see the host coverage
+shape before opening full logs. CI is
 configured to run the same helper in the macOS `rust` job and upload
 `target/compatibility-proof/*` as the `gromaq-current-host-compatibility-proof`
 artifact. CI is also configured with a Linux compatibility job that installs

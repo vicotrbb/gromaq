@@ -90,7 +90,6 @@ fn repository_keeps_single_documentation_tree() {
         "do not keep a parallel docs/ tree; use documentation/ instead"
     );
 }
-
 #[test]
 fn repository_keeps_required_issue_labels() {
     let labels_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/labels.yml");
@@ -325,6 +324,7 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(compatibility_proof_script.contains("summary.txt"));
     assert!(compatibility_proof_script.contains("tools_present="));
     assert!(compatibility_proof_script.contains("tools_missing="));
+    assert!(compatibility_proof_script.contains("pty_tests_passed="));
     assert!(compatibility_proof_script.contains("runtime_tool_workflow_checked="));
     assert!(compatibility_proof_script.contains("runtime_tool_workflow_passed="));
     assert!(compatibility_proof_script.contains("runtime_tool_workflow_skipped="));
