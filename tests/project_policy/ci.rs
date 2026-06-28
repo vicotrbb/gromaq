@@ -168,6 +168,28 @@ fn ci_workflow_runs_required_root_checks() {
 }
 
 #[test]
+fn ci_workflow_syntax_checks_every_script() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow_path = root.join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+    let scripts_dir = root.join("scripts");
+
+    for entry in fs::read_dir(&scripts_dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().and_then(|extension| extension.to_str()) != Some("sh") {
+            continue;
+        }
+        let relative = relative_path(root, &path);
+        let marker = format!("sh -n {relative}");
+        assert!(
+            workflow.contains(&marker),
+            "{} must syntax-check `{relative}`",
+            relative_path(root, &workflow_path)
+        );
+    }
+}
+
+#[test]
 fn release_workflow_builds_distribution_artifacts() {
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
     let workflow = fs::read_to_string(&workflow_path).unwrap();
