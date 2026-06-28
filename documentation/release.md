@@ -243,7 +243,7 @@ generation with
 `GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
 so the uploaded Linux checksum manifest covers the Arch source-package recipe
 metadata, `.SRCINFO`, and install hook as well as the Linux tarball and Debian
-package.
+package. The helper-backed Linux packaging proof is configured but awaits the next remote run.
 
 ## Current Proof Boundary
 

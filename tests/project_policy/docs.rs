@@ -184,6 +184,18 @@ const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "Debian package install proof is configured",
     ),
     (
+        "README.md",
+        "helper-backed Linux packaging proof is configured but awaits the next remote run",
+    ),
+    (
+        "documentation/release.md",
+        "helper-backed Linux packaging proof is configured but awaits the next remote run",
+    ),
+    (
+        "documentation/compatibility.md",
+        "helper-backed Linux packaging proof is configured but awaits the next remote run",
+    ),
+    (
         "documentation/compatibility.md",
         "Arch `gromaq.install` desktop metadata refresh",
     ),
