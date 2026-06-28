@@ -102,11 +102,8 @@ const REQUIRED_LINUX_PACKAGING_CI_MARKERS: &[&str] = &[
     "/usr/share/applications/dev.gromaq.Gromaq.desktop",
     "/usr/share/metainfo/dev.gromaq.Gromaq.metainfo.xml",
     "/usr/share/icons/hicolor/256x256/apps/dev.gromaq.Gromaq.png",
-    "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install\" scripts/generate-checksums.sh",
+    "GROMAQ_CHECKSUM_EXTRA_FILES=\"packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install\" scripts/prove-linux-release-install.sh",
     "bash -n packaging/arch/PKGBUILD",
-    "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0",
-    "GROMAQ_RELEASE_BASE=\"file://$PWD/target/dist\"",
-    "GROMAQ_BIN_DIR=target/release-install-proof/bin",
     "test -x target/release-install-proof/bin/gromaq",
 ];
 
@@ -184,6 +181,25 @@ fn ci_runs_linux_distribution_checks() {
             relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
         );
     }
+}
+
+#[test]
+fn linux_packaging_job_runs_release_install_proof_helper() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
+    let workflow = fs::read_to_string(&workflow_path).unwrap();
+    let linux_job = workflow
+        .split("  arch-packaging:")
+        .next()
+        .unwrap()
+        .split("  linux-packaging:")
+        .nth(1)
+        .unwrap();
+
+    assert!(
+        linux_job.contains("scripts/prove-linux-release-install.sh"),
+        "{} linux-packaging job must run the release install proof helper",
+        relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), &workflow_path)
+    );
 }
 
 #[test]
