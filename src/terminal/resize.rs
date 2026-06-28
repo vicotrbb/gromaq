@@ -65,6 +65,7 @@ impl Terminal {
         }
         if let Some(saved) = &mut self.saved_dec_cursor {
             saved.cursor.clamp_to(config.cols, config.rows);
+            saved.wrap_pending = false;
         }
         if self.config.cursor_shape != config.cursor_shape
             || self.config.cursor_blinking != config.cursor_blinking

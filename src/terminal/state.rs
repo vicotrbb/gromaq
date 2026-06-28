@@ -30,6 +30,7 @@ pub(super) enum CharacterSet {
 #[derive(Debug, Clone, Copy)]
 pub(super) struct SavedCursorState {
     pub(super) cursor: Cursor,
+    pub(super) wrap_pending: bool,
     pub(super) style: Style,
     pub(super) origin_mode: bool,
     pub(super) g0_dec_special_graphics: bool,

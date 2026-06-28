@@ -282,3 +282,18 @@ fn resize_clamps_saved_dec_cursor_before_restore() {
     assert_eq!(terminal.dump_cursor().row, 1);
     assert_eq!(terminal.dump_cursor().col, 3);
 }
+
+#[test]
+fn resize_clears_saved_dec_pending_wrap_before_restore() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal.write_str("\x1b[1;4HA\x1b7").unwrap();
+    terminal.resize(5, 2).unwrap();
+    terminal.write_str("\x1b8X").unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "   X");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 4);
+}

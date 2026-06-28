@@ -7,6 +7,7 @@ impl Terminal {
     pub(super) fn save_dec_cursor(&mut self) {
         self.saved_dec_cursor = Some(SavedCursorState {
             cursor: self.cursor,
+            wrap_pending: self.wrap_pending,
             style: self.style,
             origin_mode: self.origin_mode,
             g0_dec_special_graphics: self.g0_dec_special_graphics,
@@ -19,6 +20,7 @@ impl Terminal {
         if let Some(mut saved) = self.saved_dec_cursor {
             saved.cursor.clamp_to(self.config.cols, self.config.rows);
             self.cursor = saved.cursor;
+            self.wrap_pending = saved.wrap_pending;
             self.style = saved.style;
             self.origin_mode = saved.origin_mode;
             self.g0_dec_special_graphics = saved.g0_dec_special_graphics;

@@ -47,6 +47,7 @@ impl Terminal {
                 shape: self.config.cursor_shape,
                 blinking: self.config.cursor_blinking,
             },
+            wrap_pending: false,
             style: Style::default(),
             origin_mode: false,
             g0_dec_special_graphics: false,

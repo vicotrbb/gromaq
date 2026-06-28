@@ -123,6 +123,21 @@ fn dec_save_restore_cursor_restores_rendition_attributes() {
 }
 
 #[test]
+fn dec_save_restore_cursor_restores_pending_wrap_state() {
+    let mut terminal = Terminal::new(TerminalConfig::new(4, 2).unwrap());
+
+    terminal
+        .write_str("\x1b[1;4HA\x1b7\x1b[1;1HB\x1b8X")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "B  A");
+    assert_eq!(grid.line_text(1), "X");
+    assert_eq!(terminal.dump_cursor().row, 1);
+    assert_eq!(terminal.dump_cursor().col, 1);
+}
+
+#[test]
 fn dec_private_1048_saves_and_restores_cursor_without_alternate_screen() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 4).unwrap());
 
