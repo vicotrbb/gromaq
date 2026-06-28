@@ -61,6 +61,21 @@ fn alternate_screen_dec_save_cursor_does_not_replace_primary_saved_cursor() {
 }
 
 #[test]
+fn alternate_screen_sco_save_cursor_does_not_replace_primary_saved_cursor() {
+    let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
+
+    terminal
+        .write_str("primary\x1b[s\x1b[?1049halt\x1b[2;4H\x1b[s\x1b[?1049l\x1b[uZ")
+        .unwrap();
+
+    let grid = terminal.dump_grid();
+    assert_eq!(grid.line_text(0), "primaryZ");
+    assert_eq!(grid.line_text(1), "");
+    assert_eq!(terminal.dump_cursor().row, 0);
+    assert_eq!(terminal.dump_cursor().col, 8);
+}
+
+#[test]
 fn repeated_1049_enter_keeps_original_primary_cursor() {
     let mut terminal = Terminal::new(TerminalConfig::new(12, 3).unwrap());
 

@@ -55,6 +55,9 @@ impl Terminal {
             saved.cursor.row = saved.cursor.row.min(config.rows - 1);
             saved.cursor.col = saved.cursor.col.min(config.cols - 1);
             saved.wrap_pending = false;
+            if let Some(saved_cursor) = &mut saved.saved_cursor {
+                saved_cursor.clamp_to(config.cols, config.rows);
+            }
             if let Some(saved_cursor) = &mut saved.saved_dec_cursor {
                 saved_cursor.cursor.clamp_to(config.cols, config.rows);
                 saved_cursor.wrap_pending = false;
