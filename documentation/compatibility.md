@@ -59,7 +59,7 @@ welcome-preview threshold step.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |
-| `vim` launch workflow | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `vim --version` and scripted edit workflows. | Proven on current host; conditional elsewhere |
+| `vim` launch and navigation workflows | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `vim --version` and scripted edit workflows. A refreshed focused run passed `pty_session_runs_vim_search_navigation_when_available`, proving slash-search navigation to `gromaq-vim-line-040` and command-mode result capture through the PTY. | Proven on current host for launch, edit, and search navigation; conditional elsewhere |
 | `vim` alternate-screen enter/exit | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host Vim alternate-screen enter/exit proof. | Proven on current host; conditional elsewhere |
 | `vim` SGR mouse split selection | Scripted real PTY workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host Vim SGR mouse split-window selection proof. | Proven on current host; conditional elsewhere |
 | `nvim` launch workflow | Real PTY command workflow when available. On 2026-06-27, the current host did not have `nvim` on PATH, so this workflow remains unproven locally. | Conditional on host binary; not proven on current host |
@@ -163,6 +163,6 @@ welcome-preview threshold step.
 - Add live desktop OS paste-menu workflow proof.
 - Add Developer ID signed and notarized macOS app distribution proof.
 - Expand editor/multiplexer interaction beyond the current scripted edit,
-  alternate-screen, search, and mouse workflows.
+  Vim search navigation, less search, alternate-screen, and mouse workflows.
 - Expand `ssh` and `kubectl` beyond current version plus non-network local
   configuration workflows when safe live targets exist.

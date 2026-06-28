@@ -40,6 +40,47 @@ fn pty_session_runs_vim_interactive_edit_when_available() {
 }
 
 #[test]
+fn pty_session_runs_vim_search_navigation_when_available() {
+    let Some(_program) = find_program("vim") else {
+        eprintln!("skipping vim search PTY workflow test because vim is not on PATH");
+        return;
+    };
+    let source_file = test_temp_path("vim-search-source.txt");
+    let result_file = test_temp_path("vim-search-result.txt");
+    let _ = fs::remove_file(&result_file);
+    let lines = (0..80)
+        .map(|index| format!("gromaq-vim-line-{index:03}\n"))
+        .collect::<String>();
+    fs::write(&source_file, lines).unwrap();
+    let command = format!(
+        "TERM=xterm-256color vim -Nu NONE -n -i NONE -N --noplugin {}",
+        shell_quote_path(&source_file)
+    );
+    let mut session = spawn_shell_pty_command(command);
+    session.start_output_reader().unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+
+    session.write_all(b"/gromaq-vim-line-040\r").unwrap();
+    drain_until_any_output(&mut session, 50, Duration::from_millis(20));
+    let command = format!(
+        ":call writefile([getline('.')], {})|qa!\r",
+        shell_quote_path(&result_file)
+    );
+    session.write_all(command.as_bytes()).unwrap();
+
+    assert!(
+        session
+            .wait_timeout(Duration::from_secs(5))
+            .unwrap()
+            .is_some()
+    );
+    let selected_line = fs::read_to_string(&result_file).unwrap();
+    assert_eq!(selected_line.trim(), "gromaq-vim-line-040");
+    let _ = fs::remove_file(source_file);
+    let _ = fs::remove_file(result_file);
+}
+
+#[test]
 fn pty_session_runs_vim_mouse_window_selection_when_available() {
     let Some(_program) = find_program("vim") else {
         eprintln!("skipping vim mouse PTY workflow test because vim is not on PATH");
