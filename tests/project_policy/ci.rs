@@ -21,6 +21,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/prove-theme-preview.sh",
     "sh -n scripts/prove-welcome-preview.sh",
     "sh -n scripts/prove-readme-welcome-preview.sh",
+    "sh -n scripts/prove-local-ci-parity.sh",
     "bash -n packaging/arch/PKGBUILD",
     "sh -n packaging/arch/gromaq.install",
     "cargo fmt --check",

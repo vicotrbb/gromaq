@@ -31,6 +31,7 @@ jobs:
       - run: sh -n scripts/prove-theme-preview.sh
       - run: sh -n scripts/prove-welcome-preview.sh
       - run: sh -n scripts/prove-readme-welcome-preview.sh
+      - run: sh -n scripts/prove-local-ci-parity.sh
       - run: bash -n packaging/arch/PKGBUILD
       - run: sh -n packaging/arch/gromaq.install
       - run: cargo fmt --check
