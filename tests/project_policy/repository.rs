@@ -238,6 +238,8 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(screenshot_script.contains("kCGWindowSharingState"));
     assert!(screenshot_script.contains("CGPreflightScreenCaptureAccess"));
     assert!(screenshot_script.contains("macOS screen capture access preflight"));
+    assert!(screenshot_script.contains("System Settings > Privacy & Security"));
+    assert!(screenshot_script.contains("Screen & System Audio Recording"));
     assert!(screenshot_script.contains("macOS window sharing state"));
     assert!(screenshot_script.contains("macOS window content is not shareable"));
     assert!(screenshot_script.contains("Gromaq"));

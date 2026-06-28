@@ -147,6 +147,12 @@ rm -f "${window_capture_stderr}" "${region_capture_stderr}" "${validation_stderr
 : > "${log_path}"
 
 if ! preflight_screen_capture_access >> "${log_path}" 2>&1; then
+  {
+    printf '%s\n' "macOS Screen Recording permission guidance:"
+    printf '%s\n' "Open System Settings > Privacy & Security > Screen & System Audio Recording."
+    printf '%s\n' "Grant capture permission to the terminal or automation host running this script, then rerun it."
+    printf '%s\n' "Older macOS releases may label the same pane as Screen Recording."
+  } >> "${log_path}"
   printf '%s\n' "error: macOS Screen Recording permission is required for live screenshot proof; see ${log_path}." >&2
   exit 1
 fi

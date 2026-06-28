@@ -355,6 +355,11 @@ Manual live-window screenshot proof on macOS:
 scripts/capture-macos-window-proof.sh target/gromaq-live-window-proof.png
 ```
 
+This helper requires macOS Screen Recording permission for the terminal or
+automation host running it. If the preflight fails, grant access in System
+Settings > Privacy & Security > Screen & System Audio Recording, or Screen
+Recording on older macOS releases, then rerun the helper.
+
 Manual hardware-backed 144 Hz window pacing proof:
 
 ```bash
