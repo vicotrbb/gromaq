@@ -6,7 +6,7 @@ const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "scripts/prove-local-ci-parity.sh",
     "git diff --cached --check",
     "shell syntax checks",
-    "avatar asset freshness",
+    "Avatar asset freshness",
     "README screenshot freshness",
     "current-host compatibility",
 ];

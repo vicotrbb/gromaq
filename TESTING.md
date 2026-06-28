@@ -65,10 +65,11 @@ cargo bench --bench parser_throughput -- --list
 ```
 
 The parity helper is the default local proof command for CI-aligned slices. It
-also runs shell syntax checks, the theme, avatar asset freshness, welcome,
-README screenshot freshness, current-host compatibility, and benchmark
-inventory proof helpers. Use the expanded command list when you need to rerun
-or debug an individual gate.
+also runs shell syntax checks, theme legibility and preview proof, avatar asset
+freshness, welcome, README screenshot freshness, current-host compatibility,
+and benchmark inventory proof helpers. Use the expanded command list when you
+need to rerun or debug an individual gate.
+Avatar asset freshness is part of local parity.
 
 Run full Criterion benchmarks when changing parser, PTY pump, render planning,
 glyph cache, rasterization, frame preparation, or other measured hot paths:

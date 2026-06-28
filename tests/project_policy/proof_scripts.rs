@@ -69,6 +69,7 @@ fn local_ci_parity_proof_runs_clippy_before_completion() {
         "git diff --cached --check",
         "cargo clippy --all-targets --all-features -- -D warnings",
         "cargo test --all",
+        "cargo run -- --theme-legibility-smoke",
         "scripts/prove-theme-preview.sh",
         "node images/avatar/generate.mjs --check",
         "scripts/prove-welcome-preview.sh",
