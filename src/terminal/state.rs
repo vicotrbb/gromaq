@@ -42,6 +42,7 @@ pub(super) struct SavedCursorState {
 pub(super) struct SavedScreen {
     pub(super) grid: Grid,
     pub(super) cursor: Cursor,
+    pub(super) saved_dec_cursor: Option<SavedCursorState>,
     pub(super) hard_breaks: Vec<bool>,
     pub(super) tab_stops: Vec<bool>,
     pub(super) wrap_pending: bool,

@@ -13,6 +13,7 @@ impl Terminal {
         self.saved_primary = Some(SavedScreen {
             grid: self.grid.clone(),
             cursor: self.cursor,
+            saved_dec_cursor: self.saved_dec_cursor,
             hard_breaks: self.hard_breaks.clone(),
             tab_stops: self.tab_stops.clone(),
             wrap_pending: self.wrap_pending,
@@ -32,6 +33,7 @@ impl Terminal {
         self.grid = Grid::new(self.config.cols, self.config.rows);
         self.hard_breaks = vec![false; usize::from(self.config.rows)];
         self.tab_stops = default_tab_stops(self.config.cols);
+        self.saved_dec_cursor = None;
         self.scroll_top = 0;
         self.scroll_bottom = self.config.rows - 1;
         self.cursor.row = 0;
@@ -57,6 +59,7 @@ impl Terminal {
             self.flush_dirty_run();
             self.grid = saved.grid;
             self.cursor = saved.cursor;
+            self.saved_dec_cursor = saved.saved_dec_cursor;
             self.hard_breaks = saved.hard_breaks;
             self.tab_stops = saved.tab_stops;
             self.wrap_pending = saved.wrap_pending;
