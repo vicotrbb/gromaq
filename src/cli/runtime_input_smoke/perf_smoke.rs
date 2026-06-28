@@ -8,7 +8,8 @@ mod probe;
 
 const RUNTIME_RENDER_P95_BUDGET_NS: u64 = 6_940_000;
 const RUNTIME_INPUT_TO_RENDER_P95_BUDGET_NS: u64 = 10_000_000;
-const RUNTIME_PERF_P95_SMOKE_SAMPLES: usize = 16;
+const RUNTIME_PERF_BUDGET_SMOKE_SAMPLES: usize = 20;
+const RUNTIME_PERF_P95_SMOKE_SAMPLES: usize = RUNTIME_PERF_BUDGET_SMOKE_SAMPLES;
 
 pub(in crate::cli) fn runtime_perf_smoke_exit() -> CliExit {
     let probe = match run_runtime_perf_probe(1) {
@@ -19,7 +20,7 @@ pub(in crate::cli) fn runtime_perf_smoke_exit() -> CliExit {
 }
 
 pub(in crate::cli) fn runtime_perf_budget_smoke_exit() -> CliExit {
-    let probe = match run_runtime_perf_probe(1) {
+    let probe = match run_runtime_perf_probe(RUNTIME_PERF_BUDGET_SMOKE_SAMPLES) {
         Ok(probe) => probe,
         Err(error) => return runtime_perf_budget_smoke_error(error),
     };
@@ -27,7 +28,8 @@ pub(in crate::cli) fn runtime_perf_budget_smoke_exit() -> CliExit {
         return CliExit {
             code: 0,
             stdout: format!(
-                "runtime perf budget smoke: ok\npumped bytes: {}\nrendered frames: {}\nrender p95 ns: {}\nrender p95 budget ns: {}\ninput-to-render p95 ns: {}\ninput-to-render p95 budget ns: {}\n",
+                "runtime perf budget smoke: ok\nsamples: {}\npumped bytes: {}\nrendered frames: {}\nrender p95 ns: {}\nrender p95 budget ns: {}\ninput-to-render p95 ns: {}\ninput-to-render p95 budget ns: {}\n",
+                probe.expected_samples,
                 probe.pumped_bytes,
                 probe.metrics.rendered_frames,
                 probe.metrics.render_time_p95_ns,

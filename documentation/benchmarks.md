@@ -36,16 +36,16 @@ acceptance or OS compositor screenshot correctness.
 On 2026-06-23, `cargo run -- --runtime-perf-smoke` pumped 1 deterministic PTY
 echo byte, rendered 1 CPU-side frame, and reported rendered dirty-region work,
 render sample/average/max/p95, and input-to-render sample/average/max/p95
-counters. On 2026-06-27, `cargo run -- --runtime-perf-budget-smoke` ran the
-same deterministic input-echo render path as an executable budget gate, failing
-if render p95 exceeds 6940000 ns or input-to-render p95 exceeds 10000000 ns; it
-pumped 1 byte, rendered 1 CPU-side frame, reported render p95 2000000 ns, and
-reported input-to-render p95 4000000 ns. On 2026-06-27,
+counters. On 2026-06-28, `cargo run -- --runtime-perf-budget-smoke` ran the
+same deterministic input-echo render path as an executable budget gate across
+20 samples, failing if render p95 exceeds 6940000 ns or input-to-render p95
+exceeds 10000000 ns; it pumped 20 bytes, rendered 20 CPU-side frames, reported
+render p95 100000 ns, and reported input-to-render p95 500000 ns. On 2026-06-28,
 `cargo run -- --runtime-perf-p95-smoke` repeated that deterministic input-echo
-render path for 16 samples after the shaped-glyph placement fix, pumped 16
-bytes, rendered 16 CPU-side frames, reported render p95 2000000 ns against the
-6940000 ns budget, reported input-to-render p95 4000000 ns against the
-10000000 ns budget, and reported render/input max counters from the same
+render path for 20 samples, pumped 20 bytes, rendered 20 CPU-side frames,
+reported render p95 100000 ns against the 6940000 ns budget, reported
+input-to-render p95 100000 ns against the 10000000 ns budget, and reported
+render/input max counters from the same
 bounded run. This is deterministic runtime counter evidence, not live
 windowed GPU frame pacing acceptance proof. `cargo run --
 --runtime-real-shell-perf-budget-smoke` applies the same 6.94 ms render p95
@@ -55,9 +55,9 @@ timing includes OS shell-response and poll-loop variance outside the terminal's
 control; on shared CI runners it hovers near 8 ms and load spikes pushed the
 prior 10 ms gate past the limit, making CI intermittently red without a
 terminal regression. The strict 10 ms terminal-latency target remains enforced
-by the deterministic `--runtime-perf-budget-smoke` (which reports ~0.5-4 ms),
+by the 20-sample deterministic `--runtime-perf-budget-smoke`,
 so this only absorbs real-shell OS round-trip variance while still catching
-gross regressions against the ~0.5 ms render baseline. On 2026-06-25, after the
+gross regressions against the sub-millisecond render baseline. On 2026-06-25, after the
 real-shell smoke was changed to wait for the shell-ready marker before sending
 measured input, `cargo run --
 --runtime-real-shell-smoke` pumped 169 bytes, rendered 3 CPU-side frames,
