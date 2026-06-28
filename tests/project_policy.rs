@@ -2,6 +2,8 @@
 mod ci;
 #[path = "project_policy/docs.rs"]
 mod docs;
+#[path = "project_policy/docs_markers.rs"]
+mod docs_markers;
 #[path = "project_policy/line_limits.rs"]
 mod line_limits;
 #[path = "project_policy/local_verification_docs.rs"]
