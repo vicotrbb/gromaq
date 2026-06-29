@@ -5,6 +5,14 @@ tests, real PTY workflows, scripted interaction, and live smoke commands. It is
 not a claim of full daily-driver compatibility yet; it is a proof map for the
 remaining terminal-core work.
 
+For `0.2.0`, Gromaq is a public alpha/beta terminal foundation release. The
+matrix below documents installable early-adopter coverage and proof gaps; it
+does not claim v1 stability, full daily-driver completeness, accepted live
+desktop visual inspection/screenshot proof, Developer ID signed/notarized
+macOS app distribution, 144 Hz hardware acceptance, or broad host compatibility.
+Developer ID signed/notarized macOS app distribution remains a known proof gap
+for this release.
+
 On 2026-06-28, `cargo test --test pty -- --nocapture` passed all 44 PTY tests
 on the current macOS host. The captured output confirmed live current-host
 coverage for bash, zsh, vim, tmux, less, top, ssh, kubectl, and the tiny cargo

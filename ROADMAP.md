@@ -60,3 +60,13 @@
 - Cross-platform packaging
 - Accessibility review
 - Release automation
+
+## Post-0.2.0 Proof Work
+
+- Accepted live desktop screenshot proof for the default native window
+- Hardware-backed 144 Hz proof on a 144 Hz-capable display
+- Developer ID signed and notarized macOS release
+- Broader macOS and Linux host compatibility matrix
+- Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows
+- v1 daily-driver hardening for stability, recovery, accessibility, and
+  long-session behavior

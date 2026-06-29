@@ -4,6 +4,84 @@ This document tracks how Gromaq is installed and packaged today, which release
 artifacts are proven, and which distribution surfaces still need live platform
 proof.
 
+## v0.2.0 Release Posture
+
+Gromaq `0.2.0` is positioned as a public alpha/beta terminal foundation
+release. The release is intended to be installable and usable by early adopters
+on supported macOS and Linux systems, while keeping the public project clear
+about proof boundaries that are not closed yet.
+
+This is not a v1.0 stability launch, a daily-driver completeness claim, a
+Developer ID notarized macOS distribution claim, a broad host compatibility
+claim, or a hardware-backed 144 Hz proof claim.
+
+Acceptance criteria for publishing `v0.2.0`:
+
+- Users can install from source on macOS and Linux with Rust stable.
+- Linux users can install from the `v0.2.0` release tarball with checksum
+  verification.
+- Debian users can install `gromaq_0.2.0_amd64.deb`.
+- Arch users can build or install from release `PKGBUILD`, `default.SRCINFO`,
+  and `gromaq.install` metadata.
+- macOS users can use `Gromaq-macos-app.zip` or the source installer, with the
+  unsigned and not-notarized caveat visible unless Developer ID notarization is
+  completed in the release run.
+- README stays concise, user-facing, and linked to detailed proof docs.
+- GitHub repository metadata and community files are professional for a public
+  open-source project.
+
+## v0.2.0 Release Procedure
+
+Prepare locally:
+
+```bash
+cargo fmt --check
+git diff --check
+git diff --cached --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all
+cargo test --test project_policy
+scripts/prove-local-ci-parity.sh
+cargo bench --bench parser_throughput -- --list
+```
+
+After maintainer approval to publish, push the release-prep commits, wait for
+CI on `main`, then create and push the annotated tag:
+
+```bash
+git tag -a v0.2.0 -m "Gromaq v0.2.0"
+git push origin v0.2.0
+```
+
+Watch the tag-triggered release workflow:
+
+```bash
+gh run list --workflow release.yml --limit 5
+gh run watch <run-id>
+```
+
+Expected `v0.2.0` GitHub Release assets:
+
+- `gromaq-0.2.0-linux-x86_64.tar.gz`
+- `gromaq_0.2.0_amd64.deb`
+- `PKGBUILD`
+- `default.SRCINFO`
+- `gromaq.install`
+- `Gromaq-macos-app.zip`
+- `SHA256SUMS-linux-x86_64`
+- `SHA256SUMS-macos-app`
+
+Post-release proof:
+
+```bash
+GROMAQ_VERSION=v0.2.0 scripts/prove-github-release-publication.sh
+GROMAQ_VERSION=v0.2.0 scripts/prove-github-release-install.sh
+```
+
+The GitHub release notes should state what changed, install commands, supported
+platforms, known limitations, checksum/security notes, and links to README,
+compatibility, benchmark, and security docs.
+
 ## User Install
 
 The public one-command install path builds from source with Cargo:
@@ -40,7 +118,7 @@ Linux users can opt into a prebuilt release tarball install after a tagged
 release publishes GitHub Release assets:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0 sh
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.0 sh
 ```
 
 The release method downloads `gromaq-<version>-linux-<arch>.tar.gz` from
@@ -323,7 +401,12 @@ so the uploaded Linux checksum manifest covers the Arch source-package recipe
 metadata, `.SRCINFO`, and install hook as well as the Linux tarball and Debian
 package.
 
-## Current Proof Boundary
+## Historical v0.1.0 Proof
+
+The following proof entries are retained as historical evidence for the
+published `v0.1.0` release and the packaging pipeline that preceded `v0.2.0`.
+They do not by themselves prove the `v0.2.0` release until the `v0.2.0` tag,
+release workflow, assets, checksums, and install proofs are verified.
 
 Proven remotely:
 

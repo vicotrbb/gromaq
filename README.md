@@ -2,27 +2,47 @@
 
 ![Gromaq logo](images/logos/logo-on-graphite.png)
 
-Gromaq is a native Rust GPU terminal emulator for `gromaq.dev`.
+Gromaq is a native Rust GPU-rendered terminal emulator built for performance,
+correctness, and a polished developer experience.
 
 The project is intentionally native: Rust, `winit`, `wgpu`, real PTYs, and no
-Electron, webview, React, or browser UI runtime. It is currently in an alpha
-foundation stage. The core terminal state, PTY boundary, theme system, font
-rasterization, GPU presentation path, performance smokes, and compatibility
-tests are under active development, but broader daily-driver proof across
-machines and workflows is still in progress.
+Electron, webview, React, or browser UI runtime.
 
 ![Gromaq welcome screen preview](images/screenshots/gromaq-welcome-preview.png)
 
+## Status
+
+Gromaq `0.2.0` is a public alpha/beta terminal foundation release. It is
+installable and usable by early adopters on supported macOS and Linux systems,
+but it is not a v1.0 daily-driver stability claim.
+
+Use it if you want to try the native terminal foundation, verify the packaging
+work, or contribute focused compatibility and performance proof. Do not read
+this release as proof of broad host compatibility, Developer ID notarized macOS
+distribution, accepted live desktop screenshot evidence, or 144 Hz hardware
+acceptance.
+
+Detailed proof ledgers live in
+[`documentation/release.md`](documentation/release.md),
+[`documentation/compatibility.md`](documentation/compatibility.md), and
+[`documentation/benchmarks.md`](documentation/benchmarks.md).
+
 ## Install
 
-The current installer builds from source with Cargo. It works on normal macOS
-and Linux development machines that already have Rust stable installed.
+Source installer, for macOS and Linux machines with Rust stable installed:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh
 ```
 
-Manual install:
+Linux release installer, using the `v0.2.0` GitHub Release tarball and checksum
+manifest:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.0 sh
+```
+
+Manual source install:
 
 ```bash
 git clone https://github.com/vicotrbb/gromaq.git
@@ -34,443 +54,113 @@ Run:
 
 ```bash
 gromaq
-```
-
-Inspect command-line metadata:
-
-```bash
 gromaq --help
 gromaq --version
 ```
 
-Requirements:
-
-- Rust stable with Cargo
-- macOS or a Linux desktop session with GPU drivers available to `wgpu`
-- A login shell such as `zsh`, `bash`, or another configured shell
-
-The one-command installer is deliberately small and auditable. It does not
-install Rust or system packages for you; if Cargo is missing, install Rust from
-your package manager or `https://rustup.rs`, then run the command again.
-Preview the actions without installing or writing files:
+Preview installer actions without writing files:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_DRY_RUN=1 sh
 ```
 
-Linux users can opt into the prebuilt release tarball path once a tagged
-release has published GitHub Release assets:
+### Packages
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.1.0 sh
-```
+- Linux tarball: `gromaq-0.2.0-linux-x86_64.tar.gz`, verified through
+  `SHA256SUMS-linux-x86_64`.
+- Debian: `gromaq_0.2.0_amd64.deb`.
+- Arch: release assets include `PKGBUILD`, `default.SRCINFO`, and
+  `gromaq.install` for source-package workflows.
+- macOS app bundle: `Gromaq-macos-app.zip`.
 
-This downloads `gromaq-<version>-linux-<arch>.tar.gz`, installs the binary into
-`${GROMAQ_BIN_DIR:-${CARGO_HOME:-~/.cargo}/bin}`, and installs the Linux desktop
-identity assets from the tarball. By default it also downloads
-`SHA256SUMS-linux-<arch>` and verifies the tarball before extraction. Set
-`GROMAQ_VERIFY_CHECKSUMS=0` only for local mirror/debug scenarios where you have
-another integrity check. The release method is locally proven against a
-file-backed tarball, and the `v0.1.0` GitHub Release publication proof now
-verifies the live asset set. A live `v0.1.0` Linux release-method install proof
-also passed in an amd64 Ubuntu container against the real GitHub Release
-tarball and checksum manifest.
-
-On Linux, the installer also installs user-local desktop assets by default:
-`dev.gromaq.Gromaq.desktop`, the project icon under the hicolor icon theme, and
-AppStream metainfo under `${XDG_DATA_HOME:-~/.local/share}`. Set
-`GROMAQ_INSTALL_DESKTOP_ASSETS=0` to install only the binary. When
-`update-desktop-database` is available, the installer refreshes the Linux
-desktop database for the installed applications directory and reports the
-refresh path.
-
-Maintainers can prove Linux desktop asset placement and Linux desktop database
-refresh when `update-desktop-database` is available without network or home
-directory writes:
-
-```bash
-GROMAQ_SKIP_CARGO_INSTALL=1 GROMAQ_PLATFORM=Linux \
-  GROMAQ_ASSET_ROOT="$PWD" GROMAQ_INSTALL_ROOT=target/install-proof \
-  sh scripts/install.sh
-```
-
-On macOS, source install gives you the `gromaq` binary. To build a `.app` bundle
-with the project logo as the Dock/app icon from a checked-out repository, run:
-
-```bash
-scripts/package-macos-app.sh
-open target/dist/Gromaq.app
-```
-
-The packager also writes `target/dist/Gromaq-macos-app-summary.txt` after a
-successful bundle build so release runs have a compact proof handoff.
-
-To sign the bundle during packaging, set `GROMAQ_CODESIGN_IDENTITY`. Use `-`
-for local ad-hoc signing, or a Developer ID Application identity for release
-signing:
-
-```bash
-GROMAQ_CODESIGN_IDENTITY=- scripts/package-macos-app.sh
-```
-
-To notarize a signed release bundle, provide a notarytool keychain profile or
-Apple ID credentials:
-
-```bash
-GROMAQ_NOTARY_KEYCHAIN_PROFILE=gromaq scripts/notarize-macos-app.sh target/dist/Gromaq.app
-```
-
-The one-command installer can also install a user-local `.app` bundle when run
-on macOS:
+macOS source install gives you the `gromaq` binary. To install a user-local
+`.app` bundle from the installer on macOS:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_APP_BUNDLE=1 sh
 ```
 
 By default this copies `Gromaq.app` to `~/Applications`. Set
-`GROMAQ_MACOS_APP_DIR=/path/to/apps` to choose another destination.
+`GROMAQ_MACOS_APP_DIR=/path/to/apps` to choose another destination. The current
+public macOS app artifact is unsigned and not Developer ID notarized unless a
+future release note says otherwise.
 
-Release artifact helpers:
+## Requirements
 
-```bash
-scripts/package-linux-tarball.sh
-scripts/package-debian-deb.sh
-scripts/package-macos-app.sh
-scripts/prove-macos-app-identity.sh
-scripts/prove-debian-package.sh
-scripts/prove-linux-release-install.sh
-scripts/prove-github-release-publication.sh
-scripts/prove-github-release-install.sh
-scripts/prove-linux-desktop-discovery.sh
-scripts/prove-144hz-window-perf.sh
-scripts/prove-arch-package.sh
-bash -n packaging/arch/PKGBUILD
-sh -n packaging/arch/gromaq.install
-```
+- Rust stable with Cargo for source installs.
+- macOS or Linux with GPU/windowing support available to `winit` and `wgpu`.
+- A configured shell such as `zsh`, `bash`, or another login shell.
 
-`packaging/arch/PKGBUILD`, `packaging/arch/.SRCINFO`, and
-`packaging/arch/gromaq.install` provide an Arch `makepkg` source-package recipe
-that builds from the public Git repository, installs the binary, desktop file,
-AppStream metainfo, hicolor icon, README, and license, and refreshes desktop
-metadata from Arch package install/upgrade/remove hooks when the relevant
-desktop utilities are available. CI and repository policy syntax-check the
-recipe. On 2026-06-27, CI run `28303175039` completed green for commit `12a38e8`,
-including the
-`arch-packaging` job under `archlinux:base-devel` that ran
-`makepkg --nobuild` and `makepkg --printsrcinfo` as an unprivileged builder
-user. On 2026-06-28 UTC, CI run `28308158338` completed green for commit
-`5d204f2`; its `arch-packaging` job continued through full
-`makepkg --noconfirm`, `pacman -U` package installation, `gromaq --version`,
-and `pacman -Ql` payload checks for the binary, README, license, desktop file,
-AppStream metainfo, and hicolor icon.
-Maintainers with a working Docker daemon can run
-`scripts/prove-arch-package.sh` to reproduce the full Arch build, package
-install, `gromaq --version`, and installed-payload checks in an
-`archlinux:base-devel` container. The helper writes
-`target/arch-package-proof-summary.txt` with the installed payload entry count
-after success.
+The installer does not install Rust or system packages. If Cargo is missing,
+install Rust from your package manager or `https://rustup.rs`, then rerun the
+installer.
 
-Tagged releases and manual workflow runs use `.github/workflows/release.yml` to
-upload a Linux tarball, a Debian `.deb` package, the Arch `PKGBUILD` plus
-`.SRCINFO` plus `gromaq.install`, and a zipped macOS `.app` bundle as GitHub
-Actions artifacts.
-The Linux tarball packager writes `target/dist/gromaq-linux-tarball-summary.txt`
-after archive assembly succeeds.
-Tag-triggered runs also create or reuse the matching GitHub Release and upload
-release assets. The remote GitHub Actions release workflow completed green on
-2026-06-27 as run `28303243197` for commit `12a38e8`, uploading the Linux
-tarball, Debian package, Arch `PKGBUILD`, hidden `.SRCINFO`, macOS `.app` zip,
-and checksum manifests as workflow artifacts. The downloaded macOS zip includes
-an app `Info.plist` with `LSApplicationCategoryType=public.app-category.utilities`.
-The live `v0.1.0` GitHub Release is published, non-draft, non-prerelease, and
-contains the Linux tarball, Debian package, Arch `PKGBUILD`, Arch install hook,
-macOS `.app` zip, and checksum manifests. GitHub stores the hidden `.SRCINFO`
-upload as the release asset `default.SRCINFO`, so the publication proof checks
-that asset name.
-After a tagged release workflow completes, maintainers can run
-`scripts/prove-github-release-publication.sh` to verify the GitHub Release is
-published, non-draft, non-prerelease, and contains the Linux tarball, Debian
-package, Arch metadata files, macOS app zip, and platform checksum manifests.
-CI also runs a focused Ubuntu packaging job for repository policy and Linux
-installer asset placement plus Linux tarball and Debian package assembly. The
-job is now configured for Debian package install, `gromaq --version`, and installed-payload checks.
-It then runs `scripts/prove-linux-release-install.sh`
-with Arch metadata checksum extras so the locally generated Linux release
-tarball, checksum manifest, binary install, and desktop identity payloads are
-verified before accepting packaging success. The checksum script also accepts
-`GROMAQ_CHECKSUM_EXTRA_FILES="packaging/arch/PKGBUILD packaging/arch/.SRCINFO packaging/arch/gromaq.install"`,
-and the Linux packaging and release workflows use that path so the Arch recipe
-metadata is covered by the Linux checksum manifest when it is uploaded. CI run `28309262840` completed green for commit `461006d`, including the
-helper-backed Linux packaging proof, Debian package install and payload checks,
-Arch package build/install proof, and the full macOS Rust smoke suite.
-CI run
-`28303175039` completed green for commit `12a38e8`, including that checksum
-path, Debian package assembly, and the release-method tarball install step on
-Ubuntu; the macOS job passed the packaging test that inspects the `.deb` member
-structure.
-Release artifacts include a `SHA256SUMS` manifest.
-The Debian package includes Debian `postinst`/`postrm` desktop refresh hooks
-that conditionally run `update-desktop-database` and refresh the hicolor icon
-cache when those desktop utilities are available. On Debian/Ubuntu hosts,
-maintainers can run `scripts/prove-debian-package.sh` to build the `.deb`,
-install it with `dpkg -i`, run `/usr/bin/gromaq --version`, and record
-installed-payload checks. The helper writes
-`target/dist/gromaq-debian-proof-summary.txt` with the installed payload entry
-count after those checks pass.
-On Linux hosts, `scripts/prove-linux-release-install.sh` packages the release
-tarball, writes checksums, installs through `GROMAQ_INSTALL_METHOD=release`
-from a local `file://` release base, and verifies the binary plus desktop
-identity payloads under `target/release-install-proof`, including a compact
-`summary.txt`.
-On Linux desktop hosts with `desktop-file-validate`, `appstreamcli`,
-`update-desktop-database`, and `gtk-update-icon-cache` available,
-`scripts/prove-linux-desktop-discovery.sh` installs the desktop identity
-payloads into an isolated proof root, validates the `.desktop` and AppStream
-metadata, refreshes the desktop database and hicolor icon cache there, writes
-`summary.txt`, and records that this metadata/cache proof does not prove live
-menu UI rendering.
-After `scripts/prove-github-release-publication.sh` proves the tagged GitHub
-Release contains the expected asset set, Linux maintainers with `gh` available
-can run
-`scripts/prove-github-release-install.sh` to exercise the real GitHub Release
-download path into `target/github-release-install-proof`. Before installing,
-the helper verifies the release includes the Linux tarball, Debian package,
-Arch metadata files, macOS app zip, and platform checksum manifests; after
-success it writes `summary.txt`. On 2026-06-28, the helper passed in a
-`linux/amd64` Ubuntu container against the real `v0.1.0` GitHub Release,
-including checksum verification, binary launch, desktop file, AppStream
-metainfo, and hicolor icon payload checks.
+## What Works Today
 
-## Status
-
-Implemented and covered by automated tests or deterministic smoke commands:
-
-- terminal grid/state, scrollback, resize reflow, alternate screen, selection,
-  clipboard boundaries, OSC title/label/8/52 handling, and terminal-generated
-  responses
-- broad ANSI/VT parsing coverage including SGR colors and attributes, DEC modes,
-  cursor movement, tab stops, editing commands, mouse reporting, focus reports,
-  bracketed paste, and Unicode wide/emoji cluster handling
-- native PTY runtime with shell startup, input/output pump, resize propagation,
-  large-output handling, command-output redraw proof, and external-tool workflow
-  smoke coverage for available `fish`, `nu`, `vim`, `nvim`, `tmux`, `less`,
-  `top`, `htop`, `btop`, `ssh`, `kubectl`, and quiet/large-output Cargo test
-  fixtures
-- native `winit` app lifecycle, keyboard/mouse mapping, clipboard paste/copy,
+- Terminal grid/state, scrollback, resize reflow, alternate screen,
+  selection/copy, clipboard boundaries, OSC title/label/8/52 handling, and
+  terminal-generated responses.
+- ANSI/VT parsing coverage for SGR colors and attributes, DEC modes, cursor
+  movement, tab stops, editing commands, mouse reporting, focus reports,
+  bracketed paste, and Unicode wide/emoji cluster handling.
+- Native PTY runtime with shell startup, input/output pump, resize propagation,
+  command-output redraw proof, large-output handling, and scripted external
+  tool workflows where host binaries are present.
+- Native `winit` app lifecycle, keyboard/mouse mapping, clipboard paste/copy,
   scrollback navigation, live config reload, text zoom, frame scheduling, FPS
-  overlay, startup welcome screen, and generated logo window icon
-- Swash-backed font rasterization, glyph atlas packing/cache, `wgpu` adapter and
-  device bootstrap, offscreen GPU smokes, and presentable window-surface glyph
-  frame path
-- theme presets, opacity controls, deterministic theme snapshots, and default
-  theme legibility gates
-- Criterion benchmark harness and repository policy tests for native-only Rust,
-  public metadata, docs, CI commands, and module-size discipline
-- GitHub Actions release workflow that is configured to build and upload the
-  Linux tarball, Debian `.deb`, Arch `PKGBUILD`/`.SRCINFO`/`gromaq.install`,
-  and macOS `.app` release artifacts with SHA256SUMS manifests on tag and manual
-  dispatch;
-  remote proof covers the tarball, Debian package, Arch metadata, macOS `.app`,
-  and checksum workflow-artifact uploads, and live `v0.1.0` publication proof
-  covers the GitHub Release asset set with GitHub's `default.SRCINFO` name for
-  the hidden `.SRCINFO` upload
-- live `v0.1.0` Linux release-method install proof from the real GitHub Release
-  tarball and checksum manifest in an amd64 Ubuntu container
-- Linux desktop database refresh when `update-desktop-database` is available,
-  with deterministic installer coverage and Ubuntu CI configured to install the
-  desktop-file utility before the Linux install-root proof
-- macOS `.app` ad-hoc signing support plus a notarization helper with dry-run
-  archive proof
+  overlay, startup welcome screen, and generated logo window icon.
+- Swash-backed font rasterization, glyph atlas packing/cache, `wgpu` adapter
+  bootstrap, offscreen GPU smokes, and presentable window-surface glyph-frame
+  path.
+- Theme presets, opacity controls, deterministic theme snapshots, default
+  theme legibility gates, and welcome-preview freshness proof.
+- Release automation for Linux tarballs, Debian packages, Arch metadata, macOS
+  app zips, and SHA256 checksum manifests.
 
-Not yet proven enough to call complete:
+## Known Proof Gaps
 
-- accepted live desktop visual inspection/screenshot proof for the default
-  native window
-- hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display
-- wider compatibility matrix coverage across shells, editors, multiplexers,
-  pagers, remote workflows, and multiple hosts
+- Accepted live desktop screenshot proof for the default native window.
+- Hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display.
+- Wider compatibility matrix coverage across shells, editors, multiplexers,
+  pagers, remote workflows, and multiple hosts.
+- Developer ID signed and notarized macOS distribution.
+- Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows.
 
-Post-v1 deferred work includes live desktop OS paste-menu proof, live Linux
-desktop menu UI discovery, and Developer ID signed/notarized macOS app
-distribution.
-
-Current proof details live in
+These gaps are tracked as proof boundaries, not hidden failures. The current
+compatibility matrix is in
 [`documentation/compatibility.md`](documentation/compatibility.md).
 
-## Quick Start
+## Verification And Development
 
-Developer run:
-
-```bash
-cargo run
-```
-
-Useful smoke commands:
-
-```bash
-cargo run -- --gpu-info
-cargo run -- --gpu-smoke
-cargo run -- --gpu-terminal-text-smoke
-cargo run -- --welcome-image-snapshot target/gromaq-welcome-image.ppm
-cargo run -- --runtime-real-shell-smoke
-cargo run -- --runtime-real-shell-command-output-smoke
-cargo run -- --runtime-tool-workflow-smoke
-cargo run -- --runtime-osc52-clipboard-smoke
-cargo run -- --runtime-bracketed-paste-smoke
-cargo run -- --runtime-selection-copy-smoke
-cargo run -- --runtime-committed-text-smoke
-cargo run -- --runtime-perf-budget-smoke
-cargo run -- --runtime-perf-p95-smoke
-cargo run -- --runtime-text-zoom-smoke
-cargo run -- --font-symbol-fallback-smoke
-cargo run -- --theme-legibility-smoke
-cargo run -- --theme-preview-snapshot target/gromaq-theme-preview.ppm
-cargo run -- --theme-preview-config path/to/gromaq.toml target/gromaq-theme-preview.ppm
-scripts/prove-theme-preview.sh
-cargo run -- --welcome-preview-snapshot target/gromaq-welcome-preview.ppm
-node images/avatar/generate.mjs --check
-scripts/prove-welcome-preview.sh
-scripts/prove-readme-welcome-preview.sh
-```
-
-CI is configured to run `scripts/prove-theme-preview.sh` and upload the default
-and configured theme preview PPMs, PNGs, logs, and config under
-`target/theme-preview-proof/*` as `gromaq-theme-preview-proof`, including a
-compact `summary.txt`. CI run `28315944025` uploaded that artifact after the
-theme proof passed, even though the overall run later failed in the README
-welcome-preview freshness step.
-CI is also configured to upload both `target/welcome-preview-proof/*` and
-`target/readme-welcome-preview-proof/*` as `gromaq-welcome-preview-proof`, so
-the generated welcome preview and committed README screenshot freshness proof
-are retained together after the visual proof steps run. The visual proof upload
-uses `if: always()` so logs and artifacts are preserved when a later CI step
-fails or a proof command fails after writing diagnostic output. Run
-`scripts/prove-welcome-preview.sh` also writes `metrics.txt` and a compact
-summary; the refreshed local 36x17-sampled Braille avatar proof records
-`avatar rows=17` alongside the rendered text, avatar-color, glyph, cursor, and
-atlas metrics. Run
-`28315944025` passed the default welcome preview proof on macOS 26 with 126062
-avatar color pixels, then failed the README freshness proof because exact
-decoded pixels differed from the committed local PNG. Run `28316513803` then
-proved the bounded decoded-pixel README freshness helper remotely, and run
-`28321082609` completed green for commit `84740e3` after rerunning avatar
-freshness, default welcome proof, and README screenshot freshness proof for the
-previous 33x17 block avatar. Run `28326188288` completed green for commit
-`0dfed64` after rerunning avatar freshness, default welcome proof, and README
-screenshot freshness proof for the previous 33x17 Braille avatar; the macOS
-welcome proof accepted 20509 high-contrast text pixels, 25966 avatar color
-pixels, 654 glyph quads, 0 cursor quads, and 576576 atlas bytes. The refreshed
-local 36x17-sampled avatar proof accepted 25564 high-contrast text pixels,
-36299 avatar color pixels, 692 glyph quads, 0 cursor quads, and 624624 atlas
-bytes, and the committed README PNG freshness proof passed with matching
-1468x820 dimensions, 22 changed pixels, and mean delta 0.00. The helper keeps
-dimension gates and bounded visual-delta gates so host font-rasterization
-variance does not require exact decoded-pixel identity.
-
-Current-host compatibility proof bundle:
-
-```bash
-scripts/prove-current-host-compatibility.sh
-```
-
-This records the host tool inventory, runs `cargo test --test pty -- --nocapture`,
-and runs `cargo run -- --runtime-tool-workflow-smoke`, writing logs and
-`summary.txt` under `target/compatibility-proof`. The summary records
-`host_uname`, `host_os`, `host_arch`, `rustc_version`, `cargo_version`,
-`git_commit`, `git_dirty`, `tools_present`, and `tools_missing` plus
-`pty_tests_passed`, `runtime_tool_workflow_checked`,
-`runtime_tool_workflow_passed`, `runtime_tool_workflow_skipped`, and
-`runtime_tool_workflow_failed`, plus passed/skipped workflow name lists, so
-artifact readers can see the host coverage shape before opening full logs. CI is
-configured to run the same helper in the macOS `rust` job and upload
-`target/compatibility-proof/*` as the `gromaq-current-host-compatibility-proof`
-artifact. CI is also configured with a Linux compatibility job that installs
-common Ubuntu shell/editor/TUI tools, runs the same helper, and uploads
-`gromaq-linux-compatibility-proof`;
-that Linux job sets `GROMAQ_REQUIRED_COMPAT_TOOLS` so the proof fails if any
-expected installed tool is absent. CI run `28314822034` passed and uploaded
-both the macOS current-host compatibility artifact and the Linux compatibility
-artifact before the overall run failed later in the welcome-preview step.
-After a pushed commit has a successful CI run, maintainers can run
-`scripts/prove-ci-compatibility-artifacts.sh` to download both compatibility
-artifacts for that exact commit with `gh`, verify the macOS summary reports
-`host_os=Darwin`, verify the Linux summary reports `host_os=Linux`, require
-zero runtime workflow failures in both, and write
-`target/ci-compatibility-proof/summary.txt`.
-
-Manual live-window screenshot proof on macOS:
-
-```bash
-scripts/capture-macos-window-proof.sh target/gromaq-live-window-proof.png
-```
-
-This helper requires macOS Screen Recording permission for the terminal or
-automation host running it. If the preflight fails, grant access in System
-Settings > Privacy & Security > Screen & System Audio Recording, or Screen
-Recording on older macOS releases, then rerun the helper.
-
-Manual hardware-backed 144 Hz window pacing proof:
-
-```bash
-scripts/prove-144hz-window-perf.sh
-```
-
-This runs `cargo run -- --window-perf-smoke`, records
-`target/144hz-window-perf-proof/window-perf.log`, then runs
-`cargo run -- --runtime-perf-p95-smoke` into
-`target/144hz-window-perf-proof/runtime-perf-p95.log`. It fails unless the
-native window reports a monitor refresh of at least `144000` mHz, an
-unrestricted 144 FPS frame target, zero dropped frames, accepted frame pacing,
-and the runtime p95 input-to-render budget remains `10000000` ns. It is
-intentionally manual because CI and ordinary 60/120 Hz desktops are not valid
-proof surfaces for the 144 Hz hardware requirement.
-
-Manual packaged-app identity proof on macOS:
-
-```bash
-scripts/prove-macos-app-identity.sh
-```
-
-The identity helper writes live LaunchServices, System Events, process, package,
-and smoke handles under `target/macos-app-identity-proof`, including
-`summary.txt`. It fails closed if the packaged app launches but the macOS
-compositor reports every attempted surface frame as occluded; in that case
-check `target/macos-app-identity-proof/open.stderr` and rerun from a visible
-desktop session.
-
-The screenshot script launches bounded `--window-screenshot-smoke`, locates the
-visible `Gromaq` window through macOS window metadata, captures that specific
-window under `target/`, writes `gromaq-live-window-proof-summary.txt` after
-validation accepts the capture, and waits for the app process to exit. If macOS
-cannot capture the window id directly, it can fall back to the detected window bounds,
-then validates that the screenshot contains Gromaq's default terminal
-background and foreground text colors before accepting it. Rejected captures
-are removed. It is intentionally manual because desktop screenshots can include
-local user state; if macOS cannot expose or capture the targeted window
-content, the helper fails instead of accepting a desktop-only image.
-
-Full local verification:
+Run the local CI parity bundle from the repository root:
 
 ```bash
 scripts/prove-local-ci-parity.sh
 ```
 
-The helper runs shell syntax checks, formatting, staged and unstaged whitespace
-checks, clippy with denied warnings, the full test suite, avatar asset
-freshness, font symbol fallback smoke, theme legibility and preview proof,
-runtime OSC 52 clipboard, bracketed paste, selection copy, and committed text smokes,
-welcome/readme visual proof helpers, GPU welcome image snapshot proof, GPU terminal text smoke,
-current-host compatibility proof, frame scheduler smoke, and the parser
-benchmark inventory. Run full `cargo bench` when changing
-parser, PTY pump, render planning, glyph cache, rasterization, frame
-preparation, or other measured hot paths.
-After all steps pass, the helper writes
-`target/local-ci-parity-proof/summary.txt` with the proof artifact handles.
-Avatar asset freshness is part of local parity.
+For focused checks:
+
+```bash
+cargo fmt --check
+git diff --check
+git diff --cached --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all
+cargo test --test project_policy
+cargo bench --bench parser_throughput -- --list
+```
+
+`scripts/prove-local-ci-parity.sh` runs shell syntax checks, formatting,
+staged and unstaged whitespace checks, Clippy, the full test suite,
+Avatar asset freshness, README screenshot freshness, current-host compatibility proof,
+theme/welcome proof helpers, runtime smoke commands, GPU smoke commands, and
+the parser benchmark inventory. Run full `cargo bench` when changing measured
+hot paths such as parser, PTY pump, render planning, glyph cache, rasterization,
+or frame preparation.
 
 ## Configuration
 
-Generate a full starter config:
+Generate and validate a starter config:
 
 ```bash
 gromaq --config-template > gromaq.toml
@@ -478,126 +168,39 @@ gromaq --config-check gromaq.toml
 gromaq --config gromaq.toml
 ```
 
-Example:
-
-```toml
-[terminal]
-cols = 132
-rows = 40
-scrollback_lines = 4096
-
-[shell]
-program = "/bin/zsh"
-args = ["-l"]
-cwd = "/tmp"
-
-[welcome]
-enabled = true
-
-[font]
-family = "JetBrains Mono Nerd Font"
-# fallback_families = ["Apple Color Emoji"]
-size_px = 32.0
-# cell_width_px = 18
-line_height_px = 44.0
-
-[theme]
-# presets: gromaq-dark, gromaq-graphite, gromaq-ghostty
-preset = "gromaq-ghostty"
-background = "#101216"
-foreground = "#eef4fb"
-cursor = "#f6c177"
-selection = "#2f3b52"
-background_opacity = 1.0
-cursor_opacity = 1.0
-selection_opacity = 1.0
-cursor_style = "block"
-cursor_blinking = true
-ansi = [
-  "#242933", "#ff6b7a", "#9ece6a", "#e0af68",
-  "#7aa2f7", "#bb9af7", "#7dcfff", "#c8d3e5",
-  "#5f667a", "#ff8fa3", "#b9f27c", "#ffd98a",
-  "#9dbdff", "#d7afff", "#9ee7ff", "#f7fbff",
-]
-surface_padding_px = 14
-cell_spacing_px = 0
-dim_opacity = 0.68
-
-[performance]
-target_fps = 144
-dirty_region_rendering = true
-```
-
-`gromaq-ghostty` is the built-in default theme preset, with calm contrast and
-expressive ANSI colors inspired by polished Ghostty setups. `gromaq-dark` keeps
-the original polished dark palette, and `gromaq-graphite` is an alternate
-high-contrast graphite preset.
-
-Use these commands to inspect and export themes:
+Useful theme commands:
 
 ```bash
-cargo run -- --theme-list
-cargo run -- --theme-export gromaq-ghostty target/gromaq-theme.toml
+gromaq --theme-list
+gromaq --theme-export gromaq-ghostty target/gromaq-theme.toml
+gromaq --theme-preview-config gromaq.toml target/gromaq-theme-preview.ppm
 ```
 
-A preset provides the baseline background, foreground, cursor, selection, ANSI
-palette, cursor style, cursor blinking, background/cursor/selection opacity,
-surface padding, optional cell spacing, and dim text opacity; every field in
-`[theme]` can still be overridden directly in TOML. Use
-`gromaq --theme-preview-config <config> <path>` to render a deterministic
-preview snapshot from any TOML config, including background, cursor, and
-selection opacity, before adopting it.
-
-`[welcome].enabled = true` shows the built-in startup screen with sectioned
-system, terminal, renderer, and theme stats before the shell prompt. Set it to
-`false` for a blank shell-first startup. The native frame status text, such as
-FPS, is rendered as a presentation overlay and is not written into shell output
-or scrollback. The overlay only draws into blank cells so right-aligned shell
-prompts are not overwritten.
-
-`font.family = "JetBrains Mono Nerd Font"` is the default preference. The
-special value `"monospace"` remains an automatic mono-stack alias: polished
-user-installed terminal fonts such as JetBrains Mono Nerd Font, MesloLGS Nerd
-Font, Cascadia Mono, Iosevka Term, Geist Mono, Monaspace Neon, Fira Code, and
-Hack are preferred when present, then the app falls back to SF Mono, Menlo, and
-common Linux mono fonts. Explicit `.ttf`, `.ttc`, and `.otf` file paths are also
-supported. `font.fallback_families = [...]` can add ordered fallback font names
-or explicit font file paths before the automatic symbol and emoji fallback
-stack.
-
-Terminal text can be zoomed at runtime with browser-style shortcuts:
-Control/Super `+`, Control/Super `-`, Control/Super `0`, and Control/Super
-mouse wheel. Dedicated OS/browser `ZoomIn` and `ZoomOut` keys are also handled
-when the platform exposes them.
-
-More theme details are in [`documentation/theme.md`](documentation/theme.md).
+More theme, font, opacity, and welcome-screen details are in
+[`documentation/theme.md`](documentation/theme.md).
 
 ## Documentation
 
 - [`documentation/architecture.md`](documentation/architecture.md): module
-  boundaries, organization rules, and native-app architecture
-- [`documentation/benchmarks.md`](documentation/benchmarks.md): benchmark names,
-  reproducible runs, and regression handling
-- [`documentation/compatibility.md`](documentation/compatibility.md): current
-  compatibility proof and gaps
+  boundaries and native-app architecture.
 - [`documentation/release.md`](documentation/release.md): install, packaging,
-  release artifact, and proof-boundary workflow
-- [`documentation/theme.md`](documentation/theme.md): theme, font, opacity, and
-  welcome-screen contract
-- [`TESTING.md`](TESTING.md): fixture conventions and live-proof boundaries
-- [`DEBUGGING.md`](DEBUGGING.md): failure investigation workflow
-- [`ROADMAP.md`](ROADMAP.md): open work toward daily-driver quality
+  release procedure, and proof-boundary workflow.
+- [`documentation/compatibility.md`](documentation/compatibility.md): current
+  compatibility proof and gaps.
+- [`documentation/benchmarks.md`](documentation/benchmarks.md): benchmark names,
+  reproducible runs, and performance boundaries.
+- [`documentation/theme.md`](documentation/theme.md): themes, fonts, opacity,
+  and welcome-screen contract.
+- [`TESTING.md`](TESTING.md): fixture conventions and local proof commands.
+- [`DEBUGGING.md`](DEBUGGING.md): failure investigation workflow.
+- [`ROADMAP.md`](ROADMAP.md): open work toward daily-driver quality.
 - [`SECURITY.md`](SECURITY.md): vulnerability reporting scope and private
-  disclosure path
-- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md): public contributor expectations
+  disclosure path.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): contribution standards and pull request
+  expectations.
 
-The repository keeps one documentation tree under `documentation/` for project
-docs that do not belong at the root.
-
-Source logo/avatar images and generated terminal, preview, and window-icon
-assets live under [`images/`](images/). The native app currently embeds
-`images/logos/logo-icon-128.rgba` as the `winit` window icon and
-`images/avatar/avatar-splash.rgba` for the GPU-rendered welcome image smoke.
+The repository keeps one canonical project documentation tree under
+`documentation/`.
 
 ## Contributing
 
@@ -605,12 +208,13 @@ Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
 
 Important project rules:
 
-- native Rust only
-- no `unsafe` in the crate
-- no Electron, webview, React, or JavaScript frontend runtime
-- Clippy warnings are failures
-- behavior changes need tests and, where relevant, benchmark or smoke evidence
-- unproven compatibility or performance claims must be documented as unproven
+- Native Rust only.
+- No `unsafe` in crate roots.
+- No Electron, webview, React, or JavaScript frontend runtime.
+- Clippy warnings are failures.
+- Behavior changes need tests and, where relevant, benchmark or smoke evidence.
+- Unproven compatibility or performance claims must stay documented as
+  unproven.
 
 ## License
 
