@@ -255,7 +255,10 @@ uploads workflow artifacts for both trigger types:
 On tag-triggered runs, the workflow also creates or reuses the matching GitHub
 Release and uploads the Linux tarball, Debian package, Arch `PKGBUILD`,
 `.SRCINFO`, `gromaq.install`, macOS `.app` zip, and platform-specific checksum
-manifests as release assets. The checksum files are copied to
+manifests as release assets. GitHub stores the hidden `.SRCINFO` upload as the
+release asset `default.SRCINFO`, so live publication and install proof scripts
+verify that asset name while the source package metadata remains
+`packaging/arch/.SRCINFO`. The checksum files are copied to
 `SHA256SUMS-linux-x86_64` and
 `SHA256SUMS-macos-app` before release upload so the Linux and macOS manifests
 do not collide as GitHub Release asset names.
@@ -324,6 +327,20 @@ package.
 
 Proven remotely:
 
+- The live `v0.1.0` GitHub Release is published, non-draft, non-prerelease, and
+  `scripts/prove-github-release-publication.sh` verifies its current asset set:
+  `gromaq-0.1.0-linux-x86_64.tar.gz`, `gromaq_0.1.0_amd64.deb`, `PKGBUILD`,
+  `default.SRCINFO`, `gromaq.install`, `Gromaq-macos-app.zip`,
+  `SHA256SUMS-linux-x86_64`, and `SHA256SUMS-macos-app`. A temporary draft
+  release upload probe on 2026-06-28 confirmed that `gh release upload` stores
+  a hidden `.SRCINFO` filename as `default.SRCINFO`.
+- `scripts/prove-github-release-install.sh` passed on 2026-06-28 in a
+  `linux/amd64` Ubuntu container against the real `v0.1.0` GitHub Release. The
+  helper verified the published asset set, downloaded
+  `gromaq-0.1.0-linux-x86_64.tar.gz`, verified it through
+  `SHA256SUMS-linux-x86_64`, installed into an isolated proof root, ran
+  `gromaq 0.1.0`, and checked the Linux desktop file, AppStream metainfo, and
+  hicolor icon payloads.
 - GitHub Actions CI run `28321082609` completed green for commit `84740e3` on
   2026-06-28 UTC. The macOS `rust` job passed formatting, whitespace, clippy,
   `cargo test --all`, avatar asset freshness, theme proof, current-host
@@ -500,7 +517,8 @@ Proven locally:
   checksum verification enabled after first verifying the published release
   asset list includes the Linux tarball, Debian package, Arch metadata files,
   macOS app zip, and platform checksum manifests. It writes a `summary.txt`
-  success handle once tagged release assets exist and all checks pass
+  success handle after all checks pass; the `v0.1.0` helper proof passed in a
+  `linux/amd64` Ubuntu container against the real GitHub Release.
 - Linux desktop metadata/cache discovery proof helper
   `scripts/prove-linux-desktop-discovery.sh`, which is Linux-only and validates
   installed desktop identity metadata under an isolated proof root when the
@@ -527,7 +545,9 @@ Proven locally:
   `tests/project_policy/ci.rs::release_workflow_publishes_tag_assets_to_github_releases`,
   which checks the required `gh release create`, `gh release upload`, token
   permission, tag-only condition, Arch `PKGBUILD` plus `.SRCINFO` upload, and
-  unique checksum manifest markers
+  unique checksum manifest markers. GitHub stores the hidden `.SRCINFO` upload
+  as the release asset `default.SRCINFO`, and the live proof helpers verify that
+  release asset name.
 - live GitHub Release publication proof helper
   `scripts/prove-github-release-publication.sh`, which verifies the published
   release tag, draft/prerelease status, Linux tarball, Debian package, Arch
@@ -540,11 +560,6 @@ Proven locally:
   for the Linux artifact set that carries `packaging/arch/.SRCINFO`
 - shell syntax checks for install and packaging scripts
 - project policy tests covering required release files and workflow markers
-
-Not yet proven:
-
-- live tag-triggered GitHub Release asset publication
-- live Linux release-method install from GitHub Release assets
 
 Post-v1 deferred work includes Developer ID signed/notarized macOS app
 distribution, live Linux desktop menu UI discovery after install, and manual

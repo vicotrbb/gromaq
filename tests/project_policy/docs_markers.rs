@@ -127,13 +127,11 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "Debian package install, `gromaq --version`, and installed-payload checks",
     ),
     ("README.md", "remote GitHub Actions release workflow"),
+    ("README.md", "live `v0.1.0` publication proof"),
+    ("README.md", "default.SRCINFO"),
     (
         "README.md",
-        "live tag-triggered GitHub Release asset publication",
-    ),
-    (
-        "README.md",
-        "live Linux release-method install from GitHub Release assets",
+        "live `v0.1.0` Linux release-method install proof",
     ),
     (
         "README.md",
@@ -192,6 +190,7 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/release.md",
         "tag-triggered GitHub Release publication path is configured locally",
     ),
+    ("documentation/release.md", "default.SRCINFO"),
     (
         "documentation/release.md",
         "Arch `PKGBUILD` plus `.SRCINFO` source-package metadata is configured for CI",
@@ -229,13 +228,10 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
         "documentation/compatibility.md",
         "Arch `gromaq.install` desktop metadata refresh",
     ),
+    ("documentation/compatibility.md", "default.SRCINFO"),
     (
         "documentation/compatibility.md",
-        "Add live tag-triggered GitHub Release publication proof.",
-    ),
-    (
-        "documentation/compatibility.md",
-        "running `scripts/prove-github-release-install.sh` after tagged assets exist.",
+        "proven live against real `v0.1.0` GitHub Release assets",
     ),
     (
         "documentation/compatibility.md",
@@ -259,8 +255,6 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
 pub(super) const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
     "accepted live desktop visual inspection/screenshot proof",
     "hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display",
-    "live tag-triggered GitHub Release asset publication",
-    "live Linux release-method install from GitHub Release assets",
     "wider compatibility matrix coverage across shells, editors, multiplexers",
     "Post-v1 deferred work includes live desktop OS paste-menu proof",
 ];

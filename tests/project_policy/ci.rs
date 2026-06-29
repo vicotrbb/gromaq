@@ -89,6 +89,7 @@ const REQUIRED_RELEASE_WORKFLOW_COMMANDS: &[&str] = &[
     "target/dist/*.deb",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
+    "default.SRCINFO",
     "packaging/arch/gromaq.install",
     "target/dist/Gromaq-macos-app.zip",
 ];

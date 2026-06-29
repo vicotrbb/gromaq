@@ -71,8 +71,10 @@ identity assets from the tarball. By default it also downloads
 `SHA256SUMS-linux-<arch>` and verifies the tarball before extraction. Set
 `GROMAQ_VERIFY_CHECKSUMS=0` only for local mirror/debug scenarios where you have
 another integrity check. The release method is locally proven against a
-file-backed tarball; it still needs live GitHub Release asset proof from a tag
-run before becoming the default installer path.
+file-backed tarball, and the `v0.1.0` GitHub Release publication proof now
+verifies the live asset set. A live `v0.1.0` Linux release-method install proof
+also passed in an amd64 Ubuntu container against the real GitHub Release
+tarball and checksum manifest.
 
 On Linux, the installer also installs user-local desktop assets by default:
 `dev.gromaq.Gromaq.desktop`, the project icon under the hicolor icon theme, and
@@ -180,8 +182,11 @@ release assets. The remote GitHub Actions release workflow completed green on
 tarball, Debian package, Arch `PKGBUILD`, hidden `.SRCINFO`, macOS `.app` zip,
 and checksum manifests as workflow artifacts. The downloaded macOS zip includes
 an app `Info.plist` with `LSApplicationCategoryType=public.app-category.utilities`.
-Tag-triggered GitHub Release asset publication is configured but still needs a
-live tag-run proof.
+The live `v0.1.0` GitHub Release is published, non-draft, non-prerelease, and
+contains the Linux tarball, Debian package, Arch `PKGBUILD`, Arch install hook,
+macOS `.app` zip, and checksum manifests. GitHub stores the hidden `.SRCINFO`
+upload as the release asset `default.SRCINFO`, so the publication proof checks
+that asset name.
 After a tagged release workflow completes, maintainers can run
 `scripts/prove-github-release-publication.sh` to verify the GitHub Release is
 published, non-draft, non-prerelease, and contains the Linux tarball, Debian
@@ -231,7 +236,10 @@ can run
 download path into `target/github-release-install-proof`. Before installing,
 the helper verifies the release includes the Linux tarball, Debian package,
 Arch metadata files, macOS app zip, and platform checksum manifests; after
-success it writes `summary.txt`. This live proof has not passed yet.
+success it writes `summary.txt`. On 2026-06-28, the helper passed in a
+`linux/amd64` Ubuntu container against the real `v0.1.0` GitHub Release,
+including checksum verification, binary launch, desktop file, AppStream
+metainfo, and hicolor icon payload checks.
 
 ## Status
 
@@ -263,7 +271,11 @@ Implemented and covered by automated tests or deterministic smoke commands:
   and macOS `.app` release artifacts with SHA256SUMS manifests on tag and manual
   dispatch;
   remote proof covers the tarball, Debian package, Arch metadata, macOS `.app`,
-  and checksum workflow-artifact uploads
+  and checksum workflow-artifact uploads, and live `v0.1.0` publication proof
+  covers the GitHub Release asset set with GitHub's `default.SRCINFO` name for
+  the hidden `.SRCINFO` upload
+- live `v0.1.0` Linux release-method install proof from the real GitHub Release
+  tarball and checksum manifest in an amd64 Ubuntu container
 - Linux desktop database refresh when `update-desktop-database` is available,
   with deterministic installer coverage and Ubuntu CI configured to install the
   desktop-file utility before the Linux install-root proof
@@ -275,8 +287,6 @@ Not yet proven enough to call complete:
 - accepted live desktop visual inspection/screenshot proof for the default
   native window
 - hardware-backed 144 Hz frame pacing proof on a 144 Hz-capable display
-- live tag-triggered GitHub Release asset publication
-- live Linux release-method install from GitHub Release assets
 - wider compatibility matrix coverage across shells, editors, multiplexers,
   pagers, remote workflows, and multiple hosts
 

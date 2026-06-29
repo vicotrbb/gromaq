@@ -32,6 +32,7 @@ jobs:
               --verify-tag || gh release view "${GITHUB_REF_NAME}" >/dev/null
           fi
           cp target/dist/SHA256SUMS target/dist/SHA256SUMS-linux-x86_64
+          # GitHub stores hidden .SRCINFO release uploads as default.SRCINFO.
           gh release upload "${GITHUB_REF_NAME}" \
             target/dist/*.tar.gz \
             target/dist/*.deb \
