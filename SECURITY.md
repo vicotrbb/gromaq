@@ -6,9 +6,9 @@ crash material that could expose local system information.
 
 ## Supported Versions
 
-Only the current `main` branch is actively assessed during alpha development.
-Tagged releases will be listed here once release artifacts are considered
-stable enough for normal users.
+Only the current `main` branch and the latest public alpha/beta release are
+actively assessed during alpha development. Older tags remain available as
+historical packaging evidence but are not long-term support releases.
 
 ## Reporting a Vulnerability
 

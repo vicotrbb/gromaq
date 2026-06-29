@@ -12,10 +12,10 @@ Gromaq is early. Contributions must preserve correctness, determinism, and perfo
 - Add tests before behavior changes.
 - Document benchmark commands and proof boundaries.
 - Follow the fixture guidance in `TESTING.md`.
-- Follow the debugging workflow in `DEBUGGING.md` when investigating failures or
-  adding compatibility evidence.
-- Use the label taxonomy in `.github/labels.yml` and the starter issue list in
-  `GOOD_FIRST_ISSUES.md` when shaping contributor work.
+- Follow the debugging workflow in `DEBUGGING.md` when investigating failures
+  or adding compatibility evidence.
+- Use the label taxonomy in `.github/labels.yml` and the issue templates under
+  `.github/ISSUE_TEMPLATE/` when shaping contributor work.
 
 ## Required Checks
 
@@ -39,3 +39,4 @@ Each pull request should state:
 - What tests were added
 - What benchmarks were run
 - What is explicitly not proven yet
+- Any screenshots or release artifacts affected by the change
