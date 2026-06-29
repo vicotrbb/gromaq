@@ -2,14 +2,29 @@ use std::{fs, path::Path};
 
 use super::{
     docs_markers::{
-        REQUIRED_README_COMPLETION_GAP_MARKERS, REQUIRED_RELEASE_DOC_MARKERS,
-        REQUIRED_VISUAL_CONTRACT_DOC_MARKERS,
+        REQUIRED_README_COMPLETION_GAP_MARKERS, REQUIRED_README_LAUNCH_MARKERS,
+        REQUIRED_RELEASE_DOC_MARKERS, REQUIRED_VISUAL_CONTRACT_DOC_MARKERS,
     },
     support::relative_path,
 };
 
 #[test]
-fn public_docs_keep_default_visual_contract_and_proof_commands() {
+fn readme_keeps_launch_release_shape() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("README.md");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in REQUIRED_README_LAUNCH_MARKERS {
+        assert!(
+            source.contains(marker),
+            "{} must document `{marker}` for the public v0.2.0 launch page",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
+fn detailed_docs_keep_default_visual_contract_and_proof_commands() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     for (relative, marker) in REQUIRED_VISUAL_CONTRACT_DOC_MARKERS {
         let path = root.join(relative);
@@ -23,7 +38,7 @@ fn public_docs_keep_default_visual_contract_and_proof_commands() {
 }
 
 #[test]
-fn public_docs_keep_release_install_boundaries() {
+fn detailed_docs_keep_release_install_boundaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     for (relative, marker) in REQUIRED_RELEASE_DOC_MARKERS {
         let path = root.join(relative);
@@ -90,4 +105,18 @@ fn public_docs_avoid_drift_prone_current_head_remote_proof_claims() {
             relative_path(root, &path)
         );
     }
+}
+
+#[test]
+fn readme_stays_concise_for_public_onboarding() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("README.md");
+    let source = fs::read_to_string(&path).unwrap();
+    let line_count = source.lines().count();
+
+    assert!(
+        (180..=260).contains(&line_count),
+        "{} should stay roughly launch-page sized, saw {line_count} lines",
+        relative_path(root, &path)
+    );
 }
