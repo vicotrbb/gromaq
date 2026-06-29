@@ -45,6 +45,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",
     ".github/workflows/release.yml",
+    ".github/release-notes/v0.2.0.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/dependabot.yml",
     ".github/labels.yml",

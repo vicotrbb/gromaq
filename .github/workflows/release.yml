@@ -26,9 +26,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            notes_file=".github/release-notes/${GITHUB_REF_NAME}.md"
+            notes_args=(--notes "Gromaq ${GITHUB_REF_NAME} release artifacts.")
+            if [ -f "${notes_file}" ]; then
+              notes_args=(--notes-file "${notes_file}")
+            fi
             gh release create "${GITHUB_REF_NAME}" \
               --title "${GITHUB_REF_NAME}" \
-              --notes "Gromaq ${GITHUB_REF_NAME} release artifacts." \
+              "${notes_args[@]}" \
               --verify-tag || gh release view "${GITHUB_REF_NAME}" >/dev/null
           fi
           cp target/dist/SHA256SUMS target/dist/SHA256SUMS-linux-x86_64
@@ -69,9 +74,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            notes_file=".github/release-notes/${GITHUB_REF_NAME}.md"
+            notes_args=(--notes "Gromaq ${GITHUB_REF_NAME} release artifacts.")
+            if [ -f "${notes_file}" ]; then
+              notes_args=(--notes-file "${notes_file}")
+            fi
             gh release create "${GITHUB_REF_NAME}" \
               --title "${GITHUB_REF_NAME}" \
-              --notes "Gromaq ${GITHUB_REF_NAME} release artifacts." \
+              "${notes_args[@]}" \
               --verify-tag || gh release view "${GITHUB_REF_NAME}" >/dev/null
           fi
           cp target/dist/SHA256SUMS target/dist/SHA256SUMS-macos-app

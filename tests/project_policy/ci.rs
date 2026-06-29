@@ -99,6 +99,8 @@ const REQUIRED_TAG_RELEASE_UPLOAD_MARKERS: &[&str] = &[
     "contents: write",
     "startsWith(github.ref, 'refs/tags/')",
     "gh release create",
+    "--notes-file",
+    ".github/release-notes/${GITHUB_REF_NAME}.md",
     "gh release upload",
     "packaging/arch/PKGBUILD",
     "packaging/arch/.SRCINFO",
