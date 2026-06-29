@@ -1,6 +1,6 @@
 # Maintainer: Gromaq contributors
 pkgname=gromaq-git
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Native Rust GPU-rendered terminal emulator foundation for gromaq.dev"
 arch=("x86_64" "aarch64")

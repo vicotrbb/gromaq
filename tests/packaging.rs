@@ -56,7 +56,7 @@ mod unix {
         let control = tar_file_contents(&control_tar, "./control");
         for required in [
             "Package: gromaq",
-            "Version: 0.1.0",
+            "Version: 0.2.0",
             "Architecture: amd64",
             "Maintainer: Gromaq contributors",
             "Description: Native Rust GPU-rendered terminal emulator foundation for gromaq.dev",
@@ -115,7 +115,7 @@ mod unix {
         );
 
         assert!(
-            dist.path().join("gromaq_0.1.0_amd64.deb").is_file(),
+            dist.path().join("gromaq_0.2.0_amd64.deb").is_file(),
             "relative dist package missing"
         );
     }

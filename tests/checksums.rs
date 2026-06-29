@@ -18,7 +18,7 @@ mod unix {
         let dist = TempDist(std::env::temp_dir().join(unique_temp_name("gromaq-checksums")));
         fs::create_dir_all(dist.path()).unwrap();
         fs::write(
-            dist.path().join("gromaq-0.1.0-linux-x86_64.tar.gz"),
+            dist.path().join("gromaq-0.2.0-linux-x86_64.tar.gz"),
             b"stub archive",
         )
         .unwrap();
@@ -50,7 +50,7 @@ mod unix {
 
         let manifest = fs::read_to_string(dist.path().join("SHA256SUMS")).unwrap();
         assert!(
-            manifest.contains("gromaq-0.1.0-linux-x86_64.tar.gz"),
+            manifest.contains("gromaq-0.2.0-linux-x86_64.tar.gz"),
             "manifest missing release tarball:\n{manifest}"
         );
         assert!(
@@ -74,7 +74,7 @@ mod unix {
             TempDist(std::env::temp_dir().join(unique_temp_name("gromaq-checksum-missing-extra")));
         fs::create_dir_all(dist.path()).unwrap();
         fs::write(
-            dist.path().join("gromaq-0.1.0-linux-x86_64.tar.gz"),
+            dist.path().join("gromaq-0.2.0-linux-x86_64.tar.gz"),
             b"stub archive",
         )
         .unwrap();
@@ -136,7 +136,7 @@ mod unix {
         );
         fs::create_dir_all(dist.path()).unwrap();
         fs::write(
-            dist.path().join("gromaq-0.1.0-linux-x86_64.tar.gz"),
+            dist.path().join("gromaq-0.2.0-linux-x86_64.tar.gz"),
             b"stub archive",
         )
         .unwrap();
@@ -160,7 +160,7 @@ mod unix {
             "custom manifest path must not also write the default manifest"
         );
         let contents = fs::read_to_string(manifest).unwrap();
-        assert!(contents.contains("gromaq-0.1.0-linux-x86_64.tar.gz"));
+        assert!(contents.contains("gromaq-0.2.0-linux-x86_64.tar.gz"));
     }
 
     struct TempDist(PathBuf);

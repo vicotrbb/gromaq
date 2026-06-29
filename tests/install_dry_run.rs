@@ -54,7 +54,7 @@ mod unix {
             .env("GROMAQ_DRY_RUN", "1")
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env("GROMAQ_BIN_DIR", bin_dir.path())
             .env("GROMAQ_INSTALL_ROOT", install_root.path())
@@ -69,7 +69,7 @@ mod unix {
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("Dry run: would install gromaq"));
         assert!(stdout.contains("Dry run: would download release asset"));
-        assert!(stdout.contains("gromaq-0.1.0-linux-x86_64.tar.gz"));
+        assert!(stdout.contains("gromaq-0.2.0-linux-x86_64.tar.gz"));
         assert!(stdout.contains("Dry run complete; no files written."));
         assert!(!install_root.path().exists());
         assert!(!bin_dir.path().exists());
@@ -118,7 +118,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
