@@ -30,8 +30,9 @@ fn pty_session_runs_zsh_command_when_available() {
 
 #[test]
 fn pty_session_runs_zsh_interactive_workflow_when_available() {
-    assert_interactive_shell_outputs_when_available(
+    assert_interactive_program_outputs_when_available(
         "zsh",
+        &["-f"],
         b"printf 'gromaq-zsh-interactive\\n'\nexit\n",
         "gromaq-zsh-interactive",
     );

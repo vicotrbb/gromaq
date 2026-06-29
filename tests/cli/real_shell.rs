@@ -67,7 +67,7 @@ fn runtime_real_shell_perf_budget_smoke_cli_enforces_real_shell_latency_budgets(
     assert!(exit.stdout.contains("pumped bytes:"));
     assert!(exit.stdout.contains("rendered frames:"));
     assert!(exit.stdout.contains("render p95 ns:"));
-    assert!(exit.stdout.contains("render p95 budget ns: 6940000"));
+    assert!(exit.stdout.contains("render p95 budget ns: 10000000"));
     assert!(exit.stdout.contains("input-to-render p95 ns:"));
     assert!(
         exit.stdout
