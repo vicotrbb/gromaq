@@ -3,7 +3,7 @@ set -eu
 
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 package="${GROMAQ_PACKAGE:-gromaq}"
-version="${GROMAQ_VERSION:-v0.1.0}"
+version="${GROMAQ_VERSION:-v0.2.0}"
 version_without_prefix="${version#v}"
 proof_root="${GROMAQ_RELEASE_PROOF_ROOT:-${root}/target/github-release-install-proof}"
 release_base="${GROMAQ_RELEASE_BASE:-https://github.com/vicotrbb/gromaq/releases/download/${version}}"

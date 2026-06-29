@@ -19,7 +19,7 @@ mod unix {
         create_release_tarball(root, release_dir.path());
         fs::write(
             release_dir.path().join("SHA256SUMS-linux-x86_64"),
-            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.1.0-linux-x86_64.tar.gz\n",
+            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.2.0-linux-x86_64.tar.gz\n",
         )
         .unwrap();
 
@@ -27,7 +27,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
@@ -70,7 +70,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
@@ -106,7 +106,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Darwin")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_BIN_DIR", bin_dir.path())
             .env("GROMAQ_INSTALL_ROOT", install_root.path())
             .output()
@@ -133,7 +133,7 @@ mod unix {
         create_release_tarball(root, release_dir.path());
         fs::write(
             release_dir.path().join("SHA256SUMS-linux-x86_64"),
-            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.1.0-linux-x86_64.tar.gz\n",
+            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.2.0-linux-x86_64.tar.gz\n",
         )
         .unwrap();
 
@@ -141,7 +141,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
@@ -179,7 +179,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.1.0")
+            .env("GROMAQ_VERSION", "v0.2.0")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
