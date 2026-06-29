@@ -1,10 +1,12 @@
 use winit::keyboard::ModifiersState;
 
 use crate::app::native_input::{
-    NativeMouseGridMapper, NativeRenderedGridMetrics, NativeWindowMouseInput, clamp_u32_to_u16,
+    NativeMouseGridMapper, NativeRenderedGridMetrics, NativeWindowMouseInput,
+    NativeWindowMouseInputResult, clamp_u32_to_u16,
 };
 use crate::app::{NativeAppError, NativePtySessionIo};
 use crate::mouse::{MouseButton, MouseEventKind};
+use crate::{MouseEvent, SelectionPoint, SelectionRange};
 
 use super::super::NativeTerminalRuntime;
 
@@ -42,6 +44,15 @@ where
         &mut self,
         input: NativeWindowMouseInput,
     ) -> Result<bool, NativeAppError> {
+        self.send_window_mouse_input_event_result(input)
+            .map(|result| result.handled)
+    }
+
+    /// Map native window mouse input and report whether it changed visible terminal state.
+    pub fn send_window_mouse_input_event_result(
+        &mut self,
+        input: NativeWindowMouseInput,
+    ) -> Result<NativeWindowMouseInputResult, NativeAppError> {
         let grid = self.terminal.dump_grid();
         let Some(mapper) = NativeMouseGridMapper::new(
             input.window_width_px,
@@ -55,7 +66,7 @@ where
                 rows: grid.rows,
             },
         ) else {
-            return Ok(false);
+            return Ok(NativeWindowMouseInputResult::default());
         };
         let Some(event) = mapper.mouse_event_at_with_modifiers(
             input.x,
@@ -64,17 +75,76 @@ where
             input.button,
             input.modifiers,
         ) else {
-            return Ok(false);
+            return Ok(NativeWindowMouseInputResult::default());
         };
         if self.send_mouse_input(event)? {
-            return Ok(true);
+            self.selection_drag_anchor = None;
+            return Ok(NativeWindowMouseInputResult {
+                handled: true,
+                needs_redraw: false,
+            });
         }
         Ok(match (input.kind, input.button) {
-            (MouseEventKind::Press, MouseButton::WheelUp) => self.terminal.scroll_display_up(1),
-            (MouseEventKind::Press, MouseButton::WheelDown) => self.terminal.scroll_display_down(1),
-            _ => false,
+            (MouseEventKind::Press, MouseButton::WheelUp) => self.scroll_display_up_result(1),
+            (MouseEventKind::Press, MouseButton::WheelDown) => self.scroll_display_down_result(1),
+            _ => self.apply_local_mouse_selection(event),
         })
     }
+
+    fn scroll_display_up_result(&mut self, rows: u16) -> NativeWindowMouseInputResult {
+        let changed = self.terminal.scroll_display_up(rows);
+        NativeWindowMouseInputResult {
+            handled: changed,
+            needs_redraw: changed,
+        }
+    }
+
+    fn scroll_display_down_result(&mut self, rows: u16) -> NativeWindowMouseInputResult {
+        let changed = self.terminal.scroll_display_down(rows);
+        NativeWindowMouseInputResult {
+            handled: changed,
+            needs_redraw: changed,
+        }
+    }
+
+    fn apply_local_mouse_selection(&mut self, event: MouseEvent) -> NativeWindowMouseInputResult {
+        match (event.kind, event.button) {
+            (MouseEventKind::Press, MouseButton::Left) => {
+                self.selection_drag_anchor = Some(selection_point(event));
+                NativeWindowMouseInputResult {
+                    handled: true,
+                    needs_redraw: self.terminal.clear_selection(),
+                }
+            }
+            (MouseEventKind::Drag, MouseButton::Left) => {
+                let Some(anchor) = self.selection_drag_anchor else {
+                    return NativeWindowMouseInputResult::default();
+                };
+                self.terminal
+                    .set_selection(selection_range(anchor, selection_point(event)));
+                NativeWindowMouseInputResult {
+                    handled: true,
+                    needs_redraw: true,
+                }
+            }
+            (MouseEventKind::Release, MouseButton::Left) => NativeWindowMouseInputResult {
+                handled: self.selection_drag_anchor.take().is_some(),
+                needs_redraw: false,
+            },
+            _ => NativeWindowMouseInputResult::default(),
+        }
+    }
+}
+
+fn selection_point(event: MouseEvent) -> SelectionPoint {
+    SelectionPoint {
+        row: event.row,
+        col: event.col,
+    }
+}
+
+fn selection_range(start: SelectionPoint, end: SelectionPoint) -> SelectionRange {
+    SelectionRange::new((start.row, start.col), (end.row, end.col))
 }
 
 fn inferred_cell_size_px(window_px: u32, cells: u16) -> u16 {

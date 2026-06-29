@@ -6,7 +6,7 @@ use tracing::debug;
 
 use crate::clipboard::HostClipboard;
 use crate::pty::ShellCommand;
-use crate::{SelectionRange, Terminal};
+use crate::{SelectionPoint, SelectionRange, Terminal};
 
 use super::NativeAppError;
 use super::perf::{NativeRuntimePerfSnapshot, RuntimeDurationHistogram};
@@ -27,6 +27,7 @@ pub struct NativeTerminalRuntime<S> {
     render_time_histogram: RuntimeDurationHistogram,
     input_to_render_histogram: RuntimeDurationHistogram,
     pending_input_to_render_started: Option<Instant>,
+    selection_drag_anchor: Option<SelectionPoint>,
 }
 
 impl<S> NativeTerminalRuntime<S> {
@@ -49,6 +50,7 @@ impl<S> NativeTerminalRuntime<S> {
             render_time_histogram: RuntimeDurationHistogram::default(),
             input_to_render_histogram: RuntimeDurationHistogram::default(),
             pending_input_to_render_started: None,
+            selection_drag_anchor: None,
         })
     }
 

@@ -52,8 +52,9 @@ pub use lifecycle::{
 };
 pub use native_input::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativePtyResize, NativeRenderedGridMetrics,
-    NativeResizeGridMapper, NativeTextZoomAction, NativeWindowMouseInput, is_native_copy_shortcut,
-    is_native_paste_shortcut, native_text_zoom_action, native_wheel_text_zoom_action,
+    NativeResizeGridMapper, NativeTextZoomAction, NativeWindowMouseInput,
+    NativeWindowMouseInputResult, is_native_copy_shortcut, is_native_paste_shortcut,
+    native_text_zoom_action, native_wheel_text_zoom_action,
 };
 use native_input::{native_mouse_button, wheel_mouse_button};
 pub use perf::{NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot};

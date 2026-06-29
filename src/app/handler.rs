@@ -88,7 +88,7 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_position = Some(position);
                 let (kind, button) = self.mouse_buttons.cursor_move_event();
-                if let Err(error) = self.send_current_mouse_input(kind, button) {
+                if let Err(error) = self.send_current_mouse_input_and_request_redraw(kind, button) {
                     self.startup_error = Some(error.to_string());
                     event_loop.exit();
                 }
@@ -113,7 +113,9 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     } else {
                         MouseEventKind::Release
                     };
-                    if let Err(error) = self.send_current_mouse_input(kind, button) {
+                    if let Err(error) =
+                        self.send_current_mouse_input_and_request_redraw(kind, button)
+                    {
                         self.startup_error = Some(error.to_string());
                         event_loop.exit();
                     }
@@ -132,11 +134,13 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                         self.startup_error = Some(error.to_string());
                         event_loop.exit();
                     }
-                } else if let Some(button) = wheel_mouse_button(&delta)
-                    && let Err(error) = self.send_current_mouse_input(MouseEventKind::Press, button)
-                {
-                    self.startup_error = Some(error.to_string());
-                    event_loop.exit();
+                } else if let Some(button) = wheel_mouse_button(&delta) {
+                    if let Err(error) = self
+                        .send_current_mouse_input_and_request_redraw(MouseEventKind::Press, button)
+                    {
+                        self.startup_error = Some(error.to_string());
+                        event_loop.exit();
+                    }
                 }
             }
             _ => {}

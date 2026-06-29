@@ -8,7 +8,7 @@ mod shortcuts;
 
 pub use mouse::{
     NativeMouseButtonTracker, NativeMouseGridMapper, NativeRenderedGridMetrics,
-    NativeWindowMouseInput,
+    NativeWindowMouseInput, NativeWindowMouseInputResult,
 };
 pub(super) use mouse::{native_mouse_button, wheel_mouse_button};
 pub(super) use resize::clamp_u32_to_u16;

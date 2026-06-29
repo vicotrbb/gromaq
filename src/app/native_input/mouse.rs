@@ -60,6 +60,15 @@ pub struct NativeWindowMouseInput {
     pub modifiers: ModifiersState,
 }
 
+/// Result of applying native window mouse input to the terminal runtime.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct NativeWindowMouseInputResult {
+    /// Whether the input was consumed by terminal reporting, local scrollback, or local selection.
+    pub handled: bool,
+    /// Whether the visible terminal frame should be redrawn immediately.
+    pub needs_redraw: bool,
+}
+
 impl NativeMouseGridMapper {
     /// Create a mapper for a non-empty window and terminal grid.
     pub fn new(
