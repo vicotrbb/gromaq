@@ -38,12 +38,17 @@ fn fallback_font_stack_covers_symbol_glyphs_before_emoji() {
         .iter()
         .position(|path| path.contains("Apple Symbols") || path.contains("NotoSansSymbols"))
         .expect("automatic fallbacks must include a symbol font for non-emoji glyphs");
+    let cjk_index = candidates
+        .iter()
+        .position(|path| path.contains("PingFang") || path.contains("NotoSansCJK"))
+        .expect("automatic fallbacks must include a CJK font for wide Unicode glyphs");
     let emoji_index = candidates
         .iter()
         .position(|path| path.contains("Emoji"))
         .expect("automatic fallbacks must include emoji fonts");
 
     assert!(symbol_index < emoji_index);
+    assert!(cjk_index < emoji_index);
 }
 
 fn assert_candidate_contains(family: &str, file_name: &str) {

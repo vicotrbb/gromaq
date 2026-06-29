@@ -61,3 +61,60 @@ fn github_release_publication_proof_checks_tag_and_assets() {
         );
     }
 }
+
+#[test]
+fn github_release_macos_install_proof_checks_downloaded_app_bundle() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-github-release-macos-install.sh")).unwrap();
+
+    for marker in [
+        "Darwin",
+        "gh release view",
+        "Gromaq-macos-app.zip",
+        "SHA256SUMS-macos-app",
+        "checksum mismatch",
+        "extract_release_zip",
+        "Contents/MacOS/${package}",
+        "CFBundleShortVersionString",
+        "lipo -info",
+        "codesign --verify --deep --strict --verbose=4",
+        "spctl -a -vvv -t execute",
+        "GROMAQ_EXPECT_NOTARIZED",
+        "GROMAQ_INSTALL_METHOD=release",
+        "GROMAQ_MACOS_APP_DIR",
+        "GitHub release macOS install proof: ok",
+        "summary.txt",
+    ] {
+        assert!(
+            proof_script.contains(marker),
+            "GitHub release macOS install proof must include marker `{marker}`"
+        );
+    }
+}
+
+#[test]
+fn macos_live_input_manual_proof_guides_installed_app_typing() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-macos-live-input-manual.sh")).unwrap();
+
+    for marker in [
+        "Darwin",
+        "GROMAQ_MANUAL_INPUT_APP",
+        "open -W -n",
+        "typed-ls.txt",
+        "typed-pwd.txt",
+        "typed-unicode.txt",
+        "Type exactly: ls",
+        "Type exactly: pwd",
+        "Type exactly: unicode:界́🙂",
+        "macOS live input manual proof: ok",
+        "summary.txt",
+    ] {
+        assert!(
+            proof_script.contains(marker),
+            "macOS live input manual proof must include marker `{marker}`"
+        );
+    }
+}

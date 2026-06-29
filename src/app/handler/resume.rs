@@ -30,6 +30,7 @@ impl NativeTerminalApp {
             window.as_ref(),
             self.lifecycle.config().screen_capture_allowed,
         );
+        window.set_ime_allowed(true);
         if let Err(error) =
             self.create_surface_for_window(Arc::clone(&window), size.width, size.height)
         {

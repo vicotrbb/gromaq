@@ -7,6 +7,20 @@ use gromaq::{GromaqError, Terminal, TerminalConfig};
 
 use crate::support::{MockFrameRenderer, MockPtySession, system_mono_font_path};
 
+fn host_has_cjk_fallback_font() -> bool {
+    [
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.otf",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+    ]
+    .into_iter()
+    .any(|path| std::path::Path::new(path).exists())
+}
+
 #[test]
 fn native_terminal_runtime_invalidates_clean_frame_for_redraw() {
     let mut runtime =
@@ -131,6 +145,39 @@ fn configured_native_glyph_cache_rejects_unsupported_font_family_name() {
 fn default_native_glyph_cache_rasterizes_emoji_with_fallback_font() {
     let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
     terminal.write_str("😀").unwrap();
+    let dirty = terminal.take_dirty_regions();
+    let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
+    let mut planner = RenderPlanner::new(24);
+    let plan = planner
+        .plan_frame(
+            &terminal.dump_grid(),
+            terminal.dump_cursor(),
+            &dirty,
+            &mut atlas,
+        )
+        .unwrap();
+    let mut cache = load_default_native_glyph_cache().unwrap();
+
+    let batch = cache.rasterize_plan(&plan).unwrap();
+
+    assert_eq!(batch.rasterized, 1);
+    assert_eq!(batch.bitmaps.len(), 1);
+    assert!(
+        batch.bitmaps[0]
+            .rgba
+            .chunks_exact(4)
+            .any(|pixel| pixel[3] > 0)
+    );
+}
+
+#[test]
+fn default_native_glyph_cache_rasterizes_cjk_with_fallback_font_when_available() {
+    if !host_has_cjk_fallback_font() {
+        eprintln!("skipping CJK fallback proof because no known CJK fallback font is installed");
+        return;
+    }
+    let mut terminal = Terminal::new(TerminalConfig::new(8, 2).unwrap());
+    terminal.write_str("界").unwrap();
     let dirty = terminal.take_dirty_regions();
     let mut atlas = GlyphAtlas::new(GlyphAtlasConfig::new(8).unwrap());
     let mut planner = RenderPlanner::new(24);

@@ -24,11 +24,13 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "scripts/generate-checksums.sh",
     "scripts/notarize-macos-app.sh",
     "scripts/capture-macos-window-proof.sh",
+    "scripts/prove-macos-live-input-manual.sh",
     "scripts/prove-macos-app-identity.sh",
     "scripts/prove-arch-package.sh",
     "scripts/prove-debian-package.sh",
     "scripts/prove-linux-release-install.sh",
     "scripts/prove-github-release-install.sh",
+    "scripts/prove-github-release-macos-install.sh",
     "scripts/prove-linux-desktop-discovery.sh",
     "scripts/prove-current-host-compatibility.sh",
     "scripts/prove-144hz-window-perf.sh",
@@ -45,7 +47,7 @@ const REQUIRED_REPOSITORY_FILES: &[&str] = &[
     "tests/fixtures/README.md",
     ".github/workflows/ci.yml",
     ".github/workflows/release.yml",
-    ".github/release-notes/v0.2.0.md",
+    ".github/release-notes/v0.2.1.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/dependabot.yml",
     ".github/labels.yml",
@@ -195,8 +197,13 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(macos_script.contains("Cargo.toml"));
     assert!(macos_script.contains("CFBundleShortVersionString"));
     assert!(macos_script.contains("GROMAQ_CODESIGN_IDENTITY"));
+    assert!(macos_script.contains("codesign_identity=\"${GROMAQ_CODESIGN_IDENTITY:--}\""));
     assert!(macos_script.contains("codesign --force --deep"));
     assert!(macos_script.contains("--options runtime --timestamp"));
+    assert!(macos_script.contains("codesign --verify --deep --strict --verbose=4"));
+    assert!(macos_script.contains("Codesign verification: strict"));
+    assert!(macos_script.contains("GROMAQ_MACOS_UNIVERSAL"));
+    assert!(macos_script.contains("lipo -create"));
     assert!(macos_script.contains("summary.txt"));
     assert!(linux_script.contains("dev.gromaq.Gromaq.desktop"));
     assert!(linux_script.contains("logo-icon-256.png"));
@@ -326,6 +333,10 @@ fn distribution_assets_keep_desktop_identity() {
     assert!(window_perf_proof_script.contains("144Hz window perf proof: ok"));
     assert!(window_startup.contains("screen_capture_allowed"));
     assert!(window_startup.contains("set_content_protected(!allowed)"));
+    assert!(
+        window_startup.contains("set_ime_allowed(true)"),
+        "native window startup must enable IME/text input so printable keyboard input reaches the PTY through committed text events"
+    );
     assert!(desktop.contains("Icon=dev.gromaq.Gromaq"));
     assert!(desktop.contains("Categories=System;TerminalEmulator;"));
     assert!(metainfo.contains("<id>dev.gromaq.Gromaq</id>"));

@@ -109,6 +109,7 @@ impl NativeTerminalApp {
             gpu_context: None,
             surface: None,
             modifiers: ModifiersState::empty(),
+            ime_preedit_active: false,
             cursor_position: None,
             mouse_buttons: NativeMouseButtonTracker::default(),
             resize_mapper,

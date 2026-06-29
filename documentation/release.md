@@ -4,9 +4,9 @@ This document tracks how Gromaq is installed and packaged today, which release
 artifacts are proven, and which distribution surfaces still need live platform
 proof.
 
-## v0.2.0 Release Posture
+## v0.2.1 Release Posture
 
-Gromaq `0.2.0` is positioned as a public alpha/beta terminal foundation
+Gromaq `0.2.1` is positioned as a public alpha/beta terminal foundation
 release. The release is intended to be installable and usable by early adopters
 on supported macOS and Linux systems, while keeping the public project clear
 about proof boundaries that are not closed yet.
@@ -15,22 +15,24 @@ This is not a v1.0 stability launch, a daily-driver completeness claim, a
 Developer ID notarized macOS distribution claim, a broad host compatibility
 claim, or a hardware-backed 144 Hz proof claim.
 
-Acceptance criteria for publishing `v0.2.0`:
+Acceptance criteria for publishing `v0.2.1`:
 
 - Users can install from source on macOS and Linux with Rust stable.
-- Linux users can install from the `v0.2.0` release tarball with checksum
+- Linux users can install from the `v0.2.1` release tarball with checksum
   verification.
-- Debian users can install `gromaq_0.2.0_amd64.deb`.
+- macOS users can install the release app bundle without Rust, with checksum
+  verification.
+- Debian users can install `gromaq_0.2.1_amd64.deb`.
 - Arch users can build or install from release `PKGBUILD`, `default.SRCINFO`,
   and `gromaq.install` metadata.
-- macOS users can use `Gromaq-macos-app.zip` or the source installer, with the
-  unsigned and not-notarized caveat visible unless Developer ID notarization is
-  completed in the release run.
+- The macOS app artifact is universal, ad-hoc signed by default, and clearly
+  documented as not Developer ID notarized unless notarization is completed in
+  the release run.
 - README stays concise, user-facing, and linked to detailed proof docs.
 - GitHub repository metadata and community files are professional for a public
   open-source project.
 
-## v0.2.0 Release Procedure
+## v0.2.1 Release Procedure
 
 Prepare locally:
 
@@ -49,8 +51,8 @@ After maintainer approval to publish, push the release-prep commits, wait for
 CI on `main`, then create and push the annotated tag:
 
 ```bash
-git tag -a v0.2.0 -m "Gromaq v0.2.0"
-git push origin v0.2.0
+git tag -a v0.2.1 -m "Gromaq v0.2.1"
+git push origin v0.2.1
 ```
 
 Watch the tag-triggered release workflow:
@@ -60,10 +62,10 @@ gh run list --workflow release.yml --limit 5
 gh run watch <run-id>
 ```
 
-Expected `v0.2.0` GitHub Release assets:
+Expected `v0.2.1` GitHub Release assets:
 
-- `gromaq-0.2.0-linux-x86_64.tar.gz`
-- `gromaq_0.2.0_amd64.deb`
+- `gromaq-0.2.1-linux-x86_64.tar.gz`
+- `gromaq_0.2.1_amd64.deb`
 - `PKGBUILD`
 - `default.SRCINFO`
 - `gromaq.install`
@@ -74,9 +76,20 @@ Expected `v0.2.0` GitHub Release assets:
 Post-release proof:
 
 ```bash
-GROMAQ_VERSION=v0.2.0 scripts/prove-github-release-publication.sh
-GROMAQ_VERSION=v0.2.0 scripts/prove-github-release-install.sh
+GROMAQ_VERSION=v0.2.1 scripts/prove-github-release-publication.sh
+GROMAQ_VERSION=v0.2.1 scripts/prove-github-release-install.sh
+GROMAQ_VERSION=v0.2.1 scripts/prove-github-release-macos-install.sh
 ```
+
+Before tagging, run the installed native app through the manual input gate:
+
+```bash
+GROMAQ_VERSION=v0.2.1 scripts/prove-macos-live-input-manual.sh
+```
+
+That helper launches the packaged app with a controlled shell and validates that
+the shell receives exactly `ls`, `pwd`, and `unicode:界́🙂` after the operator
+types those lines in the live window.
 
 The GitHub release notes should state what changed, install commands, supported
 platforms, known limitations, checksum/security notes, and links to README,
@@ -84,14 +97,25 @@ compatibility, benchmark, and security docs.
 
 ## User Install
 
-The public one-command install path builds from source with Cargo:
+The macOS release installer downloads the published app zip, verifies
+`SHA256SUMS-macos-app`, installs `Gromaq.app` to `~/Applications` by default,
+and checks that the bundled executable reports the requested version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1 sh
+```
+
+Override the app destination with
+`GROMAQ_MACOS_APP_DIR=/path/to/apps`. This release path does not require Rust.
+
+The source one-command install path builds from source with Cargo:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh
 ```
 
-On macOS, the same installer can also package and copy a user-local `.app`
-bundle with the project icon:
+On macOS, source installs can also package and copy a user-local `.app` bundle
+with the project icon:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_APP_BUNDLE=1 sh
@@ -100,14 +124,14 @@ curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/instal
 The default destination is `~/Applications/Gromaq.app`. Override it with
 `GROMAQ_MACOS_APP_DIR=/path/to/apps`.
 
-Requirements:
+Source install requirements:
 
 - Rust stable with Cargo
 - macOS or Linux
 - GPU/windowing support suitable for `winit` and `wgpu`
 
 The installer intentionally does not install Rust or system packages. If Cargo
-is absent, it exits with a clear error.
+is absent for a source install, it exits with a clear error.
 Preview installer actions without installing or writing files:
 
 ```bash
@@ -118,7 +142,7 @@ Linux users can opt into a prebuilt release tarball install after a tagged
 release publishes GitHub Release assets:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.0 sh
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1 sh
 ```
 
 The release method downloads `gromaq-<version>-linux-<arch>.tar.gz` from
@@ -181,7 +205,10 @@ The archive includes:
 - AppStream metainfo
 - hicolor app icon
 
-Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary.
+Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Otherwise
+the script packages `${CARGO_TARGET_DIR:-target}/release/gromaq`, so Linux
+container proofs cannot accidentally reuse a host-platform `target/release`
+binary from a mounted checkout.
 The packager writes `target/dist/gromaq-linux-tarball-summary.txt` after
 archive assembly succeeds.
 On Linux hosts, `scripts/prove-linux-release-install.sh` packages the tarball,
@@ -203,6 +230,15 @@ metadata files, macOS app zip, and platform checksum manifests. It writes a
 `summary.txt` success handle after the asset-list check, install, checksum, and
 payload checks pass. That helper is present for the live download proof, but
 the proof is still unrun until release assets exist.
+On macOS hosts, `scripts/prove-github-release-macos-install.sh` verifies the
+published macOS app zip and checksum manifest with `gh release view`, downloads
+and verifies the checksum, extracts `Gromaq.app`, checks
+`Contents/MacOS/gromaq --version`, `CFBundleShortVersionString`, universal
+`lipo -info` architecture support, strict `codesign --verify`, and the expected
+non-notarized `spctl` rejection unless `GROMAQ_EXPECT_NOTARIZED=1` is set. It
+then runs the public release installer into
+`target/github-release-macos-install-proof/Applications` and writes
+`summary.txt` after the installed app passes the same checks.
 On Linux desktop hosts, `scripts/prove-linux-desktop-discovery.sh` installs the
 desktop identity payloads into `target/linux-desktop-discovery-proof` by
 default, requires `desktop-file-validate`, `appstreamcli`,
@@ -234,8 +270,10 @@ The `.deb` installs:
 
 The script does not require `dpkg-deb`; it writes the Debian ar/tar members
 directly so package assembly is testable on normal Unix CI hosts. Use
-`GROMAQ_BINARY_PATH=<path>` to package an already-built binary and
-`GROMAQ_DEB_ARCH=<arch>` to override the detected Debian architecture.
+`GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Otherwise it
+packages `${CARGO_TARGET_DIR:-target}/release/gromaq`, matching Cargo's target
+directory override in Linux containers. Use `GROMAQ_DEB_ARCH=<arch>` to override
+the detected Debian architecture.
 On Debian/Ubuntu hosts, `scripts/prove-debian-package.sh` builds the package,
 installs it with `dpkg -i`, runs `/usr/bin/gromaq --version`, and checks the
 installed binary, README, copyright, desktop file, AppStream metainfo, and
@@ -300,13 +338,17 @@ generated logo assets, writes `CFBundleIconFile` and
 `LSApplicationCategoryType=public.app-category.utilities`, and derives bundle
 version metadata from `Cargo.toml`. It writes
 `target/dist/Gromaq-macos-app-summary.txt` after successful packaging with the
-bundle path, identifier, executable, plist, icon, and signing identity when one
-was supplied.
+bundle path, identifier, executable, plist, icon, signing identity, strict
+codesign verification status, and architecture info.
 
-Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. Set
-`GROMAQ_CODESIGN_IDENTITY=-` for local ad-hoc signing, or set
+Use `GROMAQ_BINARY_PATH=<path>` to package an already-built binary. By default,
+the script ad-hoc signs the app with `GROMAQ_CODESIGN_IDENTITY=-` and then runs
+`codesign --verify --deep --strict --verbose=4`. Set
 `GROMAQ_CODESIGN_IDENTITY` to a Developer ID Application identity for release
 signing. Developer ID signing uses hardened runtime and timestamp options.
+Set `GROMAQ_MACOS_UNIVERSAL=1` to build both `aarch64-apple-darwin` and
+`x86_64-apple-darwin`, combine them with `lipo -create`, package the universal
+binary, and record `lipo -info` output in the summary.
 After signing, `scripts/notarize-macos-app.sh <path-to-app>` creates a notary
 zip, submits it with `xcrun notarytool submit --wait`, staples the accepted
 ticket, validates stapling, and runs `spctl` assessment when available. Set
@@ -404,8 +446,8 @@ package.
 ## Historical v0.1.0 Proof
 
 The following proof entries are retained as historical evidence for the
-published `v0.1.0` release and the packaging pipeline that preceded `v0.2.0`.
-They do not by themselves prove the `v0.2.0` release until the `v0.2.0` tag,
+published `v0.1.0` release and the packaging pipeline that preceded `v0.2.1`.
+They do not by themselves prove the `v0.2.1` release until the `v0.2.1` tag,
 release workflow, assets, checksums, and install proofs are verified.
 
 Proven remotely:
@@ -588,6 +630,10 @@ Proven locally:
 - Linux install-root desktop asset placement without network or home writes
 - Linux and macOS installer dry-run planning without Cargo, network, home, or
   install-root/app-directory writes
+- manual macOS live input proof helper
+  `scripts/prove-macos-live-input-manual.sh`, which launches an installed
+  `Gromaq.app` with a controlled shell and writes `summary.txt` only after the
+  shell receives exactly `ls`, `pwd`, and `unicode:界́🙂` from live window input
 - Linux release-tarball installer path with
   `GROMAQ_INSTALL_METHOD=release`, `GROMAQ_RELEASE_BASE=file://...`, and
   `GROMAQ_BIN_DIR=<temp-bin>`, proven by
@@ -602,6 +648,12 @@ Proven locally:
   macOS app zip, and platform checksum manifests. It writes a `summary.txt`
   success handle after all checks pass; the `v0.1.0` helper proof passed in a
   `linux/amd64` Ubuntu container against the real GitHub Release.
+- live GitHub Release macOS install proof helper
+  `scripts/prove-github-release-macos-install.sh`, which is macOS-only and
+  verifies the published app zip, `SHA256SUMS-macos-app`, app extraction,
+  executable and `Info.plist` versions, universal architecture, strict
+  codesign, documented `spctl` status, and the public release installer path
+  before writing `target/github-release-macos-install-proof/summary.txt`.
 - Linux desktop metadata/cache discovery proof helper
   `scripts/prove-linux-desktop-discovery.sh`, which is Linux-only and validates
   installed desktop identity metadata under an isolated proof root when the

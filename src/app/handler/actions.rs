@@ -1,5 +1,6 @@
 //! Event-handler action helpers for the native terminal app.
 
+use winit::event::Ime;
 use winit::event_loop::ActiveEventLoop;
 
 use super::super::{NativeAppAction, NativeGlyphFrameError, NativeTerminalApp};
@@ -96,12 +97,38 @@ impl NativeTerminalApp {
             self.runtime.send_clipboard_paste(&clipboard).map(|_| ())
         } else {
             self.runtime
-                .send_winit_key_event_input(&logical_key, Some(physical_key), self.modifiers)
+                .send_native_key_event_input(
+                    &logical_key,
+                    Some(physical_key),
+                    self.modifiers,
+                    self.ime_preedit_active,
+                )
                 .map(|_| ())
         };
         if let Err(error) = result {
             self.startup_error = Some(error.to_string());
             event_loop.exit();
+        }
+    }
+
+    pub(super) fn handle_ime_event(&mut self, event_loop: &ActiveEventLoop, event: Ime) {
+        match event {
+            Ime::Enabled => {
+                self.ime_preedit_active = false;
+            }
+            Ime::Preedit(text, _) => {
+                self.ime_preedit_active = !text.is_empty();
+            }
+            Ime::Commit(text) => {
+                self.ime_preedit_active = false;
+                if let Err(error) = self.runtime.send_committed_text(&text) {
+                    self.startup_error = Some(error.to_string());
+                    event_loop.exit();
+                }
+            }
+            Ime::Disabled => {
+                self.ime_preedit_active = false;
+            }
         }
     }
 }

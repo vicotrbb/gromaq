@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use winit::application::ApplicationHandler;
-use winit::event::{ElementState, Ime, WindowEvent};
+use winit::event::{ElementState, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
 use winit::window::WindowId;
 
@@ -79,12 +79,7 @@ impl ApplicationHandler<NativeAppEvent> for NativeTerminalApp {
                     self.handle_key_press(event_loop, event.logical_key, event.physical_key);
                 }
             }
-            WindowEvent::Ime(Ime::Commit(text)) => {
-                if let Err(error) = self.runtime.send_committed_text(&text) {
-                    self.startup_error = Some(error.to_string());
-                    event_loop.exit();
-                }
-            }
+            WindowEvent::Ime(event) => self.handle_ime_event(event_loop, event),
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_position = Some(position);
                 let (kind, button) = self.mouse_buttons.cursor_move_event();

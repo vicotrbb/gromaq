@@ -108,6 +108,13 @@ const DEFAULT_FALLBACK_FONT_CANDIDATES: &[&str] = &[
     "/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf",
     "/usr/share/fonts/noto/NotoSansSymbols2-Regular.ttf",
     "/usr/share/fonts/noto/NotoSansSymbols-Regular.ttf",
+    "/System/Library/Fonts/PingFang.ttc",
+    "/System/Library/Fonts/STHeiti Medium.ttc",
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
     "/System/Library/Fonts/Apple Color Emoji.ttc",
     "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
 ];

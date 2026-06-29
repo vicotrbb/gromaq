@@ -81,6 +81,7 @@ pub struct NativeTerminalApp {
     gpu_context: Option<NativeGpuContext>,
     surface: Option<NativeWindowSurface<WgpuSurfaceBackend<'static>>>,
     modifiers: ModifiersState,
+    ime_preedit_active: bool,
     cursor_position: Option<PhysicalPosition<f64>>,
     mouse_buttons: NativeMouseButtonTracker,
     resize_mapper: NativeResizeGridMapper,

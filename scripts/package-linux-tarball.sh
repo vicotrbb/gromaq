@@ -9,7 +9,8 @@ version="$(
   sed -n 's/^version = "\(.*\)"/\1/p' "${root}/Cargo.toml" | head -n 1
 )"
 target_name="${GROMAQ_RELEASE_TARGET:-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)}"
-binary_path="${GROMAQ_BINARY_PATH:-${root}/target/release/${package}}"
+target_dir="${CARGO_TARGET_DIR:-${root}/target}"
+binary_path="${GROMAQ_BINARY_PATH:-${target_dir}/release/${package}}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
 staging_dir="${dist_dir}/${package}-${version}-${target_name}"
 archive_path="${dist_dir}/${package}-${version}-${target_name}.tar.gz"

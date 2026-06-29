@@ -3,6 +3,10 @@
 #![forbid(unsafe_code)]
 
 #[cfg(unix)]
+#[path = "install_release/macos.rs"]
+mod macos;
+
+#[cfg(unix)]
 mod unix {
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
@@ -19,7 +23,7 @@ mod unix {
         create_release_tarball(root, release_dir.path());
         fs::write(
             release_dir.path().join("SHA256SUMS-linux-x86_64"),
-            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.2.0-linux-x86_64.tar.gz\n",
+            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.2.1-linux-x86_64.tar.gz\n",
         )
         .unwrap();
 
@@ -27,7 +31,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.2.0")
+            .env("GROMAQ_VERSION", "v0.2.1")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
@@ -70,7 +74,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.2.0")
+            .env("GROMAQ_VERSION", "v0.2.1")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
@@ -97,16 +101,16 @@ mod unix {
     }
 
     #[test]
-    fn install_script_rejects_release_method_on_non_linux_platform() {
+    fn install_script_rejects_release_method_on_unsupported_platform() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let install_root = TempPath::new("gromaq-release-darwin-root");
-        let bin_dir = TempPath::new("gromaq-release-darwin-bin");
+        let install_root = TempPath::new("gromaq-release-freebsd-root");
+        let bin_dir = TempPath::new("gromaq-release-freebsd-bin");
 
         let output = Command::new("sh")
             .arg(root.join("scripts/install.sh"))
-            .env("GROMAQ_PLATFORM", "Darwin")
+            .env("GROMAQ_PLATFORM", "FreeBSD")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.2.0")
+            .env("GROMAQ_VERSION", "v0.2.1")
             .env("GROMAQ_BIN_DIR", bin_dir.path())
             .env("GROMAQ_INSTALL_ROOT", install_root.path())
             .output()
@@ -114,11 +118,11 @@ mod unix {
 
         assert!(
             !output.status.success(),
-            "release install method must reject non-Linux platforms"
+            "release install method must reject unsupported platforms"
         );
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            stderr.contains("currently supports Linux tarball releases only"),
+            stderr.contains("supports Linux tarballs and macOS app bundles"),
             "stderr should explain release-platform support: {stderr}"
         );
         assert!(!bin_dir.path().join("gromaq").exists());
@@ -133,7 +137,7 @@ mod unix {
         create_release_tarball(root, release_dir.path());
         fs::write(
             release_dir.path().join("SHA256SUMS-linux-x86_64"),
-            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.2.0-linux-x86_64.tar.gz\n",
+            "0000000000000000000000000000000000000000000000000000000000000000  gromaq-0.2.1-linux-x86_64.tar.gz\n",
         )
         .unwrap();
 
@@ -141,7 +145,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.2.0")
+            .env("GROMAQ_VERSION", "v0.2.1")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",
@@ -179,7 +183,7 @@ mod unix {
             .arg(root.join("scripts/install.sh"))
             .env("GROMAQ_PLATFORM", "Linux")
             .env("GROMAQ_INSTALL_METHOD", "release")
-            .env("GROMAQ_VERSION", "v0.2.0")
+            .env("GROMAQ_VERSION", "v0.2.1")
             .env("GROMAQ_RELEASE_TARGET", "linux-x86_64")
             .env(
                 "GROMAQ_RELEASE_BASE",

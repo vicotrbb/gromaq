@@ -8,34 +8,57 @@ binary_name="${GROMAQ_PACKAGE:-gromaq}"
 version="$(
   sed -n 's/^version = "\(.*\)"/\1/p' "${root}/Cargo.toml" | head -n 1
 )"
-binary_path="${GROMAQ_BINARY_PATH:-${root}/target/release/${binary_name}}"
+if [ -n "${GROMAQ_BINARY_PATH+x}" ]; then
+  binary_path="${GROMAQ_BINARY_PATH}"
+  binary_path_was_provided=1
+else
+  binary_path="${root}/target/release/${binary_name}"
+  binary_path_was_provided=0
+fi
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
-codesign_identity="${GROMAQ_CODESIGN_IDENTITY:-}"
+codesign_identity="${GROMAQ_CODESIGN_IDENTITY:--}"
+macos_universal="${GROMAQ_MACOS_UNIVERSAL:-0}"
 app_dir="${dist_dir}/${app_name}.app"
 contents_dir="${app_dir}/Contents"
 macos_dir="${contents_dir}/MacOS"
 resources_dir="${contents_dir}/Resources"
 iconset_dir="${dist_dir}/${app_name}.iconset"
 summary_path="${dist_dir}/${app_name}-macos-app-summary.txt"
+codesign_details_path="${dist_dir}/${app_name}-macos-codesign.txt"
+arch_info_path="${dist_dir}/${app_name}-macos-arch.txt"
+universal_binary_path="${dist_dir}/${binary_name}-universal"
 
 if [ "$(uname -s)" != "Darwin" ]; then
   printf '%s\n' "error: macOS app bundle packaging requires Darwin." >&2
   exit 1
 fi
 
-for tool in cargo iconutil sips; do
+for tool in cargo iconutil sips codesign; do
   if ! command -v "${tool}" >/dev/null 2>&1; then
     printf '%s\n' "error: ${tool} is required to package ${app_name}.app." >&2
     exit 1
   fi
 done
 
-if [ ! -x "${binary_path}" ]; then
+if [ "${macos_universal}" = "1" ] && [ "${binary_path_was_provided}" = "0" ]; then
+  if ! command -v lipo >/dev/null 2>&1; then
+    printf '%s\n' "error: lipo is required for GROMAQ_MACOS_UNIVERSAL=1." >&2
+    exit 1
+  fi
+  cargo build --release --target aarch64-apple-darwin
+  cargo build --release --target x86_64-apple-darwin
+  mkdir -p "${dist_dir}"
+  lipo -create \
+    "${root}/target/aarch64-apple-darwin/release/${binary_name}" \
+    "${root}/target/x86_64-apple-darwin/release/${binary_name}" \
+    -output "${universal_binary_path}"
+  binary_path="${universal_binary_path}"
+elif [ ! -x "${binary_path}" ]; then
   cargo build --release
 fi
 
 rm -rf "${app_dir}" "${iconset_dir}"
-rm -f "${summary_path}"
+rm -f "${summary_path}" "${codesign_details_path}" "${arch_info_path}"
 mkdir -p "${macos_dir}" "${resources_dir}" "${iconset_dir}"
 
 copy_icon() {
@@ -105,18 +128,16 @@ EOF
 printf '%s' 'APPL????' > "${contents_dir}/PkgInfo"
 rm -rf "${iconset_dir}"
 
-if [ -n "${codesign_identity}" ]; then
-  if ! command -v codesign >/dev/null 2>&1; then
-    printf '%s\n' "error: codesign is required when GROMAQ_CODESIGN_IDENTITY is set." >&2
-    exit 1
-  fi
-  if [ "${codesign_identity}" = "-" ]; then
-    codesign --force --deep --sign - "${app_dir}"
-  else
-    codesign --force --deep --options runtime --timestamp --sign "${codesign_identity}" "${app_dir}"
-  fi
-  printf '%s\n' "Codesigned ${app_dir}"
+if [ "${codesign_identity}" = "-" ]; then
+  codesign --force --deep --sign - "${app_dir}"
+else
+  codesign --force --deep --options runtime --timestamp --sign "${codesign_identity}" "${app_dir}"
 fi
+codesign --verify --deep --strict --verbose=4 "${app_dir}"
+codesign -dv --verbose=4 "${app_dir}" > "${codesign_details_path}" 2>&1
+lipo -info "${macos_dir}/${binary_name}" > "${arch_info_path}" 2>&1 || \
+  file "${macos_dir}/${binary_name}" > "${arch_info_path}"
+printf '%s\n' "Codesigned ${app_dir}"
 
 {
   printf '%s\n' "macOS app package: ok"
@@ -125,7 +146,8 @@ fi
   printf '%s\n' "Executable: ${macos_dir}/${binary_name}"
   printf '%s\n' "Info.plist: ${contents_dir}/Info.plist"
   printf '%s\n' "Icon: ${resources_dir}/AppIcon.icns"
-  if [ -n "${codesign_identity}" ]; then
-    printf '%s\n' "Codesign identity: ${codesign_identity}"
-  fi
+  printf '%s\n' "Codesign identity: ${codesign_identity}"
+  printf '%s\n' "Codesign verification: strict"
+  printf '%s\n' "Codesign details: ${codesign_details_path}"
+  printf '%s\n' "Architecture info: $(cat "${arch_info_path}")"
 } | tee "${summary_path}"

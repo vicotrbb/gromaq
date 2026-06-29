@@ -17,7 +17,7 @@ fn readme_keeps_launch_release_shape() {
     for marker in REQUIRED_README_LAUNCH_MARKERS {
         assert!(
             source.contains(marker),
-            "{} must document `{marker}` for the public v0.2.0 launch page",
+            "{} must document `{marker}` for the public v0.2.1 launch page",
             relative_path(root, &path)
         );
     }

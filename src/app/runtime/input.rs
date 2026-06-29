@@ -51,6 +51,25 @@ where
         self.send_winit_key_event_input(key, None, modifiers)
     }
 
+    /// Encode a native app key event and write it to the PTY when it maps to terminal input.
+    ///
+    /// The native window path receives committed text separately through IME commit events.
+    /// Plain printable `Key::Character` events with no terminal modifiers are therefore
+    /// deferred to `send_committed_text` so one physical key cannot write twice.
+    pub fn send_native_key_event_input(
+        &mut self,
+        key: &Key,
+        physical_key: Option<PhysicalKey>,
+        modifiers: ModifiersState,
+        defer_printable_to_committed_text: bool,
+    ) -> Result<bool, NativeAppError> {
+        if defer_printable_to_committed_text && native_key_event_uses_committed_text(key, modifiers)
+        {
+            return Ok(false);
+        }
+        self.send_winit_key_event_input(key, physical_key, modifiers)
+    }
+
     /// Encode a native key event and write it to the PTY when it maps to terminal input.
     pub fn send_winit_key_event_input(
         &mut self,
@@ -148,4 +167,11 @@ where
         }
         Ok(())
     }
+}
+
+fn native_key_event_uses_committed_text(key: &Key, modifiers: ModifiersState) -> bool {
+    matches!(key, Key::Character(_))
+        && !modifiers.control_key()
+        && !modifiers.alt_key()
+        && !modifiers.super_key()
 }

@@ -1,5 +1,13 @@
 #![forbid(unsafe_code)]
 
+#[cfg(target_os = "macos")]
+#[path = "packaging/macos_signing.rs"]
+mod macos_signing;
+
+#[cfg(unix)]
+#[path = "packaging/target_dir.rs"]
+mod target_dir;
+
 #[cfg(unix)]
 mod unix {
     use std::fs::{self, Permissions};
@@ -56,7 +64,7 @@ mod unix {
         let control = tar_file_contents(&control_tar, "./control");
         for required in [
             "Package: gromaq",
-            "Version: 0.2.0",
+            "Version: 0.2.1",
             "Architecture: amd64",
             "Maintainer: Gromaq contributors",
             "Description: Native Rust GPU-rendered terminal emulator foundation for gromaq.dev",
@@ -115,7 +123,7 @@ mod unix {
         );
 
         assert!(
-            dist.path().join("gromaq_0.2.0_amd64.deb").is_file(),
+            dist.path().join("gromaq_0.2.1_amd64.deb").is_file(),
             "relative dist package missing"
         );
     }
@@ -172,26 +180,6 @@ mod unix {
         assert!(
             icon_kind.contains("icon"),
             "AppIcon.icns must be a macOS icon: {icon_kind}"
-        );
-    }
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn macos_app_script_can_codesign_bundle_when_identity_is_supplied() {
-        let dist = run_packaging_script(
-            "scripts/package-macos-app.sh",
-            &[("GROMAQ_CODESIGN_IDENTITY", "-")],
-        );
-        let app = dist.path().join("Gromaq.app");
-
-        let verify_ok = Command::new("codesign")
-            .args(["--verify", "--deep", "--strict", &app.to_string_lossy()])
-            .status()
-            .unwrap()
-            .success();
-        assert!(
-            verify_ok,
-            "codesigned app bundle must pass strict verification"
         );
     }
 

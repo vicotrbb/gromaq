@@ -3,7 +3,7 @@ set -eu
 
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 repo="${GROMAQ_GITHUB_REPO:-vicotrbb/gromaq}"
-version="${GROMAQ_VERSION:-v0.2.0}"
+version="${GROMAQ_VERSION:-v0.2.1}"
 version_without_prefix="${version#v}"
 release_arch="${GROMAQ_RELEASE_ARCH:-x86_64}"
 deb_arch="${GROMAQ_DEB_ARCH:-amd64}"

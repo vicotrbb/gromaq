@@ -65,7 +65,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --test project_policy
-      - run: scripts/package-macos-app.sh
+      - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - run: GROMAQ_MACOS_UNIVERSAL=1 scripts/package-macos-app.sh
+      - run: file target/dist/Gromaq.app/Contents/MacOS/gromaq
+      - run: lipo -info target/dist/Gromaq.app/Contents/MacOS/gromaq
+      - run: codesign --verify --deep --strict --verbose=4 target/dist/Gromaq.app
+      - run: codesign -dv --verbose=4 target/dist/Gromaq.app
       - run: ditto -c -k --sequesterRsrc --keepParent target/dist/Gromaq.app target/dist/Gromaq-macos-app.zip
       - run: scripts/generate-checksums.sh
       - name: Publish macOS assets to GitHub Release
@@ -95,3 +100,6 @@ jobs:
           path: |
             target/dist/Gromaq-macos-app.zip
             target/dist/SHA256SUMS
+            target/dist/Gromaq-macos-app-summary.txt
+            target/dist/Gromaq-macos-codesign.txt
+            target/dist/Gromaq-macos-arch.txt

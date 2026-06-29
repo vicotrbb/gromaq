@@ -20,11 +20,13 @@ jobs:
       - run: sh -n scripts/generate-checksums.sh
       - run: sh -n scripts/notarize-macos-app.sh
       - run: sh -n scripts/capture-macos-window-proof.sh
+      - run: sh -n scripts/prove-macos-live-input-manual.sh
       - run: sh -n scripts/prove-macos-app-identity.sh
       - run: sh -n scripts/prove-arch-package.sh
       - run: sh -n scripts/prove-debian-package.sh
       - run: sh -n scripts/prove-linux-release-install.sh
       - run: sh -n scripts/prove-github-release-install.sh
+      - run: sh -n scripts/prove-github-release-macos-install.sh
       - run: sh -n scripts/prove-github-release-publication.sh
       - run: sh -n scripts/prove-linux-desktop-discovery.sh
       - run: sh -n scripts/prove-current-host-compatibility.sh

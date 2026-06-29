@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.2.1
+
+Launch-readiness patch for native terminal input and macOS distribution.
+
+Highlights:
+
+- Fixed duplicated plain typed input on the native macOS app path by routing
+  printable text through committed text events while preserving control,
+  navigation, function, Alt-modified, paste, and bracketed-paste paths.
+- Added regression coverage for keyboard plus IME commit event sequencing,
+  including `ls`, Ctrl-C, named keys, Alt-modified input, Unicode committed
+  text, and paste separation.
+- Added a macOS release installer path that downloads `Gromaq-macos-app.zip`,
+  verifies `SHA256SUMS-macos-app`, installs `Gromaq.app`, and checks the
+  bundled executable version without requiring Rust.
+- Improved macOS app packaging so app bundles are signed by default, strict
+  codesign verification runs during packaging, and the release workflow builds
+  a universal `x86_64` plus `arm64` app before publishing the zip.
+- Kept Developer ID signing and notarization explicit: local/release workflow
+  default packages are ad-hoc signed unless a Developer ID identity and
+  notarization proof are supplied.
+
+Install options:
+
+- macOS release installer:
+  `curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1 sh`
+- Linux release installer:
+  `curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1 sh`
+- Source installer:
+  `curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh`
+- Debian: `gromaq_0.2.1_amd64.deb`.
+- macOS app artifact: `Gromaq-macos-app.zip`.
+- Arch: release `PKGBUILD`, `default.SRCINFO`, and `gromaq.install`.
+
+Checksum and security notes:
+
+- Linux release installs verify `SHA256SUMS-linux-x86_64` by default.
+- macOS release installs verify `SHA256SUMS-macos-app` by default.
+- `GROMAQ_VERIFY_CHECKSUMS=0` is only for local mirror/debug workflows with a
+  separate integrity check.
+- macOS Developer ID signing and notarization are not completed unless the
+  release proof explicitly shows notarytool, stapling, and `spctl` success.
+
 ## 0.2.0
 
 Public alpha/beta terminal foundation release for early adopters on supported

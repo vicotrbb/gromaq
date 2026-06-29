@@ -10,7 +10,7 @@ bin_dir="${GROMAQ_BIN_DIR:-${CARGO_HOME:-${HOME}/.cargo}/bin}"
 platform="${GROMAQ_PLATFORM:-$(uname -s)}"
 dry_run="${GROMAQ_DRY_RUN:-0}"
 install_method="${GROMAQ_INSTALL_METHOD:-cargo}"
-release_version="${GROMAQ_VERSION:-v0.2.0}"
+release_version="${GROMAQ_VERSION:-v0.2.1}"
 release_package_version="${release_version#v}"
 release_base="${GROMAQ_RELEASE_BASE:-${repo}/releases/download/${release_version}}"
 verify_checksums="${GROMAQ_VERIFY_CHECKSUMS:-1}"
@@ -57,6 +57,10 @@ linux_release_target() {
 }
 
 release_asset_name() {
+  if [ "${platform}" = "Darwin" ]; then
+    printf '%s\n' "${GROMAQ_MACOS_RELEASE_ASSET:-Gromaq-macos-app.zip}"
+    return
+  fi
   printf '%s-%s-%s.tar.gz\n' "${package}" "${release_package_version}" "$(linux_release_target)"
 }
 
@@ -65,7 +69,15 @@ release_asset_url() {
 }
 
 checksum_asset_name() {
-  printf '%s\n' "${GROMAQ_CHECKSUM_ASSET:-SHA256SUMS-$(linux_release_target)}"
+  if [ -n "${GROMAQ_CHECKSUM_ASSET:-}" ]; then
+    printf '%s\n' "${GROMAQ_CHECKSUM_ASSET}"
+    return
+  fi
+  if [ "${platform}" = "Darwin" ]; then
+    printf '%s\n' "SHA256SUMS-macos-app"
+    return
+  fi
+  printf '%s\n' "SHA256SUMS-$(linux_release_target)"
 }
 
 checksum_asset_url() {
@@ -105,7 +117,13 @@ print_dry_run_and_exit() {
     if [ "${verify_checksums}" != "0" ]; then
       printf '%s\n' "Dry run: would verify release checksum from $(checksum_asset_url)."
     fi
-    printf '%s\n' "Dry run: would install binary to ${bin_dir}/${package}."
+    if [ "${platform}" = "Darwin" ]; then
+      app_name="${GROMAQ_APP_NAME:-Gromaq}"
+      app_dir="${GROMAQ_MACOS_APP_DIR:-${HOME}/Applications}"
+      printf '%s\n' "Dry run: would install macOS release app bundle to ${app_dir}/${app_name}.app."
+    else
+      printf '%s\n' "Dry run: would install binary to ${bin_dir}/${package}."
+    fi
   else
     printf '%s\n' "Dry run: would run cargo install --git ${repo} --branch ${branch} --locked --force ${package}."
     printf '%s\n' "Dry run: expected binary path is ${bin_dir}/${package}."
@@ -210,7 +228,7 @@ install_linux_desktop_assets_from_release() {
 
 install_release_tarball() {
   if [ "${platform}" != "Linux" ]; then
-    printf '%s\n' "error: GROMAQ_INSTALL_METHOD=release currently supports Linux tarball releases only." >&2
+    printf '%s\n' "error: internal installer error: Linux tarball install called for ${platform}." >&2
     exit 1
   fi
   if ! command -v curl >/dev/null 2>&1; then
@@ -241,6 +259,82 @@ install_release_tarball() {
   if [ "${GROMAQ_INSTALL_DESKTOP_ASSETS:-1}" != "0" ]; then
     install_linux_desktop_assets_from_release "${release_root}"
   fi
+}
+
+extract_release_zip() {
+  zip_archive="$1"
+  zip_extract_dir="$2"
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -q "${zip_archive}" -d "${zip_extract_dir}"
+    return
+  fi
+  if command -v ditto >/dev/null 2>&1; then
+    ditto -x -k "${zip_archive}" "${zip_extract_dir}"
+    return
+  fi
+  printf '%s\n' "error: ditto or unzip is required to extract macOS release app assets." >&2
+  exit 1
+}
+
+verify_macos_release_app_version() {
+  app_path="$1"
+  executable="${app_path}/Contents/MacOS/${package}"
+  expected="gromaq ${release_package_version}"
+  if [ ! -x "${executable}" ]; then
+    printf '%s\n' "error: macOS release app did not contain executable Contents/MacOS/${package}." >&2
+    exit 1
+  fi
+  actual="$("${executable}" --version 2>/dev/null || true)"
+  if [ "${actual}" != "${expected}" ]; then
+    printf '%s\n' "error: macOS release app executable reported '${actual}', expected '${expected}'." >&2
+    exit 1
+  fi
+}
+
+install_release_macos_app() {
+  if [ "${platform}" != "Darwin" ]; then
+    printf '%s\n' "error: internal installer error: macOS app install called for ${platform}." >&2
+    exit 1
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    printf '%s\n' "error: curl is required to download Gromaq release assets." >&2
+    exit 1
+  fi
+
+  app_name="${GROMAQ_APP_NAME:-Gromaq}"
+  app_dir="${GROMAQ_MACOS_APP_DIR:-${HOME}/Applications}"
+  release_temp_root="$(mktemp -d "${TMPDIR:-/tmp}/gromaq-release-install.XXXXXX")"
+  archive="${release_temp_root}/$(release_asset_name)"
+  extract_dir="${release_temp_root}/extract"
+  app_path="${extract_dir}/${app_name}.app"
+  destination="${app_dir}/${app_name}.app"
+
+  printf '%s\n' "Downloading $(release_asset_url)..."
+  curl -fsSL "$(release_asset_url)" -o "${archive}"
+  verify_release_checksum "${archive}"
+  mkdir -p "${extract_dir}"
+  extract_release_zip "${archive}" "${extract_dir}"
+  verify_macos_release_app_version "${app_path}"
+
+  mkdir -p "${app_dir}"
+  rm -rf "${destination}"
+  cp -R "${app_path}" "${destination}"
+  printf '%s\n' "Installed macOS release app bundle to ${destination}."
+}
+
+install_release_asset() {
+  case "${platform}" in
+    Linux)
+      install_release_tarball
+      ;;
+    Darwin)
+      install_release_macos_app
+      ;;
+    *)
+      printf '%s\n' "error: GROMAQ_INSTALL_METHOD=release supports Linux tarballs and macOS app bundles only; unsupported platform: ${platform}." >&2
+      exit 1
+      ;;
+  esac
 }
 
 verify_release_checksum() {
@@ -313,7 +407,7 @@ elif [ "${install_method}" = "cargo" ]; then
   printf '%s\n' "Installing ${package} from ${repo} (${branch})..."
   cargo install --git "${repo}" --branch "${branch}" --locked --force "${package}"
 elif [ "${install_method}" = "release" ]; then
-  install_release_tarball
+  install_release_asset
 else
   printf '%s\n' "error: unsupported GROMAQ_INSTALL_METHOD=${install_method}; use cargo or release." >&2
   exit 1
@@ -326,11 +420,18 @@ case "${platform}" in
     fi
     ;;
   Darwin)
-    if [ "${GROMAQ_INSTALL_APP_BUNDLE:-0}" = "1" ]; then
+    if [ "${install_method}" != "release" ] && [ "${GROMAQ_INSTALL_APP_BUNDLE:-0}" = "1" ]; then
       install_macos_app_bundle
     fi
     ;;
 esac
 
-printf '%s\n' "Installed ${package}."
-printf '%s\n' "Run it with: ${package}"
+if [ "${install_method}" = "release" ] && [ "${platform}" = "Darwin" ]; then
+  app_name="${GROMAQ_APP_NAME:-Gromaq}"
+  app_dir="${GROMAQ_MACOS_APP_DIR:-${HOME}/Applications}"
+  printf '%s\n' "Installed ${app_name}.app."
+  printf '%s\n' "Open it from: ${app_dir}/${app_name}.app"
+else
+  printf '%s\n' "Installed ${package}."
+  printf '%s\n' "Run it with: ${package}"
+fi

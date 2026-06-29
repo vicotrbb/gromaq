@@ -8,7 +8,8 @@ package="${GROMAQ_PACKAGE:-gromaq}"
 version="$(
   sed -n 's/^version = "\(.*\)"/\1/p' "${root}/Cargo.toml" | head -n 1
 )"
-binary_path="${GROMAQ_BINARY_PATH:-${root}/target/release/${package}}"
+target_dir="${CARGO_TARGET_DIR:-${root}/target}"
+binary_path="${GROMAQ_BINARY_PATH:-${target_dir}/release/${package}}"
 dist_dir="${GROMAQ_DIST_DIR:-${root}/target/dist}"
 deb_arch="${GROMAQ_DEB_ARCH:-}"
 

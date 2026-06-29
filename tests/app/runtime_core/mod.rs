@@ -15,5 +15,6 @@ use crate::support::{MockFrameRenderer, MockPtySession, MockPtySpawner};
 mod clipboard;
 mod keyboard;
 mod metrics;
+mod native_keyboard;
 mod responses;
 mod shell;

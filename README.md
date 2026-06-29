@@ -12,7 +12,7 @@ Electron, webview, React, or browser UI runtime.
 
 ## Status
 
-Gromaq `0.2.0` is a public alpha/beta terminal foundation release. It is
+Gromaq `0.2.1` is a public alpha/beta terminal foundation release. It is
 installable and usable by early adopters on supported macOS and Linux systems,
 but it is not a v1.0 daily-driver stability claim.
 
@@ -29,17 +29,24 @@ Detailed proof ledgers live in
 
 ## Install
 
-Source installer, for macOS and Linux machines with Rust stable installed:
+macOS release installer, using the `v0.2.1` GitHub Release app bundle and
+checksum manifest. This path does not require Rust:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1 sh
 ```
 
-Linux release installer, using the `v0.2.0` GitHub Release tarball and checksum
+Linux release installer, using the `v0.2.1` GitHub Release tarball and checksum
 manifest:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.0 sh
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1 sh
+```
+
+Source installer, for macOS and Linux contributors with Rust stable installed:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | sh
 ```
 
 Manual source install:
@@ -66,34 +73,37 @@ curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/instal
 
 ### Packages
 
-- Linux tarball: `gromaq-0.2.0-linux-x86_64.tar.gz`, verified through
+- Linux tarball: `gromaq-0.2.1-linux-x86_64.tar.gz`, verified through
   `SHA256SUMS-linux-x86_64`.
-- Debian: `gromaq_0.2.0_amd64.deb`.
+- Debian: `gromaq_0.2.1_amd64.deb`.
 - Arch: release assets include `PKGBUILD`, `default.SRCINFO`, and
   `gromaq.install` for source-package workflows.
-- macOS app bundle: `Gromaq-macos-app.zip`.
+- macOS universal app bundle: `Gromaq-macos-app.zip`, verified through
+  `SHA256SUMS-macos-app`.
 
-macOS source install gives you the `gromaq` binary. To install a user-local
-`.app` bundle from the installer on macOS:
+macOS release install copies `Gromaq.app` to `~/Applications` by default.
+Set `GROMAQ_MACOS_APP_DIR=/path/to/apps` to choose another destination. The
+current public macOS app artifact is ad-hoc signed and not Developer ID
+notarized unless a future release note says otherwise.
+
+macOS source install gives contributors the `gromaq` binary. To build and copy
+a user-local `.app` bundle from source on macOS:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vicotrbb/gromaq/main/scripts/install.sh | GROMAQ_INSTALL_APP_BUNDLE=1 sh
 ```
 
-By default this copies `Gromaq.app` to `~/Applications`. Set
-`GROMAQ_MACOS_APP_DIR=/path/to/apps` to choose another destination. The current
-public macOS app artifact is unsigned and not Developer ID notarized unless a
-future release note says otherwise.
+This source bundle path requires Rust and Cargo.
 
 ## Requirements
 
-- Rust stable with Cargo for source installs.
+- Rust stable with Cargo for source installs only.
 - macOS or Linux with GPU/windowing support available to `winit` and `wgpu`.
 - A configured shell such as `zsh`, `bash`, or another login shell.
 
 The installer does not install Rust or system packages. If Cargo is missing,
-install Rust from your package manager or `https://rustup.rs`, then rerun the
-installer.
+use the release installer or install Rust from your package manager or
+`https://rustup.rs` before running a source install.
 
 ## What Works Today
 

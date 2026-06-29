@@ -1,8 +1,8 @@
 pub(super) const REQUIRED_README_LAUNCH_MARKERS: &[&str] = &[
     "public alpha/beta terminal foundation release",
-    "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.0",
+    "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1",
     "Gromaq-macos-app.zip",
-    "gromaq_0.2.0_amd64.deb",
+    "gromaq_0.2.1_amd64.deb",
     "`PKGBUILD`, `default.SRCINFO`, and",
     "Accepted live desktop screenshot proof",
     "Hardware-backed 144 Hz frame pacing proof",
@@ -15,8 +15,8 @@ pub(super) const REQUIRED_README_LAUNCH_MARKERS: &[&str] = &[
 ];
 
 pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
-    ("documentation/release.md", "GROMAQ_VERSION=v0.2.0"),
-    ("documentation/release.md", "git tag -a v0.2.0"),
+    ("documentation/release.md", "GROMAQ_VERSION=v0.2.1"),
+    ("documentation/release.md", "git tag -a v0.2.1"),
     (
         "documentation/release.md",
         "scripts/prove-github-release-publication.sh",
@@ -27,9 +27,13 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/release.md",
-        "gromaq-0.2.0-linux-x86_64.tar.gz",
+        "scripts/prove-github-release-macos-install.sh",
     ),
-    ("documentation/release.md", "gromaq_0.2.0_amd64.deb"),
+    (
+        "documentation/release.md",
+        "gromaq-0.2.1-linux-x86_64.tar.gz",
+    ),
+    ("documentation/release.md", "gromaq_0.2.1_amd64.deb"),
     ("documentation/release.md", "Gromaq-macos-app.zip"),
     ("documentation/release.md", "default.SRCINFO"),
     ("documentation/release.md", "Historical v0.1.0 Proof"),
