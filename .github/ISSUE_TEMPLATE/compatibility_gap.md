@@ -28,7 +28,7 @@ selection behavior, mouse reporting, status response, or rendered frame.
 
 Link or paste the closest current evidence from:
 
-- `COMPATIBILITY.md`
+- `documentation/compatibility.md`
 - deterministic tests
 - golden fixtures
 - PTY tests
