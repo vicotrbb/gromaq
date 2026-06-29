@@ -6,3 +6,5 @@ mod mouse_protocol;
 mod scrollback_navigation;
 #[path = "runtime_input/window_mouse.rs"]
 mod window_mouse;
+#[path = "runtime_input/window_selection.rs"]
+mod window_selection;

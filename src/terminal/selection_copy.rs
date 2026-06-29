@@ -14,11 +14,13 @@ impl Terminal {
     }
 
     /// Clear the active selection.
-    pub fn clear_selection(&mut self) {
-        if self.selection.is_some() {
+    pub fn clear_selection(&mut self) -> bool {
+        let had_selection = self.selection.is_some();
+        if had_selection {
             self.dirty.mark_viewport(self.config.rows, self.config.cols);
         }
         self.selection = None;
+        had_selection
     }
 
     /// Copy the active selection as plain text.
