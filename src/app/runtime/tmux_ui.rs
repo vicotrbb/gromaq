@@ -1,16 +1,29 @@
 use crate::tmux::{TmuxActionResult, TmuxCommandRunner, TmuxManagerSnapshot};
 
 use super::NativeTerminalRuntime;
-use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState};
+use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset};
 
 impl<S> NativeTerminalRuntime<S> {
     /// Toggle the native tmux manager panel using a freshly read snapshot.
     pub fn toggle_tmux_manager_panel(&mut self, snapshot: TmuxManagerSnapshot) {
+        self.toggle_tmux_manager_panel_with_workspaces(snapshot, Vec::new());
+    }
+
+    /// Toggle the native tmux manager panel with configured workspace presets.
+    pub fn toggle_tmux_manager_panel_with_workspaces(
+        &mut self,
+        snapshot: TmuxManagerSnapshot,
+        workspace_presets: Vec<TmuxWorkspaceUiPreset>,
+    ) {
         if self.tmux_manager_panel_is_open() {
             self.tmux_manager_panel = None;
             self.tmux_manager_snapshot = None;
         } else {
-            self.tmux_manager_panel = Some(TmuxManagerPanelState::open_for_snapshot(&snapshot));
+            self.tmux_manager_panel =
+                Some(TmuxManagerPanelState::open_for_snapshot_with_workspaces(
+                    &snapshot,
+                    workspace_presets,
+                ));
             self.tmux_manager_snapshot = Some(snapshot);
         }
         self.terminal.invalidate_viewport();

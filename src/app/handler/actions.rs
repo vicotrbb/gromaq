@@ -103,8 +103,10 @@ impl NativeTerminalApp {
             ),
             Some(super::super::NativeTmuxAssistAction::ToggleManager)
         ) {
-            self.runtime
-                .toggle_tmux_manager_panel(read_tmux_manager_snapshot());
+            self.runtime.toggle_tmux_manager_panel_with_workspaces(
+                read_tmux_manager_snapshot(),
+                self.lifecycle.config().tmux_workspaces.clone(),
+            );
             if let Some(window) = &self.window {
                 window.request_redraw();
             }

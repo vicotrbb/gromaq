@@ -6,8 +6,8 @@ use winit::window::{Window, WindowAttributes};
 
 use crate::config::GromaqConfig;
 
-use super::super::NativeAppError;
 use super::super::icon::gromaq_window_icon;
+use super::super::{NativeAppError, TmuxWorkspaceUiPreset};
 
 const NANOS_PER_SECOND: u64 = 1_000_000_000;
 
@@ -38,6 +38,8 @@ pub struct NativeAppConfig {
     pub welcome_screen: bool,
     /// Whether platform screenshot APIs may read the native window contents.
     pub screen_capture_allowed: bool,
+    /// tmux workspace presets visible in the native manager panel.
+    pub tmux_workspaces: Vec<TmuxWorkspaceUiPreset>,
 }
 
 impl Default for NativeAppConfig {
@@ -55,6 +57,7 @@ impl Default for NativeAppConfig {
             startup_text: None,
             welcome_screen: true,
             screen_capture_allowed: true,
+            tmux_workspaces: Vec::new(),
         }
     }
 }
@@ -68,6 +71,7 @@ impl NativeAppConfig {
         Ok(Self {
             target_fps: config.performance.target_fps,
             welcome_screen: config.welcome.enabled,
+            tmux_workspaces: tmux_workspace_presets(config),
             ..Self::default()
         })
     }
@@ -89,4 +93,16 @@ impl NativeAppConfig {
     pub fn target_frame_interval(&self) -> Duration {
         Duration::from_nanos(NANOS_PER_SECOND / u64::from(self.target_fps.max(1)))
     }
+}
+
+fn tmux_workspace_presets(config: &GromaqConfig) -> Vec<TmuxWorkspaceUiPreset> {
+    if !config.tmux.enabled {
+        return Vec::new();
+    }
+    config
+        .tmux
+        .workspaces
+        .iter()
+        .map(|(key, workspace)| TmuxWorkspaceUiPreset::new(key.clone(), workspace.clone()))
+        .collect()
 }

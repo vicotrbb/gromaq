@@ -5,6 +5,7 @@ use std::time::Duration;
 use gromaq::app::{
     NativeAppConfig, NativeTerminalApp, NativeTerminalRuntimeConfig, NativeTextZoomAction,
 };
+use gromaq::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use gromaq::pty::ShellCommand;
 use gromaq::renderer::RendererConfig;
 use gromaq::{ConfigFileReloader, CursorShape, CursorStyleSetting, GromaqConfig};
@@ -83,6 +84,29 @@ fn native_app_config_uses_validated_gromaq_performance_target() {
         app_config.target_frame_interval(),
         Duration::from_nanos(8_333_333)
     );
+}
+
+#[test]
+fn native_app_config_carries_enabled_tmux_workspace_presets() {
+    let mut user_config = GromaqConfig::default();
+    user_config.tmux.enabled = true;
+    user_config.tmux.workspaces.insert(
+        "gromaq".to_owned(),
+        TmuxWorkspaceSettings {
+            session: "gromaq".to_owned(),
+            root: Some("/repo".to_owned()),
+            windows: vec![TmuxWorkspaceWindowSettings {
+                name: "code".to_owned(),
+                panes: vec!["nvim".to_owned()],
+            }],
+        },
+    );
+
+    let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
+
+    assert_eq!(app_config.tmux_workspaces.len(), 1);
+    assert_eq!(app_config.tmux_workspaces[0].key, "gromaq");
+    assert_eq!(app_config.tmux_workspaces[0].settings.session, "gromaq");
 }
 
 #[test]
