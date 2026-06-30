@@ -136,6 +136,11 @@ impl TmuxManagerPanelState {
         self.last_action_feedback.as_deref()
     }
 
+    /// Return configured workspace presets visible in this panel.
+    pub fn workspace_presets(&self) -> &[TmuxWorkspaceUiPreset] {
+        &self.workspace_presets
+    }
+
     /// Record action execution feedback from a runtime-specific action path.
     pub fn record_action_feedback(&mut self, feedback: impl Into<String>) {
         self.last_action_feedback = Some(feedback.into());

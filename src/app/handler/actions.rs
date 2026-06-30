@@ -116,20 +116,31 @@ impl NativeTerminalApp {
                 .runtime
                 .handle_tmux_manager_key(&logical_key, self.modifiers);
             if !matches!(tmux_outcome, super::super::TmuxManagerKeyOutcome::Ignored) {
-                if self
+                let terminal_dispatched = self
                     .runtime
                     .dispatch_tmux_manager_terminal_action(tmux_outcome.clone())
-                    .is_none()
-                {
-                    self.runtime.dispatch_tmux_manager_action(
+                    .is_some();
+                let action_dispatched = if terminal_dispatched {
+                    false
+                } else {
+                    self.runtime
+                        .dispatch_tmux_manager_action(
+                            tmux_outcome.clone(),
+                            &crate::tmux::SystemTmuxCommandRunner,
+                        )
+                        .is_some()
+                };
+                let workspace_dispatched = self
+                    .runtime
+                    .dispatch_tmux_manager_workspace(
                         tmux_outcome.clone(),
                         &crate::tmux::SystemTmuxCommandRunner,
-                    );
+                    )
+                    .is_some();
+                if terminal_dispatched || action_dispatched || workspace_dispatched {
+                    self.runtime
+                        .refresh_tmux_manager_panel(read_tmux_manager_snapshot());
                 }
-                self.runtime.dispatch_tmux_manager_workspace(
-                    tmux_outcome,
-                    &crate::tmux::SystemTmuxCommandRunner,
-                );
                 if let Some(window) = &self.window {
                     window.request_redraw();
                 }

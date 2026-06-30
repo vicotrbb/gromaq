@@ -146,6 +146,31 @@ fn runtime_toggle_opens_and_closes_renderable_tmux_manager_panel() {
     assert!(!runtime.tmux_manager_panel_is_open());
 }
 
+#[test]
+fn runtime_refreshes_open_tmux_manager_panel_snapshot() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 80,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.toggle_tmux_manager_panel(manager_snapshot());
+
+    runtime.refresh_tmux_manager_panel(refreshed_manager_snapshot());
+
+    assert!(runtime.tmux_manager_panel_is_open());
+    let mut renderer = MockFrameRenderer::default();
+    assert!(
+        runtime
+            .render_terminal_frame_with_status_overlay(&mut renderer, Some("144 fps"))
+            .unwrap()
+    );
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[3].contains("Sessions gamma*"));
+    assert!(!frame.lines[3].contains("alpha"));
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         state: TmuxState {
@@ -189,6 +214,39 @@ fn manager_snapshot() -> TmuxManagerSnapshot {
             session_name: "alpha".to_owned(),
             window_index: 1,
             pane_id: "%2".to_owned(),
+        }),
+    }
+}
+
+fn refreshed_manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "gamma".to_owned(),
+                attached: true,
+            }],
+            windows: vec![TmuxWindow {
+                session_name: "gamma".to_owned(),
+                index: 0,
+                name: "ops".to_owned(),
+                active: true,
+            }],
+            panes: vec![TmuxPane {
+                session_name: "gamma".to_owned(),
+                window_index: 0,
+                index: 0,
+                id: "%9".to_owned(),
+                title: "monitor".to_owned(),
+                current_command: "htop".to_owned(),
+                active: true,
+                width: Some(80),
+                height: Some(24),
+            }],
+        },
+        current: Some(TmuxManagerCurrent {
+            session_name: "gamma".to_owned(),
+            window_index: 0,
+            pane_id: "%9".to_owned(),
         }),
     }
 }

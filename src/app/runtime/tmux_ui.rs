@@ -41,6 +41,23 @@ impl<S> NativeTerminalRuntime<S> {
             .is_some_and(TmuxManagerPanelState::is_open)
     }
 
+    /// Refresh the open tmux manager panel with a newly read snapshot.
+    pub fn refresh_tmux_manager_panel(&mut self, snapshot: TmuxManagerSnapshot) {
+        let Some(panel) = self.tmux_manager_panel.as_ref() else {
+            return;
+        };
+        if !panel.is_open() {
+            return;
+        }
+        let workspace_presets = panel.workspace_presets().to_vec();
+        self.tmux_manager_panel = Some(TmuxManagerPanelState::open_for_snapshot_with_workspaces(
+            &snapshot,
+            workspace_presets,
+        ));
+        self.tmux_manager_snapshot = Some(snapshot);
+        self.terminal.invalidate_viewport();
+    }
+
     /// Let the open tmux manager panel handle a native key before shell input.
     pub fn handle_tmux_manager_key(
         &mut self,
