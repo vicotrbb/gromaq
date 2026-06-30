@@ -4,6 +4,7 @@ use super::selection::{
     selected_pane_index, selected_panes, selected_session_index, selected_window_index,
     selected_windows, window_label,
 };
+use super::workspaces::TmuxWorkspaceUiPreset;
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 
 /// Focus region within the native tmux manager panel.
@@ -32,11 +33,22 @@ pub struct TmuxManagerPanelState {
     pub(super) confirmation: Option<String>,
     pub(super) confirmation_action: Option<ActionId>,
     pub(super) last_action_feedback: Option<String>,
+    pub(super) workspace_presets: Vec<TmuxWorkspaceUiPreset>,
+    pub(super) selected_workspace: usize,
+    pub(super) workspace_feedback: Option<String>,
 }
 
 impl TmuxManagerPanelState {
     /// Build an open panel state from the current tmux manager snapshot.
     pub fn open_for_snapshot(snapshot: &TmuxManagerSnapshot) -> Self {
+        Self::open_for_snapshot_with_workspaces(snapshot, Vec::new())
+    }
+
+    /// Build an open panel state with visible workspace presets.
+    pub fn open_for_snapshot_with_workspaces(
+        snapshot: &TmuxManagerSnapshot,
+        workspace_presets: Vec<TmuxWorkspaceUiPreset>,
+    ) -> Self {
         let selected_session = selected_session_index(snapshot);
         let selected_window = selected_window_index(snapshot, selected_session);
         let selected_pane = selected_pane_index(snapshot, selected_session, selected_window);
@@ -51,6 +63,9 @@ impl TmuxManagerPanelState {
             confirmation: None,
             confirmation_action: None,
             last_action_feedback: None,
+            workspace_presets,
+            selected_workspace: 0,
+            workspace_feedback: None,
         }
     }
 

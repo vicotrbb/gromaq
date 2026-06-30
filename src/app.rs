@@ -70,7 +70,7 @@ pub use surface::{
 };
 pub use tmux_ui::{
     TmuxManagerFocus, TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxStatusKind, TmuxUiSnapshot,
-    apply_tmux_manager_panel, apply_tmux_status_strip,
+    TmuxWorkspaceUiPreset, apply_tmux_manager_panel, apply_tmux_status_strip,
 };
 pub(crate) use welcome::{WELCOME_AVATAR_ANSI, default_welcome_text};
 

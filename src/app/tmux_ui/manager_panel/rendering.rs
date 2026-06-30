@@ -3,6 +3,7 @@
 use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
+use super::workspaces::workspace_row;
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot, TmuxPane};
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 
@@ -41,7 +42,7 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
             )
         })
         .unwrap_or_else(|| "none".to_owned());
-    vec![
+    let mut lines = vec![
         format!(
             "tmux manager | focus {} | target {target}",
             focus_label(panel.focus)
@@ -49,12 +50,19 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
         format!("Sessions {}", session_row(snapshot, panel)),
         format!("Windows {}", window_row(snapshot, panel)),
         format!("Panes {}", pane_row(snapshot, panel)),
-        action_row(panel),
+    ];
+    if let Some(workspace_row) = workspace_row(panel) {
+        lines.push(workspace_row);
+    }
+    lines.push(action_row(panel));
+    lines.push(
         panel
             .confirmation
             .clone()
+            .or_else(|| panel.workspace_feedback.clone())
             .unwrap_or_else(|| "Esc close".to_owned()),
-    ]
+    );
+    lines
 }
 
 fn focus_label(focus: TmuxManagerFocus) -> &'static str {
