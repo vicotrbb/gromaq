@@ -8,7 +8,10 @@ use crate::app::perf::{
     average_duration_nanos, dirty_region_cell_count, saturating_duration_nanos,
     scrollback_cell_count,
 };
-use crate::app::{TmuxUiSnapshot, apply_tmux_status_strip};
+use crate::app::{
+    TmuxManagerPanelState, TmuxUiSnapshot, apply_tmux_manager_panel, apply_tmux_status_strip,
+};
+use crate::tmux::TmuxManagerSnapshot;
 
 impl<S> NativeTerminalRuntime<S> {
     /// Return deterministic native runtime counters.
@@ -67,11 +70,47 @@ impl<S> NativeTerminalRuntime<S> {
         self.render_terminal_frame_with_visuals(renderer, None, Some(tmux_snapshot))
     }
 
+    /// Render the current terminal frame with a native tmux manager panel.
+    pub fn render_terminal_frame_with_tmux_manager_panel<R>(
+        &mut self,
+        renderer: &mut R,
+        tmux_snapshot: &TmuxManagerSnapshot,
+        panel: &TmuxManagerPanelState,
+    ) -> GromaqResult<bool>
+    where
+        R: GpuRenderer,
+    {
+        self.render_terminal_frame_with_visual_surfaces(
+            renderer,
+            None,
+            None,
+            Some((tmux_snapshot, panel)),
+        )
+    }
+
     fn render_terminal_frame_with_visuals<R>(
         &mut self,
         renderer: &mut R,
         status_overlay: Option<&str>,
         tmux_snapshot: Option<&TmuxUiSnapshot>,
+    ) -> GromaqResult<bool>
+    where
+        R: GpuRenderer,
+    {
+        self.render_terminal_frame_with_visual_surfaces(
+            renderer,
+            status_overlay,
+            tmux_snapshot,
+            None,
+        )
+    }
+
+    fn render_terminal_frame_with_visual_surfaces<R>(
+        &mut self,
+        renderer: &mut R,
+        status_overlay: Option<&str>,
+        tmux_snapshot: Option<&TmuxUiSnapshot>,
+        tmux_manager_panel: Option<(&TmuxManagerSnapshot, &TmuxManagerPanelState)>,
     ) -> GromaqResult<bool>
     where
         R: GpuRenderer,
@@ -102,6 +141,11 @@ impl<S> NativeTerminalRuntime<S> {
         }
         if let Some(tmux_snapshot) = tmux_snapshot
             && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
+        {
+            dirty_regions.push(region);
+        }
+        if let Some((tmux_snapshot, panel)) = tmux_manager_panel
+            && let Some(region) = apply_tmux_manager_panel(&mut grid, tmux_snapshot, panel)
         {
             dirty_regions.push(region);
         }

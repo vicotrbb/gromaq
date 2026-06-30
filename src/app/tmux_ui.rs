@@ -1,6 +1,10 @@
 //! Native tmux UI state and frame-only rendering helpers.
 
+mod manager_panel;
+
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
+
+pub use manager_panel::{TmuxManagerFocus, TmuxManagerPanelState, apply_tmux_manager_panel};
 
 /// High-level tmux status shown in native tmux UI surfaces.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

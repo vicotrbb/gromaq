@@ -68,7 +68,10 @@ pub use surface::{
     render_and_present_terminal_glyph_frame_report,
     render_and_present_terminal_glyph_frame_report_with_snapshot,
 };
-pub use tmux_ui::{TmuxStatusKind, TmuxUiSnapshot, apply_tmux_status_strip};
+pub use tmux_ui::{
+    TmuxManagerFocus, TmuxManagerPanelState, TmuxStatusKind, TmuxUiSnapshot,
+    apply_tmux_manager_panel, apply_tmux_status_strip,
+};
 pub(crate) use welcome::{WELCOME_AVATAR_ANSI, default_welcome_text};
 
 /// Native terminal application handler for the `winit` event loop.
