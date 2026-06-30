@@ -6,9 +6,10 @@ use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-const PANEL_ACTIONS: [ActionId; 12] = [
+const PANEL_ACTIONS: [ActionId; 13] = [
     ActionId::SplitPaneRight,
     ActionId::KillWindow,
+    ActionId::AttachSession,
     ActionId::DetachSession,
     ActionId::SplitPaneDown,
     ActionId::NewWindow,

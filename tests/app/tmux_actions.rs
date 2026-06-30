@@ -11,6 +11,8 @@ use gromaq::tmux::{
 };
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
+use crate::support::MockPtySpawner;
+
 #[derive(Debug)]
 struct FakeRunner {
     calls: RefCell<Vec<ExpectedCall>>,
@@ -219,6 +221,37 @@ fn runtime_dispatches_open_manager_action_outcome_through_runner() {
         }
     ));
     assert_eq!(runner.remaining_calls(), 0);
+}
+
+#[test]
+fn runtime_dispatches_attach_session_action_through_terminal_pty() {
+    let mut snapshot = manager_snapshot();
+    snapshot.current = None;
+    let mut runtime = NativeTerminalRuntime::<crate::support::MockPtySession>::new(
+        NativeTerminalRuntimeConfig::default(),
+    )
+    .unwrap();
+    runtime.start_shell(&MockPtySpawner::default()).unwrap();
+    runtime.toggle_tmux_manager_panel(snapshot);
+
+    let result = runtime
+        .dispatch_tmux_manager_terminal_action(TmuxManagerKeyOutcome::ActionRequested(
+            ActionId::AttachSession,
+        ))
+        .unwrap();
+
+    assert!(matches!(
+        result,
+        TmuxActionResult::Success {
+            action_id: ActionId::AttachSession,
+            ..
+        }
+    ));
+    let input = runtime.shell_session().unwrap().input.borrow();
+    assert_eq!(
+        input.last().map(Vec::as_slice),
+        Some(b"tmux attach-session -t alpha\r".as_slice())
+    );
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {

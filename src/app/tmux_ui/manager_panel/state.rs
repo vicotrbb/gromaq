@@ -136,6 +136,11 @@ impl TmuxManagerPanelState {
         self.last_action_feedback.as_deref()
     }
 
+    /// Record action execution feedback from a runtime-specific action path.
+    pub fn record_action_feedback(&mut self, feedback: impl Into<String>) {
+        self.last_action_feedback = Some(feedback.into());
+    }
+
     /// Return the selected session name for a snapshot.
     pub fn selected_session_name<'a>(&self, snapshot: &'a TmuxManagerSnapshot) -> Option<&'a str> {
         snapshot
