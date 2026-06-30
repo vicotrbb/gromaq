@@ -8,7 +8,7 @@ pub(super) const ACTIONS: &[TmuxAction] = &[
         "start-session",
         "Start session",
         "Start a named tmux session.",
-        "tmux new-session -s <session>",
+        "tmux new-session -d -s <session>",
         None,
         false,
         false,

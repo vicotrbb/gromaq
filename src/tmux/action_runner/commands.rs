@@ -17,7 +17,7 @@ pub(super) fn command_args(request: &TmuxActionRequest) -> Result<Vec<String>, S
             .ok_or_else(|| "missing new name".to_owned())
     };
     let args = match request.action_id {
-        ActionId::StartSession => vec!["new-session".into(), "-s".into(), target()?],
+        ActionId::StartSession => vec!["new-session".into(), "-d".into(), "-s".into(), target()?],
         ActionId::AttachSession => vec!["attach-session".into(), "-t".into(), target()?],
         ActionId::DetachSession => vec!["detach-client".into()],
         ActionId::SplitPaneRight => split_args("-h", request.target.clone()),

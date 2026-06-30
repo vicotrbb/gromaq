@@ -52,7 +52,12 @@ fn tmux_manager_panel_collects_name_and_starts_session() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
     focus_action_index(&mut panel, &snapshot, 3);
-    let runner = FakeRunner::new(vec![ExpectedCall::success(&["new-session", "-s", "delta"])]);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "new-session",
+        "-d",
+        "-s",
+        "delta",
+    ])]);
 
     submit_action_name(&mut panel, &snapshot, "delta");
     let outcome = panel.handle_key(

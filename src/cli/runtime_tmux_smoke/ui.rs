@@ -63,6 +63,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let manager_rendered = render_manager_panel(&mut runtime, &mut renderer);
     let confirmation_checked = drive_confirmation_cancel(&mut runtime);
     let safe_action_dispatched = drive_safe_action(&mut runtime, &runner);
+    let name_entry_dispatched = drive_name_entry_action(&mut runtime, &runner);
     let workspace_result = run_workspace_proof(&snapshot, &workspace_preset, &runner);
     let state = match TmuxStateReader::new(runner.clone()).read_state() {
         Ok(state) => state,
@@ -82,7 +83,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nconfirmation path checked: {confirmation_checked}\nsafe action dispatched: {safe_action_dispatched}\nworkspace launch: {workspace_launch}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nconfirmation path checked: {confirmation_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.duplicate_prevented,
             state.sessions.len(),
             state.windows.len(),
@@ -155,4 +156,45 @@ fn drive_safe_action(
                 ..
             })
         )
+}
+
+fn drive_name_entry_action(
+    runtime: &mut NativeTerminalRuntime<()>,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    for _ in 0..3 {
+        if matches!(
+            runtime
+                .handle_tmux_manager_key(&Key::Named(NamedKey::ArrowDown), ModifiersState::empty()),
+            TmuxManagerKeyOutcome::Ignored
+        ) {
+            return false;
+        }
+    }
+    if !matches!(
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty()),
+        TmuxManagerKeyOutcome::Consumed
+    ) {
+        return false;
+    }
+    for character in "gromaq-runtime-tmux-ui-name".chars() {
+        if !matches!(
+            runtime.handle_tmux_manager_key(
+                &Key::Character(character.to_string().into()),
+                ModifiersState::empty()
+            ),
+            TmuxManagerKeyOutcome::Consumed
+        ) {
+            return false;
+        }
+    }
+    let requested =
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::StartSession,
+            ..
+        })
+    )
 }
