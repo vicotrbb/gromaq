@@ -8,6 +8,7 @@ use crate::app::perf::{
     average_duration_nanos, dirty_region_cell_count, saturating_duration_nanos,
     scrollback_cell_count,
 };
+use crate::app::{TmuxUiSnapshot, apply_tmux_status_strip};
 
 impl<S> NativeTerminalRuntime<S> {
     /// Return deterministic native runtime counters.
@@ -51,6 +52,30 @@ impl<S> NativeTerminalRuntime<S> {
     where
         R: GpuRenderer,
     {
+        self.render_terminal_frame_with_visuals(renderer, status_overlay, None)
+    }
+
+    /// Render the current terminal frame with a persistent tmux status strip.
+    pub fn render_terminal_frame_with_tmux_status_strip<R>(
+        &mut self,
+        renderer: &mut R,
+        tmux_snapshot: &TmuxUiSnapshot,
+    ) -> GromaqResult<bool>
+    where
+        R: GpuRenderer,
+    {
+        self.render_terminal_frame_with_visuals(renderer, None, Some(tmux_snapshot))
+    }
+
+    fn render_terminal_frame_with_visuals<R>(
+        &mut self,
+        renderer: &mut R,
+        status_overlay: Option<&str>,
+        tmux_snapshot: Option<&TmuxUiSnapshot>,
+    ) -> GromaqResult<bool>
+    where
+        R: GpuRenderer,
+    {
         self.perf.render_attempts += 1;
         let mut dirty_regions = self.terminal.take_dirty_regions();
         if dirty_regions.is_empty() {
@@ -72,6 +97,11 @@ impl<S> NativeTerminalRuntime<S> {
             }
         } else if let Some(status_overlay) = status_overlay
             && let Some(region) = apply_status_overlay(&mut grid, cursor, status_overlay)
+        {
+            dirty_regions.push(region);
+        }
+        if let Some(tmux_snapshot) = tmux_snapshot
+            && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
         {
             dirty_regions.push(region);
         }

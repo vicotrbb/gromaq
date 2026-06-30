@@ -8,6 +8,8 @@ mod lifecycle;
 mod presentation;
 #[path = "app/rendering.rs"]
 mod rendering;
+#[path = "app/rendering_tmux.rs"]
+mod rendering_tmux;
 #[path = "app/runtime_core/mod.rs"]
 mod runtime_core;
 #[path = "app/runtime_input.rs"]
