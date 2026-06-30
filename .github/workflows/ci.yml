@@ -51,21 +51,21 @@ jobs:
       - run: node --check site/check-links.mjs
       - run: node site/check-links.mjs
       - run: scripts/prove-current-host-compatibility.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: gromaq-current-host-compatibility-proof
           path: target/compatibility-proof/*
       - run: scripts/prove-welcome-preview.sh
       - run: scripts/prove-readme-welcome-preview.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: gromaq-welcome-preview-proof
           path: |
             target/welcome-preview-proof/*
             target/readme-welcome-preview-proof/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: gromaq-theme-preview-proof
@@ -156,7 +156,7 @@ jobs:
       - run: scripts/prove-current-host-compatibility.sh
         env:
           GROMAQ_REQUIRED_COMPAT_TOOLS: bash zsh fish vim nvim tmux less top htop btop ssh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: gromaq-linux-compatibility-proof
