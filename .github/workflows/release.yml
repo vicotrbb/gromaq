@@ -46,7 +46,7 @@ jobs:
             packaging/arch/gromaq.install \
             target/dist/SHA256SUMS-linux-x86_64 \
             --clobber
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: gromaq-linux-tarball
           include-hidden-files: true
@@ -94,7 +94,7 @@ jobs:
             target/dist/Gromaq-macos-app.zip \
             target/dist/SHA256SUMS-macos-app \
             --clobber
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: gromaq-macos-app
           path: |
