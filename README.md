@@ -133,10 +133,11 @@ use the release installer or install Rust from your package manager or
   confirmation metadata; `gromaq --tmux-action <id> [target] [name]
   [--confirm]` runs tmux actions through the same registry; `gromaq
   --tmux-manager` reports sessions, windows, panes, current target, and
-  registry-backed manager actions; Control/Super Shift `T` shows a
-  renderer-safe tmux teaching overlay in the native window; `gromaq
-  --runtime-tmux-smoke` proves isolated tmux session/window/pane action and
-  state-reader behavior when tmux is installed.
+  registry-backed manager actions; Control/Super Shift `T` opens the native
+  tmux manager panel with status, keyboard navigation, action confirmation, and
+  workspace preset launch; `gromaq --runtime-tmux-smoke` and `gromaq
+  --runtime-tmux-ui-smoke` prove isolated tmux action/state and native manager
+  UI behavior when tmux is installed.
 
 ## Known Proof Gaps
 
@@ -209,6 +210,7 @@ gromaq --tmux-manager
 gromaq --tmux-action split-pane-right
 gromaq --tmux-action kill-session my-session --confirm
 gromaq --runtime-tmux-smoke
+gromaq --runtime-tmux-ui-smoke
 ```
 
 ## Documentation

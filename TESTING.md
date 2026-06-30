@@ -69,6 +69,7 @@ cargo run -- --tmux-assist
 cargo run -- --tmux-manager
 cargo run -- --tmux-action kill-session gromaq-test
 cargo run -- --runtime-tmux-smoke
+cargo run -- --runtime-tmux-ui-smoke
 cargo bench --bench parser_throughput -- --list
 ```
 

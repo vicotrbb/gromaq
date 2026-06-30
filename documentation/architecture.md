@@ -29,10 +29,11 @@ handoff, and validation tooling.
   and draw/readback helpers, and structured GPU reports.
 - `app`: native `winit` app wiring, lifecycle state, launch wrappers, config
   reload application, PTY bridge, input mapping, text zoom, font discovery,
-  runtime rendering, and native window surface presentation. Handler actions,
-  shortcut policy, resize mapping, lifecycle window ownership, lifecycle
-  run-report data, frame-interval accounting, snapshot artifact helpers, and
-  native font search policy live in focused child modules.
+  runtime rendering, native tmux manager UI state/rendering/input dispatch, and
+  native window surface presentation. Handler actions, shortcut policy, resize
+  mapping, lifecycle window ownership, lifecycle run-report data, frame-interval
+  accounting, snapshot artifact helpers, and native font search policy live in
+  focused child modules.
 - `cli`: executable smoke commands, config utilities, GPU reports, runtime
   validation commands, and bounded live-window probes. GPU command context
   traits are isolated from GPU CLI output formatting, and config launch
@@ -40,8 +41,8 @@ handoff, and validation tooling.
   renders the native tmux action catalog, `--tmux-manager` reports sessions,
   windows, panes, current target, and registry-backed manager actions,
   `--tmux-action` executes registry actions with confirmation gates, and
-  `--runtime-tmux-smoke` proves the isolated tmux state/action path when tmux
-  is installed.
+  `--runtime-tmux-smoke` plus `--runtime-tmux-ui-smoke` prove the isolated tmux
+  state/action and native manager UI paths when tmux is installed.
 - `test_api`: deterministic integration hooks used by tests and future debug
   tooling.
 - `tmux`: native tmux domain boundary. Probe, state reader, manager snapshot,
