@@ -1,9 +1,12 @@
 use crate::tmux::{
-    TmuxActionResult, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot, TmuxWorkspaceResult,
+    TmuxActionResult, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot, TmuxTerminalCommand,
+    TmuxWorkspaceResult,
 };
 
 use super::NativeTerminalRuntime;
-use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset};
+use crate::app::{
+    NativePtySessionIo, TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset,
+};
 
 impl<S> NativeTerminalRuntime<S> {
     /// Toggle the native tmux manager panel using a freshly read snapshot.
@@ -90,6 +93,7 @@ impl<S> NativeTerminalRuntime<S> {
         runner: &R,
     ) -> Option<Result<TmuxWorkspaceResult, TmuxError>>
     where
+        S: NativePtySessionIo,
         R: TmuxCommandRunner,
     {
         if !matches!(outcome, TmuxManagerKeyOutcome::WorkspaceLaunchRequested) {
@@ -97,6 +101,14 @@ impl<S> NativeTerminalRuntime<S> {
         }
         let panel = self.tmux_manager_panel.as_mut()?;
         let result = panel.launch_selected_workspace(runner);
+        if let Some(Ok(workspace)) = result.as_ref() {
+            let session = match workspace {
+                TmuxWorkspaceResult::Attached { session }
+                | TmuxWorkspaceResult::Started { session, .. } => session,
+            };
+            let _ =
+                self.send_pty_input(&TmuxTerminalCommand::attach_session(session).to_pty_input());
+        }
         if result.is_some() {
             self.terminal.invalidate_viewport();
         }
