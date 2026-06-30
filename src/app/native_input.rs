@@ -14,8 +14,9 @@ pub(super) use mouse::{native_mouse_button, wheel_mouse_button};
 pub(super) use resize::clamp_u32_to_u16;
 pub use resize::{NativePtyResize, NativeResizeGridMapper};
 pub use shortcuts::{
-    NativeTextZoomAction, is_native_copy_shortcut, is_native_paste_shortcut,
-    native_text_zoom_action, native_wheel_text_zoom_action,
+    NativeTextZoomAction, NativeTmuxAssistAction, is_native_copy_shortcut,
+    is_native_paste_shortcut, native_text_zoom_action, native_tmux_assist_action,
+    native_wheel_text_zoom_action,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

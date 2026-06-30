@@ -85,6 +85,14 @@ pub(super) enum CliCommand<'a> {
     RuntimeRepaintSmoke,
     /// Runtime real PTY external-tool workflow smoke command.
     RuntimeToolWorkflowSmoke,
+    /// Runtime isolated tmux manager/action smoke command.
+    RuntimeTmuxSmoke,
+    /// Native tmux assist action catalog command.
+    TmuxAssist,
+    /// Native tmux manager state command.
+    TmuxManager,
+    /// Native tmux action execution command.
+    TmuxAction,
     /// Native font symbol fallback smoke command.
     FontSymbolFallbackSmoke,
     /// Default theme legibility smoke command.
@@ -170,6 +178,10 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-text-zoom-smoke" => Some(CliCommand::RuntimeTextZoomSmoke),
         "--runtime-repaint-smoke" => Some(CliCommand::RuntimeRepaintSmoke),
         "--runtime-tool-workflow-smoke" => Some(CliCommand::RuntimeToolWorkflowSmoke),
+        "--runtime-tmux-smoke" => Some(CliCommand::RuntimeTmuxSmoke),
+        "--tmux-assist" => Some(CliCommand::TmuxAssist),
+        "--tmux-manager" => Some(CliCommand::TmuxManager),
+        "--tmux-action" => Some(CliCommand::TmuxAction),
         "--font-symbol-fallback-smoke" => Some(CliCommand::FontSymbolFallbackSmoke),
         "--theme-list" => Some(CliCommand::ThemeList),
         "--theme-export" => Some(CliCommand::ThemeExport),

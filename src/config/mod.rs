@@ -9,6 +9,7 @@ use crate::error::{GromaqError, Result};
 mod reload;
 mod settings;
 mod theme;
+mod tmux;
 
 pub use reload::{ConfigFileReloader, ConfigReload};
 pub use settings::{
@@ -25,10 +26,12 @@ pub use theme::{
     MAX_BACKGROUND_OPACITY, MAX_CELL_SPACING_PX, MAX_DIM_OPACITY, MIN_BACKGROUND_OPACITY,
     MIN_DIM_OPACITY, ThemePresetSetting, ThemeSettings, format_theme_preset, parse_theme_preset,
 };
+pub use tmux::{TmuxSettings, TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 
 pub(crate) use settings::validate_terminal_dimensions;
 
 use settings::{validate_font_settings, validate_shell_settings};
+use tmux::validate_tmux_settings;
 
 /// Top-level Gromaq configuration.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -46,6 +49,8 @@ pub struct GromaqConfig {
     pub theme: ThemeSettings,
     /// Performance-related targets.
     pub performance: PerformanceSettings,
+    /// tmux assist, manager, and workspace settings.
+    pub tmux: TmuxSettings,
 }
 
 impl GromaqConfig {
@@ -120,6 +125,7 @@ impl GromaqConfig {
         }
         self.theme.validate()?;
         validate_shell_settings(&self.shell)?;
+        validate_tmux_settings(&self.tmux)?;
         Ok(())
     }
 }

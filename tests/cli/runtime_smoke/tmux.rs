@@ -1,0 +1,107 @@
+use std::cell::RefCell;
+
+use crate::{MockBackend, run_with_backend};
+
+#[test]
+fn runtime_tmux_smoke_cli_reports_isolated_tmux_proof_or_clean_skip() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-tmux-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime tmux smoke: ok"));
+    assert!(exit.stdout.contains("tmux available:"));
+    if exit.stdout.contains("tmux available: true") {
+        assert!(exit.stdout.contains("created session: true"));
+        assert!(exit.stdout.contains("split pane action: success"));
+        assert!(exit.stdout.contains("new window action: success"));
+        assert!(exit.stdout.contains("state reader observed session: true"));
+        assert!(exit.stdout.contains("state windows: 2"));
+        assert!(exit.stdout.contains("state panes: 3"));
+        assert!(exit.stdout.contains("cleanup killed session: true"));
+    } else {
+        assert!(exit.stdout.contains("skipped: tmux not found on PATH"));
+    }
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn tmux_assist_cli_lists_actions_with_commands_keys_and_safety() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--tmux-assist"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("tmux assist"));
+    assert!(exit.stdout.contains("tmux installed:"));
+    assert!(exit.stdout.contains("inside tmux:"));
+    assert!(exit.stdout.contains("Split pane right"));
+    assert!(exit.stdout.contains("tmux command: tmux split-window -h"));
+    assert!(exit.stdout.contains("tmux key: Ctrl-b %"));
+    assert!(exit.stdout.contains("Kill session"));
+    assert!(exit.stdout.contains("confirmation required: true"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn tmux_action_cli_requires_confirmation_before_destructive_execution() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(
+        ["gromaq", "--tmux-action", "kill-session", "alpha"],
+        &backend,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("tmux action: confirmation required"));
+    assert!(exit.stdout.contains("action: kill-session"));
+    assert!(
+        exit.stdout
+            .contains("tmux command: tmux kill-session -t <session>")
+    );
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn tmux_action_cli_rejects_unknown_action_id() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--tmux-action", "wat"], &backend);
+
+    assert_eq!(exit.code, 2);
+    assert!(exit.stdout.is_empty());
+    assert!(exit.stderr.contains("unknown tmux action: wat"));
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn tmux_manager_cli_reports_state_or_clean_absence() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--tmux-manager"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("tmux manager"));
+    assert!(exit.stdout.contains("tmux installed:"));
+    assert!(exit.stdout.contains("sessions:"));
+    assert!(exit.stdout.contains("windows:"));
+    assert!(exit.stdout.contains("panes:"));
+    assert!(exit.stdout.contains("manager action: attach-session"));
+    assert!(exit.stdout.contains("manager action: kill-session"));
+    assert!(exit.stdout.contains("run: gromaq --tmux-action"));
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}

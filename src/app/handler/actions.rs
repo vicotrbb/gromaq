@@ -95,6 +95,19 @@ impl NativeTerminalApp {
         } else if super::super::is_native_paste_shortcut(&logical_key, self.modifiers) {
             let clipboard = NativeClipboard::new();
             self.runtime.send_clipboard_paste(&clipboard).map(|_| ())
+        } else if matches!(
+            super::super::native_tmux_assist_action(
+                &logical_key,
+                Some(physical_key),
+                self.modifiers
+            ),
+            Some(super::super::NativeTmuxAssistAction::Show)
+        ) {
+            self.runtime.show_tmux_assist_overlay();
+            if let Some(window) = &self.window {
+                window.request_redraw();
+            }
+            Ok(())
         } else {
             self.runtime
                 .send_native_key_event_input(

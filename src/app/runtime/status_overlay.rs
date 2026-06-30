@@ -7,6 +7,23 @@ pub(super) fn apply_status_overlay(
     cursor: CursorSnapshot,
     status: &str,
 ) -> Option<DirtyRegion> {
+    apply_status_overlay_with_fallback(grid, cursor, status, false)
+}
+
+pub(super) fn apply_status_overlay_nearby(
+    grid: &mut GridSnapshot,
+    cursor: CursorSnapshot,
+    status: &str,
+) -> Option<DirtyRegion> {
+    apply_status_overlay_with_fallback(grid, cursor, status, true)
+}
+
+fn apply_status_overlay_with_fallback(
+    grid: &mut GridSnapshot,
+    cursor: CursorSnapshot,
+    status: &str,
+    fallback: bool,
+) -> Option<DirtyRegion> {
     let status = status.trim();
     if status.is_empty() || grid.cols == 0 || grid.rows == 0 {
         return None;
@@ -16,14 +33,11 @@ pub(super) fn apply_status_overlay(
     if required_cols >= grid.cols {
         return None;
     }
-    let row = status_overlay_row(grid, cursor);
+    let row = status_overlay_row(grid, cursor, status_width, fallback)?;
     let col = grid
         .cols
         .saturating_sub(required_cols)
         .min(grid.cols.saturating_sub(status_width));
-    if !overlay_target_is_blank(grid, row, col, status_width) {
-        return None;
-    }
     let style = status_overlay_style();
     for (offset, ch) in status.chars().enumerate() {
         let offset = u16::try_from(offset).ok()?;
@@ -48,9 +62,30 @@ fn overlay_target_is_blank(grid: &GridSnapshot, row: u16, col: u16, width: u16) 
     (0..width).all(|offset| grid.cell(row, col + offset).text.trim().is_empty())
 }
 
-fn status_overlay_row(grid: &GridSnapshot, cursor: CursorSnapshot) -> u16 {
+fn status_overlay_row(
+    grid: &GridSnapshot,
+    cursor: CursorSnapshot,
+    status_width: u16,
+    fallback: bool,
+) -> Option<u16> {
     let cursor_row = cursor.row.min(grid.rows.saturating_sub(1));
-    cursor_row.saturating_sub(1)
+    let preferred = cursor_row.saturating_sub(1);
+    let col = grid
+        .cols
+        .saturating_sub(status_width.saturating_add(STATUS_RIGHT_MARGIN_COLS))
+        .min(grid.cols.saturating_sub(status_width));
+    if overlay_target_is_blank(grid, preferred, col, status_width) {
+        return Some(preferred);
+    }
+    if !fallback {
+        return None;
+    }
+    if overlay_target_is_blank(grid, cursor_row, col, status_width) {
+        return Some(cursor_row);
+    }
+    (cursor_row.saturating_add(1)..grid.rows)
+        .chain((0..preferred).rev())
+        .find(|row| overlay_target_is_blank(grid, *row, col, status_width))
 }
 
 fn status_overlay_style() -> Style {

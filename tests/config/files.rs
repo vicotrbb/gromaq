@@ -151,3 +151,61 @@ fn config_serializes_to_valid_pretty_toml() {
     assert!(toml.contains("preset = \"gromaq-ghostty\""));
     assert_eq!(parsed, config);
 }
+
+#[test]
+fn config_parses_tmux_workspace_presets() {
+    let config = GromaqConfig::from_toml_str(
+        r#"
+        [tmux]
+        enabled = true
+
+        [tmux.workspaces.gromaq]
+        session = "gromaq"
+        root = "/Users/victorbona/Daedalus/gromaq"
+
+        [[tmux.workspaces.gromaq.windows]]
+        name = "code"
+        panes = ["$SHELL"]
+
+        [[tmux.workspaces.gromaq.windows]]
+        name = "test"
+        panes = ["cargo test --all", "cargo run -- --runtime-tool-workflow-smoke"]
+        "#,
+    )
+    .unwrap();
+
+    let workspace = config.tmux.workspaces.get("gromaq").unwrap();
+
+    assert!(config.tmux.enabled);
+    assert_eq!(workspace.session, "gromaq");
+    assert_eq!(
+        workspace.root.as_deref(),
+        Some("/Users/victorbona/Daedalus/gromaq")
+    );
+    assert_eq!(workspace.windows.len(), 2);
+    assert_eq!(workspace.windows[1].name, "test");
+    assert_eq!(workspace.windows[1].panes.len(), 2);
+}
+
+#[test]
+fn config_rejects_empty_tmux_workspace_pane_command() {
+    let error = GromaqConfig::from_toml_str(
+        r#"
+        [tmux.workspaces.bad]
+        session = "bad"
+
+        [[tmux.workspaces.bad.windows]]
+        name = "code"
+        panes = [""]
+        "#,
+    )
+    .unwrap_err();
+
+    assert!(matches!(
+        error,
+        GromaqError::InvalidTmuxWorkspace {
+            workspace,
+            field: "panes[0]",
+        } if workspace == "bad"
+    ));
+}

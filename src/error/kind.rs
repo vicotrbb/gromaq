@@ -13,7 +13,6 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: u32,
     },
-
     /// Terminal grid area must stay within a bounded allocation size.
     #[error("terminal grid must contain at most {maximum} cells, got {actual}")]
     InvalidGridArea {
@@ -22,7 +21,6 @@ pub enum GromaqError {
         /// Actual requested cell count.
         actual: u64,
     },
-
     /// Scrollback capacity must be bounded.
     #[error("scrollback limit must be at most {maximum}, got {actual}")]
     InvalidScrollback {
@@ -31,7 +29,6 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: usize,
     },
-
     /// Font size must be useful for rendering.
     #[error("font size must be finite and between {minimum} and {maximum}, got {actual}")]
     InvalidFontSize {
@@ -42,7 +39,6 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: f32,
     },
-
     /// Font cell width must be useful for terminal column geometry.
     #[error("font cell width must be finite and between {minimum} and {maximum}, got {actual}")]
     InvalidCellWidth {
@@ -53,7 +49,6 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: f32,
     },
-
     /// Font line height must be useful for rendering.
     #[error("font line height must be finite and between {minimum} and {maximum}, got {actual}")]
     InvalidLineHeight {
@@ -64,14 +59,12 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: f32,
     },
-
     /// Configured font fallback names must contain usable values.
     #[error("font fallback at index {index} must not be empty")]
     InvalidFontFallback {
         /// Index of the invalid fallback entry.
         index: usize,
     },
-
     /// Frame target must stay within supported deterministic pacing bounds.
     #[error("target fps must be between {minimum} and {maximum}, got {actual}")]
     InvalidTargetFps {
@@ -82,7 +75,6 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: u32,
     },
-
     /// Theme colors must use a supported hex RGB format.
     #[error("theme color {field} must use #RRGGBB, got {actual}")]
     InvalidThemeColor {
@@ -91,7 +83,6 @@ pub enum GromaqError {
         /// Actual invalid value.
         actual: String,
     },
-
     /// Theme ANSI palettes must provide exactly sixteen colors.
     #[error("theme ANSI palette must contain exactly {expected} colors, got {actual}")]
     InvalidThemeAnsiPaletteLength {
@@ -170,6 +161,15 @@ pub enum GromaqError {
     /// Configured shell working directory must contain a usable path.
     #[error("shell working directory must not be empty")]
     InvalidShellCwd,
+
+    /// Configured tmux workspace fields must contain usable values.
+    #[error("tmux workspace {workspace} field {field} must not be empty")]
+    InvalidTmuxWorkspace {
+        /// Workspace table key.
+        workspace: String,
+        /// Invalid workspace field name.
+        field: &'static str,
+    },
 
     /// Loading a configuration file from disk failed.
     #[error("failed to read config file {path}: {message}")]

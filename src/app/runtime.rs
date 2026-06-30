@@ -27,6 +27,7 @@ pub struct NativeTerminalRuntime<S> {
     render_time_histogram: RuntimeDurationHistogram,
     input_to_render_histogram: RuntimeDurationHistogram,
     pending_input_to_render_started: Option<Instant>,
+    pending_status_overlay: Option<String>,
     selection_drag_anchor: Option<SelectionPoint>,
 }
 
@@ -50,6 +51,7 @@ impl<S> NativeTerminalRuntime<S> {
             render_time_histogram: RuntimeDurationHistogram::default(),
             input_to_render_histogram: RuntimeDurationHistogram::default(),
             pending_input_to_render_started: None,
+            pending_status_overlay: None,
             selection_drag_anchor: None,
         })
     }
@@ -64,6 +66,12 @@ impl<S> NativeTerminalRuntime<S> {
         self.terminal
             .write_str(text)
             .map_err(|error| NativeAppError::Runtime(error.to_string()))
+    }
+
+    /// Request a one-frame native tmux assist teaching overlay.
+    pub fn show_tmux_assist_overlay(&mut self) {
+        self.pending_status_overlay = Some("tmux split-window -h | Ctrl-b %".to_owned());
+        self.terminal.invalidate_viewport();
     }
 
     /// Access runtime configuration.

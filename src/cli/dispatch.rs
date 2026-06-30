@@ -34,8 +34,11 @@ use super::runtime_repaint_smoke::runtime_repaint_smoke_exit;
 use super::runtime_scrollback_smoke::runtime_scrollback_smoke_exit;
 use super::runtime_selection_copy_smoke::runtime_selection_copy_smoke_exit;
 use super::runtime_text_zoom_smoke::runtime_text_zoom_smoke_exit;
+use super::runtime_tmux_smoke::runtime_tmux_smoke_exit;
 use super::runtime_tool_workflow_smoke::runtime_tool_workflow_smoke_exit;
 use super::theme_smoke::{theme_legibility_smoke_exit, theme_list_exit};
+use super::tmux_assist::tmux_assist_exit;
+use super::tmux_manager::tmux_manager_exit;
 use super::{CliExit, NativeAppLauncher};
 use crate::clipboard::HostClipboard;
 use crate::native_gpu::GpuBootstrapBackend;
@@ -132,6 +135,10 @@ where
         CliCommand::RuntimeTextZoomSmoke => runtime_text_zoom_smoke_exit(),
         CliCommand::RuntimeRepaintSmoke => runtime_repaint_smoke_exit(),
         CliCommand::RuntimeToolWorkflowSmoke => runtime_tool_workflow_smoke_exit(),
+        CliCommand::RuntimeTmuxSmoke => runtime_tmux_smoke_exit(),
+        CliCommand::TmuxAssist => tmux_assist_exit(),
+        CliCommand::TmuxManager => tmux_manager_exit(),
+        CliCommand::TmuxAction => unreachable!(),
         CliCommand::FontSymbolFallbackSmoke => font_symbol_fallback_smoke_exit(),
         CliCommand::ThemeList => theme_list_exit(),
         CliCommand::ThemeLegibilitySmoke => theme_legibility_smoke_exit(),

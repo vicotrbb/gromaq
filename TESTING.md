@@ -31,6 +31,9 @@ the behavior under test.
 - `tests/app/*.rs` and `tests/app/runtime_core/*.rs`: native runtime, PTY, input, mouse, resize, surface, and
   redraw boundary fixtures.
 - `tests/pty.rs`: real PTY command and optional external-tool fixtures.
+- `tests/tmux.rs` and `tests/tmux_manager.rs`: native tmux probe, parser,
+  action metadata, action runner, state reader, manager snapshot, and
+  workspace launcher fixtures using fake command runners.
 - `tests/native_gpu.rs` and `tests/cli.rs`: GPU and CLI smoke fixtures.
 - `benches/parser_throughput.rs`: reproducible benchmark payloads.
 
@@ -61,6 +64,11 @@ git diff --check
 git diff --cached --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
+cargo test --test tmux
+cargo run -- --tmux-assist
+cargo run -- --tmux-manager
+cargo run -- --tmux-action kill-session gromaq-test
+cargo run -- --runtime-tmux-smoke
 cargo bench --bench parser_throughput -- --list
 ```
 

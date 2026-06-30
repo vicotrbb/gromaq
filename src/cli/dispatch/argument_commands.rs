@@ -5,6 +5,7 @@ use super::arguments::reject_extra_args;
 use crate::cli::args::{CliCommand, usage};
 use crate::cli::gpu::GpuCommandContext;
 use crate::cli::theme_smoke::{theme_export_exit, theme_preview_config_exit};
+use crate::cli::tmux_action::tmux_action_command;
 use crate::cli::window_smoke::window_smoke_exit;
 use crate::cli::{CliExit, NativeAppLauncher};
 use crate::native_gpu::GpuBootstrapBackend;
@@ -42,6 +43,7 @@ where
         CliCommand::WelcomePreviewSnapshot => Some(welcome_preview_snapshot_command(args)),
         CliCommand::ThemePreviewConfig => Some(theme_preview_config_command(args)),
         CliCommand::ThemeExport => Some(theme_export_command(args)),
+        CliCommand::TmuxAction => Some(tmux_action_command(args)),
         CliCommand::WindowGlyphFrameSnapshot => {
             Some(window_glyph_frame_snapshot_command(args, app_launcher))
         }

@@ -63,6 +63,12 @@ preview pixels against the committed README
 screenshot with matching dimensions and bounded font-rasterization delta, so
 `images/screenshots/gromaq-welcome-preview.png` cannot drift silently.
 
+The native tmux assist overlay reuses the existing status-overlay visual style:
+bold ANSI cyan text, placed only on a blank right-aligned span above the cursor
+row, and rendered into a cloned frame snapshot so terminal-owned grid contents
+and shell scrollback are not mutated. Runtime rendering tests cover the
+one-frame overlay for Control/Super Shift `T`.
+
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:
 

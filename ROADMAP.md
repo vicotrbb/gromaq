@@ -48,6 +48,8 @@
 
 - Shell PTY lifecycle tests
 - `vim`, `nvim`, `tmux`, `ssh`, and pager scenarios
+- Native tmux assist and manager proof, including action discovery, isolated
+  action execution, state reading, and workspace preset launchers
 - Screenshot/reference comparisons
 - 144Hz frame pacing proof
 - Idle CPU and memory-growth validation

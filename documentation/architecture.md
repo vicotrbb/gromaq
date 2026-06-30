@@ -15,7 +15,9 @@ handoff, and validation tooling.
 - `pty`: shell command resolution, PTY session lifecycle, background output
   reading, writer access, and resize notification.
 - `config`: TOML settings, validation, defaults, theme tokens, and config-file
-  reload state.
+  reload state. The `tmux` config child module owns workspace-preset settings
+  and validates session, root, window, and pane command fields before launch
+  code can consume them.
 - `font`: real-font rasterization, glyph image preparation, fallback handling,
   and rasterized glyph caching.
 - `renderer`: CPU-side render planning, glyph atlas metadata, quad generation,
@@ -34,9 +36,18 @@ handoff, and validation tooling.
 - `cli`: executable smoke commands, config utilities, GPU reports, runtime
   validation commands, and bounded live-window probes. GPU command context
   traits are isolated from GPU CLI output formatting, and config launch
-  boundaries are isolated from config-check/template formatting.
+  boundaries are isolated from config-check/template formatting. `--tmux-assist`
+  renders the native tmux action catalog, `--tmux-manager` reports sessions,
+  windows, panes, current target, and registry-backed manager actions,
+  `--tmux-action` executes registry actions with confirmation gates, and
+  `--runtime-tmux-smoke` proves the isolated tmux state/action path when tmux
+  is installed.
 - `test_api`: deterministic integration hooks used by tests and future debug
   tooling.
+- `tmux`: native tmux domain boundary. Probe, state reader, manager snapshot,
+  action registry, action runner, socket-scoped runner, and workspace launcher
+  code stay testable through an abstract command-runner trait and do not
+  reimplement tmux panes.
 
 ## Boundary Rules
 

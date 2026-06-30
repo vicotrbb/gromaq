@@ -16,6 +16,8 @@ mod output_volume;
 mod performance;
 #[path = "runtime_smoke/selection_copy.rs"]
 mod selection_copy;
+#[path = "runtime_smoke/tmux.rs"]
+mod tmux;
 #[path = "runtime_smoke/tool_workflow.rs"]
 mod tool_workflow;
 #[test]

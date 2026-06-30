@@ -2,7 +2,7 @@ use crate::error::Result as GromaqResult;
 use crate::renderer::GpuRenderer;
 
 use super::NativeTerminalRuntime;
-use super::status_overlay::apply_status_overlay;
+use super::status_overlay::{apply_status_overlay, apply_status_overlay_nearby};
 use crate::app::perf::{
     NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot, add_usize_counter,
     average_duration_nanos, dirty_region_cell_count, saturating_duration_nanos,
@@ -65,7 +65,12 @@ impl<S> NativeTerminalRuntime<S> {
         let render_started = std::time::Instant::now();
         let cursor = self.terminal.dump_cursor();
         let mut grid = self.terminal.dump_grid();
-        if let Some(status_overlay) = status_overlay
+        let pending_overlay = self.pending_status_overlay.take();
+        if let Some(pending_overlay) = pending_overlay.as_deref() {
+            if let Some(region) = apply_status_overlay_nearby(&mut grid, cursor, pending_overlay) {
+                dirty_regions.push(region);
+            }
+        } else if let Some(status_overlay) = status_overlay
             && let Some(region) = apply_status_overlay(&mut grid, cursor, status_overlay)
         {
             dirty_regions.push(region);

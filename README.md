@@ -128,6 +128,15 @@ use the release installer or install Rust from your package manager or
   theme legibility gates, and welcome-preview freshness proof.
 - Release automation for Linux tarballs, Debian packages, Arch metadata, macOS
   app zips, and SHA256 checksum manifests.
+- Native tmux assist foundations: `gromaq --tmux-assist` lists common tmux
+  actions with their tmux command, keybinding hints, and destructive-action
+  confirmation metadata; `gromaq --tmux-action <id> [target] [name]
+  [--confirm]` runs tmux actions through the same registry; `gromaq
+  --tmux-manager` reports sessions, windows, panes, current target, and
+  registry-backed manager actions; Control/Super Shift `T` shows a
+  renderer-safe tmux teaching overlay in the native window; `gromaq
+  --runtime-tmux-smoke` proves isolated tmux session/window/pane action and
+  state-reader behavior when tmux is installed.
 
 ## Known Proof Gaps
 
@@ -190,6 +199,17 @@ gromaq --theme-preview-config gromaq.toml target/gromaq-theme-preview.ppm
 
 More theme, font, opacity, and welcome-screen details are in
 [`documentation/theme.md`](documentation/theme.md).
+
+tmux assist and workspace-preset foundations are available through native Rust
+commands and config validation. Useful tmux commands:
+
+```bash
+gromaq --tmux-assist
+gromaq --tmux-manager
+gromaq --tmux-action split-pane-right
+gromaq --tmux-action kill-session my-session --confirm
+gromaq --runtime-tmux-smoke
+```
 
 ## Documentation
 

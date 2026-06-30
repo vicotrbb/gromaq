@@ -21,8 +21,12 @@ mod runtime_repaint_smoke;
 mod runtime_scrollback_smoke;
 mod runtime_selection_copy_smoke;
 mod runtime_text_zoom_smoke;
+mod runtime_tmux_smoke;
 mod runtime_tool_workflow_smoke;
 mod theme_smoke;
+mod tmux_action;
+mod tmux_assist;
+mod tmux_manager;
 mod window_smoke;
 pub use config_commands::{
     NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher, RealNativeAppLauncher,

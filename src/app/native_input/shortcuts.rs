@@ -1,7 +1,7 @@
 //! Native copy, paste, and text zoom shortcut policy.
 
 use winit::event::MouseScrollDelta;
-use winit::keyboard::{Key, ModifiersState, NamedKey};
+use winit::keyboard::{Key, KeyCode, ModifiersState, NamedKey, PhysicalKey};
 
 use crate::mouse::MouseButton;
 
@@ -16,6 +16,13 @@ pub enum NativeTextZoomAction {
     Decrease,
     /// Reset terminal text size to the default metrics.
     Reset,
+}
+
+/// Native tmux assist action requested by app-owned keyboard shortcuts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NativeTmuxAssistAction {
+    /// Show the tmux assist teaching overlay.
+    Show,
 }
 
 /// Browser-style terminal text zoom action requested by a modified mouse wheel event.
@@ -60,6 +67,27 @@ pub fn is_native_paste_shortcut(key: &Key, modifiers: ModifiersState) -> bool {
             && !modifiers.alt_key()
             && ((modifiers.control_key() && !modifiers.super_key())
                 || (modifiers.super_key() && !modifiers.control_key())))
+}
+
+/// Native tmux assist shortcut for the terminal viewport.
+pub fn native_tmux_assist_action(
+    key: &Key,
+    physical_key: Option<PhysicalKey>,
+    modifiers: ModifiersState,
+) -> Option<NativeTmuxAssistAction> {
+    let command_modifier = modifiers.control_key() ^ modifiers.super_key();
+    if !command_modifier || !modifiers.shift_key() || modifiers.alt_key() {
+        return None;
+    }
+    if matches!(physical_key, Some(PhysicalKey::Code(KeyCode::KeyT))) {
+        return Some(NativeTmuxAssistAction::Show);
+    }
+    match key {
+        Key::Character(character) if character.eq_ignore_ascii_case("t") => {
+            Some(NativeTmuxAssistAction::Show)
+        }
+        _ => None,
+    }
 }
 
 /// Browser-style native text zoom shortcut for the terminal viewport.

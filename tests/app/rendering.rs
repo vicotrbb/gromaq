@@ -98,6 +98,68 @@ fn native_terminal_runtime_renders_status_overlay_without_mutating_terminal_grid
 }
 
 #[test]
+fn native_terminal_runtime_renders_tmux_assist_overlay_once() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 48,
+        terminal_rows: 4,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.show_tmux_assist_overlay();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_status_overlay(&mut renderer, Some("144 fps"))
+            .unwrap()
+    );
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[0].contains("tmux split-window -h | Ctrl-b %"));
+    assert!(!frame.lines[0].contains("144 fps"));
+    assert_eq!(runtime.terminal().dump_grid().line_text(0), "ready");
+    assert_eq!(runtime.terminal().dump_grid().line_text(1), ">");
+
+    runtime.invalidate_terminal_frame();
+    assert!(
+        runtime
+            .render_terminal_frame_with_status_overlay(&mut renderer, Some("144 fps"))
+            .unwrap()
+    );
+    assert!(renderer.frames.last().unwrap().lines[0].contains("144 fps"));
+}
+
+#[test]
+fn native_terminal_runtime_renders_tmux_assist_overlay_below_right_prompt() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 64,
+        terminal_rows: 5,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime
+        .write_startup_text("ready\r\n................................ rb 2.7.5 15:42\r\n> ")
+        .unwrap();
+    runtime.show_tmux_assist_overlay();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_status_overlay(&mut renderer, Some("144 fps"))
+            .unwrap()
+    );
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[2].contains("tmux split-window -h | Ctrl-b %"));
+    assert!(frame.lines[1].contains("rb 2.7.5 15:42"));
+    assert_eq!(
+        runtime.terminal().dump_grid().line_text(1),
+        "................................ rb 2.7.5 15:42"
+    );
+}
+
+#[test]
 fn default_native_glyph_cache_loads_system_monospace_font() {
     let cache = load_default_native_glyph_cache().unwrap();
 
