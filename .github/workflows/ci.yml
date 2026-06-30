@@ -10,7 +10,7 @@ jobs:
   rust:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: sh -n scripts/install.sh
@@ -114,7 +114,7 @@ jobs:
   linux-packaging:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: sh -n scripts/install.sh
@@ -147,7 +147,7 @@ jobs:
   linux-compatibility:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: |
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: pacman -Syu --noconfirm git rust
       - run: bash -n packaging/arch/PKGBUILD
       - run: test -s packaging/arch/.SRCINFO
