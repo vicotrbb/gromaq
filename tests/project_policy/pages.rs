@@ -33,7 +33,6 @@ fn pages_site_keeps_real_terminal_media_contract() {
     let html = fs::read_to_string(&html_path).unwrap();
 
     for marker in [
-        "<video",
         "poster=\"assets/gromaq-welcome-preview.png\"",
         "Native Rust GPU terminal",
         "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1",
@@ -50,11 +49,26 @@ fn pages_site_keeps_real_terminal_media_contract() {
     let recording_path = root.join("site/assets/gromaq-terminal-recording.webm");
     if recording_path.is_file() {
         assert!(
+            html.contains("<video"),
+            "{} must render video controls when real recording media exists",
+            relative_path(root, &html_path)
+        );
+        assert!(
             html.contains("assets/gromaq-terminal-recording.webm"),
             "{} must link the captured native terminal recording when the media file exists",
             relative_path(root, &html_path)
         );
     } else {
+        assert!(
+            !html.contains("<video"),
+            "{} must not render broken video controls when recording media is absent",
+            relative_path(root, &html_path)
+        );
+        assert!(
+            html.contains("class=\"terminal-poster\""),
+            "{} must render the welcome preview as the fallback media surface",
+            relative_path(root, &html_path)
+        );
         for marker in [
             "data-recording-status=\"blocked\"",
             "Recording capture blocked:",
@@ -85,6 +99,27 @@ fn pages_site_links_stay_inside_deploy_artifact() {
         "{} must link directly to the published v0.2.1 release",
         relative_path(root, &html_path)
     );
+}
+
+#[test]
+fn pages_site_omits_standalone_proof_boundaries_section() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let html_path = root.join("site/index.html");
+    let html = fs::read_to_string(&html_path).unwrap();
+
+    for removed_marker in [
+        "href=\"#proof\"",
+        "id=\"proof\"",
+        "Proof boundaries",
+        "Public alpha/beta means honest boundaries.",
+        "boundary-grid",
+    ] {
+        assert!(
+            !html.contains(removed_marker),
+            "{} must omit the standalone proof-boundaries section marker `{removed_marker}`",
+            relative_path(root, &html_path)
+        );
+    }
 }
 
 #[test]

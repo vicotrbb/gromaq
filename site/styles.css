@@ -71,7 +71,8 @@ a {
 }
 
 img,
-video {
+video,
+.terminal-poster {
   max-width: 100%;
 }
 
@@ -203,7 +204,6 @@ strong {
 .section-heading,
 .command-panel,
 .proof-list article,
-.boundary-grid article,
 .docs-section {
   animation: rise-in 560ms var(--ease-out-quart) both;
 }
@@ -333,13 +333,20 @@ strong {
     radial-gradient(circle at 49px 5px, oklch(69% 0.13 155) 0 4px, transparent 4px);
 }
 
-.terminal-showcase video {
+.terminal-showcase video,
+.terminal-poster {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 1px solid color-mix(in oklch, var(--violet), var(--graphite) 35%);
   border-radius: var(--radius-md);
   background: var(--graphite);
+}
+
+.terminal-poster {
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: cover;
 }
 
 .terminal-showcase figcaption,
@@ -371,7 +378,6 @@ strong {
 
 .command-grid,
 .proof-list,
-.boundary-grid,
 .doc-links {
   display: grid;
   gap: var(--space-md);
@@ -382,8 +388,7 @@ strong {
 }
 
 .command-panel,
-.proof-list article,
-.boundary-grid article {
+.proof-list article {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: color-mix(in oklch, var(--paper-raised), transparent 8%);
@@ -397,8 +402,7 @@ strong {
 }
 
 .command-panel p,
-.proof-list p,
-.boundary-grid span {
+.proof-list p {
   color: var(--ink-muted);
 }
 
@@ -452,7 +456,7 @@ strong {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-sm);
   padding: 0;
-  margin: 0 0 var(--space-lg);
+  margin: 0 0 var(--space-md);
   list-style: none;
 }
 
@@ -460,25 +464,15 @@ strong {
   padding: var(--space-md);
 }
 
+.release-note {
+  max-width: 68ch;
+  margin: 0 0 var(--space-lg);
+  color: var(--ink-muted);
+}
+
 .text-link {
   color: var(--violet-strong);
   font-weight: 700;
-}
-
-.boundary-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.boundary-grid article {
-  display: grid;
-  gap: var(--space-xs);
-  padding: var(--space-lg);
-}
-
-.boundary-grid strong {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  line-height: 1.1;
 }
 
 .doc-links {
@@ -519,12 +513,6 @@ strong {
   }
 }
 
-@media (max-width: 1050px) {
-  .boundary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
@@ -561,10 +549,6 @@ strong {
     width: 100%;
   }
 
-  .boundary-grid {
-    grid-template-columns: 1fr;
-  }
-
   .site-footer {
     flex-direction: column;
   }
@@ -580,8 +564,7 @@ strong {
   }
 
   .command-panel,
-  .proof-list article,
-  .boundary-grid article {
+  .proof-list article {
     padding: var(--space-md);
   }
 }
