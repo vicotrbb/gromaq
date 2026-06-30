@@ -21,10 +21,12 @@ const FORBIDDEN_FRONTEND_FILES: &[&str] = &[
 const FORBIDDEN_FRONTEND_EXTENSIONS: &[&str] =
     &["cjs", "cts", "js", "jsx", "mjs", "mts", "ts", "tsx"];
 
-const ALLOWED_IMAGE_TOOLING_FILES: &[&str] = &[
+const ALLOWED_JAVASCRIPT_FILES: &[&str] = &[
     "images/avatar/generate.mjs",
     "images/logos/generate.mjs",
     "images/tools/gromaq-image-assets.mjs",
+    "site/scripts.js",
+    "site/check-links.mjs",
 ];
 
 /// Directories that never contain Gromaq source and must be skipped by the
@@ -138,7 +140,7 @@ fn collect_frontend_file_violations(root: &Path, dir: &Path, violations: &mut Ve
 
 fn is_forbidden_frontend_file(path: &Path) -> bool {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    if ALLOWED_IMAGE_TOOLING_FILES.contains(&relative_path(root, path).as_str()) {
+    if ALLOWED_JAVASCRIPT_FILES.contains(&relative_path(root, path).as_str()) {
         return false;
     }
 

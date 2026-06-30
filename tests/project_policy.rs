@@ -12,6 +12,8 @@ mod line_limits;
 mod local_verification_docs;
 #[path = "project_policy/native.rs"]
 mod native;
+#[path = "project_policy/pages.rs"]
+mod pages;
 #[path = "project_policy/proof_scripts.rs"]
 mod proof_scripts;
 #[path = "project_policy/release_proof.rs"]

@@ -61,7 +61,7 @@
 - Modify: `tests/project_policy/native.rs`
 - Modify: `tests/project_policy/ci.rs`
 
-- [ ] **Step 1: Add the project-policy module**
+- [x] **Step 1: Add the project-policy module**
 
 Add this line to `tests/project_policy.rs` after the `native` module:
 
@@ -70,7 +70,7 @@ Add this line to `tests/project_policy.rs` after the `native` module:
 mod pages;
 ```
 
-- [ ] **Step 2: Create failing Pages policy tests**
+- [x] **Step 2: Create failing Pages policy tests**
 
 Create `tests/project_policy/pages.rs` with:
 
@@ -169,7 +169,7 @@ fn pages_workflow_publishes_site_directory_only() {
 }
 ```
 
-- [ ] **Step 3: Allow only the static-site JavaScript files**
+- [x] **Step 3: Allow only the static-site JavaScript files**
 
 In `tests/project_policy/native.rs`, rename `ALLOWED_IMAGE_TOOLING_FILES` to `ALLOWED_JAVASCRIPT_FILES` and include the site files:
 
@@ -191,7 +191,7 @@ if ALLOWED_JAVASCRIPT_FILES.contains(&relative.as_str()) {
 }
 ```
 
-- [ ] **Step 4: Add CI markers for Pages syntax checks**
+- [x] **Step 4: Add CI markers for Pages syntax checks**
 
 In `tests/project_policy/ci.rs`, add these entries to `REQUIRED_CI_COMMANDS`:
 
@@ -202,7 +202,7 @@ In `tests/project_policy/ci.rs`, add these entries to `REQUIRED_CI_COMMANDS`:
 "node site/check-links.mjs",
 ```
 
-- [ ] **Step 5: Run policy test and verify it fails for missing site files**
+- [x] **Step 5: Run policy test and verify it fails for missing site files**
 
 Run:
 
@@ -227,7 +227,7 @@ that makes the new Pages policy tests pass.
 - Create: `site/assets/logo-icon-512.png`
 - Create: `site/assets/gromaq-welcome-preview.png`
 
-- [ ] **Step 1: Create the deploy asset directory**
+- [x] **Step 1: Create the deploy asset directory**
 
 ```bash
 mkdir -p site/assets
@@ -237,7 +237,7 @@ cp images/logos/logo-icon-512.png site/assets/logo-icon-512.png
 cp images/screenshots/gromaq-welcome-preview.png site/assets/gromaq-welcome-preview.png
 ```
 
-- [ ] **Step 2: Create `site/index.html`**
+- [x] **Step 2: Create `site/index.html`**
 
 Use this complete structure, then refine copy only if it remains factually tied to README/release docs:
 
@@ -412,7 +412,7 @@ Use this complete structure, then refine copy only if it remains factually tied 
 </html>
 ```
 
-- [ ] **Step 3: Run the failing media-contract test**
+- [x] **Step 3: Run the failing media-contract test**
 
 Run:
 
@@ -432,7 +432,7 @@ are still required for the new project-policy checks to pass.
 **Files:**
 - Create: `site/styles.css`
 
-- [ ] **Step 1: Create `site/styles.css`**
+- [x] **Step 1: Create `site/styles.css`**
 
 Implement these required design constraints:
 
@@ -538,7 +538,7 @@ rg -n "background-clip:\\s*text|border-(left|right):\\s*[2-9]px|#000|#fff|linear
 
 Expected: no matches.
 
-- [ ] **Step 2: Run CSS anti-pattern scan**
+- [x] **Step 2: Run CSS anti-pattern scan**
 
 Run:
 
@@ -548,7 +548,7 @@ rg -n "background-clip:\\s*text|border-(left|right):\\s*[2-9]px|#000|#fff|linear
 
 Expected: exit 1 with no matches.
 
-- [ ] **Step 3: Keep CSS in the working tree**
+- [x] **Step 3: Keep CSS in the working tree**
 
 Do not commit yet. The Pages implementation should be committed once the local
 site checks and project-policy suite pass.
@@ -559,7 +559,7 @@ site checks and project-policy suite pass.
 - Create: `site/scripts.js`
 - Create: `site/check-links.mjs`
 
-- [ ] **Step 1: Add copy-button behavior**
+- [x] **Step 1: Add copy-button behavior**
 
 Create `site/scripts.js`:
 
@@ -589,7 +589,7 @@ copyButtons.forEach((button) => {
 });
 ```
 
-- [ ] **Step 2: Add deploy-artifact link checker**
+- [x] **Step 2: Add deploy-artifact link checker**
 
 Create `site/check-links.mjs`:
 
@@ -638,7 +638,7 @@ if (failures.length > 0) {
 console.log("Pages link check: ok");
 ```
 
-- [ ] **Step 3: Run JavaScript syntax and link checks**
+- [x] **Step 3: Run JavaScript syntax and link checks**
 
 Run:
 
@@ -650,7 +650,10 @@ node site/check-links.mjs
 
 Expected: syntax checks pass; link check fails only until the terminal recording file exists.
 
-- [ ] **Step 4: Keep JS and checker in the working tree**
+Current result: syntax checks pass and the link checker passes with the
+explicit blocker fallback because no fake recording asset is linked.
+
+- [x] **Step 4: Keep JS and checker in the working tree**
 
 Do not commit yet. The checker is expected to pass after the recording asset is
 captured in Task 5.
@@ -661,7 +664,7 @@ captured in Task 5.
 - Create: `scripts/capture-pages-terminal-recording.sh`
 - Create: `site/assets/gromaq-terminal-recording.webm`
 
-- [ ] **Step 1: Add the recording helper**
+- [x] **Step 1: Add the recording helper**
 
 Create `scripts/capture-pages-terminal-recording.sh`. It should:
 
@@ -679,7 +682,7 @@ Create `scripts/capture-pages-terminal-recording.sh`. It should:
 
 Use the existing Swift window lookup approach from `scripts/capture-macos-window-proof.sh`; do not invent a separate window matching policy.
 
-- [ ] **Step 2: Run shell syntax check**
+- [x] **Step 2: Run shell syntax check**
 
 Run:
 
@@ -689,7 +692,7 @@ sh -n scripts/capture-pages-terminal-recording.sh
 
 Expected: PASS.
 
-- [ ] **Step 3: Capture the real recording**
+- [x] **Step 3: Capture the real recording**
 
 Run:
 
@@ -705,7 +708,10 @@ Expected:
 
 If macOS Screen Recording or Accessibility permission blocks capture or keystrokes, grant permission to the terminal application and rerun the same command. If permission remains blocked, keep the poster fallback intact and report the exact blocker.
 
-- [ ] **Step 4: Verify media file metadata**
+Current result: blocked by macOS Screen Recording permission preflight returning
+`false`; poster fallback and explicit blocker copy are active.
+
+- [x] **Step 4: Verify media file metadata**
 
 Run:
 
@@ -715,7 +721,10 @@ ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:no
 
 Expected: duration is between `10.0` and `16.0` seconds.
 
-- [ ] **Step 5: Run site link check**
+Current result: not applicable because macOS Screen Recording permission blocked
+capture before a media file could be produced.
+
+- [x] **Step 5: Run site link check**
 
 Run:
 
@@ -725,7 +734,7 @@ node site/check-links.mjs
 
 Expected: `Pages link check: ok`.
 
-- [ ] **Step 6: Keep recording helper and media in the working tree**
+- [x] **Step 6: Keep recording helper and media in the working tree**
 
 Do not commit yet. Commit the full site after the Pages workflow and policy
 checks pass.
@@ -735,7 +744,7 @@ checks pass.
 **Files:**
 - Create: `.github/workflows/pages.yml`
 
-- [ ] **Step 1: Create Pages workflow**
+- [x] **Step 1: Create Pages workflow**
 
 Create `.github/workflows/pages.yml`:
 
@@ -781,7 +790,7 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-- [ ] **Step 2: Run workflow and policy checks**
+- [x] **Step 2: Run workflow and policy checks**
 
 Run:
 
@@ -807,7 +816,7 @@ git commit -m "feat: add gromaq pages launch site"
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Add launch-site link to README**
+- [x] **Step 1: Add launch-site link to README**
 
 Add this line near the top after the project description:
 
@@ -815,7 +824,7 @@ Add this line near the top after the project description:
 Launch site: `https://vicotrbb.github.io/gromaq/`
 ```
 
-- [ ] **Step 2: Run local static server**
+- [x] **Step 2: Run local static server**
 
 Run:
 
@@ -825,7 +834,7 @@ python3 -m http.server 4173 --directory site
 
 Expected: server starts at `http://localhost:4173/`.
 
-- [ ] **Step 3: Visually inspect responsive states with browser automation**
+- [x] **Step 3: Visually inspect responsive states with browser automation**
 
 Open `http://localhost:4173/` and verify:
 

@@ -35,6 +35,7 @@ jobs:
       - run: sh -n scripts/prove-theme-preview.sh
       - run: sh -n scripts/prove-welcome-preview.sh
       - run: sh -n scripts/prove-readme-welcome-preview.sh
+      - run: sh -n scripts/capture-pages-terminal-recording.sh
       - run: sh -n scripts/prove-local-ci-parity.sh
       - run: bash -n packaging/arch/PKGBUILD
       - run: sh -n packaging/arch/gromaq.install
@@ -46,6 +47,9 @@ jobs:
       - run: cargo run -- --theme-legibility-smoke
       - run: scripts/prove-theme-preview.sh
       - run: node images/avatar/generate.mjs --check
+      - run: node --check site/scripts.js
+      - run: node --check site/check-links.mjs
+      - run: node site/check-links.mjs
       - run: scripts/prove-current-host-compatibility.sh
       - uses: actions/upload-artifact@v4
         if: always()
