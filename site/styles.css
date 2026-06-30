@@ -71,8 +71,7 @@ a {
 }
 
 img,
-video,
-.terminal-poster {
+.terminal-screenshot {
   max-width: 100%;
 }
 
@@ -333,8 +332,7 @@ strong {
     radial-gradient(circle at 49px 5px, oklch(69% 0.13 155) 0 4px, transparent 4px);
 }
 
-.terminal-showcase video,
-.terminal-poster {
+.terminal-screenshot {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -343,24 +341,10 @@ strong {
   background: var(--graphite);
 }
 
-.terminal-poster {
+.terminal-screenshot {
   height: auto;
   aspect-ratio: auto;
   object-fit: cover;
-}
-
-.terminal-showcase figcaption,
-.recording-status {
-  margin-top: var(--space-sm);
-  color: oklch(78% 0.04 282);
-  font-size: 0.92rem;
-}
-
-.recording-status {
-  padding: var(--space-sm);
-  border: 1px solid color-mix(in oklch, var(--cyan), var(--graphite) 56%);
-  border-radius: var(--radius-sm);
-  background: color-mix(in oklch, var(--graphite-3), var(--cyan) 8%);
 }
 
 .section-heading {

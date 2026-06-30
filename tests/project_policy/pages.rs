@@ -81,7 +81,8 @@ fn pages_site_keeps_real_terminal_media_contract() {
     let html = fs::read_to_string(&html_path).unwrap();
 
     for marker in [
-        "poster=\"assets/gromaq-welcome-preview.png\"",
+        "class=\"terminal-screenshot\"",
+        "src=\"assets/gromaq-welcome-preview.png\"",
         "Native Rust GPU terminal",
         "GROMAQ_INSTALL_METHOD=release GROMAQ_VERSION=v0.2.1",
         "public alpha/beta",
@@ -113,18 +114,21 @@ fn pages_site_keeps_real_terminal_media_contract() {
             relative_path(root, &html_path)
         );
         assert!(
-            html.contains("class=\"terminal-poster\""),
-            "{} must render the welcome preview as the fallback media surface",
+            html.contains("class=\"terminal-screenshot\""),
+            "{} must render the welcome preview as the intentional static screenshot",
             relative_path(root, &html_path)
         );
-        for marker in [
+        for removed_marker in [
+            "poster=\"",
+            "fallback",
             "data-recording-status=\"blocked\"",
             "Recording capture blocked:",
             "macOS Screen Recording permission",
+            "real native app recording is claimed",
         ] {
             assert!(
-                html.contains(marker),
-                "{} must document the exact recording blocker when real media is absent",
+                !html.contains(removed_marker),
+                "{} must omit recording fallback marker `{removed_marker}` when using the static screenshot",
                 relative_path(root, &html_path)
             );
         }
