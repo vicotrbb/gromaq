@@ -103,7 +103,8 @@ impl<S> NativeTerminalRuntime<S> {
         let result = panel.launch_selected_workspace(runner);
         if let Some(Ok(workspace)) = result.as_ref() {
             let session = match workspace {
-                TmuxWorkspaceResult::Attached { session }
+                TmuxWorkspaceResult::Existing { session }
+                | TmuxWorkspaceResult::Attached { session }
                 | TmuxWorkspaceResult::Started { session, .. } => session,
             };
             let _ =

@@ -7,6 +7,11 @@ use super::{SystemTmuxCommandRunner, TmuxCommandRunner, TmuxError};
 /// Result of starting or attaching to a tmux workspace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TmuxWorkspaceResult {
+    /// The workspace session already exists and was left running.
+    Existing {
+        /// tmux session name.
+        session: String,
+    },
     /// An existing workspace session was attached.
     Attached {
         /// tmux session name.
@@ -49,6 +54,26 @@ where
             self.runner
                 .run_tmux(&["attach-session", "-t", &workspace.session])?;
             return Ok(TmuxWorkspaceResult::Attached {
+                session: workspace.session.clone(),
+            });
+        }
+        self.start_workspace(workspace)?;
+        Ok(TmuxWorkspaceResult::Started {
+            session: workspace.session.clone(),
+            windows: workspace.windows.len(),
+            panes: pane_count(workspace),
+        })
+    }
+
+    /// Ensure the workspace session exists without attaching a tmux client.
+    pub fn start_if_absent(
+        &self,
+        key: &str,
+        workspace: &TmuxWorkspaceSettings,
+    ) -> Result<TmuxWorkspaceResult, TmuxError> {
+        validate_workspace(key, workspace)?;
+        if self.session_exists(&workspace.session)? {
+            return Ok(TmuxWorkspaceResult::Existing {
                 session: workspace.session.clone(),
             });
         }

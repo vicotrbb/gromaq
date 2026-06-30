@@ -78,6 +78,9 @@ fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) -> String {
 
 fn workspace_feedback(key: &str, result: &Result<TmuxWorkspaceResult, TmuxError>) -> String {
     match result {
+        Ok(TmuxWorkspaceResult::Existing { session }) => {
+            format!("workspace {key} found session {session}")
+        }
         Ok(TmuxWorkspaceResult::Attached { session }) => {
             format!("workspace {key} attached session {session}")
         }

@@ -27,6 +27,10 @@ impl FakeRunner {
             calls: RefCell::new(calls),
         }
     }
+
+    fn remaining_calls(&self) -> usize {
+        self.calls.borrow().len()
+    }
 }
 
 impl ExpectedCall {
@@ -357,4 +361,31 @@ fn tmux_workspace_launcher_attaches_existing_workspace_without_duplication() {
             session: "gromaq".to_owned(),
         }
     );
+}
+
+#[test]
+fn tmux_workspace_launcher_can_ensure_existing_workspace_without_attaching() {
+    let workspace = TmuxWorkspaceSettings {
+        session: "gromaq".to_owned(),
+        root: None,
+        windows: vec![TmuxWorkspaceWindowSettings {
+            name: "code".to_owned(),
+            panes: vec!["$SHELL".to_owned()],
+        }],
+    };
+    let runner = FakeRunner::new(vec![ExpectedCall::output(
+        &["has-session", "-t", "gromaq"],
+        "",
+    )]);
+    let result = TmuxWorkspaceLauncher::new(&runner)
+        .start_if_absent("gromaq", &workspace)
+        .unwrap();
+
+    assert_eq!(
+        result,
+        TmuxWorkspaceResult::Existing {
+            session: "gromaq".to_owned(),
+        }
+    );
+    assert_eq!(runner.remaining_calls(), 0);
 }
