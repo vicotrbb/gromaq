@@ -43,6 +43,9 @@ fn action_request(
     if let Some(target) = action_target(action_id, panel, snapshot) {
         request = request.target(target);
     }
+    if let Some(new_name) = action_new_name(action_id, panel) {
+        request = request.new_name(new_name);
+    }
     request
 }
 
@@ -52,10 +55,10 @@ fn action_target(
     snapshot: &TmuxManagerSnapshot,
 ) -> Option<String> {
     match action_id {
-        ActionId::StartSession
-        | ActionId::AttachSession
-        | ActionId::RenameSession
-        | ActionId::KillSession => panel.selected_session_name(snapshot).map(str::to_owned),
+        ActionId::StartSession => panel.pending_action_name().map(str::to_owned),
+        ActionId::AttachSession | ActionId::RenameSession | ActionId::KillSession => {
+            panel.selected_session_name(snapshot).map(str::to_owned)
+        }
         ActionId::SplitPaneRight
         | ActionId::SplitPaneDown
         | ActionId::SelectPane
@@ -68,6 +71,15 @@ fn action_target(
         | ActionId::PreviousWindow
         | ActionId::ZoomPane
         | ActionId::ShowHelp => None,
+    }
+}
+
+fn action_new_name(action_id: ActionId, panel: &TmuxManagerPanelState) -> Option<String> {
+    match action_id {
+        ActionId::RenameSession | ActionId::RenameWindow => {
+            panel.pending_action_name().map(str::to_owned)
+        }
+        _ => None,
     }
 }
 

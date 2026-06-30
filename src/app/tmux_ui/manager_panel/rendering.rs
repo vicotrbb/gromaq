@@ -57,9 +57,10 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
     lines.push(action_row(panel));
     lines.push(
         panel
-            .confirmation
-            .clone()
+            .action_input_prompt()
+            .or_else(|| panel.confirmation.clone())
             .or_else(|| panel.workspace_feedback.clone())
+            .or_else(|| panel.last_action_feedback.clone())
             .unwrap_or_else(|| "Esc close".to_owned()),
     );
     lines

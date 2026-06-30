@@ -22,6 +22,13 @@ pub enum TmuxManagerFocus {
     Actions,
 }
 
+/// Inline text input for tmux actions that need a user-supplied name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TmuxActionInputState {
+    pub(super) action_id: ActionId,
+    pub(super) value: String,
+}
+
 /// Native tmux manager panel state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TmuxManagerPanelState {
@@ -32,8 +39,10 @@ pub struct TmuxManagerPanelState {
     pub(super) selected_pane: usize,
     pub(super) selected_action: usize,
     pub(super) pending_action: Option<String>,
+    pub(super) pending_action_name: Option<String>,
     pub(super) confirmation: Option<String>,
     pub(super) confirmation_action: Option<ActionId>,
+    pub(super) action_input: Option<TmuxActionInputState>,
     pub(super) last_action_feedback: Option<String>,
     pub(super) workspace_presets: Vec<TmuxWorkspaceUiPreset>,
     pub(super) selected_workspace: usize,
@@ -62,8 +71,10 @@ impl TmuxManagerPanelState {
             selected_pane,
             selected_action: 0,
             pending_action: None,
+            pending_action_name: None,
             confirmation: None,
             confirmation_action: None,
+            action_input: None,
             last_action_feedback: None,
             workspace_presets,
             selected_workspace: 0,
@@ -81,6 +92,7 @@ impl TmuxManagerPanelState {
         self.open = false;
         self.confirmation = None;
         self.confirmation_action = None;
+        self.action_input = None;
     }
 
     /// Return the current focus region.
@@ -104,6 +116,7 @@ impl TmuxManagerPanelState {
 
     /// Request an action, asking for confirmation when it is destructive.
     pub fn request_action(&mut self, stable_id: &str, destructive: bool) {
+        self.pending_action_name = None;
         if destructive {
             self.confirmation = Some(format!("confirm {stable_id} with y"));
             self.confirmation_action = action_id_for_stable_id(stable_id);
@@ -129,6 +142,18 @@ impl TmuxManagerPanelState {
     /// Return the pending non-destructive action id.
     pub fn pending_action(&self) -> Option<&str> {
         self.pending_action.as_deref()
+    }
+
+    /// Return the pending user-supplied action name.
+    pub fn pending_action_name(&self) -> Option<&str> {
+        self.pending_action_name.as_deref()
+    }
+
+    /// Return the active action input prompt text.
+    pub fn action_input_prompt(&self) -> Option<String> {
+        let input = self.action_input.as_ref()?;
+        let action = TmuxAction::by_id(input.action_id)?;
+        Some(format!("{} name: {}", action.stable_id, input.value))
     }
 
     /// Return the latest action execution feedback.

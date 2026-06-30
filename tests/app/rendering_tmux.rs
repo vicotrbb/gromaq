@@ -247,10 +247,13 @@ fn native_terminal_runtime_renders_tmux_manager_executable_actions() {
     let action_line = &renderer.frames.last().unwrap().lines[6];
     for action in [
         "attach-session",
+        "start-session",
         "detach-session",
         "split-pane-right",
         "split-pane-down",
         "new-window",
+        "rename-session",
+        "rename-window",
         "next-window",
         "previous-window",
         "zoom-pane",

@@ -2,17 +2,20 @@
 
 mod navigation;
 
-use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
+use super::state::{TmuxActionInputState, TmuxManagerFocus, TmuxManagerPanelState};
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-const PANEL_ACTIONS: [ActionId; 13] = [
+const PANEL_ACTIONS: [ActionId; 16] = [
     ActionId::SplitPaneRight,
     ActionId::KillWindow,
     ActionId::AttachSession,
+    ActionId::StartSession,
     ActionId::DetachSession,
     ActionId::SplitPaneDown,
     ActionId::NewWindow,
+    ActionId::RenameSession,
+    ActionId::RenameWindow,
     ActionId::NextWindow,
     ActionId::PreviousWindow,
     ActionId::ZoomPane,
@@ -51,6 +54,9 @@ impl TmuxManagerPanelState {
     ) -> TmuxManagerKeyOutcome {
         if !self.open || !modifiers.is_empty() {
             return TmuxManagerKeyOutcome::Ignored;
+        }
+        if self.action_input.is_some() {
+            return self.handle_action_input_key(key);
         }
         if self.confirmation.is_some() {
             return self.handle_confirmation_key(key);
@@ -119,6 +125,44 @@ impl TmuxManagerPanelState {
         }
     }
 
+    fn handle_action_input_key(&mut self, key: &Key) -> TmuxManagerKeyOutcome {
+        let Some(input) = self.action_input.as_mut() else {
+            return TmuxManagerKeyOutcome::Consumed;
+        };
+        match key {
+            Key::Named(NamedKey::Escape) => {
+                self.action_input = None;
+                self.pending_action_name = None;
+                TmuxManagerKeyOutcome::Consumed
+            }
+            Key::Named(NamedKey::Backspace) => {
+                input.value.pop();
+                TmuxManagerKeyOutcome::Consumed
+            }
+            Key::Named(NamedKey::Enter) => {
+                let value = input.value.trim().to_owned();
+                let action_id = input.action_id;
+                if value.is_empty() {
+                    return TmuxManagerKeyOutcome::Consumed;
+                }
+                let action = TmuxAction::by_id(action_id).expect("input action is registered");
+                self.action_input = None;
+                self.pending_action_name = Some(value);
+                self.pending_action = Some(action.stable_id.to_owned());
+                self.confirmation = None;
+                self.confirmation_action = None;
+                TmuxManagerKeyOutcome::ActionRequested(action_id)
+            }
+            Key::Character(character)
+                if input.value.len() < 64 && !character.chars().any(char::is_control) =>
+            {
+                input.value.push_str(character);
+                TmuxManagerKeyOutcome::Consumed
+            }
+            _ => TmuxManagerKeyOutcome::Consumed,
+        }
+    }
+
     fn activate_selected_action(&mut self) -> TmuxManagerKeyOutcome {
         if self.focus == TmuxManagerFocus::Workspaces {
             return if self.workspace_presets.is_empty() {
@@ -132,6 +176,18 @@ impl TmuxManagerPanelState {
             .copied()
             .unwrap_or(ActionId::SplitPaneRight);
         let action = TmuxAction::by_id(action_id).expect("panel action is registered");
+        if action_needs_name(action_id) {
+            self.action_input = Some(TmuxActionInputState {
+                action_id,
+                value: String::new(),
+            });
+            self.pending_action = None;
+            self.pending_action_name = None;
+            self.confirmation = None;
+            self.confirmation_action = None;
+            return TmuxManagerKeyOutcome::Consumed;
+        }
+        self.pending_action_name = None;
         if action.confirmation_required {
             self.request_action(action.stable_id, true);
             return TmuxManagerKeyOutcome::ConfirmationRequired(action_id);
@@ -143,4 +199,11 @@ impl TmuxManagerPanelState {
 
 pub(super) fn panel_actions() -> &'static [ActionId] {
     &PANEL_ACTIONS
+}
+
+fn action_needs_name(action_id: ActionId) -> bool {
+    matches!(
+        action_id,
+        ActionId::StartSession | ActionId::RenameSession | ActionId::RenameWindow
+    )
 }
