@@ -18,3 +18,5 @@ mod runtime_input;
 mod support;
 #[path = "app/surface.rs"]
 mod surface;
+#[path = "app/tmux_ui.rs"]
+mod tmux_ui;

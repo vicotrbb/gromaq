@@ -21,8 +21,8 @@ pub enum NativeTextZoomAction {
 /// Native tmux assist action requested by app-owned keyboard shortcuts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NativeTmuxAssistAction {
-    /// Show the tmux assist teaching overlay.
-    Show,
+    /// Toggle the native tmux manager panel.
+    ToggleManager,
 }
 
 /// Browser-style terminal text zoom action requested by a modified mouse wheel event.
@@ -80,11 +80,11 @@ pub fn native_tmux_assist_action(
         return None;
     }
     if matches!(physical_key, Some(PhysicalKey::Code(KeyCode::KeyT))) {
-        return Some(NativeTmuxAssistAction::Show);
+        return Some(NativeTmuxAssistAction::ToggleManager);
     }
     match key {
         Key::Character(character) if character.eq_ignore_ascii_case("t") => {
-            Some(NativeTmuxAssistAction::Show)
+            Some(NativeTmuxAssistAction::ToggleManager)
         }
         _ => None,
     }

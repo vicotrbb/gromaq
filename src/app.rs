@@ -69,7 +69,7 @@ pub use surface::{
     render_and_present_terminal_glyph_frame_report_with_snapshot,
 };
 pub use tmux_ui::{
-    TmuxManagerFocus, TmuxManagerPanelState, TmuxStatusKind, TmuxUiSnapshot,
+    TmuxManagerFocus, TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxStatusKind, TmuxUiSnapshot,
     apply_tmux_manager_panel, apply_tmux_status_strip,
 };
 pub(crate) use welcome::{WELCOME_AVATAR_ANSI, default_welcome_text};

@@ -144,8 +144,11 @@ impl<S> NativeTerminalRuntime<S> {
         {
             dirty_regions.push(region);
         }
-        if let Some((tmux_snapshot, panel)) = tmux_manager_panel
-            && let Some(region) = apply_tmux_manager_panel(&mut grid, tmux_snapshot, panel)
+        if let Some((tmux_snapshot, panel)) = tmux_manager_panel.or_else(|| {
+            self.tmux_manager_snapshot
+                .as_ref()
+                .zip(self.tmux_manager_panel.as_ref())
+        }) && let Some(region) = apply_tmux_manager_panel(&mut grid, tmux_snapshot, panel)
         {
             dirty_regions.push(region);
         }

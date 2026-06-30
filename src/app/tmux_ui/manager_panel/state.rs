@@ -4,7 +4,7 @@ use super::selection::{
     selected_pane_index, selected_panes, selected_session_index, selected_window_index,
     selected_windows, window_label,
 };
-use crate::tmux::TmuxManagerSnapshot;
+use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 
 /// Focus region within the native tmux manager panel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,8 +27,10 @@ pub struct TmuxManagerPanelState {
     pub(super) selected_session: usize,
     pub(super) selected_window: usize,
     pub(super) selected_pane: usize,
+    pub(super) selected_action: usize,
     pub(super) pending_action: Option<String>,
     pub(super) confirmation: Option<String>,
+    pub(super) confirmation_action: Option<ActionId>,
 }
 
 impl TmuxManagerPanelState {
@@ -43,8 +45,10 @@ impl TmuxManagerPanelState {
             selected_session,
             selected_window,
             selected_pane,
+            selected_action: 0,
             pending_action: None,
             confirmation: None,
+            confirmation_action: None,
         }
     }
 
@@ -57,6 +61,7 @@ impl TmuxManagerPanelState {
     pub fn close(&mut self) {
         self.open = false;
         self.confirmation = None;
+        self.confirmation_action = None;
     }
 
     /// Return the current focus region.
@@ -78,16 +83,19 @@ impl TmuxManagerPanelState {
     pub fn request_action(&mut self, stable_id: &str, destructive: bool) {
         if destructive {
             self.confirmation = Some(format!("confirm {stable_id} with y"));
+            self.confirmation_action = action_id_for_stable_id(stable_id);
             self.pending_action = None;
         } else {
             self.pending_action = Some(stable_id.to_owned());
             self.confirmation = None;
+            self.confirmation_action = None;
         }
     }
 
     /// Cancel the active destructive-action confirmation prompt.
     pub fn cancel_confirmation(&mut self) {
         self.confirmation = None;
+        self.confirmation_action = None;
     }
 
     /// Return the current confirmation message.
@@ -122,4 +130,8 @@ impl TmuxManagerPanelState {
             .get(self.selected_pane)
             .map(|pane| pane.id.as_str())
     }
+}
+
+fn action_id_for_stable_id(stable_id: &str) -> Option<ActionId> {
+    TmuxAction::by_stable_id(stable_id).map(|action| action.id)
 }

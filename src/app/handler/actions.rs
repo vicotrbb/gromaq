@@ -101,9 +101,19 @@ impl NativeTerminalApp {
                 Some(physical_key),
                 self.modifiers
             ),
-            Some(super::super::NativeTmuxAssistAction::Show)
+            Some(super::super::NativeTmuxAssistAction::ToggleManager)
         ) {
-            self.runtime.show_tmux_assist_overlay();
+            self.runtime
+                .toggle_tmux_manager_panel(read_tmux_manager_snapshot());
+            if let Some(window) = &self.window {
+                window.request_redraw();
+            }
+            Ok(())
+        } else if !matches!(
+            self.runtime
+                .handle_tmux_manager_key(&logical_key, self.modifiers),
+            super::super::TmuxManagerKeyOutcome::Ignored
+        ) {
             if let Some(window) = &self.window {
                 window.request_redraw();
             }
@@ -144,4 +154,13 @@ impl NativeTerminalApp {
             }
         }
     }
+}
+
+fn read_tmux_manager_snapshot() -> crate::tmux::TmuxManagerSnapshot {
+    crate::tmux::TmuxManager::new(crate::tmux::SystemTmuxCommandRunner)
+        .snapshot()
+        .unwrap_or(crate::tmux::TmuxManagerSnapshot {
+            state: crate::tmux::TmuxState::default(),
+            current: None,
+        })
 }

@@ -1,5 +1,6 @@
 //! Native tmux manager panel rendering.
 
+use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot, TmuxPane};
@@ -48,7 +49,7 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
         format!("Sessions {}", session_row(snapshot, panel)),
         format!("Windows {}", window_row(snapshot, panel)),
         format!("Panes {}", pane_row(snapshot, panel)),
-        action_row(),
+        action_row(panel),
         panel
             .confirmation
             .clone()
@@ -107,10 +108,19 @@ fn pane_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> St
         .join(" ")
 }
 
-fn action_row() -> String {
+fn action_row(panel: &TmuxManagerPanelState) -> String {
     let action = TmuxAction::by_id(ActionId::SplitPaneRight).expect("split action is registered");
+    let actions = panel_actions()
+        .iter()
+        .enumerate()
+        .filter_map(|(index, action_id)| {
+            TmuxAction::by_id(*action_id)
+                .map(|action| selected_label(action.stable_id, index == panel.selected_action))
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
     format!(
-        "Enter {} | {} | Esc close",
+        "Actions {actions} | Enter {} | {} | Esc close",
         action.stable_id,
         action.key_binding.unwrap_or(action.tmux_command)
     )

@@ -9,7 +9,7 @@ fn native_tmux_assist_shortcut_uses_modified_t_without_plain_control_t() {
             None,
             ModifiersState::CONTROL | ModifiersState::SHIFT
         ),
-        Some(NativeTmuxAssistAction::Show)
+        Some(NativeTmuxAssistAction::ToggleManager)
     );
     assert_eq!(
         native_tmux_assist_action(
@@ -17,7 +17,7 @@ fn native_tmux_assist_shortcut_uses_modified_t_without_plain_control_t() {
             None,
             ModifiersState::SUPER | ModifiersState::SHIFT
         ),
-        Some(NativeTmuxAssistAction::Show)
+        Some(NativeTmuxAssistAction::ToggleManager)
     );
     assert_eq!(
         native_tmux_assist_action(&Key::Character("t".into()), None, ModifiersState::CONTROL),
@@ -41,6 +41,6 @@ fn native_tmux_assist_shortcut_accepts_physical_t_when_logical_text_is_modified(
             Some(PhysicalKey::Code(KeyCode::KeyT)),
             ModifiersState::CONTROL | ModifiersState::SHIFT
         ),
-        Some(NativeTmuxAssistAction::Show)
+        Some(NativeTmuxAssistAction::ToggleManager)
     );
 }
