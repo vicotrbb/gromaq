@@ -118,7 +118,12 @@ fn pane_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> St
 }
 
 fn action_row(panel: &TmuxManagerPanelState) -> String {
-    let action = TmuxAction::by_id(ActionId::SplitPaneRight).expect("split action is registered");
+    let selected_action_id = panel_actions()
+        .get(panel.selected_action)
+        .copied()
+        .unwrap_or(ActionId::SplitPaneRight);
+    let selected_action =
+        TmuxAction::by_id(selected_action_id).expect("panel action is registered");
     let actions = panel_actions()
         .iter()
         .enumerate()
@@ -129,9 +134,11 @@ fn action_row(panel: &TmuxManagerPanelState) -> String {
         .collect::<Vec<_>>()
         .join(" ");
     format!(
-        "Actions {actions} | Enter {} | {} | Esc close",
-        action.stable_id,
-        action.key_binding.unwrap_or(action.tmux_command)
+        "Actions | Enter {} | {} | choices {actions} | Esc close",
+        selected_action.stable_id,
+        selected_action
+            .key_binding
+            .unwrap_or(selected_action.tmux_command)
     )
 }
 

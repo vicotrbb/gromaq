@@ -6,7 +6,20 @@ use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-const PANEL_ACTIONS: [ActionId; 2] = [ActionId::SplitPaneRight, ActionId::KillWindow];
+const PANEL_ACTIONS: [ActionId; 12] = [
+    ActionId::SplitPaneRight,
+    ActionId::KillWindow,
+    ActionId::DetachSession,
+    ActionId::SplitPaneDown,
+    ActionId::NewWindow,
+    ActionId::NextWindow,
+    ActionId::PreviousWindow,
+    ActionId::ZoomPane,
+    ActionId::SelectPane,
+    ActionId::KillPane,
+    ActionId::KillSession,
+    ActionId::ShowHelp,
+];
 
 /// Result of handling a key while the tmux manager panel may be open.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -225,6 +225,44 @@ fn native_terminal_runtime_renders_compact_tmux_manager_panel() {
     assert_eq!(runtime.terminal().dump_grid().line_text(1), ">");
 }
 
+#[test]
+fn native_terminal_runtime_renders_tmux_manager_executable_actions() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 220,
+        terminal_rows: 9,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let action_line = &renderer.frames.last().unwrap().lines[6];
+    for action in [
+        "detach-session",
+        "split-pane-right",
+        "split-pane-down",
+        "new-window",
+        "next-window",
+        "previous-window",
+        "zoom-pane",
+        "select-pane",
+        "kill-pane",
+        "kill-window",
+        "kill-session",
+        "show-help",
+    ] {
+        assert!(action_line.contains(action), "{action_line}");
+    }
+}
+
 fn attached_snapshot() -> TmuxUiSnapshot {
     TmuxUiSnapshot {
         status: TmuxStatusKind::Attached,
