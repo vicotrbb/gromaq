@@ -117,6 +117,10 @@ impl NativeTerminalApp {
                 .handle_tmux_manager_key(&logical_key, self.modifiers);
             if !matches!(tmux_outcome, super::super::TmuxManagerKeyOutcome::Ignored) {
                 self.runtime.dispatch_tmux_manager_action(
+                    tmux_outcome.clone(),
+                    &crate::tmux::SystemTmuxCommandRunner,
+                );
+                self.runtime.dispatch_tmux_manager_workspace(
                     tmux_outcome,
                     &crate::tmux::SystemTmuxCommandRunner,
                 );

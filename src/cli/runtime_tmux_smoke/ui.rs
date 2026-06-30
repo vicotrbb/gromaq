@@ -118,6 +118,7 @@ fn drive_confirmation_cancel(runtime: &mut NativeTerminalRuntime<()>) -> bool {
         Key::Named(NamedKey::ArrowRight),
         Key::Named(NamedKey::ArrowRight),
         Key::Named(NamedKey::ArrowRight),
+        Key::Named(NamedKey::ArrowRight),
         Key::Named(NamedKey::ArrowDown),
     ] {
         if matches!(

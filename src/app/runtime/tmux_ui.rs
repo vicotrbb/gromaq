@@ -1,4 +1,6 @@
-use crate::tmux::{TmuxActionResult, TmuxCommandRunner, TmuxManagerSnapshot};
+use crate::tmux::{
+    TmuxActionResult, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot, TmuxWorkspaceResult,
+};
 
 use super::NativeTerminalRuntime;
 use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset};
@@ -75,6 +77,26 @@ impl<S> NativeTerminalRuntime<S> {
             return None;
         };
         let result = panel.dispatch_action_outcome(outcome, snapshot, runner);
+        if result.is_some() {
+            self.terminal.invalidate_viewport();
+        }
+        result
+    }
+
+    /// Dispatch a workspace-launch tmux manager key outcome through the workspace launcher.
+    pub fn dispatch_tmux_manager_workspace<R>(
+        &mut self,
+        outcome: TmuxManagerKeyOutcome,
+        runner: &R,
+    ) -> Option<Result<TmuxWorkspaceResult, TmuxError>>
+    where
+        R: TmuxCommandRunner,
+    {
+        if !matches!(outcome, TmuxManagerKeyOutcome::WorkspaceLaunchRequested) {
+            return None;
+        }
+        let panel = self.tmux_manager_panel.as_mut()?;
+        let result = panel.launch_selected_workspace(runner);
         if result.is_some() {
             self.terminal.invalidate_viewport();
         }

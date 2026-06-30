@@ -1,14 +1,15 @@
 use std::cell::RefCell;
 
 use gromaq::app::{
-    NativeTerminalRuntime, NativeTerminalRuntimeConfig, TmuxManagerPanelState,
-    TmuxWorkspaceUiPreset,
+    NativeTerminalRuntime, NativeTerminalRuntimeConfig, TmuxManagerFocus, TmuxManagerKeyOutcome,
+    TmuxManagerPanelState, TmuxWorkspaceUiPreset,
 };
 use gromaq::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use gromaq::tmux::{
     TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot,
     TmuxState, TmuxWorkspaceResult,
 };
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::support::{MockFrameRenderer, MockPtySession};
 
@@ -93,6 +94,75 @@ fn tmux_manager_panel_renders_workspace_preset_summary() {
     assert!(frame.lines[6].contains("session gromaq"));
     assert!(frame.lines[6].contains("root /repo"));
     assert!(frame.lines[6].contains("windows code(2) test(1)"));
+}
+
+#[test]
+fn tmux_manager_panel_keyboard_launches_selected_workspace_preset() {
+    let snapshot = TmuxManagerSnapshot {
+        state: TmuxState::default(),
+        current: None,
+    };
+    let mut panel = TmuxManagerPanelState::open_for_snapshot_with_workspaces(
+        &snapshot,
+        vec![workspace_preset()],
+    );
+
+    panel.handle_key(
+        &Key::Named(NamedKey::ArrowRight),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    panel.handle_key(
+        &Key::Named(NamedKey::ArrowRight),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    panel.handle_key(
+        &Key::Named(NamedKey::ArrowRight),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    assert_eq!(panel.focus(), TmuxManagerFocus::Workspaces);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Named(NamedKey::Enter),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::WorkspaceLaunchRequested
+    );
+}
+
+#[test]
+fn runtime_dispatches_workspace_launch_outcome_through_launcher() {
+    let snapshot = TmuxManagerSnapshot {
+        state: TmuxState::default(),
+        current: None,
+    };
+    let mut runtime =
+        NativeTerminalRuntime::<crate::support::MockPtySession>::new(NativeTerminalRuntimeConfig {
+            terminal_cols: 88,
+            terminal_rows: 8,
+            ..NativeTerminalRuntimeConfig::default()
+        })
+        .unwrap();
+    runtime.toggle_tmux_manager_panel_with_workspaces(snapshot, vec![workspace_preset()]);
+    let runner = FakeRunner::new(vec![
+        ExpectedCall::success(&["has-session", "-t", "gromaq"]),
+        ExpectedCall::success(&["attach-session", "-t", "gromaq"]),
+    ]);
+
+    let result = runtime
+        .dispatch_tmux_manager_workspace(TmuxManagerKeyOutcome::WorkspaceLaunchRequested, &runner);
+
+    assert_eq!(
+        result,
+        Some(Ok(TmuxWorkspaceResult::Attached {
+            session: "gromaq".to_owned()
+        }))
+    );
+    assert_eq!(runner.remaining_calls(), 0);
 }
 
 #[test]

@@ -70,6 +70,7 @@ fn focus_label(focus: TmuxManagerFocus) -> &'static str {
         TmuxManagerFocus::Sessions => "sessions",
         TmuxManagerFocus::Windows => "windows",
         TmuxManagerFocus::Panes => "panes",
+        TmuxManagerFocus::Workspaces => "workspaces",
         TmuxManagerFocus::Actions => "actions",
     }
 }

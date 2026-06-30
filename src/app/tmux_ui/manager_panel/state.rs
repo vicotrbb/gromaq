@@ -16,6 +16,8 @@ pub enum TmuxManagerFocus {
     Windows,
     /// Pane list focus.
     Panes,
+    /// Workspace preset row focus.
+    Workspaces,
     /// Action row focus.
     Actions,
 }
@@ -91,7 +93,11 @@ impl TmuxManagerPanelState {
         self.focus = match self.focus {
             TmuxManagerFocus::Sessions => TmuxManagerFocus::Windows,
             TmuxManagerFocus::Windows => TmuxManagerFocus::Panes,
-            TmuxManagerFocus::Panes => TmuxManagerFocus::Actions,
+            TmuxManagerFocus::Panes if self.workspace_presets.is_empty() => {
+                TmuxManagerFocus::Actions
+            }
+            TmuxManagerFocus::Panes => TmuxManagerFocus::Workspaces,
+            TmuxManagerFocus::Workspaces => TmuxManagerFocus::Actions,
             TmuxManagerFocus::Actions => TmuxManagerFocus::Sessions,
         };
     }
