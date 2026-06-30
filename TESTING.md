@@ -64,6 +64,7 @@ git diff --check
 git diff --cached --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
+cargo test --test app tmux -- --nocapture
 cargo test --test tmux
 cargo run -- --tmux-assist
 cargo run -- --tmux-manager
@@ -96,3 +97,23 @@ Headless tests and offscreen GPU smokes do not prove live desktop behavior.
 Compatibility rows marked as live or not proven require separate evidence from
 a real windowed runtime, hardware-backed frame pacing, native clipboard paste,
 or interactive workflows in tools such as `tmux`, editors, and pagers.
+
+For native tmux manager app-window proof, use an isolated tmux target and record
+the exact result. The required manual checklist is:
+
+- Launch `cargo run`.
+- Verify the persistent tmux status strip is visible and legible.
+- Press Control/Super Shift `T` and verify a real manager panel opens.
+- Inspect sessions, windows, panes, current target, and pane command text.
+- Navigate with arrows or `h`/`j`/`k`/`l`.
+- Run a safe split-pane action from the UI.
+- Create or rename a window from the inline name prompt.
+- Start a named session or launch a configured workspace preset from the UI.
+- Attempt a kill action and verify inline confirmation appears before tmux runs.
+- Confirm a kill only against an isolated test target.
+- Close the panel and verify normal shell input still reaches the terminal.
+- Check a right-prompt or long prompt layout for legible overlap behavior.
+
+Until that manual checklist has been performed in the current session, native
+tmux manager behavior is proven only by automated model/render/runtime smokes
+and remains separate from live app-window proof.

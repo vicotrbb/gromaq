@@ -18,9 +18,13 @@ mod runtime_input;
 mod support;
 #[path = "app/surface.rs"]
 mod surface;
+#[path = "app/tmux_action_names.rs"]
+mod tmux_action_names;
 #[path = "app/tmux_actions.rs"]
 mod tmux_actions;
 #[path = "app/tmux_ui.rs"]
 mod tmux_ui;
+#[path = "app/tmux_workspace_runtime.rs"]
+mod tmux_workspace_runtime;
 #[path = "app/tmux_workspaces.rs"]
 mod tmux_workspaces;

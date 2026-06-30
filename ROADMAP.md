@@ -49,7 +49,8 @@
 - Shell PTY lifecycle tests
 - `vim`, `nvim`, `tmux`, `ssh`, and pager scenarios
 - Native tmux assist and manager proof, including action discovery, isolated
-  action execution, state reading, and workspace preset launchers
+  action execution, state reading, native manager action/name-entry paths, and
+  workspace preset launchers
 - Screenshot/reference comparisons
 - 144Hz frame pacing proof
 - Idle CPU and memory-growth validation
@@ -70,5 +71,6 @@
 - Developer ID signed and notarized macOS release
 - Broader macOS and Linux host compatibility matrix
 - Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows
+- Manual app-window proof for the full native tmux manager workflow
 - v1 daily-driver hardening for stability, recovery, accessibility, and
   long-session behavior

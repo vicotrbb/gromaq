@@ -128,16 +128,12 @@ use the release installer or install Rust from your package manager or
   theme legibility gates, and welcome-preview freshness proof.
 - Release automation for Linux tarballs, Debian packages, Arch metadata, macOS
   app zips, and SHA256 checksum manifests.
-- Native tmux assist foundations: `gromaq --tmux-assist` lists common tmux
-  actions with their tmux command, keybinding hints, and destructive-action
-  confirmation metadata; `gromaq --tmux-action <id> [target] [name]
-  [--confirm]` runs tmux actions through the same registry; `gromaq
-  --tmux-manager` reports sessions, windows, panes, current target, and
-  registry-backed manager actions; Control/Super Shift `T` opens the native
-  tmux manager panel with status, keyboard navigation, action confirmation, and
-  workspace preset launch; `gromaq --runtime-tmux-smoke` and `gromaq
-  --runtime-tmux-ui-smoke` prove isolated tmux action/state and native manager
-  UI behavior when tmux is installed.
+- Native tmux assist foundations: `gromaq --tmux-assist`, `--tmux-action`,
+  and `--tmux-manager` expose registry-backed tmux command/keybinding metadata.
+  Control/Super Shift `T` opens the native manager for status, navigation,
+  start/attach, split/window/rename, confirmed kill actions, snapshot refresh,
+  and workspace preset launch; `--runtime-tmux-smoke` and
+  `--runtime-tmux-ui-smoke` prove isolated tmux paths when tmux is installed.
 
 ## Known Proof Gaps
 
@@ -147,6 +143,7 @@ use the release installer or install Rust from your package manager or
   pagers, remote workflows, and multiple hosts.
 - Developer ID signed and notarized macOS distribution.
 - Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows.
+- Manual app-window proof for the full native tmux manager workflow.
 
 These gaps are tracked as proof boundaries, not hidden failures. The current
 compatibility matrix is in
@@ -212,6 +209,10 @@ gromaq --tmux-action kill-session my-session --confirm
 gromaq --runtime-tmux-smoke
 gromaq --runtime-tmux-ui-smoke
 ```
+
+Inside the native window, Control/Super Shift `T` toggles the tmux manager. Use
+arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry;
+destructive actions require `y`; Esc closes or cancels prompts.
 
 ## Documentation
 

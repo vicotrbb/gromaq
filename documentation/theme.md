@@ -67,7 +67,10 @@ The native tmux assist overlay reuses the existing status-overlay visual style:
 bold ANSI cyan text, placed only on a blank right-aligned span above the cursor
 row, and rendered into a cloned frame snapshot so terminal-owned grid contents
 and shell scrollback are not mutated. Runtime rendering tests cover the
-one-frame overlay for Control/Super Shift `T`.
+one-frame overlay for Control/Super Shift `T`. The native tmux manager uses the
+same terminal-native discipline: compact ANSI text rows, no decorative cards or
+gradients, action/keybinding hints inline with the selected action, and cloned
+frame rendering so manager rows do not become shell-owned scrollback.
 
 The selected preset is the starting point for the theme. Users can keep it
 as-is or override any individual field in TOML:
