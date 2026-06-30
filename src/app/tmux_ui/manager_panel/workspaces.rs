@@ -40,6 +40,21 @@ impl TmuxManagerPanelState {
         Some(result)
     }
 
+    /// Ensure the selected workspace exists without attaching outside the terminal PTY.
+    pub fn ensure_selected_workspace_started<R>(
+        &mut self,
+        runner: &R,
+    ) -> Option<Result<TmuxWorkspaceResult, TmuxError>>
+    where
+        R: TmuxCommandRunner,
+    {
+        let preset = self.workspace_presets.get(self.selected_workspace)?.clone();
+        let result =
+            TmuxWorkspaceLauncher::new(runner).start_if_absent(&preset.key, &preset.settings);
+        self.workspace_feedback = Some(workspace_feedback(&preset.key, &result));
+        Some(result)
+    }
+
     /// Return the latest workspace launch feedback.
     pub fn workspace_feedback(&self) -> Option<&str> {
         self.workspace_feedback.as_deref()

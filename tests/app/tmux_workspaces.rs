@@ -148,17 +148,18 @@ fn runtime_dispatches_workspace_launch_outcome_through_launcher() {
         })
         .unwrap();
     runtime.toggle_tmux_manager_panel_with_workspaces(snapshot, vec![workspace_preset()]);
-    let runner = FakeRunner::new(vec![
-        ExpectedCall::success(&["has-session", "-t", "gromaq"]),
-        ExpectedCall::success(&["attach-session", "-t", "gromaq"]),
-    ]);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "has-session",
+        "-t",
+        "gromaq",
+    ])]);
 
     let result = runtime
         .dispatch_tmux_manager_workspace(TmuxManagerKeyOutcome::WorkspaceLaunchRequested, &runner);
 
     assert_eq!(
         result,
-        Some(Ok(TmuxWorkspaceResult::Attached {
+        Some(Ok(TmuxWorkspaceResult::Existing {
             session: "gromaq".to_owned()
         }))
     );
@@ -219,6 +220,43 @@ fn runtime_workspace_launch_attaches_started_workspace_through_pty() {
         result,
         Some(Ok(TmuxWorkspaceResult::Started { .. }))
     ));
+    assert_eq!(runner.remaining_calls(), 0);
+    let input = runtime.shell_session().unwrap().input.borrow();
+    assert_eq!(
+        input.last().map(Vec::as_slice),
+        Some(b"tmux attach-session -t gromaq\r".as_slice())
+    );
+}
+
+#[test]
+fn runtime_workspace_launch_attaches_existing_workspace_through_pty_without_runner_attach() {
+    let snapshot = TmuxManagerSnapshot {
+        state: TmuxState::default(),
+        current: None,
+    };
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 88,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.start_shell(&MockPtySpawner::default()).unwrap();
+    runtime.toggle_tmux_manager_panel_with_workspaces(snapshot, vec![workspace_preset()]);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "has-session",
+        "-t",
+        "gromaq",
+    ])]);
+
+    let result = runtime
+        .dispatch_tmux_manager_workspace(TmuxManagerKeyOutcome::WorkspaceLaunchRequested, &runner);
+
+    assert_eq!(
+        result,
+        Some(Ok(TmuxWorkspaceResult::Existing {
+            session: "gromaq".to_owned()
+        }))
+    );
     assert_eq!(runner.remaining_calls(), 0);
     let input = runtime.shell_session().unwrap().input.borrow();
     assert_eq!(

@@ -100,7 +100,7 @@ impl<S> NativeTerminalRuntime<S> {
             return None;
         }
         let panel = self.tmux_manager_panel.as_mut()?;
-        let result = panel.launch_selected_workspace(runner);
+        let result = panel.ensure_selected_workspace_started(runner);
         if let Some(Ok(workspace)) = result.as_ref() {
             let session = match workspace {
                 TmuxWorkspaceResult::Existing { session }
