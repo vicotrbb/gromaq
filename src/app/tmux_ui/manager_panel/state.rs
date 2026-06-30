@@ -31,6 +31,7 @@ pub struct TmuxManagerPanelState {
     pub(super) pending_action: Option<String>,
     pub(super) confirmation: Option<String>,
     pub(super) confirmation_action: Option<ActionId>,
+    pub(super) last_action_feedback: Option<String>,
 }
 
 impl TmuxManagerPanelState {
@@ -49,6 +50,7 @@ impl TmuxManagerPanelState {
             pending_action: None,
             confirmation: None,
             confirmation_action: None,
+            last_action_feedback: None,
         }
     }
 
@@ -106,6 +108,11 @@ impl TmuxManagerPanelState {
     /// Return the pending non-destructive action id.
     pub fn pending_action(&self) -> Option<&str> {
         self.pending_action.as_deref()
+    }
+
+    /// Return the latest action execution feedback.
+    pub fn last_action_feedback(&self) -> Option<&str> {
+        self.last_action_feedback.as_deref()
     }
 
     /// Return the selected session name for a snapshot.

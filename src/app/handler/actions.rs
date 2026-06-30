@@ -109,24 +109,29 @@ impl NativeTerminalApp {
                 window.request_redraw();
             }
             Ok(())
-        } else if !matches!(
-            self.runtime
-                .handle_tmux_manager_key(&logical_key, self.modifiers),
-            super::super::TmuxManagerKeyOutcome::Ignored
-        ) {
-            if let Some(window) = &self.window {
-                window.request_redraw();
-            }
-            Ok(())
         } else {
-            self.runtime
-                .send_native_key_event_input(
-                    &logical_key,
-                    Some(physical_key),
-                    self.modifiers,
-                    self.ime_preedit_active,
-                )
-                .map(|_| ())
+            let tmux_outcome = self
+                .runtime
+                .handle_tmux_manager_key(&logical_key, self.modifiers);
+            if !matches!(tmux_outcome, super::super::TmuxManagerKeyOutcome::Ignored) {
+                self.runtime.dispatch_tmux_manager_action(
+                    tmux_outcome,
+                    &crate::tmux::SystemTmuxCommandRunner,
+                );
+                if let Some(window) = &self.window {
+                    window.request_redraw();
+                }
+                Ok(())
+            } else {
+                self.runtime
+                    .send_native_key_event_input(
+                        &logical_key,
+                        Some(physical_key),
+                        self.modifiers,
+                        self.ime_preedit_active,
+                    )
+                    .map(|_| ())
+            }
         };
         if let Err(error) = result {
             self.startup_error = Some(error.to_string());

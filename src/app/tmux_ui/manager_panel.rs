@@ -1,5 +1,6 @@
 //! Native tmux manager panel state and rendering helpers.
 
+mod actions;
 mod input;
 mod rendering;
 mod selection;

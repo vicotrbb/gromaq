@@ -1,4 +1,4 @@
-use crate::tmux::TmuxManagerSnapshot;
+use crate::tmux::{TmuxActionResult, TmuxCommandRunner, TmuxManagerSnapshot};
 
 use super::NativeTerminalRuntime;
 use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState};
@@ -44,5 +44,27 @@ impl<S> NativeTerminalRuntime<S> {
             self.tmux_manager_snapshot = None;
         }
         outcome
+    }
+
+    /// Dispatch an action-producing tmux manager key outcome through a command runner.
+    pub fn dispatch_tmux_manager_action<R>(
+        &mut self,
+        outcome: TmuxManagerKeyOutcome,
+        runner: &R,
+    ) -> Option<TmuxActionResult>
+    where
+        R: TmuxCommandRunner,
+    {
+        let (Some(snapshot), Some(panel)) = (
+            self.tmux_manager_snapshot.as_ref(),
+            self.tmux_manager_panel.as_mut(),
+        ) else {
+            return None;
+        };
+        let result = panel.dispatch_action_outcome(outcome, snapshot, runner);
+        if result.is_some() {
+            self.terminal.invalidate_viewport();
+        }
+        result
     }
 }
