@@ -8,6 +8,7 @@ mod probe;
 mod reader;
 mod runner;
 mod state;
+mod terminal_command;
 mod workspace;
 
 pub use action::{ActionId, TmuxAction};
@@ -21,4 +22,5 @@ pub use runner::{
     TmuxCommandRunner,
 };
 pub use state::{TmuxPane, TmuxSession, TmuxState, TmuxTarget, TmuxWindow};
+pub use terminal_command::TmuxTerminalCommand;
 pub use workspace::{TmuxWorkspaceLauncher, TmuxWorkspaceResult};

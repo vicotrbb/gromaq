@@ -1,7 +1,7 @@
 use gromaq::tmux::{
     ActionId, TmuxAction, TmuxActionRequest, TmuxActionResult, TmuxActionRunner,
     TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner, TmuxError, TmuxProbe, TmuxState,
-    TmuxStateReader, TmuxWorkspaceLauncher, TmuxWorkspaceResult,
+    TmuxStateReader, TmuxTerminalCommand, TmuxWorkspaceLauncher, TmuxWorkspaceResult,
 };
 use gromaq::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use std::cell::RefCell;
@@ -180,6 +180,23 @@ fn tmux_action_registry_finds_actions_by_stable_id() {
         ActionId::SplitPaneRight
     );
     assert!(TmuxAction::by_stable_id("missing-action").is_none());
+}
+
+#[test]
+fn tmux_terminal_command_renders_attach_as_pty_input() {
+    let input = TmuxTerminalCommand::attach_session("alpha").to_pty_input();
+
+    assert_eq!(input, b"tmux attach-session -t alpha\r");
+}
+
+#[test]
+fn tmux_terminal_command_quotes_shell_metacharacters_as_one_argument() {
+    let input = TmuxTerminalCommand::attach_session("dev'; rm -rf / #").to_pty_input();
+
+    assert_eq!(
+        String::from_utf8(input).unwrap(),
+        "tmux attach-session -t 'dev'\\''; rm -rf / #'\r"
+    );
 }
 
 #[test]
