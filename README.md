@@ -5,6 +5,8 @@
 Gromaq is a native Rust GPU-rendered terminal emulator built for performance,
 correctness, and a polished developer experience.
 
+Launch site: `https://vicotrbb.github.io/gromaq/`
+
 The project is intentionally native: Rust, `winit`, `wgpu`, real PTYs, and no
 Electron, webview, React, or browser UI runtime.
 

@@ -803,7 +803,7 @@ cargo test --test project_policy pages_workflow_publishes_site_directory_only
 
 Expected: all pass.
 
-- [ ] **Step 3: Commit the complete verified Pages slice**
+- [x] **Step 3: Commit the complete verified Pages slice**
 
 ```bash
 git add tests/project_policy.rs tests/project_policy/pages.rs tests/project_policy/native.rs tests/project_policy/ci.rs
@@ -845,7 +845,7 @@ Open `http://localhost:4173/` and verify:
 - Copy buttons update to `Copied`.
 - Focus rings are visible from keyboard navigation.
 
-- [ ] **Step 4: Run final verification**
+- [x] **Step 4: Run final verification**
 
 Run:
 
@@ -861,7 +861,7 @@ git diff --cached --check
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit README update and final fixes**
+- [x] **Step 5: Commit README update and final fixes**
 
 ```bash
 git add README.md
