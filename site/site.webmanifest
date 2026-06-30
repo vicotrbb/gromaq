@@ -1,0 +1,18 @@
+{
+  "name": "Gromaq",
+  "short_name": "Gromaq",
+  "description": "Native Rust GPU-rendered terminal emulator for macOS and Linux.",
+  "start_url": "https://gromaq.dev/",
+  "scope": "https://gromaq.dev/",
+  "display": "standalone",
+  "background_color": "#f7f2e8",
+  "theme_color": "#7b2bd6",
+  "icons": [
+    {
+      "src": "assets/logo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

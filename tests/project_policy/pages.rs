@@ -7,6 +7,11 @@ const REQUIRED_SITE_FILES: &[&str] = &[
     "site/styles.css",
     "site/scripts.js",
     "site/check-links.mjs",
+    "site/CNAME",
+    "site/robots.txt",
+    "site/sitemap.xml",
+    "site/site.webmanifest",
+    "site/og-image.png",
     "site/assets/logo-on-graphite.png",
     "site/assets/logo-transparent.png",
     "site/assets/logo-icon-512.png",
@@ -24,6 +29,49 @@ fn pages_site_keeps_required_deployable_files() {
             "{relative} must exist for the GitHub Pages launch site"
         );
     }
+}
+
+#[test]
+fn pages_site_keeps_gromaq_dev_seo_contract() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let html_path = root.join("site/index.html");
+    let html = fs::read_to_string(&html_path).unwrap();
+    let cname = fs::read_to_string(root.join("site/CNAME")).unwrap();
+    let robots = fs::read_to_string(root.join("site/robots.txt")).unwrap();
+    let sitemap = fs::read_to_string(root.join("site/sitemap.xml")).unwrap();
+    let manifest = fs::read_to_string(root.join("site/site.webmanifest")).unwrap();
+
+    assert_eq!(cname.trim(), "gromaq.dev");
+
+    for marker in [
+        "<link rel=\"canonical\" href=\"https://gromaq.dev/\">",
+        "<meta name=\"robots\" content=\"index, follow, max-image-preview:large\">",
+        "<meta property=\"og:url\" content=\"https://gromaq.dev/\">",
+        "<meta property=\"og:site_name\" content=\"Gromaq\">",
+        "<meta property=\"og:image\" content=\"https://gromaq.dev/og-image.png\">",
+        "<meta property=\"og:image:width\" content=\"1200\">",
+        "<meta property=\"og:image:height\" content=\"630\">",
+        "<meta property=\"og:image:alt\" content=\"Gromaq native Rust GPU terminal preview\">",
+        "<meta name=\"twitter:card\" content=\"summary_large_image\">",
+        "<meta name=\"twitter:image\" content=\"https://gromaq.dev/og-image.png\">",
+        "<script type=\"application/ld+json\">",
+        "\"url\": \"https://gromaq.dev/\"",
+        "\"softwareVersion\": \"0.2.1\"",
+    ] {
+        assert!(
+            html.contains(marker),
+            "{} must include SEO marker `{marker}`",
+            relative_path(root, &html_path)
+        );
+    }
+
+    assert!(robots.contains("Sitemap: https://gromaq.dev/sitemap.xml"));
+    assert!(sitemap.contains("<loc>https://gromaq.dev/</loc>"));
+    assert!(manifest.contains("\"start_url\": \"https://gromaq.dev/\""));
+    assert!(manifest.contains("\"name\": \"Gromaq\""));
+
+    let (width, height) = png_dimensions(&root.join("site/og-image.png"));
+    assert_eq!((width, height), (1200, 630));
 }
 
 #[test]
@@ -81,6 +129,18 @@ fn pages_site_keeps_real_terminal_media_contract() {
             );
         }
     }
+}
+
+fn png_dimensions(path: &Path) -> (u32, u32) {
+    let bytes = fs::read(path).unwrap();
+    assert!(
+        bytes.starts_with(b"\x89PNG\r\n\x1a\n"),
+        "{} must be a PNG image",
+        relative_path(Path::new(env!("CARGO_MANIFEST_DIR")), path)
+    );
+    let width = u32::from_be_bytes(bytes[16..20].try_into().unwrap());
+    let height = u32::from_be_bytes(bytes[20..24].try_into().unwrap());
+    (width, height)
 }
 
 #[test]

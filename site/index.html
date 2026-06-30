@@ -3,21 +3,48 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="author" content="Gromaq">
+    <meta name="theme-color" content="#7b2bd6">
+    <meta name="color-scheme" content="light">
     <meta
       name="description"
-      content="Gromaq is a native Rust GPU-rendered terminal emulator built for speed, correctness, and real command work."
+      content="Gromaq is a native Rust GPU-rendered terminal emulator for macOS and Linux, built for speed, correctness, and real command work."
     >
-    <meta property="og:title" content="Gromaq - Native Rust GPU terminal">
+    <meta
+      name="keywords"
+      content="Gromaq, terminal emulator, Rust terminal, GPU terminal, wgpu, native terminal, macOS terminal, Linux terminal"
+    >
+    <link rel="canonical" href="https://gromaq.dev/">
+    <meta property="og:site_name" content="Gromaq">
+    <meta property="og:title" content="Gromaq - Native Rust GPU terminal emulator">
     <meta
       property="og:description"
-      content="Install the public alpha/beta v0.2.1 release for macOS and Linux, with proof-backed release boundaries."
+      content="Install Gromaq v0.2.1, a native Rust GPU-rendered terminal emulator for macOS and Linux."
     >
-    <meta property="og:image" content="./assets/gromaq-welcome-preview.png">
+    <meta property="og:url" content="https://gromaq.dev/">
     <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image" content="https://gromaq.dev/og-image.png">
+    <meta property="og:image:secure_url" content="https://gromaq.dev/og-image.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Gromaq native Rust GPU terminal preview">
     <meta name="twitter:card" content="summary_large_image">
-    <title>Gromaq - Native Rust GPU terminal</title>
+    <meta name="twitter:title" content="Gromaq - Native Rust GPU terminal emulator">
+    <meta
+      name="twitter:description"
+      content="Install Gromaq v0.2.1, a native Rust GPU-rendered terminal emulator for macOS and Linux."
+    >
+    <meta name="twitter:image" content="https://gromaq.dev/og-image.png">
+    <meta name="twitter:image:alt" content="Gromaq native Rust GPU terminal preview">
+    <title>Gromaq - Native Rust GPU terminal emulator</title>
     <link rel="icon" type="image/png" href="./assets/logo-icon-512.png">
+    <link rel="apple-touch-icon" href="./assets/logo-icon-512.png">
+    <link rel="manifest" href="./site.webmanifest">
     <link rel="preload" as="image" href="./assets/gromaq-welcome-preview.png">
+    <link rel="preload" as="image" href="./og-image.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -25,6 +52,27 @@
       rel="stylesheet"
     >
     <link rel="stylesheet" href="./styles.css">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Gromaq",
+        "url": "https://gromaq.dev/",
+        "image": "https://gromaq.dev/og-image.png",
+        "description": "Gromaq is a native Rust GPU-rendered terminal emulator for macOS and Linux, built for speed, correctness, and real command work.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux",
+        "softwareVersion": "0.2.1",
+        "codeRepository": "https://github.com/vicotrbb/gromaq",
+        "downloadUrl": "https://github.com/vicotrbb/gromaq/releases/tag/v0.2.1",
+        "license": "https://github.com/vicotrbb/gromaq/blob/main/LICENSE",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>

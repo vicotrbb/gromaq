@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gromaq.dev/sitemap.xml
