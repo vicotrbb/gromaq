@@ -87,6 +87,8 @@ pub(super) enum CliCommand<'a> {
     RuntimeToolWorkflowSmoke,
     /// Runtime isolated tmux manager/action smoke command.
     RuntimeTmuxSmoke,
+    /// Runtime native tmux manager UI smoke command.
+    RuntimeTmuxUiSmoke,
     /// Native tmux assist action catalog command.
     TmuxAssist,
     /// Native tmux manager state command.
@@ -179,6 +181,7 @@ pub(super) fn command_for(arg: &str) -> Option<CliCommand<'_>> {
         "--runtime-repaint-smoke" => Some(CliCommand::RuntimeRepaintSmoke),
         "--runtime-tool-workflow-smoke" => Some(CliCommand::RuntimeToolWorkflowSmoke),
         "--runtime-tmux-smoke" => Some(CliCommand::RuntimeTmuxSmoke),
+        "--runtime-tmux-ui-smoke" => Some(CliCommand::RuntimeTmuxUiSmoke),
         "--tmux-assist" => Some(CliCommand::TmuxAssist),
         "--tmux-manager" => Some(CliCommand::TmuxManager),
         "--tmux-action" => Some(CliCommand::TmuxAction),

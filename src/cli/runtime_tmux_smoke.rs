@@ -1,10 +1,13 @@
 //! Isolated tmux action and state-reader runtime smoke.
 
+mod ui;
+
 use crate::cli::CliExit;
 use crate::tmux::{
     ActionId, SocketTmuxCommandRunner, SystemTmuxCommandRunner, TmuxActionRequest,
     TmuxActionResult, TmuxActionRunner, TmuxCommandRunner, TmuxProbe, TmuxStateReader,
 };
+pub(super) use ui::runtime_tmux_ui_smoke_exit;
 
 const SESSION: &str = "gromaq-runtime-tmux";
 

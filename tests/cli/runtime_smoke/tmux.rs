@@ -29,6 +29,34 @@ fn runtime_tmux_smoke_cli_reports_isolated_tmux_proof_or_clean_skip() {
 }
 
 #[test]
+fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+
+    let exit = run_with_backend(["gromaq", "--runtime-tmux-ui-smoke"], &backend);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stdout.contains("runtime tmux ui smoke: ok"));
+    assert!(exit.stdout.contains("tmux available:"));
+    if exit.stdout.contains("tmux available: true") {
+        assert!(exit.stdout.contains("manager panel opened: true"));
+        assert!(exit.stdout.contains("status strip rendered: true"));
+        assert!(exit.stdout.contains("manager panel rendered: true"));
+        assert!(exit.stdout.contains("confirmation path checked: true"));
+        assert!(exit.stdout.contains("safe action dispatched: true"));
+        assert!(exit.stdout.contains("workspace launch: started"));
+        assert!(exit.stdout.contains("workspace duplicate prevented: true"));
+        assert!(exit.stdout.contains("state reader observed session: true"));
+        assert!(exit.stdout.contains("cleanup killed session: true"));
+    } else {
+        assert!(exit.stdout.contains("skipped: tmux not found on PATH"));
+    }
+    assert!(exit.stderr.is_empty());
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
 fn tmux_assist_cli_lists_actions_with_commands_keys_and_safety() {
     let backend = MockBackend {
         requests: RefCell::new(Vec::new()),
