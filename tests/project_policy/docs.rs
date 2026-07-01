@@ -110,35 +110,15 @@ fn public_docs_avoid_drift_prone_current_head_remote_proof_claims() {
 #[test]
 fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let compat = "documentation/compatibility.md";
     for (relative, marker) in [
-        (
-            "documentation/compatibility.md",
-            "destructive shortcut checked: true",
-        ),
-        (
-            "documentation/compatibility.md",
-            "unavailable shortcut blocked: true",
-        ),
-        (
-            "documentation/compatibility.md",
-            "no-server start hint checked: true",
-        ),
-        (
-            "documentation/compatibility.md",
-            "outside attach hint checked: true",
-        ),
-        (
-            "documentation/compatibility.md",
-            "mouse focus checked: true",
-        ),
-        (
-            "documentation/compatibility.md",
-            "mouse action selection checked: true",
-        ),
-        (
-            "documentation/compatibility.md",
-            "mouse workspace selection checked: true",
-        ),
+        (compat, "destructive shortcut checked: true"),
+        (compat, "unavailable shortcut blocked: true"),
+        (compat, "no-server start hint checked: true"),
+        (compat, "outside attach hint checked: true"),
+        (compat, "mouse focus checked: true"),
+        (compat, "mouse action selection checked: true"),
+        (compat, "mouse workspace selection checked: true"),
         (
             "documentation/compatibility.md",
             "startup manager after shell prompt checked: true",
@@ -243,6 +223,8 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "tmux missing feedback checked: true",
         ),
+        ("documentation/compatibility.md", "tmux command:"),
+        ("documentation/compatibility.md", "confirmation required:"),
         (
             "documentation/compatibility.md",
             "start session pty handoff checked: true",
@@ -288,12 +270,9 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "tmux-manager-not-hint.txt",
         ),
-        ("documentation/compatibility.md", "tmux-state-visible.txt"),
-        (
-            "documentation/compatibility.md",
-            "tmux-native-control-plane.txt",
-        ),
-        ("documentation/compatibility.md", "terminal cells:"),
+        (compat, "tmux-state-visible.txt"),
+        (compat, "tmux-native-control-plane.txt"),
+        (compat, "terminal cells:"),
         ("TESTING.md", "terminal cells:"),
         ("README.md", "terminal cells:"),
         (
