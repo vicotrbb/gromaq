@@ -109,6 +109,13 @@ scripts/prove-macos-native-tmux-default-cargo-run.sh
 scripts/prove-macos-native-tmux-manual.sh
 ```
 
+Set `GROMAQ_DEFAULT_CARGO_TMUX_PREFLIGHT_ONLY=true` or
+`GROMAQ_MANUAL_TMUX_PREFLIGHT_ONLY=true` to run the corresponding harness
+through its non-interactive machine checks and write a preflight summary without
+opening the live app window. Preflight mode proves stale-binary checks, isolated
+tmux setup, bounded window-smoke rendering, and generated artifacts; it does not
+replace the manual app-window checklist.
+
 `scripts/prove-macos-native-tmux-default-cargo-run.sh` opens the default app
 path through plain `cargo run`, matching the no-argument developer workflow. It
 prepares uniquely named tmux sessions, asks the tester to verify the default

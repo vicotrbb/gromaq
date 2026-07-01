@@ -13,6 +13,7 @@ default_debug_binary="${root}/target/debug/gromaq"
 app_path="${GROMAQ_MANUAL_TMUX_APP:-}"
 binary_path="${GROMAQ_MANUAL_TMUX_BINARY:-}"
 open_manager_on_start="${GROMAQ_MANUAL_TMUX_OPEN_ON_START:-false}"
+preflight_only="${GROMAQ_MANUAL_TMUX_PREFLIGHT_ONLY:-false}"
 config_path="${proof_root}/gromaq-native-tmux-manual.toml"
 shell_path="${proof_root}/manual-tmux-shell.sh"
 summary_path="${proof_root}/summary.txt"
@@ -62,6 +63,14 @@ case "${open_manager_on_start}" in
   true | false) ;;
   *)
     printf '%s\n' "error: GROMAQ_MANUAL_TMUX_OPEN_ON_START must be true or false." >&2
+    exit 1
+    ;;
+esac
+
+case "${preflight_only}" in
+  true | false) ;;
+  *)
+    printf '%s\n' "error: GROMAQ_MANUAL_TMUX_PREFLIGHT_ONLY must be true or false." >&2
     exit 1
     ;;
 esac
@@ -166,6 +175,36 @@ fi
 if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: selected executable window smoke did not render the tmux manager panel." >&2
   exit 1
+fi
+
+if [ "${preflight_only}" = "true" ]; then
+  {
+    printf '%s\n' "macOS native tmux manual preflight: ok"
+    printf '%s\n' "manual preflight only requested; skipping live app-window launch"
+    printf '%s\n' "Launch mode: ${launch_mode}"
+    printf '%s\n' "Open manager on start: ${open_manager_on_start}"
+    printf '%s\n' "App: ${app_path:-none}"
+    printf '%s\n' "Executable: ${executable}"
+    printf '%s\n' "Version: ${actual_version}"
+    printf '%s\n' "tmux: ${tmux_version}"
+    printf '%s\n' "git HEAD: ${head_sha}"
+    printf '%s\n' "git branch: ${git_branch}"
+    printf '%s\n' "git dirty: ${git_dirty}"
+    printf '%s\n' "git-status.txt: ${git_status_path}"
+    printf '%s\n' "tmux-binary-markers.txt: ${startup_marker}"
+    printf '%s\n' "tmux-window-smoke.stdout: ${window_smoke_stdout_path}"
+    printf '%s\n' "tmux-window-smoke.stderr: ${window_smoke_stderr_path}"
+    grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
+    grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
+    grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
+    printf '%s\n' "session: ${session}"
+    printf '%s\n' "tmux-initial-windows.txt: ${initial_windows_path}"
+    printf '%s\n' "initial tmux windows: ${initial_window_count}"
+    printf '%s\n' "tmux-initial-panes.txt: ${initial_panes_path}"
+    printf '%s\n' "initial tmux panes: ${initial_pane_count}"
+    printf '%s\n' "Proof root: ${proof_root}"
+  } | tee "${summary_path}"
+  exit 0
 fi
 
 cat > "${shell_path}" <<EOF

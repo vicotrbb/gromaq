@@ -3,6 +3,7 @@ set -eu
 
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 proof_root="${GROMAQ_DEFAULT_CARGO_TMUX_PROOF_ROOT:-${root}/target/macos-native-tmux-default-cargo-run-proof}"
+preflight_only="${GROMAQ_DEFAULT_CARGO_TMUX_PREFLIGHT_ONLY:-false}"
 summary_path="${proof_root}/summary.txt"
 git_status_path="${proof_root}/git-status.txt"
 session="gromaq-default-cargo-tmux-$$"
@@ -30,6 +31,13 @@ if ! command -v tmux >/dev/null 2>&1; then
   printf '%s\n' "error: tmux is required for macOS native tmux default cargo run proof." >&2
   exit 1
 fi
+case "${preflight_only}" in
+  true | false) ;;
+  *)
+    printf '%s\n' "error: GROMAQ_DEFAULT_CARGO_TMUX_PREFLIGHT_ONLY must be true or false." >&2
+    exit 1
+    ;;
+esac
 tmux_version="$(tmux -V)"
 head_sha="$(git -C "${root}" rev-parse --short HEAD)"
 git_branch="$(git -C "${root}" branch --show-current)"
@@ -177,6 +185,44 @@ done
 
 if command -v sips >/dev/null 2>&1; then
   sips -s format png "${manager_reference_ppm_path}" --out "${manager_reference_png_path}" >/dev/null
+fi
+
+if [ "${preflight_only}" = "true" ]; then
+  {
+    printf '%s\n' "macOS native tmux default cargo run preflight: ok"
+    printf '%s\n' "default cargo run preflight only requested; skipping live cargo run window"
+    printf '%s\n' "tmux: ${tmux_version}"
+    printf '%s\n' "git HEAD: ${head_sha}"
+    printf '%s\n' "git branch: ${git_branch}"
+    printf '%s\n' "git dirty: ${git_dirty}"
+    printf '%s\n' "git-status.txt: ${git_status_path}"
+    printf '%s\n' "debug binary: ${binary_path}"
+    printf '%s\n' "session: ${session}"
+    printf '%s\n' "tmux-default-cargo-run-initial-windows.txt: ${initial_windows_path}"
+    printf '%s\n' "initial tmux windows: ${initial_window_count}"
+    printf '%s\n' "tmux-default-cargo-run-initial-panes.txt: ${initial_panes_path}"
+    printf '%s\n' "initial tmux panes: ${initial_pane_count}"
+    printf '%s\n' "cargo-build stdout: ${proof_root}/cargo-build.stdout"
+    printf '%s\n' "cargo-build stderr: ${proof_root}/cargo-build.stderr"
+    printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"
+    printf '%s\n' "tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}"
+    printf '%s\n' "tmux-default-cargo-run-window-smoke.stderr: ${window_smoke_stderr_path}"
+    grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
+    grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
+    grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
+    grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
+    printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
+    printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
+    printf '%s\n' "tmux-default-cargo-run-manager-reference.ppm: ${manager_reference_ppm_path}"
+    if [ -f "${manager_reference_png_path}" ]; then
+      printf '%s\n' "tmux-default-cargo-run-manager-reference.png: ${manager_reference_png_path}"
+    fi
+    printf '%s\n' "tmux-default-cargo-run-manager-reference.stdout: ${manager_reference_stdout_path}"
+    printf '%s\n' "tmux-default-cargo-run-manager-reference.stderr: ${manager_reference_stderr_path}"
+    grep -F "terminal cells:" "${manager_reference_stdout_path}"
+    printf '%s\n' "Proof root: ${proof_root}"
+  } | tee "${summary_path}"
+  exit 0
 fi
 
 printf '%s\n' "macOS native tmux default cargo run proof"
