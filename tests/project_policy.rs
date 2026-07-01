@@ -22,3 +22,5 @@ mod release_proof;
 mod repository;
 #[path = "project_policy/support.rs"]
 mod support;
+#[path = "project_policy/tmux_proof_summaries.rs"]
+mod tmux_proof_summaries;
