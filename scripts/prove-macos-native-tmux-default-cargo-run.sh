@@ -343,6 +343,8 @@ if [ "${preflight_only}" = "true" ]; then
     grep -F "startup manager small-grid cells: 69x17" "${runtime_tmux_ui_smoke_stdout_path}"
     grep -F "manager header status checked: true" "${runtime_tmux_ui_smoke_stdout_path}"
     grep -F "outside attach target checked: true" "${runtime_tmux_ui_smoke_stdout_path}"
+    grep -F "skipped pty handoffs checked: attach=true start=true workspace=true" "${runtime_tmux_ui_smoke_stdout_path}"
+    grep -F "workspace duplicate prevented: true" "${runtime_tmux_ui_smoke_stdout_path}"
     printf '%s\n' "tmux-default-cargo-run-manager-reference.ppm: ${manager_reference_ppm_path}"
     if [ -f "${manager_reference_png_path}" ]; then
       printf '%s\n' "tmux-default-cargo-run-manager-reference.png: ${manager_reference_png_path}"
@@ -513,6 +515,8 @@ printf '%s\n' "completed" > "${live_app_window_proof_path}"
   grep -F "startup manager small-grid cells: 69x17" "${runtime_tmux_ui_smoke_stdout_path}"
   grep -F "manager header status checked: true" "${runtime_tmux_ui_smoke_stdout_path}"
   grep -F "outside attach target checked: true" "${runtime_tmux_ui_smoke_stdout_path}"
+  grep -F "skipped pty handoffs checked: attach=true start=true workspace=true" "${runtime_tmux_ui_smoke_stdout_path}"
+  grep -F "workspace duplicate prevented: true" "${runtime_tmux_ui_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-manager-reference.ppm: ${manager_reference_ppm_path}"
   if [ -f "${manager_reference_png_path}" ]; then
     printf '%s\n' "tmux-default-cargo-run-manager-reference.png: ${manager_reference_png_path}"

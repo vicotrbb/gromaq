@@ -1,5 +1,4 @@
 use std::{fs, path::Path};
-
 const REQUIRED_GITHUB_RELEASE_ASSETS: &[&str] = &[
     "gromaq-${version_without_prefix}-linux-${release_arch}.tar.gz",
     "gromaq_${version_without_prefix}_${deb_arch}.deb",
@@ -285,7 +284,6 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-macos-native-tmux-default-cargo-run.sh"))
             .unwrap();
-
     let build = proof_script.find("cargo build").unwrap();
     let marker_check = proof_script
         .find("does not contain current startup marker")
@@ -317,11 +315,14 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     let summary_window_smoke = proof_script
         .find("tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}")
         .unwrap();
+    let summary = &proof_script[summary_window_smoke..];
     assert!(
-        proof_script[summary_window_smoke..].contains(
+        summary.contains(
             "grep -F \"tmux status pane command rendered: true\" \"${window_smoke_stdout_path}\""
-        ),
-        "default cargo-run proof summary must surface the active-pane window-smoke line"
+        ) && summary.contains(
+            "grep -F \"skipped pty handoffs checked: attach=true start=true workspace=true\""
+        ) && summary.contains("grep -F \"workspace duplicate prevented: true\""),
+        "default cargo-run proof summary must surface active-pane and runtime UI proof lines"
     );
 }
 #[test]
@@ -329,7 +330,6 @@ fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-native-tmux-default-snapshot.sh")).unwrap();
-
     for marker in [
         "cargo run -- --window-tmux-manager-snapshot",
         "tmux new-session -d -s",
