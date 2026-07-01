@@ -2,7 +2,7 @@
 
 use super::availability::action_available;
 use super::state::TmuxManagerPanelState;
-use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxManagerStatus};
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxManagerStatus, shell_quote};
 
 pub(super) fn action_hint(action: &TmuxAction) -> String {
     match action.key_binding {
@@ -78,7 +78,15 @@ pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
             .to_owned();
     }
     if snapshot.current.is_none() {
-        return "Outside tmux; Enter attach-session | r refresh | ? help | Esc close".to_owned();
+        let session = snapshot
+            .state
+            .sessions
+            .first()
+            .map(|session| format!(" {}", shell_quote(&session.name)))
+            .unwrap_or_default();
+        return format!(
+            "Outside tmux; Enter attach-session{session} | r refresh | ? help | Esc close"
+        );
     }
     format!(
         "Shortcuts ? help | r refresh | Esc close | {}",

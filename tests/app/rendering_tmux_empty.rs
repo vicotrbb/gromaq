@@ -69,6 +69,10 @@ fn native_terminal_runtime_renders_outside_tmux_attach_command_hint() {
     let hint_line = &frame.lines[7];
     assert!(hint_line.contains("Outside tmux"), "{hint_line}");
     assert!(
+        hint_line.contains("Enter attach-session alpha"),
+        "{hint_line}"
+    );
+    assert!(
         renderer
             .frames
             .last()
