@@ -148,6 +148,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "README.md",
             "`r` refreshes the tmux snapshot without shell input",
         ),
+        ("README.md", "mouse clicks select visible manager rows"),
     ] {
         let path = root.join(relative);
         let source = fs::read_to_string(&path).unwrap();

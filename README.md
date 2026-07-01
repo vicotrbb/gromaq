@@ -132,8 +132,9 @@ use the release installer or install Rust from your package manager or
   and `--tmux-manager` expose registry-backed tmux command/keybinding metadata.
   The no-argument native app opens the manager on startup for status,
   navigation, start/attach, split/window/rename, confirmed kill actions,
-  snapshot refresh, and workspace preset launch. Control/Super Shift `T`
-  toggles the same manager after launch; `--runtime-tmux-smoke` and
+  snapshot refresh, workspace preset launch, and mouse clicks select visible manager rows.
+  Control/Super Shift `T` toggles the same manager after launch;
+  `--runtime-tmux-smoke` and
   `--runtime-tmux-ui-smoke` prove isolated tmux paths when tmux is installed.
 
 ## Known Proof Gaps
