@@ -47,17 +47,6 @@ pub(super) fn window_smoke_launch_config(command: CliCommand<'_>) -> (NativeAppL
             cwd: None,
         };
     }
-    if command == CliCommand::WindowScreenshotSmoke {
-        launch_config.app.startup_text = Some("gromaq live screenshot proof\n".to_owned());
-        launch_config.runtime.shell = ShellCommand {
-            program: "/bin/sh".into(),
-            args: vec![
-                "-lc".into(),
-                "printf 'gromaq live screenshot proof\\n'".into(),
-            ],
-            cwd: None,
-        };
-    }
     (launch_config, frame_limit)
 }
 

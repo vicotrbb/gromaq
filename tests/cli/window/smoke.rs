@@ -133,7 +133,7 @@ fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
     );
     assert!(
         exit.stdout
-            .contains("default startup content checked: false")
+            .contains("default startup content checked: true")
     );
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
     assert!(exit.stdout.contains("tmux manager panel rendered: true"));
@@ -143,11 +143,8 @@ fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
     assert_eq!(launch.app.exit_after_redraw_attempts, Some(3600));
     assert!(launch.app.screen_capture_allowed);
     assert!(launch.app.redraw_until_presented_frame_limit);
-    assert_eq!(
-        launch.app.startup_text.as_deref(),
-        Some("gromaq live screenshot proof\n")
-    );
-    assert_eq!(launch.runtime.shell.program, "/bin/sh");
+    assert_eq!(launch.app.startup_text, None);
+    assert_eq!(launch.runtime, NativeAppLaunchConfig::default().runtime);
     assert_eq!(launch.renderer, NativeAppLaunchConfig::default().renderer);
     assert_eq!(launch.config_path, None);
     assert!(backend.requests.borrow().is_empty());
