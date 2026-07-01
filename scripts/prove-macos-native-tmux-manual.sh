@@ -9,7 +9,9 @@ version_without_prefix="${version#v}"
 proof_root="${GROMAQ_MANUAL_TMUX_PROOF_ROOT:-${root}/target/macos-native-tmux-manual-proof}"
 default_installed_app="${root}/target/macos-release-install-proof/Applications/${app_name}.app"
 default_dist_app="${root}/target/dist/${app_name}.app"
+default_debug_binary="${root}/target/debug/gromaq"
 app_path="${GROMAQ_MANUAL_TMUX_APP:-}"
+binary_path="${GROMAQ_MANUAL_TMUX_BINARY:-}"
 config_path="${proof_root}/gromaq-native-tmux-manual.toml"
 shell_path="${proof_root}/manual-tmux-shell.sh"
 summary_path="${proof_root}/summary.txt"
@@ -28,29 +30,47 @@ if [ "$(uname -s)" != "Darwin" ]; then
   exit 1
 fi
 
-if ! command -v open >/dev/null 2>&1; then
-  printf '%s\n' "error: open is required for macOS native tmux manual proof." >&2
-  exit 1
-fi
-
 if ! command -v tmux >/dev/null 2>&1; then
   printf '%s\n' "error: tmux is required for macOS native tmux manual proof." >&2
   exit 1
 fi
 tmux_version="$(tmux -V)"
 
-if [ -z "${app_path}" ]; then
+launch_mode="app"
+if [ -n "${binary_path}" ]; then
+  launch_mode="binary"
+elif [ -z "${app_path}" ]; then
   if [ -d "${default_installed_app}" ]; then
     app_path="${default_installed_app}"
-  else
+  elif [ -d "${default_dist_app}" ]; then
     app_path="${default_dist_app}"
+  else
+    launch_mode="binary"
+    binary_path="${default_debug_binary}"
   fi
 fi
 
-executable="${app_path}/Contents/MacOS/${package}"
+if [ "${launch_mode}" = "binary" ] && [ "${binary_path}" = "${default_debug_binary}" ]; then
+  (
+    cd "${root}"
+    cargo build
+  )
+fi
+
+if [ "${launch_mode}" = "app" ]; then
+  if ! command -v open >/dev/null 2>&1; then
+    printf '%s\n' "error: open is required for app-bundle tmux manual proof." >&2
+    exit 1
+  fi
+  executable="${app_path}/Contents/MacOS/${package}"
+else
+  executable="${binary_path}"
+fi
+
 if [ ! -x "${executable}" ]; then
   printf '%s\n' "error: app executable not found: ${executable}" >&2
   printf '%s\n' "Set GROMAQ_MANUAL_TMUX_APP=/path/to/Gromaq.app to choose the installed app." >&2
+  printf '%s\n' "Set GROMAQ_MANUAL_TMUX_BINARY=/path/to/gromaq to choose a debug binary." >&2
   exit 1
 fi
 
@@ -132,7 +152,9 @@ panes = ["printf 'manual workspace test pane\\n'; sleep 60"]
 EOF
 
 printf '%s\n' "macOS native tmux manual proof"
-printf '%s\n' "App: ${app_path}"
+printf '%s\n' "Launch mode: ${launch_mode}"
+printf '%s\n' "App: ${app_path:-none}"
+printf '%s\n' "Binary: ${executable}"
 printf '%s\n' "Version: ${actual_version}"
 printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "Target session: ${session}"
@@ -141,11 +163,17 @@ printf '%s\n' "Workspace preset session: ${workspace_session}"
 printf '%s\n' "A Gromaq window will open with tmux UI enabled and the manager open on start."
 printf '%s\n' "Follow the prompts inside the Gromaq terminal window exactly."
 
-open -W -n \
-  -o "${proof_root}/open.stdout" \
-  --stderr "${proof_root}/open.stderr" \
-  "${app_path}" \
-  --args --config "${config_path}"
+if [ "${launch_mode}" = "app" ]; then
+  open -W -n \
+    -o "${proof_root}/open.stdout" \
+    --stderr "${proof_root}/open.stderr" \
+    "${app_path}" \
+    --args --config "${config_path}"
+else
+  "${executable}" --config "${config_path}" \
+    > "${proof_root}/binary.stdout" \
+    2> "${proof_root}/binary.stderr"
+fi
 
 manager_visible="$(cat "${proof_root}/tmux-manager-visible.txt" 2>/dev/null || true)"
 safe_action="$(cat "${proof_root}/tmux-safe-action.txt" 2>/dev/null || true)"
@@ -176,7 +204,8 @@ fi
 
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
-  printf '%s\n' "App: ${app_path}"
+  printf '%s\n' "Launch mode: ${launch_mode}"
+  printf '%s\n' "App: ${app_path:-none}"
   printf '%s\n' "Executable: ${executable}"
   printf '%s\n' "Version: ${actual_version}"
   printf '%s\n' "tmux: ${tmux_version}"

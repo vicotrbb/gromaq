@@ -107,6 +107,11 @@ the exact result. The required manual checklist is:
 scripts/prove-macos-native-tmux-manual.sh
 ```
 
+When no packaged app bundle is selected, the helper builds and launches
+`target/debug/gromaq` directly with its generated tmux proof config. Set
+`GROMAQ_MANUAL_TMUX_APP=/path/to/Gromaq.app` to force an app-bundle run, or
+`GROMAQ_MANUAL_TMUX_BINARY=/path/to/gromaq` to force a specific binary.
+
 - Launch `cargo run` or `scripts/prove-macos-native-tmux-manual.sh`.
 - Verify the persistent tmux status strip is visible and legible.
 - Verify the manager remains visible when startup shell output fills the first window.
