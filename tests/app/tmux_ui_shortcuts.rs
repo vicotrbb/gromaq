@@ -22,6 +22,22 @@ fn tmux_manager_panel_shortcuts_zoom_selected_pane() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_select_pane() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("m".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::SelectPane)
+    );
+    assert_eq!(panel.pending_action(), Some("select-pane"));
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_switch_windows() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);

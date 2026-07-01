@@ -25,6 +25,8 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
         Some(ActionId::RenameSession)
     } else if character.eq_ignore_ascii_case("v") {
         Some(ActionId::SplitPaneDown)
+    } else if character.eq_ignore_ascii_case("m") {
+        Some(ActionId::SelectPane)
     } else if character.eq_ignore_ascii_case("n") {
         Some(ActionId::NextWindow)
     } else if character.eq_ignore_ascii_case("p") {
@@ -50,5 +52,5 @@ pub(super) fn is_refresh_shortcut(key: &Key) -> bool {
 }
 
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts ? help q kill-session a attach-session c new-window d detach-session e rename-window s split-right t start-session u rename-session v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
+    "shortcuts ? help q kill-session a attach-session c new-window d detach-session e rename-window s split-right t start-session u rename-session v split-down m select-pane n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
 }
