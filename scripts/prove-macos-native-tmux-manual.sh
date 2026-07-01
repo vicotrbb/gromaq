@@ -20,6 +20,9 @@ git_status_path="${proof_root}/git-status.txt"
 session="gromaq-manual-tmux-$$"
 kill_session="${session}-kill"
 workspace_session="${session}-workspace"
+post_windows_path="${proof_root}/tmux-post-windows.txt"
+post_panes_path="${proof_root}/tmux-post-panes.txt"
+kill_absent_path="${proof_root}/tmux-kill-session-absent.txt"
 
 cleanup() {
   tmux kill-session -t "${session}" >/dev/null 2>&1 || true
@@ -146,7 +149,7 @@ printf '%s\n' "\${new_window}" > "${proof_root}/tmux-new-window.txt"
 printf '%s\n' "Press r and verify the manager refreshes without sending shell input. Type exactly: refresh-checked"
 IFS= read -r refresh_checked
 printf '%s\n' "\${refresh_checked}" > "${proof_root}/tmux-refresh-checked.txt"
-printf '%s\n' "Use q or another destructive shortcut, verify inline confirmation appears, and only confirm against ${kill_session}. Type exactly: destructive-confirmation"
+printf '%s\n' "Use q to run kill-session, verify inline confirmation appears, and only confirm against ${kill_session}. Type exactly: destructive-confirmation"
 IFS= read -r destructive_confirmation
 printf '%s\n' "\${destructive_confirmation}" > "${proof_root}/tmux-destructive-confirmation.txt"
 printf '%s\n' "Launch the configured workspace preset or verify it is listed with root/windows summary. Type exactly: workspace-visible"
@@ -281,6 +284,33 @@ if [ "${normal_shell_input}" != "normal-shell-input" ]; then
   exit 1
 fi
 
+if ! tmux list-windows -t "${session}" -F "#{window_id} #{window_name}" > "${post_windows_path}"; then
+  printf '%s\n' "error: could not read post-proof tmux windows for ${session}." >&2
+  exit 1
+fi
+post_window_count="$(wc -l < "${post_windows_path}" | tr -d '[:space:]')"
+if [ "${post_window_count}" -lt 2 ]; then
+  printf '%s\n' "error: expected at least 2 tmux windows in ${session} after new-window proof, got ${post_window_count}." >&2
+  exit 1
+fi
+
+if ! tmux list-panes -s -t "${session}" -F "#{pane_id} #{pane_current_command}" > "${post_panes_path}"; then
+  printf '%s\n' "error: could not read post-proof tmux panes for ${session}." >&2
+  exit 1
+fi
+post_pane_count="$(wc -l < "${post_panes_path}" | tr -d '[:space:]')"
+if [ "${post_pane_count}" -lt 3 ]; then
+  printf '%s\n' "error: expected at least 3 tmux panes in ${session} after safe split proof, got ${post_pane_count}." >&2
+  exit 1
+fi
+
+if tmux has-session -t "${kill_session}" >/dev/null 2>&1; then
+  printf '%s\n' "false" > "${kill_absent_path}"
+  printf '%s\n' "error: expected isolated kill-session target ${kill_session} to be absent after destructive proof." >&2
+  exit 1
+fi
+printf '%s\n' "true" > "${kill_absent_path}"
+
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
   printf '%s\n' "Launch mode: ${launch_mode}"
@@ -304,8 +334,14 @@ fi
   printf '%s\n' "tmux-attach-session.txt: ${attach_session}"
   printf '%s\n' "tmux-safe-action.txt: ${safe_action}"
   printf '%s\n' "tmux-new-window.txt: ${new_window}"
+  printf '%s\n' "tmux-post-windows.txt: ${post_windows_path}"
+  printf '%s\n' "post tmux windows: ${post_window_count}"
+  printf '%s\n' "tmux-post-panes.txt: ${post_panes_path}"
+  printf '%s\n' "post tmux panes: ${post_pane_count}"
   printf '%s\n' "tmux-refresh-checked.txt: ${refresh_checked}"
   printf '%s\n' "tmux-destructive-confirmation.txt: ${destructive_confirmation}"
+  printf '%s\n' "tmux-kill-session-absent.txt: ${kill_absent_path}"
+  printf '%s\n' "kill-session absent: true"
   printf '%s\n' "tmux-workspace-visible.txt: ${workspace_visible}"
   printf '%s\n' "tmux-normal-shell-input.txt: ${normal_shell_input}"
   printf '%s\n' "launch-mode.txt: ${launch_mode}"

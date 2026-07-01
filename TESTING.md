@@ -120,6 +120,9 @@ exact `target/debug/gromaq` binary marker used by the `cargo run` launch and
 fails if the old keyboard/mouse/paste startup copy remains in that binary, then
 records git branch/dirty metadata plus confirmation files under
 `target/macos-native-tmux-default-cargo-run-proof`.
+After confirmations, it also reads tmux state directly and fails unless the
+target session has an added window, has an added pane from the safe split, and
+the disposable kill-session target is absent.
 
 `scripts/prove-native-tmux-default-snapshot.sh` is the non-interactive default
 startup artifact proof. It runs `cargo run -- --window-tmux-manager-snapshot`,
@@ -134,6 +137,9 @@ When no packaged app bundle is selected, the helper builds and launches
 The configured helper also records git branch/dirty metadata beside the manual
 confirmation files so the live proof can be tied back to the checkout under
 test.
+After the live prompts finish, it reads tmux state directly and requires the
+target session to show the new window, split pane, and removed disposable kill
+session before writing the summary.
 By default, the generated tmux proof config starts with the manager closed so
 the tester must open it with Control/Super Shift `T`; set
 `GROMAQ_MANUAL_TMUX_OPEN_ON_START=true` to instead prove startup-open behavior.

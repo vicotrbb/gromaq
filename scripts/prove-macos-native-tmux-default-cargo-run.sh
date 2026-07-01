@@ -7,6 +7,9 @@ summary_path="${proof_root}/summary.txt"
 git_status_path="${proof_root}/git-status.txt"
 session="gromaq-default-cargo-tmux-$$"
 kill_session="${session}-kill"
+post_windows_path="${proof_root}/tmux-default-cargo-run-post-windows.txt"
+post_panes_path="${proof_root}/tmux-default-cargo-run-post-panes.txt"
+kill_absent_path="${proof_root}/tmux-default-cargo-run-kill-session-absent.txt"
 
 cleanup() {
   tmux kill-session -t "${session}" >/dev/null 2>&1 || true
@@ -66,7 +69,7 @@ printf '%s\n' "- Start a new tmux session from the UI."
 printf '%s\n' "- Attach ${session} from the UI, then run a safe split-pane action."
 printf '%s\n' "- Create a tmux window from the UI."
 printf '%s\n' "- A destructive action shows inline confirmation before running."
-printf '%s\n' "- Confirm a kill only against ${kill_session}."
+printf '%s\n' "- Confirm a kill-session action only against ${kill_session}."
 printf '%s\n' "- Close the panel and verify normal shell input still reaches the prompt."
 printf '%s\n' "- Check prompt/right-prompt layout for legible overlap behavior."
 
@@ -119,9 +122,36 @@ record_confirmation "Confirm ${session} was attached from the UI." "attach-sessi
 record_confirmation "Confirm a safe tmux action ran from the UI." "safe-action" "tmux-default-cargo-run-safe-action.txt"
 record_confirmation "Confirm a tmux window was created from the UI." "new-window" "tmux-default-cargo-run-new-window.txt"
 record_confirmation "Confirm a destructive action showed inline confirmation first." "destructive-confirmation" "tmux-default-cargo-run-destructive-confirmation.txt"
-record_confirmation "Confirm any kill action was performed only against ${kill_session}." "isolated-kill-confirmed" "tmux-default-cargo-run-isolated-kill.txt"
+record_confirmation "Confirm a kill-session action was performed only against ${kill_session}." "isolated-kill-confirmed" "tmux-default-cargo-run-isolated-kill.txt"
 record_confirmation "Confirm normal shell input still worked after closing the panel." "shell-input" "tmux-default-cargo-run-shell-input.txt"
 record_confirmation "Confirm prompt/right-prompt layout stayed legible." "right-prompt-legible" "tmux-default-cargo-run-right-prompt.txt"
+
+if ! tmux list-windows -t "${session}" -F "#{window_id} #{window_name}" > "${post_windows_path}"; then
+  printf '%s\n' "error: could not read post-proof tmux windows for ${session}." >&2
+  exit 1
+fi
+post_window_count="$(wc -l < "${post_windows_path}" | tr -d '[:space:]')"
+if [ "${post_window_count}" -lt 2 ]; then
+  printf '%s\n' "error: expected at least 2 tmux windows in ${session} after new-window proof, got ${post_window_count}." >&2
+  exit 1
+fi
+
+if ! tmux list-panes -s -t "${session}" -F "#{pane_id} #{pane_current_command}" > "${post_panes_path}"; then
+  printf '%s\n' "error: could not read post-proof tmux panes for ${session}." >&2
+  exit 1
+fi
+post_pane_count="$(wc -l < "${post_panes_path}" | tr -d '[:space:]')"
+if [ "${post_pane_count}" -lt 3 ]; then
+  printf '%s\n' "error: expected at least 3 tmux panes in ${session} after safe split proof, got ${post_pane_count}." >&2
+  exit 1
+fi
+
+if tmux has-session -t "${kill_session}" >/dev/null 2>&1; then
+  printf '%s\n' "false" > "${kill_absent_path}"
+  printf '%s\n' "error: expected isolated kill-session target ${kill_session} to be absent after destructive proof." >&2
+  exit 1
+fi
+printf '%s\n' "true" > "${kill_absent_path}"
 
 {
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
@@ -146,8 +176,14 @@ record_confirmation "Confirm prompt/right-prompt layout stayed legible." "right-
   printf '%s\n' "tmux-default-cargo-run-attach-session.txt: attach-session"
   printf '%s\n' "tmux-default-cargo-run-safe-action.txt: safe-action"
   printf '%s\n' "tmux-default-cargo-run-new-window.txt: new-window"
+  printf '%s\n' "tmux-default-cargo-run-post-windows.txt: ${post_windows_path}"
+  printf '%s\n' "post tmux windows: ${post_window_count}"
+  printf '%s\n' "tmux-default-cargo-run-post-panes.txt: ${post_panes_path}"
+  printf '%s\n' "post tmux panes: ${post_pane_count}"
   printf '%s\n' "tmux-default-cargo-run-destructive-confirmation.txt: destructive-confirmation"
   printf '%s\n' "tmux-default-cargo-run-isolated-kill.txt: isolated-kill-confirmed"
+  printf '%s\n' "tmux-default-cargo-run-kill-session-absent.txt: ${kill_absent_path}"
+  printf '%s\n' "kill-session absent: true"
   printf '%s\n' "tmux-default-cargo-run-shell-input.txt: shell-input"
   printf '%s\n' "tmux-default-cargo-run-right-prompt.txt: right-prompt-legible"
   printf '%s\n' "Proof root: ${proof_root}"
