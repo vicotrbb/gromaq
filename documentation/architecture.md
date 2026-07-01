@@ -31,8 +31,9 @@ handoff, and validation tooling.
 - `app`: native `winit` app wiring, lifecycle state, launch wrappers, config
   reload application, PTY bridge, input mapping, text zoom, font discovery,
   runtime rendering, native tmux manager UI state/rendering/input dispatch,
-  terminal-PTY tmux attach handoff, post-action tmux snapshot refresh, and
-  native window surface presentation. Handler actions, shortcut policy, resize
+  mouse-aware manager row hit testing, terminal-PTY tmux attach handoff,
+  post-action tmux snapshot refresh, and native window surface presentation.
+  Handler actions, shortcut policy, resize
   mapping, lifecycle window ownership, lifecycle run-report data, frame-interval
   accounting, snapshot artifact helpers, and native font search policy live in
   focused child modules.

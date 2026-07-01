@@ -135,6 +135,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "cancellation feedback checked: true",
         ),
+        (
+            "documentation/architecture.md",
+            "mouse-aware manager row hit testing",
+        ),
         ("TESTING.md", "Press `r` and verify the manager refreshes"),
         (
             "TESTING.md",
