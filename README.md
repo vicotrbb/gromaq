@@ -132,7 +132,8 @@ use the release installer or install Rust from your package manager or
   and `--tmux-manager` expose registry-backed tmux command/keybinding metadata.
   The no-argument native app opens the manager on startup for status,
   navigation, start/attach, split/window/rename, confirmed kill actions,
-  snapshot refresh, workspace preset launch, and mouse clicks select visible manager rows.
+  current pane target details, snapshot refresh, workspace preset launch, and
+  mouse clicks select visible manager rows.
   Control/Super Shift `T` toggles the same manager after launch;
   `--runtime-tmux-smoke` and
   `--runtime-tmux-ui-smoke` prove isolated tmux paths when tmux is installed.
@@ -212,7 +213,7 @@ gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
 scripts/prove-native-tmux-default-snapshot.sh
 ```
 
-Inside the native window, the tmux manager opens on startup when tmux UI is enabled and `open_manager_on_start` is true; `show_status_strip = false` hides only the strip. Control/Super Shift `T` toggles the manager. Use arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry; `r` refreshes the tmux snapshot without shell input; `?` opens the command/keybinding help catalog; destructive actions require `y`; Esc closes or cancels prompts. Missing-tmux, no-server, and outside-tmux manager states keep the visible hint row focused on Enter, `r`, `?`, and Esc while action rows continue to show the underlying tmux command. `scripts/prove-native-tmux-default-snapshot.sh` creates an isolated tmux session, records the rendered status-strip pane command plus manager session/window/pane counts, and writes PPM/PNG artifacts under `target/native-tmux-default-snapshot-proof`; it proves the native rendered frame path, not live keyboard or mouse interaction.
+Inside the native window, the tmux manager opens on startup when tmux UI is enabled and `open_manager_on_start` is true; `show_status_strip = false` hides only the strip. Control/Super Shift `T` toggles the manager. Use arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry; `r` refreshes the tmux snapshot without shell input; `?` opens the command/keybinding help catalog; destructive actions require `y`; Esc closes or cancels prompts. Missing-tmux, no-server, and outside-tmux manager states keep the visible hint row focused on Enter, `r`, `?`, and Esc while action rows continue to show the underlying tmux command. The manager header reports the live tmux target and current pane title/command/dimensions when the snapshot contains them. `scripts/prove-native-tmux-default-snapshot.sh` creates an isolated tmux session, records the rendered status-strip pane command plus manager session/window/pane counts, and writes PPM/PNG artifacts under `target/native-tmux-default-snapshot-proof`; it proves the native rendered frame path, not live keyboard or mouse interaction.
 
 ## Documentation
 

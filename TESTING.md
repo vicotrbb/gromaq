@@ -162,7 +162,8 @@ the tester must open it with Control/Super Shift `T`; set
   verify a real manager panel opens again.
 - In the configured manual proof, press Control/Super Shift `T` when the manager
   starts closed and verify a real manager panel opens.
-- Inspect sessions, windows, panes, current target, and pane command text.
+- Inspect sessions, windows, panes, current target, and current pane
+  title/command/dimension text.
 - Navigate with arrows or `h`/`j`/`k`/`l`.
 - Click session/window/pane/action/workspace rows and verify selection moves;
   the harness records this as `tmux-navigation-checked.txt`.
