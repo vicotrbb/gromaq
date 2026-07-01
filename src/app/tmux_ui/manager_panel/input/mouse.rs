@@ -4,6 +4,7 @@ use super::super::enter_action::enter_action_id;
 use super::super::hints::{action_choice_label, action_hint, enter_action_label};
 use super::super::selection::{selected_panes, selected_windows, window_label};
 use super::super::state::{TmuxManagerFocus, TmuxManagerPanelState};
+use super::super::workspaces::workspace_summary;
 use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxPane};
 use crate::{MouseButton, MouseEvent, MouseEventKind};
 
@@ -112,7 +113,20 @@ impl TmuxManagerPanelState {
                     self.selected_action = index;
                 }
             }
-            TmuxManagerFocus::Workspaces => {}
+            TmuxManagerFocus::Workspaces => {
+                if let Some(index) = hit_label_index(
+                    col,
+                    "Workspaces ".len(),
+                    self.workspace_presets
+                        .iter()
+                        .enumerate()
+                        .map(|(index, preset)| {
+                            workspace_summary(preset, index == self.selected_workspace)
+                        }),
+                ) {
+                    self.selected_workspace = index;
+                }
+            }
         }
     }
 }

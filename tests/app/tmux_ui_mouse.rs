@@ -1,7 +1,8 @@
 use gromaq::app::{
     NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowMouseInput, TmuxManagerFocus,
-    TmuxManagerKeyOutcome, TmuxManagerMouseOutcome, TmuxManagerPanelState,
+    TmuxManagerKeyOutcome, TmuxManagerMouseOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset,
 };
+use gromaq::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use gromaq::tmux::{
     ActionId, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession,
     TmuxState, TmuxWindow,
@@ -207,8 +208,89 @@ fn tmux_manager_panel_mouse_press_selects_clicked_action() {
     );
 }
 
+#[test]
+fn tmux_manager_panel_mouse_press_selects_clicked_workspace() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot_with_workspaces(
+        &snapshot,
+        vec![
+            workspace_preset("gromaq", "gromaq"),
+            workspace_preset("docs", "docs"),
+        ],
+    );
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 220,
+        terminal_rows: 9,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+    let workspace_line = renderer
+        .frames
+        .last()
+        .unwrap()
+        .lines
+        .iter()
+        .find(|line| line.contains("Workspaces"))
+        .expect("workspace row should render");
+    let docs_col = workspace_line
+        .find("docs session")
+        .expect("second workspace should render");
+
+    assert_eq!(
+        panel.handle_mouse_event(
+            panel_mouse(
+                MouseEventKind::Press,
+                MouseButton::Left,
+                4,
+                u16::try_from(docs_col + 1).unwrap(),
+            ),
+            &snapshot,
+        ),
+        TmuxManagerMouseOutcome::Consumed
+    );
+
+    renderer.frames.clear();
+    runtime.invalidate_terminal_frame();
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+    assert!(
+        renderer
+            .frames
+            .last()
+            .unwrap()
+            .lines
+            .iter()
+            .any(|line| line.contains("docs* session docs"))
+    );
+}
+
 fn panel_mouse(kind: MouseEventKind, button: MouseButton, row: u16, col: u16) -> MouseEvent {
     MouseEvent::new(kind, button, col, row)
+}
+
+fn workspace_preset(key: &str, session: &str) -> TmuxWorkspaceUiPreset {
+    TmuxWorkspaceUiPreset::new(
+        key,
+        TmuxWorkspaceSettings {
+            session: session.to_owned(),
+            root: None,
+            windows: vec![TmuxWorkspaceWindowSettings {
+                name: "main".to_owned(),
+                panes: vec!["zsh".to_owned()],
+            }],
+        },
+    )
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {

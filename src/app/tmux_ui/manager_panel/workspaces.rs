@@ -75,7 +75,7 @@ pub(super) fn workspace_row(panel: &TmuxManagerPanelState) -> Option<String> {
     Some(format!("Workspaces {presets}"))
 }
 
-fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) -> String {
+pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) -> String {
     let marker = if selected { "*" } else { "" };
     let root = preset.settings.root.as_deref().unwrap_or("-");
     let windows = preset
