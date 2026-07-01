@@ -5,7 +5,7 @@ mod name_entry;
 mod split;
 mod zoom;
 
-use winit::keyboard::{Key, ModifiersState};
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::app::TmuxManagerKeyOutcome;
 use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult, TmuxManagerSnapshot};
@@ -169,12 +169,32 @@ pub(super) fn drive_refresh_shortcut(runtime: &mut super::SmokeRuntime) -> bool 
     )
 }
 
+pub(super) fn drive_refresh_preserves_action_focus(snapshot: &TmuxManagerSnapshot) -> bool {
+    let Ok(mut runtime) = super::smoke_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(snapshot.clone(), Vec::new());
+    for _ in 0..3 {
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::ArrowRight), ModifiersState::empty());
+    }
+    let before =
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
+    runtime.refresh_tmux_manager_panel(snapshot.clone());
+    let after =
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
+    matches!(
+        (before, after),
+        (
+            TmuxManagerKeyOutcome::ActionRequested(ActionId::SplitPaneRight),
+            TmuxManagerKeyOutcome::ActionRequested(ActionId::SplitPaneRight)
+        )
+    )
+}
+
 pub(super) fn drive_unavailable_shortcut_block(runtime: &mut super::SmokeRuntime) -> bool {
     if runtime.tmux_manager_panel_is_open() {
-        let _ = runtime.handle_tmux_manager_key(
-            &Key::Named(winit::keyboard::NamedKey::Escape),
-            ModifiersState::empty(),
-        );
+        let _ =
+            runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Escape), ModifiersState::empty());
     }
     runtime.toggle_tmux_manager_panel(TmuxManagerSnapshot::no_server());
     matches!(
