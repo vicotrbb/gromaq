@@ -93,6 +93,7 @@ fn native_terminal_runtime_renders_help_catalog_after_help_shortcut() {
     assert!(help_line.contains("c new-window tmux new-window Ctrl-b c"));
     assert!(help_line.contains("q kill-session tmux kill-session -t <session>"));
     assert!(help_line.contains("? show-help tmux list-keys Ctrl-b ?"));
+    assert!(help_line.contains("r refresh tmux refresh snapshot no tmux key"));
 }
 
 #[test]

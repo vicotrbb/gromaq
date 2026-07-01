@@ -21,7 +21,7 @@ use crate::tmux::{
 use cleanup::TmuxUiSmokeCleanup;
 use confirmation::{drive_confirmation_cancel, drive_safe_action};
 use destructive::drive_kill_session_confirmation;
-use help::drive_help_catalog;
+use help::render_help_catalog;
 use mouse::{drive_mouse_action_selection, drive_mouse_focus, drive_mouse_workspace_selection};
 use pty::{TmuxUiSmokePtySession, TmuxUiSmokePtySpawner};
 use render::{
@@ -100,9 +100,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let refresh_focus_preserved = drive_refresh_preserves_action_focus(&snapshot);
     let no_server_start_hint_checked = render_no_server_start_hint(&mut renderer);
     let outside_attach_hint_checked = render_outside_attach_hint(&mut renderer);
-    let help_catalog_checked = drive_help_catalog(&mut runtime)
-        && render_manager_panel_contains(&mut runtime, &mut renderer, "tmuxhelp")
-        && render_manager_panel_contains(&mut runtime, &mut renderer, "split-pane-righttmux");
+    let help_catalog_checked = render_help_catalog(&snapshot, &mut renderer);
     let new_window_shortcut_checked = drive_new_window_shortcut(&mut runtime, &runner);
     let window_cycle_shortcuts_checked = drive_window_cycle_shortcuts(&mut runtime, &runner);
     let zoom_shortcut_checked = drive_zoom_shortcut(&mut runtime, &runner);
