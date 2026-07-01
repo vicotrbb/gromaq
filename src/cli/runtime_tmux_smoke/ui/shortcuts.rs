@@ -16,7 +16,7 @@ pub(super) use name_entry::{
 };
 pub(super) use split::{drive_split_down_shortcut, drive_split_right_shortcut};
 
-pub(super) fn drive_shortcut_action(
+pub(super) fn drive_new_window_shortcut(
     runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,
 ) -> bool {
