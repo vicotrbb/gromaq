@@ -23,4 +23,5 @@ pub use runner::{
 };
 pub use state::{TmuxPane, TmuxSession, TmuxState, TmuxTarget, TmuxWindow};
 pub use terminal_command::TmuxTerminalCommand;
+pub(crate) use terminal_command::shell_quote;
 pub use workspace::{TmuxWorkspaceLauncher, TmuxWorkspaceResult};

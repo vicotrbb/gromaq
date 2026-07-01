@@ -1,7 +1,9 @@
 //! Native tmux manager workspace preset UI and launch helpers.
 
 use crate::config::TmuxWorkspaceSettings;
-use crate::tmux::{TmuxCommandRunner, TmuxError, TmuxWorkspaceLauncher, TmuxWorkspaceResult};
+use crate::tmux::{
+    TmuxCommandRunner, TmuxError, TmuxWorkspaceLauncher, TmuxWorkspaceResult, shell_quote,
+};
 
 use super::state::TmuxManagerPanelState;
 
@@ -108,9 +110,9 @@ pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) 
 }
 
 fn workspace_command_hint(preset: &TmuxWorkspaceUiPreset) -> String {
+    let session = shell_quote(&preset.settings.session);
     format!(
-        " | Enter start/attach | tmux new-session -d -s {} | tmux attach-session -t {}",
-        preset.settings.session, preset.settings.session
+        " | Enter start/attach | tmux new-session -d -s {session} | tmux attach-session -t {session}"
     )
 }
 
