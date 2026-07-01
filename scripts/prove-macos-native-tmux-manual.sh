@@ -225,6 +225,14 @@ if ! grep -F "presented frame limit: 3" "${window_smoke_stdout_path}" >/dev/null
   printf '%s\n' "error: selected executable window smoke did not present three settled frames." >&2
   exit 1
 fi
+if ! grep -F "default startup content checked: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable window smoke did not prove current startup content." >&2
+  exit 1
+fi
+if ! grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable window smoke did not prove current startup marker." >&2
+  exit 1
+fi
 if ! grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: selected executable window smoke did not render the tmux status strip." >&2
   exit 1
@@ -254,6 +262,14 @@ run_native_window_proof_with_retry \
   "${manager_reference_stderr_path}" \
   "${executable}" --window-tmux-manager-snapshot "${manager_reference_ppm_path}"
 
+if ! grep -F "default startup content checked: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable manager reference did not prove current startup content." >&2
+  exit 1
+fi
+if ! grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable manager reference did not prove current startup marker." >&2
+  exit 1
+fi
 if ! grep -F "tmux status strip rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
   printf '%s\n' "error: selected executable manager reference did not render the tmux status strip." >&2
   exit 1
@@ -338,6 +354,7 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "native window proof attempts: ${native_window_proof_attempts}"
     printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
     printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
+    grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${window_smoke_stdout_path}"
     grep -F "presented frame limit: 3" "${window_smoke_stdout_path}"
     grep -F "frames presented: 3" "${window_smoke_stdout_path}"
     grep -F "terminal cells:" "${window_smoke_stdout_path}"
@@ -353,6 +370,7 @@ if [ "${preflight_only}" = "true" ]; then
     fi
     printf '%s\n' "tmux-manager-reference.stdout: ${manager_reference_stdout_path}"
     printf '%s\n' "tmux-manager-reference.stderr: ${manager_reference_stderr_path}"
+    grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${manager_reference_stdout_path}"
     grep -F "terminal cells:" "${manager_reference_stdout_path}"
     grep -F "tmux manager sessions:" "${manager_reference_stdout_path}"
     grep -F "tmux manager windows:" "${manager_reference_stdout_path}"
@@ -628,6 +646,7 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   printf '%s\n' "native window proof attempts: ${native_window_proof_attempts}"
   printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
   printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
+  grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${window_smoke_stdout_path}"
   grep -F "presented frame limit: 3" "${window_smoke_stdout_path}"
   grep -F "frames presented: 3" "${window_smoke_stdout_path}"
   grep -F "terminal cells:" "${window_smoke_stdout_path}"
@@ -643,6 +662,7 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   fi
   printf '%s\n' "tmux-manager-reference.stdout: ${manager_reference_stdout_path}"
   printf '%s\n' "tmux-manager-reference.stderr: ${manager_reference_stderr_path}"
+  grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${manager_reference_stdout_path}"
   grep -F "terminal cells:" "${manager_reference_stdout_path}"
   grep -F "tmux manager sessions:" "${manager_reference_stdout_path}"
   grep -F "tmux manager windows:" "${manager_reference_stdout_path}"

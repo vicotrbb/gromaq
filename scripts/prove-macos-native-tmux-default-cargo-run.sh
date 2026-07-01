@@ -164,6 +164,10 @@ if ! grep -F "default startup content checked: true" "${window_smoke_stdout_path
   printf '%s\n' "error: default window smoke did not prove current startup content." >&2
   exit 1
 fi
+if ! grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not prove current startup marker." >&2
+  exit 1
+fi
 
 if ! grep -F "presented frame limit: 3" "${window_smoke_stdout_path}" >/dev/null ||
   ! grep -F "frames presented: 3" "${window_smoke_stdout_path}" >/dev/null ||
@@ -228,6 +232,10 @@ fi
 
 if ! grep -F "default startup content checked: true" "${manager_reference_stdout_path}" >/dev/null; then
   printf '%s\n' "error: default manager reference did not prove current startup content." >&2
+  exit 1
+fi
+if ! grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default manager reference did not prove current startup marker." >&2
   exit 1
 fi
 
@@ -319,6 +327,7 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
     printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
     grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
+    grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${window_smoke_stdout_path}"
     grep -F "presented frame limit: 3" "${window_smoke_stdout_path}"
     grep -F "frames presented: 3" "${window_smoke_stdout_path}"
     grep -F "terminal cells:" "${window_smoke_stdout_path}"
@@ -336,6 +345,7 @@ if [ "${preflight_only}" = "true" ]; then
     fi
     printf '%s\n' "tmux-default-cargo-run-manager-reference.stdout: ${manager_reference_stdout_path}"
     printf '%s\n' "tmux-default-cargo-run-manager-reference.stderr: ${manager_reference_stderr_path}"
+    grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${manager_reference_stdout_path}"
     grep -F "terminal cells:" "${manager_reference_stdout_path}"
     printf '%s\n' "Proof root: ${proof_root}"
   } | tee "${summary_path}"
@@ -480,6 +490,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
   printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
   grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
+  grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${window_smoke_stdout_path}"
   grep -F "presented frame limit: 3" "${window_smoke_stdout_path}"
   grep -F "frames presented: 3" "${window_smoke_stdout_path}"
   grep -F "terminal cells:" "${window_smoke_stdout_path}"
@@ -497,6 +508,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   fi
   printf '%s\n' "tmux-default-cargo-run-manager-reference.stdout: ${manager_reference_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-manager-reference.stderr: ${manager_reference_stderr_path}"
+  grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${manager_reference_stdout_path}"
   grep -F "terminal cells:" "${manager_reference_stdout_path}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"

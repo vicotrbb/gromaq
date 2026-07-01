@@ -226,6 +226,28 @@ fn native_tmux_default_snapshot_proof_requires_current_startup_marker() {
 }
 
 #[test]
+fn native_tmux_manual_proofs_require_startup_marker_outputs() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for script in [
+        "scripts/prove-macos-native-tmux-default-cargo-run.sh",
+        "scripts/prove-macos-native-tmux-manual.sh",
+    ] {
+        let path = root.join(script);
+        let source = fs::read_to_string(&path).unwrap();
+        for marker in [
+            "grep -F \"default startup marker: tmux Cmd/Ctrl+Shift+T\" \"${window_smoke_stdout_path}\"",
+            "grep -F \"default startup marker: tmux Cmd/Ctrl+Shift+T\" \"${manager_reference_stdout_path}\"",
+        ] {
+            assert!(
+                source.contains(marker),
+                "{} must require `{marker}` so manual tmux proof rejects stale startup output",
+                relative_path(root, &path)
+            );
+        }
+    }
+}
+
+#[test]
 fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("scripts/prove-ci-compatibility-artifacts.sh");
