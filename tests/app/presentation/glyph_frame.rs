@@ -116,6 +116,49 @@ fn native_redraw_exports_presented_glyph_frame_snapshot() {
 }
 
 #[test]
+fn native_redraw_creates_parent_directories_for_glyph_frame_snapshot() {
+    let spawner = MockPtySpawner::default();
+    let mut runtime = NativeTerminalRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 20,
+        terminal_rows: 4,
+        scrollback_lines: 100,
+        pixel_width: 0,
+        pixel_height: 0,
+        cursor_shape: NativeTerminalRuntimeConfig::default().cursor_shape,
+        cursor_blinking: NativeTerminalRuntimeConfig::default().cursor_blinking,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+    })
+    .unwrap();
+    runtime.start_shell(&spawner).unwrap();
+    runtime.pump_pty_output().unwrap();
+    let mut renderer = WgpuRenderer::new(RendererConfig::default()).unwrap();
+    let mut glyph_cache = RasterizedGlyphCache::from_bytes(system_mono_font()).unwrap();
+    let backend = MockSurfaceBackend::default();
+    let mut surface = NativeWindowSurface::new(backend, supported_surface_capabilities());
+    surface.configure_initial(1280, 800).unwrap();
+    let path = test_snapshot_path("nested/native-redraw-glyph-frame.ppm");
+    let _ = fs::remove_dir_all(path.parent().unwrap());
+
+    let report = render_and_present_terminal_glyph_frame_report_with_snapshot(
+        &mut runtime,
+        &mut renderer,
+        &mut glyph_cache,
+        &mut surface,
+        Some(&path),
+    )
+    .unwrap();
+
+    let bytes = fs::read(&path).unwrap();
+    let _ = fs::remove_dir_all(path.parent().unwrap());
+    assert!(report.snapshot_written);
+    assert_eq!(report.snapshot_bytes, bytes.len());
+}
+
+#[test]
 fn native_redraw_presents_blank_runtime_cursor_frame_without_clear_only_fallback() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
         terminal_cols: 20,

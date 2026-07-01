@@ -142,6 +142,7 @@ where
         snapshot_height: 0,
     };
     if let Some((path, width, height, bytes)) = snapshot {
+        create_snapshot_parent_dir(path)?;
         fs::write(path, &bytes).map_err(|error| {
             NativeGlyphFrameError::Snapshot(format!(
                 "failed to write native glyph frame snapshot: {error}"
@@ -164,6 +165,20 @@ where
         Err(error) => return Err(error.into()),
     }
     Ok(report)
+}
+
+fn create_snapshot_parent_dir(path: &Path) -> Result<(), NativeGlyphFrameError> {
+    let Some(parent) = path.parent() else {
+        return Ok(());
+    };
+    if parent.as_os_str().is_empty() {
+        return Ok(());
+    }
+    fs::create_dir_all(parent).map_err(|error| {
+        NativeGlyphFrameError::Snapshot(format!(
+            "failed to create native glyph frame snapshot directory: {error}"
+        ))
+    })
 }
 
 fn clear_and_present_report<B>(
