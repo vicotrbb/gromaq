@@ -80,6 +80,16 @@ if ! grep -F "default startup content checked: true" "${window_smoke_stdout_path
   exit 1
 fi
 
+if ! grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not render the tmux status strip." >&2
+  exit 1
+fi
+
+if ! grep -F "tmux status pane command rendered:" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not report tmux status pane command coverage." >&2
+  exit 1
+fi
+
 if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: default window smoke did not render the tmux manager panel." >&2
   exit 1

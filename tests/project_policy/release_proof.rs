@@ -197,6 +197,8 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "cargo run -- --window-smoke",
         "tmux-default-cargo-run-window-smoke.stdout",
         "default startup content checked: true",
+        "tmux status strip rendered: true",
+        "tmux status pane command rendered:",
         "tmux manager panel rendered: true",
         "cargo run -- --runtime-tmux-ui-smoke",
         "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout",
