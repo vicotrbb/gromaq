@@ -49,6 +49,9 @@ git_dirty="clean"
 if [ -n "$(git -C "${root}" status --short)" ]; then
   git_dirty="dirty"
 fi
+startup_marker="tmux Cmd/Ctrl+Shift+T"
+old_startup_marker="keyboard, mouse, paste"
+binary_markers_path="${proof_root}/tmux-binary-markers.txt"
 
 case "${open_manager_on_start}" in
   true | false) ;;
@@ -96,6 +99,9 @@ if [ ! -x "${executable}" ]; then
   exit 1
 fi
 
+rm -rf "${proof_root}"
+mkdir -p "${proof_root}"
+
 actual_version="$("${executable}" --version 2>/dev/null || true)"
 expected_version="gromaq ${version_without_prefix}"
 if [ "${actual_version}" != "${expected_version}" ]; then
@@ -103,8 +109,16 @@ if [ "${actual_version}" != "${expected_version}" ]; then
   exit 1
 fi
 
-rm -rf "${proof_root}"
-mkdir -p "${proof_root}"
+if ! strings "${executable}" | grep -F "${startup_marker}" > "${binary_markers_path}"; then
+  printf '%s\n' "error: ${executable} does not contain current startup marker '${startup_marker}'." >&2
+  exit 1
+fi
+
+if strings "${executable}" | grep -F "${old_startup_marker}" >> "${binary_markers_path}"; then
+  printf '%s\n' "error: unexpected old startup marker '${old_startup_marker}' remains in ${executable}." >&2
+  exit 1
+fi
+
 trap cleanup EXIT INT TERM
 cleanup
 git -C "${root}" status --short --branch > "${git_status_path}"
@@ -335,6 +349,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "git branch: ${git_branch}"
   printf '%s\n' "git dirty: ${git_dirty}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
+  printf '%s\n' "tmux-binary-markers.txt: ${startup_marker}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "started-session: ${started_session}"
   printf '%s\n' "kill-session target: ${kill_session}"
