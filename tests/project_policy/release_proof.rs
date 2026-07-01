@@ -28,7 +28,6 @@ fn github_release_install_proof_checks_complete_published_asset_set() {
         );
     }
 }
-
 #[test]
 fn github_release_publication_proof_checks_tag_and_assets() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -233,6 +232,7 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "cargo run -- --runtime-tmux-ui-smoke",
         "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout",
         "skipped pty handoffs checked: attach=true start=true workspace=true",
+        "manager header status checked: true",
         "workspace duplicate prevented: true",
         "cargo run -- --window-tmux-manager-snapshot",
         "tmux-default-cargo-run-manager-reference.ppm",
