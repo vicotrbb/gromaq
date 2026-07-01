@@ -79,15 +79,6 @@ pub(super) fn window_tmux_manager_snapshot_launch_config(path: &str) -> NativeAp
     let mut launch_config = NativeAppLaunchConfig::default();
     configure_snapshot_launch(&mut launch_config, path);
     launch_config.app.open_tmux_manager_on_start = true;
-    launch_config.app.startup_text = Some("gromaq window tmux manager snapshot\n".to_owned());
-    launch_config.runtime.shell = ShellCommand {
-        program: "/bin/sh".into(),
-        args: vec![
-            "-lc".into(),
-            "printf 'gromaq window tmux manager snapshot\\n'; sleep 1".into(),
-        ],
-        cwd: None,
-    };
     launch_config
 }
 

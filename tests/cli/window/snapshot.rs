@@ -2,6 +2,8 @@ use std::cell::RefCell;
 use std::ffi::OsString;
 use std::fs;
 
+use gromaq::cli::NativeAppLaunchConfig;
+
 use super::super::{MockAppLauncher, MockBackend, run_with_backend_and_app, test_cli_config_path};
 
 #[test]
@@ -99,18 +101,8 @@ fn window_tmux_manager_snapshot_smoke_writes_artifact() {
         launch.app.glyph_frame_snapshot_path.as_deref(),
         Some(path.as_path())
     );
-    assert_eq!(
-        launch.app.startup_text.as_deref(),
-        Some("gromaq window tmux manager snapshot\n")
-    );
-    assert_eq!(launch.runtime.shell.program, "/bin/sh");
-    assert_eq!(
-        launch.runtime.shell.args,
-        vec![
-            OsString::from("-lc"),
-            OsString::from("printf 'gromaq window tmux manager snapshot\\n'; sleep 1")
-        ]
-    );
+    assert_eq!(launch.app.startup_text.as_deref(), None);
+    assert_eq!(launch.runtime, NativeAppLaunchConfig::default().runtime);
 }
 
 #[test]
