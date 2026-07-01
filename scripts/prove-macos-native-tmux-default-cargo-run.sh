@@ -247,7 +247,7 @@ disposable kill target: ${kill_session}
 - The welcome Input row says '${startup_marker}', not the old keyboard/mouse/paste copy. Type exactly: current-startup-copy
 - Persistent tmux status strip is visible and legible. Type exactly: status-strip-visible
 - If the manager is already visible on startup, close it with Esc.
-- Control/Super Shift+T opens or reopens a real manager panel, not a tiny hint. Type exactly: manager-visible
+- Cmd/Ctrl+Shift+T opens or reopens a real manager panel, not a tiny hint. Type exactly: manager-visible
 - Sessions, windows, panes, current target, and pane command text are visible. Type exactly: state-visible
 - Keyboard navigation changes selection. Type exactly: navigation-checked
 - Start a new tmux session named ${started_session} from the UI. Type exactly: start-session
@@ -325,7 +325,7 @@ printf '%s\n' "Checklist while cargo run is open:"
 printf '%s\n' "- The welcome Input row says '${startup_marker}', not the old keyboard/mouse/paste copy."
 printf '%s\n' "- Persistent tmux status strip is visible and legible."
 printf '%s\n' "- If the manager is already visible on startup, close it with Esc."
-printf '%s\n' "- Control/Super Shift+T opens or reopens a real manager panel, not a tiny hint."
+printf '%s\n' "- Cmd/Ctrl+Shift+T opens or reopens a real manager panel, not a tiny hint."
 printf '%s\n' "- Sessions, windows, panes, current target, and pane command text are visible."
 printf '%s\n' "- Keyboard navigation changes selection."
 printf '%s\n' "- Start a new tmux session named ${started_session} from the UI."
@@ -366,7 +366,7 @@ record_confirmation() {
 
 record_confirmation "Confirm the welcome Input row used the current tmux shortcut copy." "current-startup-copy" "tmux-default-cargo-run-current-startup.txt"
 record_confirmation "Confirm the persistent tmux status strip was visible and legible." "status-strip-visible" "tmux-default-cargo-run-status-strip.txt"
-record_confirmation "Confirm Control/Super Shift+T opened or reopened a real manager panel." "manager-visible" "tmux-default-cargo-run-manager-visible.txt"
+record_confirmation "Confirm Cmd/Ctrl+Shift+T opened or reopened a real manager panel." "manager-visible" "tmux-default-cargo-run-manager-visible.txt"
 record_confirmation "Confirm the manager was not a tiny hint or palette." "not-hint" "tmux-default-cargo-run-not-hint.txt"
 record_confirmation "Confirm sessions/windows/panes/current target/pane command text were visible." "state-visible" "tmux-default-cargo-run-state-visible.txt"
 record_confirmation "Confirm keyboard navigation changed selection." "navigation-checked" "tmux-default-cargo-run-navigation.txt"

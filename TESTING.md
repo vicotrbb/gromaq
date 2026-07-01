@@ -127,7 +127,7 @@ available outside the app window.
 `scripts/prove-macos-native-tmux-default-cargo-run.sh` opens the default app
 path through plain `cargo run`, matching the no-argument developer workflow. It
 prepares uniquely named tmux sessions, asks the tester to verify the default
-startup shortcut copy, status strip, Control/Super Shift `T` manager panel,
+startup shortcut copy, status strip, Cmd/Ctrl+Shift `T` manager panel,
 visible tmux state, visible Enter/`r`/`?`/Esc hint controls in missing/no-server
 and outside-tmux manager states, navigation, start-session, attach-session, safe
 action dispatch, new-window, destructive confirmation against the disposable target,
@@ -181,7 +181,7 @@ named started session to exist, the target session to show the new window and
 split pane, and the disposable kill-session target to be removed before writing
 the summary.
 By default, the generated tmux proof config starts with the manager closed so
-the tester must open it with Control/Super Shift `T`; set
+the tester must open it with Cmd/Ctrl+Shift `T`; set
 `GROMAQ_MANUAL_TMUX_OPEN_ON_START=true` to instead prove startup-open behavior.
 
 - Launch `cargo run` or `scripts/prove-macos-native-tmux-manual.sh`.
@@ -189,9 +189,9 @@ the tester must open it with Control/Super Shift `T`; set
   records this as `tmux-status-strip-visible.txt`.
 - Verify the manager remains visible when startup shell output fills the first window.
 - In the default no-argument proof, if the manager is already visible on
-  startup, close it with Esc first, then press Control/Super Shift `T` and
+  startup, close it with Esc first, then press Cmd/Ctrl+Shift `T` and
   verify a real manager panel opens again.
-- In the configured manual proof, press Control/Super Shift `T` when the manager
+- In the configured manual proof, press Cmd/Ctrl+Shift `T` when the manager
   starts closed and verify a real manager panel opens.
 - Confirm the manager is not a tiny hint or palette; the configured manual
   proof records this as `tmux-manager-not-hint.txt`.

@@ -271,7 +271,7 @@ workspace preset session: ${workspace_session}
 expected started session: ${started_session}
 
 - Confirm the persistent tmux status strip is visible. Type exactly: status-strip-visible
-- Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible
+- Press Cmd/Ctrl+Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible
 - Confirm the manager is a real panel, not a tiny hint or palette. Type exactly: not-hint
 - Confirm sessions/windows/panes/current target/pane command text are visible. Type exactly: state-visible
 - Navigate with arrows or h/j/k/l and click at least one session/window/pane/action/workspace row. Type exactly: navigation-checked
@@ -345,7 +345,7 @@ printf '%s\n' "Use the visible Gromaq window for each step, then type the exact 
 printf '%s\n' "Confirm the persistent tmux status strip is visible. Type exactly: status-strip-visible"
 IFS= read -r status_strip_visible
 printf '%s\n' "\${status_strip_visible}" > "${proof_root}/tmux-status-strip-visible.txt"
-printf '%s\n' "Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
+printf '%s\n' "Press Cmd/Ctrl+Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
 IFS= read -r manager_visible
 printf '%s\n' "\${manager_visible}" > "${proof_root}/tmux-manager-visible.txt"
 printf '%s\n' "Confirm the manager is a real panel, not a tiny hint or palette. Type exactly: not-hint"
