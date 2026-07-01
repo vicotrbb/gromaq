@@ -26,6 +26,7 @@ use render::{
 use shortcuts::{
     drive_destructive_shortcut_confirmation, drive_name_entry_action, drive_refresh_shortcut,
     drive_select_pane_shortcut, drive_shortcut_action, drive_unavailable_shortcut_block,
+    drive_window_cycle_shortcuts, drive_zoom_shortcut,
 };
 use workspace::{docs_workspace_preset, run_workspace_proof, workspace_preset};
 
@@ -82,6 +83,8 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let destructive_shortcut_checked = drive_destructive_shortcut_confirmation(&mut runtime);
     let refresh_shortcut_requested = drive_refresh_shortcut(&mut runtime);
     let shortcut_action_dispatched = drive_shortcut_action(&mut runtime, &runner);
+    let window_cycle_shortcuts_checked = drive_window_cycle_shortcuts(&mut runtime, &runner);
+    let zoom_shortcut_checked = drive_zoom_shortcut(&mut runtime, &runner);
     let select_pane_shortcut_checked = drive_select_pane_shortcut(&mut runtime, &runner);
     let safe_action_dispatched = drive_safe_action(&mut runtime, &runner);
     let name_entry_dispatched = drive_name_entry_action(&mut runtime, &runner);
@@ -119,7 +122,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nwindow cycle shortcuts checked: {window_cycle_shortcuts_checked}\nzoom shortcut checked: {zoom_shortcut_checked}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.feedback_checked,
             workspace_result.duplicate_prevented,
             state.sessions.len(),

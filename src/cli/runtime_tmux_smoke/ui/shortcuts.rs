@@ -35,6 +35,46 @@ pub(super) fn drive_select_pane_shortcut(
     )
 }
 
+pub(super) fn drive_window_cycle_shortcuts(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let next =
+        runtime.handle_tmux_manager_key(&Key::Character("n".into()), ModifiersState::empty());
+    let next_result = runtime.dispatch_tmux_manager_action(next, runner);
+    let previous =
+        runtime.handle_tmux_manager_key(&Key::Character("p".into()), ModifiersState::empty());
+    let previous_result = runtime.dispatch_tmux_manager_action(previous, runner);
+    matches!(
+        next_result,
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::NextWindow,
+            ..
+        })
+    ) && matches!(
+        previous_result,
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::PreviousWindow,
+            ..
+        })
+    )
+}
+
+pub(super) fn drive_zoom_shortcut(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let requested =
+        runtime.handle_tmux_manager_key(&Key::Character("z".into()), ModifiersState::empty());
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::ZoomPane,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_name_entry_action(
     runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,

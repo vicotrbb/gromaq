@@ -58,6 +58,8 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
                 .contains("mouse workspace selection checked: true")
         );
         assert!(exit.stdout.contains("refresh shortcut requested: true"));
+        assert!(exit.stdout.contains("window cycle shortcuts checked: true"));
+        assert!(exit.stdout.contains("zoom shortcut checked: true"));
         assert!(exit.stdout.contains("select pane shortcut checked: true"));
         assert!(exit.stdout.contains("safe action dispatched: true"));
         assert!(exit.stdout.contains("name entry action dispatched: true"));
