@@ -210,6 +210,7 @@ gromaq --tmux-action kill-session my-session --confirm
 gromaq --runtime-tmux-smoke
 gromaq --runtime-tmux-ui-smoke
 gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
+scripts/prove-native-tmux-default-snapshot.sh
 ```
 
 Inside the native window, the tmux manager opens on startup when tmux UI is
@@ -217,6 +218,11 @@ enabled and `open_manager_on_start` is true; `show_status_strip = false` hides
 only the strip. Control/Super Shift `T` toggles the manager. Use arrows or
 `h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry; `r` refreshes the tmux snapshot without shell input; destructive actions require `y`; Esc
 closes or cancels prompts.
+
+`scripts/prove-native-tmux-default-snapshot.sh` creates an isolated tmux
+session, captures the default startup manager/status-strip frame, and writes
+PPM/PNG artifacts under `target/native-tmux-default-snapshot-proof`. It proves
+the native rendered frame path, not live keyboard or mouse interaction.
 
 ## Documentation
 
