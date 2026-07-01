@@ -26,6 +26,21 @@ pub(super) fn drive_shortcut_action(
     )
 }
 
+pub(super) fn drive_attach_session_handoff(runtime: &mut super::SmokeRuntime) -> bool {
+    let before = runtime.dump_runtime_perf_metrics().pty_input_writes;
+    let requested =
+        runtime.handle_tmux_manager_key(&Key::Character("a".into()), ModifiersState::empty());
+    let result = runtime.dispatch_tmux_manager_terminal_action(requested);
+    let after = runtime.dump_runtime_perf_metrics().pty_input_writes;
+    matches!(
+        result,
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::AttachSession,
+            ..
+        })
+    ) && after == before + 1
+}
+
 pub(super) fn drive_select_pane_shortcut(
     runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,
