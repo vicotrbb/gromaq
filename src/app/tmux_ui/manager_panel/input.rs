@@ -117,7 +117,7 @@ impl TmuxManagerPanelState {
     fn handle_confirmation_key(&mut self, key: &Key) -> TmuxManagerKeyOutcome {
         match key {
             Key::Named(NamedKey::Escape) => {
-                self.cancel_confirmation();
+                self.cancel_confirmation_with_feedback();
                 TmuxManagerKeyOutcome::Consumed
             }
             Key::Character(character) if character.eq_ignore_ascii_case("y") => {
@@ -129,7 +129,7 @@ impl TmuxManagerPanelState {
                 }
             }
             Key::Character(character) if character.eq_ignore_ascii_case("n") => {
-                self.cancel_confirmation();
+                self.cancel_confirmation_with_feedback();
                 TmuxManagerKeyOutcome::Consumed
             }
             _ => TmuxManagerKeyOutcome::Consumed,

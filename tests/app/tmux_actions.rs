@@ -182,6 +182,36 @@ fn tmux_manager_panel_waits_for_confirmation_before_kill_action_dispatch() {
 }
 
 #[test]
+fn tmux_manager_panel_reports_destructive_confirmation_cancellation() {
+    let snapshot = manager_snapshot();
+    for cancel_key in [Key::Character("n".into()), Key::Named(NamedKey::Escape)] {
+        let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+        panel.focus_next();
+        panel.focus_next();
+        panel.focus_next();
+        panel.handle_key(
+            &Key::Named(NamedKey::ArrowDown),
+            ModifiersState::empty(),
+            &snapshot,
+        );
+
+        assert_eq!(
+            panel.handle_key(
+                &Key::Named(NamedKey::Enter),
+                ModifiersState::empty(),
+                &snapshot,
+            ),
+            TmuxManagerKeyOutcome::ConfirmationRequired(ActionId::KillWindow)
+        );
+        assert_eq!(
+            panel.handle_key(&cancel_key, ModifiersState::empty(), &snapshot),
+            TmuxManagerKeyOutcome::Consumed
+        );
+        assert_eq!(panel.last_action_feedback(), Some("kill-window canceled"));
+    }
+}
+
+#[test]
 fn tmux_manager_panel_reports_action_runner_failure_feedback() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);

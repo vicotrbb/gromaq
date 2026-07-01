@@ -125,8 +125,7 @@ impl TmuxManagerPanelState {
                 .unwrap_or("<unknown tmux command>");
             let key_hint = action
                 .and_then(|action| action.key_binding)
-                .map(|key| format!(" | {key}"))
-                .unwrap_or_default();
+                .map_or(String::new(), |key| format!(" | {key}"));
             self.confirmation = Some(format!(
                 "confirm {stable_id} ({command}{key_hint}) with y, n/Esc cancels"
             ));
@@ -143,6 +142,14 @@ impl TmuxManagerPanelState {
     pub fn cancel_confirmation(&mut self) {
         self.confirmation = None;
         self.confirmation_action = None;
+    }
+
+    pub(super) fn cancel_confirmation_with_feedback(&mut self) {
+        let action = self.confirmation_action.and_then(TmuxAction::by_id);
+        self.cancel_confirmation();
+        if let Some(action) = action {
+            self.record_action_feedback(format!("{} canceled", action.stable_id));
+        }
     }
 
     /// Return the current confirmation message.
