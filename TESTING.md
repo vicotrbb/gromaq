@@ -122,8 +122,8 @@ fails if the old keyboard/mouse/paste startup copy remains in that binary, then
 records a bounded manager reference snapshot as
 `tmux-default-cargo-run-manager-reference.ppm` plus a PNG when `sips` is
 available. That reference must report current startup content, the tmux status
-strip, active pane command text, and nonzero manager session/window/pane counts
-before the manual `cargo run` window opens. The harness then records git
+strip, active pane command text, `terminal cells:`, and nonzero manager
+session/window/pane counts before the manual `cargo run` window opens. The harness then records git
 branch/dirty metadata plus confirmation files under
 `target/macos-native-tmux-default-cargo-run-proof`.
 After confirmations, it also reads tmux state directly and fails unless the
@@ -134,9 +134,9 @@ target is absent.
 `scripts/prove-native-tmux-default-snapshot.sh` is the non-interactive default
 startup artifact proof. It runs `cargo run -- --window-tmux-manager-snapshot`,
 requires the default startup content plus tmux status strip, status pane
-command, and manager panel proof lines, records the rendered manager
-session/window/pane counts from an isolated tmux session, writes a PPM artifact,
-and writes a PNG beside it when `sips` is available.
+command, manager panel, and `terminal cells:` proof lines, records the rendered
+manager session/window/pane counts from an isolated tmux session, writes a PPM
+artifact, and writes a PNG beside it when `sips` is available.
 
 Both runtime tmux smokes are fail-closed proof commands: `--runtime-tmux-smoke`
 and `--runtime-tmux-ui-smoke` return a failing exit when a required proof line
