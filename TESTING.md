@@ -104,6 +104,7 @@ the exact result. The required manual checklist is:
 
 - Launch `cargo run`.
 - Verify the persistent tmux status strip is visible and legible.
+- Verify the manager remains visible when startup shell output fills the first window.
 - Press Control/Super Shift `T` and verify a real manager panel opens.
 - Inspect sessions, windows, panes, current target, and pane command text.
 - Navigate with arrows or `h`/`j`/`k`/`l`.

@@ -154,6 +154,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "TESTING.md",
+            "startup shell output fills the first window",
+        ),
+        (
+            "TESTING.md",
             "Click session/window/pane/action/workspace rows",
         ),
         (
