@@ -51,6 +51,7 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
         assert!(exit.stdout.contains("cancellation feedback checked: true"));
         assert!(exit.stdout.contains("destructive shortcut checked: true"));
         assert!(exit.stdout.contains("unavailable shortcut blocked: true"));
+        assert!(exit.stdout.contains("no-server start hint checked: true"));
         assert!(exit.stdout.contains("mouse focus checked: true"));
         assert!(exit.stdout.contains("mouse action selection checked: true"));
         assert!(

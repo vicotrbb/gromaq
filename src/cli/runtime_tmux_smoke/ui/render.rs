@@ -2,7 +2,7 @@
 
 use crate::app::{NativeTerminalRuntimeConfig, TmuxStatusKind, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
-use crate::tmux::TmuxManagerSnapshot;
+use crate::tmux::{TmuxManagerSnapshot, TmuxManagerStatus, TmuxState};
 
 pub(super) fn render_status_strip(
     runtime: &mut super::SmokeRuntime,
@@ -81,6 +81,16 @@ pub(super) fn render_startup_manager_after_shell_prompt(
     render_manager_panel(&mut runtime, renderer)
 }
 
+pub(super) fn render_no_server_start_hint(renderer: &mut WgpuRenderer) -> bool {
+    let Ok(mut runtime) = super::smoke_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(no_server_snapshot(), Vec::new());
+    render_manager_panel_contains(&mut runtime, renderer, "Enterstart-session")
+        && render_manager_panel_contains(&mut runtime, renderer, "tmuxnew-session-d-s<session>")
+        && render_manager_panel_contains(&mut runtime, renderer, "Enterstart-sessiontocreate")
+}
+
 fn tmux_status(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
     if snapshot.state.sessions.is_empty() {
         TmuxStatusKind::NoServer
@@ -99,6 +109,14 @@ fn last_plan_text(renderer: &WgpuRenderer) -> String {
                 .collect::<String>()
         })
         .unwrap_or_default()
+}
+
+fn no_server_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::NoServer,
+        state: TmuxState::default(),
+        current: None,
+    }
 }
 
 fn full_prompt_grid() -> String {
