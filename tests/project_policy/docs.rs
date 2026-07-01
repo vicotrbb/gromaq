@@ -313,6 +313,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ("README.md", "mouse clicks select visible manager rows"),
         ("README.md", "scripts/prove-native-tmux-default-snapshot.sh"),
         ("ROADMAP.md", "Default native tmux snapshot artifact proof"),
+        (
+            "documentation/compatibility.md",
+            "No-server snapshots may report `tmux status pane command rendered: false` only with `tmux manager panes: 0`",
+        ),
     ] {
         let path = root.join(relative);
         let source = fs::read_to_string(&path).unwrap();
