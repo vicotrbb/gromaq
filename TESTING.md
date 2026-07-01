@@ -127,10 +127,10 @@ target is absent.
 
 `scripts/prove-native-tmux-default-snapshot.sh` is the non-interactive default
 startup artifact proof. It runs `cargo run -- --window-tmux-manager-snapshot`,
-requires the default startup content plus tmux status strip and manager panel
-proof lines, records the rendered manager session/window/pane counts from an
-isolated tmux session, writes a PPM artifact, and writes a PNG beside it when
-`sips` is available.
+requires the default startup content plus tmux status strip, status pane
+command, and manager panel proof lines, records the rendered manager
+session/window/pane counts from an isolated tmux session, writes a PPM artifact,
+and writes a PNG beside it when `sips` is available.
 
 When no packaged app bundle is selected, the helper builds and launches
 `target/debug/gromaq` directly with its generated tmux proof config. Set
