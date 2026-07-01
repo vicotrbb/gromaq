@@ -119,6 +119,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "refresh shortcut requested: true",
         ),
+        (
+            "documentation/compatibility.md",
+            "cancellation feedback checked: true",
+        ),
         ("TESTING.md", "Press `r` and verify the manager refreshes"),
         (
             "TESTING.md",
