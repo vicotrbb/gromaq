@@ -58,6 +58,10 @@ old_startup_marker="keyboard, mouse, paste"
 binary_markers_path="${proof_root}/tmux-binary-markers.txt"
 window_smoke_stdout_path="${proof_root}/tmux-window-smoke.stdout"
 window_smoke_stderr_path="${proof_root}/tmux-window-smoke.stderr"
+manager_reference_ppm_path="${proof_root}/tmux-manager-reference.ppm"
+manager_reference_png_path="${proof_root}/tmux-manager-reference.png"
+manager_reference_stdout_path="${proof_root}/tmux-manager-reference.stdout"
+manager_reference_stderr_path="${proof_root}/tmux-manager-reference.stderr"
 
 case "${open_manager_on_start}" in
   true | false) ;;
@@ -177,6 +181,37 @@ if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >
   exit 1
 fi
 
+"${executable}" --window-tmux-manager-snapshot "${manager_reference_ppm_path}" \
+  > "${manager_reference_stdout_path}" \
+  2> "${manager_reference_stderr_path}"
+
+if ! grep -F "tmux status strip rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable manager reference did not render the tmux status strip." >&2
+  exit 1
+fi
+if ! grep -F "tmux status pane command rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable manager reference did not render the tmux active pane command." >&2
+  exit 1
+fi
+if ! grep -F "tmux manager panel rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable manager reference did not render the tmux manager panel." >&2
+  exit 1
+fi
+if ! grep -F "terminal cells:" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable manager reference did not report terminal cells." >&2
+  exit 1
+fi
+for count_label in "tmux manager sessions:" "tmux manager windows:" "tmux manager panes:"; do
+  if ! grep -F "${count_label}" "${manager_reference_stdout_path}" >/dev/null; then
+    printf '%s\n' "error: selected executable manager reference did not report ${count_label}" >&2
+    exit 1
+  fi
+done
+
+if command -v sips >/dev/null 2>&1; then
+  sips -s format png "${manager_reference_ppm_path}" --out "${manager_reference_png_path}" >/dev/null
+fi
+
 if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux manual preflight: ok"
@@ -197,6 +232,16 @@ if [ "${preflight_only}" = "true" ]; then
     grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
+    printf '%s\n' "tmux-manager-reference.ppm: ${manager_reference_ppm_path}"
+    if [ -f "${manager_reference_png_path}" ]; then
+      printf '%s\n' "tmux-manager-reference.png: ${manager_reference_png_path}"
+    fi
+    printf '%s\n' "tmux-manager-reference.stdout: ${manager_reference_stdout_path}"
+    printf '%s\n' "tmux-manager-reference.stderr: ${manager_reference_stderr_path}"
+    grep -F "terminal cells:" "${manager_reference_stdout_path}"
+    grep -F "tmux manager sessions:" "${manager_reference_stdout_path}"
+    grep -F "tmux manager windows:" "${manager_reference_stdout_path}"
+    grep -F "tmux manager panes:" "${manager_reference_stdout_path}"
     printf '%s\n' "session: ${session}"
     printf '%s\n' "tmux-initial-windows.txt: ${initial_windows_path}"
     printf '%s\n' "initial tmux windows: ${initial_window_count}"
@@ -463,6 +508,16 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
+  printf '%s\n' "tmux-manager-reference.ppm: ${manager_reference_ppm_path}"
+  if [ -f "${manager_reference_png_path}" ]; then
+    printf '%s\n' "tmux-manager-reference.png: ${manager_reference_png_path}"
+  fi
+  printf '%s\n' "tmux-manager-reference.stdout: ${manager_reference_stdout_path}"
+  printf '%s\n' "tmux-manager-reference.stderr: ${manager_reference_stderr_path}"
+  grep -F "terminal cells:" "${manager_reference_stdout_path}"
+  grep -F "tmux manager sessions:" "${manager_reference_stdout_path}"
+  grep -F "tmux manager windows:" "${manager_reference_stdout_path}"
+  grep -F "tmux manager panes:" "${manager_reference_stdout_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "tmux-initial-windows.txt: ${initial_windows_path}"
   printf '%s\n' "initial tmux windows: ${initial_window_count}"

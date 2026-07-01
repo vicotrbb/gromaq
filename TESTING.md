@@ -163,7 +163,11 @@ silently validate stale startup text.
 It also runs the selected executable through `--window-smoke` after preparing
 the isolated tmux state, records `tmux-window-smoke.stdout`, and fails unless
 the status strip, active pane command, and manager panel render before the live
-interactive window opens.
+interactive window opens. The same selected executable writes an inspectable
+manager reference as `tmux-manager-reference.ppm` plus a PNG when `sips` is
+available, with stdout/stderr captured beside it; this reference must report
+the status strip, active pane command, manager panel, terminal cells, and
+manager session/window/pane counts.
 After the live prompts finish, it reads tmux state directly and requires the
 named started session to exist, the target session to show the new window and
 split pane, and the disposable kill-session target to be removed before writing
