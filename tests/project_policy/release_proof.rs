@@ -190,6 +190,7 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
         "open-manager-on-start.txt",
         "Native tmux manager manual proof",
         "macOS native tmux manual proof: ok",
+        "live app-window proof: completed",
         "summary.txt",
     ] {
         assert!(
@@ -277,6 +278,7 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "tmux-default-cargo-run-native-control-plane.txt",
         "native terminal control, not web UI",
         "macOS native tmux default cargo run proof: ok",
+        "live app-window proof: completed",
         "summary.txt",
         "startup manager small-grid cells: 69x17",
     ] {

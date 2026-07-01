@@ -629,6 +629,7 @@ printf '%s\n' "true" > "${workspace_exists_path}"
 
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
+  printf '%s\n' "live app-window proof: completed"
   printf '%s\n' "Launch mode: ${launch_mode}"
   printf '%s\n' "Open manager on start: ${open_manager_on_start}"
   printf '%s\n' "App: ${app_path:-none}"

@@ -468,6 +468,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
 
 {
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
+  printf '%s\n' "live app-window proof: completed"
   printf '%s\n' "tmux: ${tmux_version}"
   printf '%s\n' "git HEAD: ${head_sha}"
   printf '%s\n' "git branch: ${git_branch}"
