@@ -207,6 +207,8 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "unexpected old startup marker",
         "tmux-default-cargo-run-current-startup.txt",
         "tmux-default-cargo-run-status-strip.txt",
+        "If the manager is already visible on startup, close it with Esc",
+        "Confirm Control/Super Shift+T opened or reopened a real manager panel.",
         "tmux-default-cargo-run-manager-visible.txt",
         "tmux-default-cargo-run-not-hint.txt",
         "tmux-default-cargo-run-state-visible.txt",

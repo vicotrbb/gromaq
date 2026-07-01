@@ -151,7 +151,11 @@ the tester must open it with Control/Super Shift `T`; set
 - Verify the persistent tmux status strip is visible and legible; the harness
   records this as `tmux-status-strip-visible.txt`.
 - Verify the manager remains visible when startup shell output fills the first window.
-- Press Control/Super Shift `T` and verify a real manager panel opens.
+- In the default no-argument proof, if the manager is already visible on
+  startup, close it with Esc first, then press Control/Super Shift `T` and
+  verify a real manager panel opens again.
+- In the configured manual proof, press Control/Super Shift `T` when the manager
+  starts closed and verify a real manager panel opens.
 - Inspect sessions, windows, panes, current target, and pane command text.
 - Navigate with arrows or `h`/`j`/`k`/`l`.
 - Click session/window/pane/action/workspace rows and verify selection moves;
