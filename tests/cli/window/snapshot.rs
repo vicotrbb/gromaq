@@ -31,6 +31,7 @@ fn window_glyph_frame_snapshot_smoke_writes_artifact() {
     assert!(exit.stdout.contains("frame size: 1x1"));
     assert!(exit.stdout.contains("glyph frame presented: true"));
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
+    assert!(exit.stdout.contains("tmux manager panel rendered: true"));
     let bytes = fs::read(&path).unwrap();
     let _ = fs::remove_file(&path);
     assert_eq!(bytes, b"P6\n1 1\n255\n\x17\x1b$");
@@ -40,6 +41,7 @@ fn window_glyph_frame_snapshot_smoke_writes_artifact() {
     assert_eq!(launch.app.exit_after_presented_frames, Some(60));
     assert_eq!(launch.app.exit_after_redraw_attempts, Some(60));
     assert!(launch.app.redraw_until_presented_frame_limit);
+    assert!(launch.app.open_tmux_manager_on_start);
     assert_eq!(
         launch.app.glyph_frame_snapshot_path.as_deref(),
         Some(path.as_path())

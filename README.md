@@ -130,9 +130,10 @@ use the release installer or install Rust from your package manager or
   app zips, and SHA256 checksum manifests.
 - Native tmux assist foundations: `gromaq --tmux-assist`, `--tmux-action`,
   and `--tmux-manager` expose registry-backed tmux command/keybinding metadata.
-  Control/Super Shift `T` opens the native manager for status, navigation,
-  start/attach, split/window/rename, confirmed kill actions, snapshot refresh,
-  and workspace preset launch; `--runtime-tmux-smoke` and
+  The no-argument native app opens the manager on startup for status,
+  navigation, start/attach, split/window/rename, confirmed kill actions,
+  snapshot refresh, and workspace preset launch. Control/Super Shift `T`
+  toggles the same manager after launch; `--runtime-tmux-smoke` and
   `--runtime-tmux-ui-smoke` prove isolated tmux paths when tmux is installed.
 
 ## Known Proof Gaps
@@ -211,10 +212,11 @@ gromaq --runtime-tmux-ui-smoke
 gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
 ```
 
-Inside the native window, Control/Super Shift `T` toggles the tmux manager. Use
-arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry;
-`r` refreshes the tmux snapshot without shell input; destructive actions require
-`y`; Esc closes or cancels prompts.
+Inside the native window, the tmux manager opens on startup when tmux UI is
+enabled. Control/Super Shift `T` toggles it after launch. Use arrows or
+`h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry;
+`r` refreshes the tmux snapshot without shell input; destructive actions
+require `y`; Esc closes or cancels prompts.
 
 ## Documentation
 

@@ -62,7 +62,7 @@ impl Default for NativeAppConfig {
             welcome_screen: true,
             screen_capture_allowed: true,
             tmux_ui_enabled: true,
-            open_tmux_manager_on_start: false,
+            open_tmux_manager_on_start: true,
             tmux_workspaces: Vec::new(),
         }
     }
@@ -78,6 +78,7 @@ impl NativeAppConfig {
             target_fps: config.performance.target_fps,
             welcome_screen: config.welcome.enabled,
             tmux_ui_enabled: config.tmux.enabled,
+            open_tmux_manager_on_start: config.tmux.enabled,
             tmux_workspaces: tmux_workspace_presets(config),
             ..Self::default()
         })

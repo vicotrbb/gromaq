@@ -22,6 +22,7 @@ fn no_arguments_launches_native_terminal_app() {
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
     assert_eq!(app.launches.borrow()[0], NativeAppLaunchConfig::default());
+    assert!(app.launches.borrow()[0].app.open_tmux_manager_on_start);
 }
 
 #[test]

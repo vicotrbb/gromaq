@@ -70,6 +70,8 @@ fn native_app_config_builds_terminal_window_attributes() {
         config.target_frame_interval(),
         Duration::from_nanos(6_944_444)
     );
+    assert!(config.tmux_ui_enabled);
+    assert!(config.open_tmux_manager_on_start);
 }
 
 #[test]
@@ -119,6 +121,15 @@ fn native_app_config_enables_tmux_ui_by_default() {
 }
 
 #[test]
+fn native_app_config_opens_tmux_manager_by_default() {
+    let user_config = GromaqConfig::default();
+
+    let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
+
+    assert!(app_config.open_tmux_manager_on_start);
+}
+
+#[test]
 fn native_app_config_can_disable_tmux_ui() {
     let mut user_config = GromaqConfig::default();
     user_config.tmux.enabled = false;
@@ -126,6 +137,7 @@ fn native_app_config_can_disable_tmux_ui() {
     let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
 
     assert!(!app_config.tmux_ui_enabled);
+    assert!(!app_config.open_tmux_manager_on_start);
 }
 
 #[test]
