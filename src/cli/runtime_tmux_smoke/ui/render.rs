@@ -2,7 +2,7 @@
 
 use crate::app::{NativeTerminalRuntimeConfig, TmuxStatusKind, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
-use crate::tmux::{TmuxManagerSnapshot, TmuxManagerStatus, TmuxState};
+use crate::tmux::{TmuxManagerSnapshot, TmuxManagerStatus, TmuxSession, TmuxState};
 
 pub(super) fn render_status_strip(
     runtime: &mut super::SmokeRuntime,
@@ -91,6 +91,15 @@ pub(super) fn render_no_server_start_hint(renderer: &mut WgpuRenderer) -> bool {
         && render_manager_panel_contains(&mut runtime, renderer, "Enterstart-sessiontocreate")
 }
 
+pub(super) fn render_outside_attach_hint(renderer: &mut WgpuRenderer) -> bool {
+    let Ok(mut runtime) = super::smoke_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(detached_snapshot(), Vec::new());
+    render_manager_panel_contains(&mut runtime, renderer, "Outsidetmux")
+        && render_manager_panel_contains(&mut runtime, renderer, "tmuxattach-session-t<session>")
+}
+
 fn tmux_status(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
     if snapshot.state.sessions.is_empty() {
         TmuxStatusKind::NoServer
@@ -115,6 +124,21 @@ fn no_server_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::NoServer,
         state: TmuxState::default(),
+        current: None,
+    }
+}
+
+fn detached_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "gromaq-runtime-detached".to_owned(),
+                attached: false,
+            }],
+            windows: Vec::new(),
+            panes: Vec::new(),
+        },
         current: None,
     }
 }
