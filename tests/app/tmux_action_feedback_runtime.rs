@@ -15,6 +15,9 @@ struct FakeRunner {
     calls: RefCell<Vec<Vec<&'static str>>>,
 }
 
+#[derive(Debug)]
+struct MissingRunner;
+
 impl FakeRunner {
     fn new(calls: Vec<Vec<&'static str>>) -> Self {
         Self {
@@ -28,6 +31,12 @@ impl TmuxCommandRunner for FakeRunner {
         let expected = self.calls.borrow_mut().remove(0);
         assert_eq!(args, expected.as_slice());
         Ok(TmuxCommandOutput::new(String::new(), String::new()))
+    }
+}
+
+impl TmuxCommandRunner for MissingRunner {
+    fn run_tmux(&self, _args: &[&str]) -> Result<TmuxCommandOutput, TmuxError> {
+        Err(TmuxError::Missing)
     }
 }
 
@@ -101,6 +110,43 @@ fn runtime_shows_confirmation_feedback_in_status_strip() {
     assert!(frame.lines[11].contains("tmux: attached"));
     assert!(frame.lines[11].contains("confirm: confirm kill-window"));
     assert!(frame.lines[11].contains("Ctrl-b &"));
+}
+
+#[test]
+fn runtime_shows_missing_tmux_action_feedback_in_status_strip() {
+    let snapshot = manager_snapshot();
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 160,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.toggle_tmux_manager_panel(snapshot);
+
+    for _ in 0..3 {
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::ArrowRight), ModifiersState::empty());
+    }
+    let outcome =
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
+    let result = runtime
+        .dispatch_tmux_manager_action(outcome, &MissingRunner)
+        .unwrap();
+    assert!(matches!(
+        result,
+        TmuxActionResult::TmuxMissing {
+            action_id: ActionId::SplitPaneRight,
+            ..
+        }
+    ));
+    runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Escape), ModifiersState::empty());
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[7].contains("tmux: attached"));
+    assert!(frame.lines[7].contains("split-pane-right failed: tmux missing"));
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
