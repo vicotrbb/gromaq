@@ -2,6 +2,7 @@
 
 mod missing;
 mod name_entry;
+mod split;
 
 use winit::keyboard::{Key, ModifiersState};
 
@@ -13,6 +14,7 @@ pub(super) use name_entry::{
     drive_name_entry_action, drive_rename_session_action, drive_rename_window_action,
     drive_start_session_pty_handoff,
 };
+pub(super) use split::{drive_split_down_shortcut, drive_split_right_shortcut};
 
 pub(super) fn drive_shortcut_action(
     runtime: &mut super::SmokeRuntime,
@@ -69,21 +71,6 @@ pub(super) fn drive_select_pane_shortcut(
         runtime.dispatch_tmux_manager_action(requested, runner),
         Some(TmuxActionResult::Success {
             action_id: ActionId::SelectPane,
-            ..
-        })
-    )
-}
-
-pub(super) fn drive_split_down_shortcut(
-    runtime: &mut super::SmokeRuntime,
-    runner: &SocketTmuxCommandRunner,
-) -> bool {
-    let requested =
-        runtime.handle_tmux_manager_key(&Key::Character("v".into()), ModifiersState::empty());
-    matches!(
-        runtime.dispatch_tmux_manager_action(requested, runner),
-        Some(TmuxActionResult::Success {
-            action_id: ActionId::SplitPaneDown,
             ..
         })
     )

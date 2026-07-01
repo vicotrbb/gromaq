@@ -62,6 +62,7 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
         assert!(exit.stdout.contains("window cycle shortcuts checked: true"));
         assert!(exit.stdout.contains("zoom shortcut checked: true"));
         assert!(exit.stdout.contains("select pane shortcut checked: true"));
+        assert!(exit.stdout.contains("split right shortcut checked: true"));
         assert!(exit.stdout.contains("split down shortcut checked: true"));
         assert!(exit.stdout.contains("safe action dispatched: true"));
         assert!(
