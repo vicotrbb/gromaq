@@ -121,6 +121,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "workspace feedback checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "cancellation feedback checked: true",
         ),
         ("TESTING.md", "Press `r` and verify the manager refreshes"),
