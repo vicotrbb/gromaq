@@ -207,7 +207,8 @@ The terminal is not complete until these are true:
 
 - Works with `bash`, `zsh`, `fish`, and `nushell` where available.
 - Works with `vim` and `neovim`.
-- Works with `tmux`, including documented native manager proof boundaries.
+- Works with `tmux`, including documented native manager proof boundaries and
+  `live-app-window-proof.txt` for live manual proof state.
 - Works with `ssh`.
 - Handles alternate screen correctly.
 - Handles resize/reflow correctly.

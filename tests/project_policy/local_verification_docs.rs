@@ -29,6 +29,7 @@ const REQUIRED_LOCAL_VERIFICATION_DOC_MARKERS: &[(&str, &str)] = &[
     ("documentation/benchmarks.md", "git diff --cached --check"),
     ("documentation/goal.md", "scripts/prove-local-ci-parity.sh"),
     ("documentation/goal.md", "git diff --cached --check"),
+    ("documentation/goal.md", "live-app-window-proof.txt"),
     ("TESTING.md", "scripts/prove-local-ci-parity.sh"),
     ("TESTING.md", "git diff --cached --check"),
 ];
