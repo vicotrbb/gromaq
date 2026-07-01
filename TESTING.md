@@ -181,6 +181,9 @@ manager reference as `tmux-manager-reference.ppm` plus a PNG when `sips` is
 available, with stdout/stderr captured beside it; this reference must report
 the status strip, active pane command, manager panel, terminal cells, and
 manager session/window/pane counts.
+The helper also records `tmux-runtime-tmux-ui-smoke.stdout` and fails unless
+`--runtime-tmux-ui-smoke` proves `outside attach target checked: true`, keeping
+the configured manual path aligned with the default `cargo run` proof.
 After the live prompts finish, it reads tmux state directly and requires the
 named started session to exist, the target session to show the new window and
 split pane, and the disposable kill-session target to be removed before writing

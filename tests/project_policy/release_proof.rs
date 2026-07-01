@@ -59,7 +59,6 @@ fn github_release_publication_proof_checks_tag_and_assets() {
         );
     }
 }
-
 #[test]
 fn github_release_macos_install_proof_checks_downloaded_app_bundle() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -90,7 +89,6 @@ fn github_release_macos_install_proof_checks_downloaded_app_bundle() {
         );
     }
 }
-
 #[test]
 fn macos_live_input_manual_proof_guides_installed_app_typing() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -116,7 +114,6 @@ fn macos_live_input_manual_proof_guides_installed_app_typing() {
         );
     }
 }
-
 #[test]
 fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -141,6 +138,9 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
         "selected executable window smoke did not render the tmux status strip",
         "selected executable window smoke did not render the tmux active pane command",
         "selected executable window smoke did not render the tmux manager panel",
+        "cargo run -- --runtime-tmux-ui-smoke",
+        "tmux-runtime-tmux-ui-smoke.stdout",
+        "outside attach target checked: true",
         "--window-tmux-manager-snapshot",
         "tmux-manager-reference.ppm",
         "Press Cmd/Ctrl+Shift+T if the manager is closed",

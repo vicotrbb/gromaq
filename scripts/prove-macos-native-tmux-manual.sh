@@ -60,6 +60,8 @@ old_startup_marker="keyboard, mouse, paste"
 binary_markers_path="${proof_root}/tmux-binary-markers.txt"
 window_smoke_stdout_path="${proof_root}/tmux-window-smoke.stdout"
 window_smoke_stderr_path="${proof_root}/tmux-window-smoke.stderr"
+runtime_tmux_ui_smoke_stdout_path="${proof_root}/tmux-runtime-tmux-ui-smoke.stdout"
+runtime_tmux_ui_smoke_stderr_path="${proof_root}/tmux-runtime-tmux-ui-smoke.stderr"
 manager_reference_ppm_path="${proof_root}/tmux-manager-reference.ppm"
 manager_reference_png_path="${proof_root}/tmux-manager-reference.png"
 manager_reference_stdout_path="${proof_root}/tmux-manager-reference.stdout"
@@ -236,6 +238,16 @@ if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >
   exit 1
 fi
 
+(
+  cd "${root}"
+  cargo run -- --runtime-tmux-ui-smoke > "${runtime_tmux_ui_smoke_stdout_path}" 2> "${runtime_tmux_ui_smoke_stderr_path}"
+)
+
+if ! grep -F "outside attach target checked: true" "${runtime_tmux_ui_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: runtime tmux UI smoke did not prove concrete outside-tmux attach guidance." >&2
+  exit 1
+fi
+
 run_native_window_proof_with_retry \
   "selected executable manager reference" \
   "${manager_reference_stdout_path}" \
@@ -332,6 +344,9 @@ if [ "${preflight_only}" = "true" ]; then
     grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
+    printf '%s\n' "tmux-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
+    printf '%s\n' "tmux-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
+    grep -F "outside attach target checked: true" "${runtime_tmux_ui_smoke_stdout_path}"
     printf '%s\n' "tmux-manager-reference.ppm: ${manager_reference_ppm_path}"
     if [ -f "${manager_reference_png_path}" ]; then
       printf '%s\n' "tmux-manager-reference.png: ${manager_reference_png_path}"
@@ -619,6 +634,9 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
+  printf '%s\n' "tmux-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
+  printf '%s\n' "tmux-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
+  grep -F "outside attach target checked: true" "${runtime_tmux_ui_smoke_stdout_path}"
   printf '%s\n' "tmux-manager-reference.ppm: ${manager_reference_ppm_path}"
   if [ -f "${manager_reference_png_path}" ]; then
     printf '%s\n' "tmux-manager-reference.png: ${manager_reference_png_path}"
