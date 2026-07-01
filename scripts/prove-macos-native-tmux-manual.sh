@@ -24,6 +24,7 @@ started_session="${session}-started"
 initial_windows_path="${proof_root}/tmux-initial-windows.txt"
 initial_panes_path="${proof_root}/tmux-initial-panes.txt"
 started_session_exists_path="${proof_root}/tmux-start-session-exists.txt"
+workspace_exists_path="${proof_root}/tmux-workspace-session-exists.txt"
 post_windows_path="${proof_root}/tmux-post-windows.txt"
 post_panes_path="${proof_root}/tmux-post-panes.txt"
 kill_absent_path="${proof_root}/tmux-kill-session-absent.txt"
@@ -199,7 +200,7 @@ printf '%s\n' "\${refresh_checked}" > "${proof_root}/tmux-refresh-checked.txt"
 printf '%s\n' "Use q to run kill-session, verify inline confirmation appears, and only confirm against ${kill_session}. Type exactly: destructive-confirmation"
 IFS= read -r destructive_confirmation
 printf '%s\n' "\${destructive_confirmation}" > "${proof_root}/tmux-destructive-confirmation.txt"
-printf '%s\n' "Launch the configured workspace preset or verify it is listed with root/windows summary. Type exactly: workspace-visible"
+printf '%s\n' "Launch the configured workspace preset and verify it is listed with root/windows summary. Type exactly: workspace-launched"
 IFS= read -r workspace_visible
 printf '%s\n' "\${workspace_visible}" > "${proof_root}/tmux-workspace-visible.txt"
 printf '%s\n' "Close the manager and verify normal shell input still reaches this prompt. Type exactly: normal-shell-input"
@@ -338,8 +339,8 @@ if [ "${destructive_confirmation}" != "destructive-confirmation" ]; then
   printf '%s\n' "error: expected destructive-confirmation confirmation, got '${destructive_confirmation}'." >&2
   exit 1
 fi
-if [ "${workspace_visible}" != "workspace-visible" ]; then
-  printf '%s\n' "error: expected workspace-visible confirmation, got '${workspace_visible}'." >&2
+if [ "${workspace_visible}" != "workspace-launched" ]; then
+  printf '%s\n' "error: expected workspace-launched confirmation, got '${workspace_visible}'." >&2
   exit 1
 fi
 if [ "${normal_shell_input}" != "normal-shell-input" ]; then
@@ -380,6 +381,13 @@ if ! tmux has-session -t "${started_session}" >/dev/null 2>&1; then
   exit 1
 fi
 printf '%s\n' "true" > "${started_session_exists_path}"
+
+if ! tmux has-session -t "${workspace_session}" >/dev/null 2>&1; then
+  printf '%s\n' "false" > "${workspace_exists_path}"
+  printf '%s\n' "error: expected workspace session ${workspace_session} to exist after workspace proof." >&2
+  exit 1
+fi
+printf '%s\n' "true" > "${workspace_exists_path}"
 
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
@@ -424,6 +432,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "tmux-kill-session-absent.txt: ${kill_absent_path}"
   printf '%s\n' "kill-session absent: true"
   printf '%s\n' "tmux-workspace-visible.txt: ${workspace_visible}"
+  printf '%s\n' "tmux-workspace-session-exists.txt: ${workspace_exists_path}"
+  printf '%s\n' "workspace-session exists: true"
   printf '%s\n' "tmux-normal-shell-input.txt: ${normal_shell_input}"
   printf '%s\n' "launch-mode.txt: ${launch_mode}"
   printf '%s\n' "open-manager-on-start.txt: ${open_manager_on_start}"

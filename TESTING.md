@@ -196,8 +196,9 @@ the tester must open it with Control/Super Shift `T`; set
 - Use `q` or another destructive shortcut and verify inline confirmation appears
   before tmux runs.
 - Confirm a kill only against an isolated test target.
-- Launch or inspect the configured workspace preset; the configured manual
-  harness records this as `tmux-workspace-visible.txt`.
+- Launch the configured workspace preset; the configured manual harness records
+  this as `tmux-workspace-visible.txt` and fails unless the workspace session
+  exists.
 - Close the panel and verify normal shell input still reaches the terminal.
 
 Until that manual checklist has been performed in the current session, native
