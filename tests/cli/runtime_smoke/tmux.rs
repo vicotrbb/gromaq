@@ -80,9 +80,14 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
             exit.stdout
                 .contains("rename window action dispatched: true")
         );
+        assert!(exit.stdout.contains("rename window feedback checked: true"));
         assert!(
             exit.stdout
                 .contains("rename session action dispatched: true")
+        );
+        assert!(
+            exit.stdout
+                .contains("rename session feedback checked: true")
         );
         assert!(
             exit.stdout
