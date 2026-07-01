@@ -113,8 +113,9 @@ Set `GROMAQ_DEFAULT_CARGO_TMUX_PREFLIGHT_ONLY=true` or
 `GROMAQ_MANUAL_TMUX_PREFLIGHT_ONLY=true` to run the corresponding harness
 through its non-interactive machine checks and write a preflight summary without
 opening the live app window. Preflight mode proves stale-binary checks, isolated
-tmux setup, bounded window-smoke rendering, and generated artifacts; it does not
-replace the manual app-window checklist.
+tmux setup, bounded window-smoke rendering with `presented frame limit: 3`,
+`frames presented: 3`, and generated artifacts; it does not replace the manual
+app-window checklist.
 Set `GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS=<n>` to control bounded native-window
 proof retries. The manual tmux harnesses retry only transient `surface occluded`
 or `no surface frame was presented` failures and still fail immediately for
@@ -136,9 +137,12 @@ exact `target/debug/gromaq` binary marker used by the `cargo run` launch and
 fails if the old keyboard/mouse/paste startup copy remains in that binary, then
 records initial tmux window/pane state plus a bounded manager reference snapshot as
 `tmux-default-cargo-run-manager-reference.ppm` plus a PNG when `sips` is
-available. That reference must report current startup content, the tmux status
-strip, active pane command text, `terminal cells:`, and nonzero manager
-session/window/pane counts before the manual `cargo run` window opens. The harness then records git
+available. Window-smoke must report `presented frame limit: 3`,
+`frames presented: 3`, current startup content, the tmux status strip, active
+pane command text, and `terminal cells:` before the manual `cargo run` window
+opens. The manager reference must also report current startup content, the tmux
+status strip, active pane command text, `terminal cells:`, and nonzero manager
+session/window/pane counts. The harness then records git
 branch/dirty metadata plus confirmation files under
 `target/macos-native-tmux-default-cargo-run-proof`.
 After confirmations, it also reads tmux state directly and fails unless the
@@ -169,9 +173,10 @@ executable. It fails if that executable still contains the old
 keyboard/mouse/paste startup copy, so app-bundle and explicit-binary runs cannot
 silently validate stale startup text.
 It also runs the selected executable through `--window-smoke` after preparing
-the isolated tmux state, records `tmux-window-smoke.stdout`, and fails unless
-the status strip, active pane command, and manager panel render before the live
-interactive window opens. The same selected executable writes an inspectable
+the isolated tmux state, records `tmux-window-smoke.stdout`, and fails unless it
+reports `presented frame limit: 3`, `frames presented: 3`, terminal cells,
+status strip, active pane command, and manager panel before the live interactive
+window opens. The same selected executable writes an inspectable
 manager reference as `tmux-manager-reference.ppm` plus a PNG when `sips` is
 available, with stdout/stderr captured beside it; this reference must report
 the status strip, active pane command, manager panel, terminal cells, and

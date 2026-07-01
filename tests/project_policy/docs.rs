@@ -272,6 +272,8 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (compat, "tmux-state-visible.txt"),
         (compat, "tmux-native-control-plane.txt"),
+        (compat, "presented frame limit: 3"),
+        ("TESTING.md", "presented frame limit: 3"),
         (compat, "terminal cells:"),
         ("TESTING.md", "terminal cells:"),
         ("README.md", "terminal cells:"),
