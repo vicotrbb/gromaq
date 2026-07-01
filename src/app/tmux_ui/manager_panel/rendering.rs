@@ -19,7 +19,7 @@ pub fn apply_tmux_manager_panel(
         return None;
     }
     let lines = panel_lines(snapshot, panel);
-    let start_row = panel_start_row(grid, lines.len())?;
+    let start_row = panel_start_row(grid, lines.len());
     let available_rows = usize::from(grid.rows.saturating_sub(start_row));
     let rows = lines.len().min(available_rows);
     for (offset, line) in lines.into_iter().take(rows).enumerate() {
@@ -158,17 +158,15 @@ fn pane_label(pane: &TmuxPane, selected: bool) -> String {
 }
 
 fn selected_label(label: &str, selected: bool) -> String {
-    if selected {
-        format!("{label}*")
-    } else {
-        label.to_owned()
-    }
+    format!("{label}{}", if selected { "*" } else { "" })
 }
 
-fn panel_start_row(grid: &GridSnapshot, panel_rows: usize) -> Option<u16> {
-    let row = (0..grid.rows).find(|row| grid.line_text(*row).is_empty())?;
+fn panel_start_row(grid: &GridSnapshot, panel_rows: usize) -> u16 {
+    let row = (0..grid.rows)
+        .find(|row| grid.line_text(*row).is_empty())
+        .unwrap_or(0);
     let available_rows = usize::from(grid.rows.saturating_sub(row));
-    Some(if available_rows >= panel_rows { row } else { 0 })
+    if available_rows >= panel_rows { row } else { 0 }
 }
 
 fn write_panel_line(grid: &mut GridSnapshot, row: u16, line: &str) {

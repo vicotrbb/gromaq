@@ -55,6 +55,29 @@ fn native_terminal_app_default_startup_renders_tmux_manager_first_frame() {
 }
 
 #[test]
+fn native_terminal_app_default_startup_keeps_tmux_manager_visible_after_shell_prompt() {
+    let mut app = NativeTerminalApp::new_with_runtime_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig {
+            terminal_cols: 69,
+            terminal_rows: 17,
+            ..NativeTerminalRuntimeConfig::default()
+        },
+    )
+    .unwrap();
+    app.runtime
+        .write_startup_text("Now using node v20.20.0 (npm v10.8.2)\r\n~ ................................ rb 2.7.5 22:17:47\r\n> ")
+        .unwrap();
+    let mut renderer = TestFrameRenderer::default();
+
+    assert!(app.runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap().join("\n");
+    assert!(frame.contains("tmux manager"), "{frame}");
+    assert!(app.runtime.last_rendered_tmux_manager_panel());
+}
+
+#[test]
 fn native_terminal_app_new_uses_explicit_startup_text_over_default_welcome() {
     let app = NativeTerminalApp::new(NativeAppConfig {
         startup_text: Some("custom startup\r\n".to_owned()),
