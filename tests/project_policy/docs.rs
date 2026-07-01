@@ -295,6 +295,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         ("documentation/compatibility.md", "terminal cells:"),
         ("TESTING.md", "terminal cells:"),
+        ("README.md", "terminal cells:"),
         (
             "documentation/compatibility.md",
             "tmux-default-cargo-run-native-control-plane.txt",
