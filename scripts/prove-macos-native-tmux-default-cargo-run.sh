@@ -305,6 +305,7 @@ if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux default cargo run preflight: ok"
     printf '%s\n' "default cargo run preflight only requested; skipping live cargo run window"
+    printf '%s\n' "live app-window proof: not run"
     printf '%s\n' "tmux: ${tmux_version}"
     printf '%s\n' "git HEAD: ${head_sha}"
     printf '%s\n' "git branch: ${git_branch}"

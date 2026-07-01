@@ -336,6 +336,7 @@ if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux manual preflight: ok"
     printf '%s\n' "manual preflight only requested; skipping live app-window launch"
+    printf '%s\n' "live app-window proof: not run"
     printf '%s\n' "Launch mode: ${launch_mode}"
     printf '%s\n' "Open manager on start: ${open_manager_on_start}"
     printf '%s\n' "App: ${app_path:-none}"
