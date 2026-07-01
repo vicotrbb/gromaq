@@ -170,6 +170,8 @@ the tester must open it with Control/Super Shift `T`; set
   verify a real manager panel opens again.
 - In the configured manual proof, press Control/Super Shift `T` when the manager
   starts closed and verify a real manager panel opens.
+- Confirm the manager is not a tiny hint or palette; the configured manual
+  proof records this as `tmux-manager-not-hint.txt`.
 - Inspect sessions, windows, panes, current target, and current pane
   title/command/dimension text.
 - Navigate with arrows or `h`/`j`/`k`/`l`.

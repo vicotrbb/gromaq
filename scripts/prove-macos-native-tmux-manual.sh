@@ -146,6 +146,9 @@ printf '%s\n' "\${status_strip_visible}" > "${proof_root}/tmux-status-strip-visi
 printf '%s\n' "Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
 IFS= read -r manager_visible
 printf '%s\n' "\${manager_visible}" > "${proof_root}/tmux-manager-visible.txt"
+printf '%s\n' "Confirm the manager is a real panel, not a tiny hint or palette. Type exactly: not-hint"
+IFS= read -r manager_not_hint
+printf '%s\n' "\${manager_not_hint}" > "${proof_root}/tmux-manager-not-hint.txt"
 printf '%s\n' "Navigate with arrows or h/j/k/l and click at least one session/window/pane/action/workspace row. Type exactly: navigation-checked"
 IFS= read -r navigation_checked
 printf '%s\n' "\${navigation_checked}" > "${proof_root}/tmux-navigation-checked.txt"
@@ -242,6 +245,7 @@ else
 fi
 
 manager_visible="$(cat "${proof_root}/tmux-manager-visible.txt" 2>/dev/null || true)"
+manager_not_hint="$(cat "${proof_root}/tmux-manager-not-hint.txt" 2>/dev/null || true)"
 status_strip_visible="$(cat "${proof_root}/tmux-status-strip-visible.txt" 2>/dev/null || true)"
 navigation_checked="$(cat "${proof_root}/tmux-navigation-checked.txt" 2>/dev/null || true)"
 right_prompt_legible="$(cat "${proof_root}/tmux-right-prompt-legible.txt" 2>/dev/null || true)"
@@ -260,6 +264,10 @@ if [ "${status_strip_visible}" != "status-strip-visible" ]; then
 fi
 if [ "${manager_visible}" != "manager-visible" ]; then
   printf '%s\n' "error: expected manager-visible confirmation, got '${manager_visible}'." >&2
+  exit 1
+fi
+if [ "${manager_not_hint}" != "not-hint" ]; then
+  printf '%s\n' "error: expected not-hint confirmation, got '${manager_not_hint}'." >&2
   exit 1
 fi
 if [ "${navigation_checked}" != "navigation-checked" ]; then
@@ -356,6 +364,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "workspace-session: ${workspace_session}"
   printf '%s\n' "tmux-status-strip-visible.txt: ${status_strip_visible}"
   printf '%s\n' "tmux-manager-visible.txt: ${manager_visible}"
+  printf '%s\n' "tmux-manager-not-hint.txt: ${manager_not_hint}"
   printf '%s\n' "tmux-navigation-checked.txt: ${navigation_checked}"
   printf '%s\n' "tmux-right-prompt-legible.txt: ${right_prompt_legible}"
   printf '%s\n' "tmux-start-session.txt: ${start_session}"

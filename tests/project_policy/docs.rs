@@ -248,7 +248,12 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "fails if the selected executable still contains the old keyboard/mouse/paste startup copy",
         ),
+        (
+            "documentation/compatibility.md",
+            "tmux-manager-not-hint.txt",
+        ),
         ("TESTING.md", "tmux-binary-markers.txt"),
+        ("TESTING.md", "tmux-manager-not-hint.txt"),
         (
             "documentation/compatibility.md",
             "cancellation feedback checked: true",
