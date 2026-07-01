@@ -211,6 +211,8 @@ fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
             "native window proof attempt log:",
             "manual-checklist.txt",
             "manual checklist:",
+            "manual checklist missing current shortcut copy",
+            "manual checklist retained stale shortcut copy",
             "native-control-plane",
             "right-prompt-legible",
         ] {

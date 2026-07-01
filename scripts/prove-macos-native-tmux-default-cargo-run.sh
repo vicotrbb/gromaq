@@ -260,6 +260,15 @@ disposable kill target: ${kill_session}
 - Confirm the UI felt like native terminal control, not web UI. Type exactly: native-control-plane
 EOF
 
+if ! grep -F "Cmd/Ctrl+Shift+T" "${manual_checklist_path}" >/dev/null; then
+  printf '%s\n' "error: manual checklist missing current shortcut copy." >&2
+  exit 1
+fi
+if grep -F "Control/Super Shift" "${manual_checklist_path}" >/dev/null; then
+  printf '%s\n' "error: manual checklist retained stale shortcut copy." >&2
+  exit 1
+fi
+
 if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux default cargo run preflight: ok"

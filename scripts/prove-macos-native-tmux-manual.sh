@@ -287,6 +287,15 @@ expected started session: ${started_session}
 - Close the manager and verify normal shell input still reaches this prompt. Type exactly: normal-shell-input
 EOF
 
+if ! grep -F "Cmd/Ctrl+Shift+T" "${manual_checklist_path}" >/dev/null; then
+  printf '%s\n' "error: manual checklist missing current shortcut copy." >&2
+  exit 1
+fi
+if grep -F "Control/Super Shift" "${manual_checklist_path}" >/dev/null; then
+  printf '%s\n' "error: manual checklist retained stale shortcut copy." >&2
+  exit 1
+fi
+
 if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux manual preflight: ok"
