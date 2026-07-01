@@ -105,7 +105,9 @@ For macOS screenshot and app-identity proof, `--window-screenshot-smoke` is the
 default-startup tmux UI proof host. The helpers fail unless the bounded smoke
 reports `default startup content checked: true`, `tmux status strip rendered:
 true`, and `tmux manager panel rendered: true` before accepting the live-window
-proof path.
+proof path. The live screenshot capture also samples tmux ANSI-14 accent pixels
+from the PNG and rejects captures below `GROMAQ_SCREENSHOT_MIN_TMUX_PIXELS`,
+so a generic terminal background cannot satisfy the tmux UI proof by itself.
 
 For native tmux manager app-window proof, use an isolated tmux target and record
 the exact result. The required manual checklist is:
