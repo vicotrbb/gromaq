@@ -40,6 +40,8 @@ pub struct NativeAppConfig {
     pub screen_capture_allowed: bool,
     /// Whether native tmux status and manager affordances are enabled.
     pub tmux_ui_enabled: bool,
+    /// Whether the persistent tmux status strip is shown.
+    pub tmux_status_strip_enabled: bool,
     /// Whether to open the native tmux manager panel before the first frame.
     pub open_tmux_manager_on_start: bool,
     /// tmux workspace presets visible in the native manager panel.
@@ -62,6 +64,7 @@ impl Default for NativeAppConfig {
             welcome_screen: true,
             screen_capture_allowed: true,
             tmux_ui_enabled: true,
+            tmux_status_strip_enabled: true,
             open_tmux_manager_on_start: true,
             tmux_workspaces: Vec::new(),
         }
@@ -78,6 +81,7 @@ impl NativeAppConfig {
             target_fps: config.performance.target_fps,
             welcome_screen: config.welcome.enabled,
             tmux_ui_enabled: config.tmux.enabled,
+            tmux_status_strip_enabled: config.tmux.enabled && config.tmux.show_status_strip,
             open_tmux_manager_on_start: config.tmux.enabled && config.tmux.open_manager_on_start,
             tmux_workspaces: tmux_workspace_presets(config),
             ..Self::default()

@@ -12,6 +12,8 @@ use crate::error::{GromaqError, Result};
 pub struct TmuxSettings {
     /// Whether tmux-native affordances are enabled.
     pub enabled: bool,
+    /// Whether Gromaq renders the persistent tmux status strip.
+    pub show_status_strip: bool,
     /// Whether the native tmux manager opens when the app starts.
     pub open_manager_on_start: bool,
     /// Named tmux workspace presets.
@@ -23,6 +25,7 @@ impl Default for TmuxSettings {
     fn default() -> Self {
         Self {
             enabled: true,
+            show_status_strip: true,
             open_manager_on_start: true,
             workspaces: BTreeMap::new(),
         }

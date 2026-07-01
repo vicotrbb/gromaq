@@ -57,6 +57,30 @@ fn native_app_applies_reloadable_gromaq_render_config_without_restarting_runtime
 }
 
 #[test]
+fn native_app_reloads_tmux_status_strip_visibility_without_disabling_manager() {
+    let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
+        NativeAppConfig::default(),
+        NativeTerminalRuntimeConfig {
+            terminal_cols: 96,
+            terminal_rows: 9,
+            ..NativeTerminalRuntimeConfig::default()
+        },
+        RendererConfig::default(),
+    )
+    .unwrap();
+    let mut config = GromaqConfig::default();
+    config.tmux.enabled = true;
+    config.tmux.show_status_strip = false;
+    config.tmux.open_manager_on_start = true;
+
+    app.apply_reloadable_gromaq_config(&config).unwrap();
+
+    assert!(app.lifecycle().config().tmux_ui_enabled);
+    assert!(app.lifecycle().config().open_tmux_manager_on_start);
+    assert!(!app.lifecycle().config().tmux_status_strip_enabled);
+}
+
+#[test]
 fn native_app_applies_reloadable_font_file_path_without_restarting_runtime() {
     let mut app = NativeTerminalApp::new_with_runtime_and_renderer_config(
         NativeAppConfig::default(),

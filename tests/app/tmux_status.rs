@@ -1,5 +1,9 @@
 use gromaq::app::TmuxUiSnapshot;
 use gromaq::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig, TmuxStatusKind};
+use gromaq::tmux::{
+    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
+    TmuxWindow,
+};
 
 use crate::support::{MockFrameRenderer, MockPtySession};
 
@@ -78,6 +82,35 @@ fn retained_tmux_status_strip_renders_when_viewport_has_no_blank_row() {
     );
 }
 
+#[test]
+fn hidden_tmux_status_strip_still_allows_retained_manager_panel() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 96,
+        terminal_rows: 9,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.set_tmux_status_strip_enabled(false);
+    runtime.set_tmux_status_snapshot(attached_snapshot());
+    let snapshot = manager_snapshot();
+    runtime.toggle_tmux_manager_panel(snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(!runtime.last_rendered_tmux_status_strip());
+    assert!(runtime.last_rendered_tmux_manager_panel());
+    assert!(frame.lines.iter().any(|line| line.contains("tmux manager")));
+    assert!(
+        !frame
+            .lines
+            .iter()
+            .any(|line| line.contains("tmux: attached"))
+    );
+}
+
 fn attached_snapshot() -> TmuxUiSnapshot {
     TmuxUiSnapshot {
         status: TmuxStatusKind::Attached,
@@ -89,5 +122,39 @@ fn attached_snapshot() -> TmuxUiSnapshot {
         active_pane_command: Some("nvim".to_owned()),
         pending_feedback: None,
         confirmation_feedback: None,
+    }
+}
+
+fn manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "alpha".to_owned(),
+                attached: true,
+            }],
+            windows: vec![TmuxWindow {
+                session_name: "alpha".to_owned(),
+                index: 1,
+                name: "code".to_owned(),
+                active: true,
+            }],
+            panes: vec![TmuxPane {
+                session_name: "alpha".to_owned(),
+                window_index: 1,
+                index: 0,
+                id: "%2".to_owned(),
+                title: "editor".to_owned(),
+                current_command: "nvim".to_owned(),
+                active: true,
+                width: Some(100),
+                height: Some(30),
+            }],
+        },
+        current: Some(TmuxManagerCurrent {
+            session_name: "alpha".to_owned(),
+            window_index: 1,
+            pane_id: "%2".to_owned(),
+        }),
     }
 }

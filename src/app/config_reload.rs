@@ -99,8 +99,11 @@ impl NativeTerminalApp {
         }
         if app_config.tmux_ui_enabled {
             self.runtime
+                .set_tmux_status_strip_enabled(app_config.tmux_status_strip_enabled);
+            self.runtime
                 .set_tmux_status_snapshot(super::tmux_status::read_tmux_status_snapshot());
         } else {
+            self.runtime.set_tmux_status_strip_enabled(false);
             self.runtime.clear_tmux_status_snapshot();
         }
         self.resize_mapper = resize_mapper;

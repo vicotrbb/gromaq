@@ -14,6 +14,12 @@ impl<S> NativeTerminalRuntime<S> {
         self.terminal.invalidate_viewport();
     }
 
+    /// Configure whether retained tmux status is rendered as a persistent strip.
+    pub fn set_tmux_status_strip_enabled(&mut self, enabled: bool) {
+        self.tmux_status_strip_enabled = enabled;
+        self.terminal.invalidate_viewport();
+    }
+
     /// Clear the retained tmux status snapshot from the normal native render path.
     pub fn clear_tmux_status_snapshot(&mut self) {
         self.tmux_status_snapshot = None;

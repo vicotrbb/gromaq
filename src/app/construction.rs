@@ -96,6 +96,7 @@ impl NativeTerminalApp {
             runtime.write_startup_text(&startup_text)?;
         }
         if config.tmux_ui_enabled {
+            runtime.set_tmux_status_strip_enabled(config.tmux_status_strip_enabled);
             runtime.set_tmux_status_snapshot(super::tmux_status::read_tmux_status_snapshot());
             if config.open_tmux_manager_on_start {
                 runtime.toggle_tmux_manager_panel_with_workspaces(

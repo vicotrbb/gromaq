@@ -196,8 +196,7 @@ gromaq --theme-export gromaq-ghostty target/gromaq-theme.toml
 gromaq --theme-preview-config gromaq.toml target/gromaq-theme-preview.ppm
 ```
 
-More theme, font, opacity, and welcome-screen details are in
-[`documentation/theme.md`](documentation/theme.md).
+More theme, font, opacity, and welcome-screen details are in [`documentation/theme.md`](documentation/theme.md).
 
 tmux assist and workspace-preset foundations are available through native Rust
 commands and config validation. Useful tmux commands:
@@ -213,10 +212,10 @@ gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
 ```
 
 Inside the native window, the tmux manager opens on startup when tmux UI is
-enabled and `open_manager_on_start` is true. Control/Super Shift `T` toggles it
-after launch. Use arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or
-starts name entry; `r` refreshes the tmux snapshot without shell input;
-destructive actions require `y`; Esc closes or cancels prompts.
+enabled and `open_manager_on_start` is true; `show_status_strip = false` hides
+only the strip. Control/Super Shift `T` toggles the manager. Use arrows or
+`h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry; `r` refreshes the tmux snapshot without shell input; destructive actions require `y`; Esc
+closes or cancels prompts.
 
 ## Documentation
 

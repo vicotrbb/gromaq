@@ -50,6 +50,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
 
         [tmux]
         enabled = true
+        show_status_strip = false
         open_manager_on_start = false
         "##,
     )
@@ -67,6 +68,7 @@ fn config_check_cli_validates_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("shell cwd: /tmp"));
     assert!(exit.stdout.contains("welcome enabled: false"));
     assert!(exit.stdout.contains("tmux enabled: true"));
+    assert!(exit.stdout.contains("tmux status strip shown: false"));
     assert!(exit.stdout.contains("tmux open manager on start: false"));
     assert!(exit.stdout.contains("font: Gromaq Mono 16.5px"));
     assert!(

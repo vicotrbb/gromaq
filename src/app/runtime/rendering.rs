@@ -125,7 +125,8 @@ impl<S> NativeTerminalRuntime<S> {
         self.last_rendered_tmux_status_strip = false;
         self.last_rendered_tmux_manager_panel = false;
         let tmux_snapshot = tmux_snapshot.or(self.tmux_status_snapshot.as_ref());
-        if let Some(tmux_snapshot) = tmux_snapshot
+        if self.tmux_status_strip_enabled
+            && let Some(tmux_snapshot) = tmux_snapshot
             && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
         {
             dirty_regions.push(region);
