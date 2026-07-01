@@ -17,11 +17,13 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
         Some(ActionId::KillWindow)
     } else if character.eq_ignore_ascii_case("x") {
         Some(ActionId::KillPane)
+    } else if character.eq_ignore_ascii_case("z") {
+        Some(ActionId::ZoomPane)
     } else {
         None
     }
 }
 
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts c new-window s split-right v split-down w kill-window x kill-pane"
+    "shortcuts c new-window s split-right v split-down z zoom-pane w kill-window x kill-pane"
 }
