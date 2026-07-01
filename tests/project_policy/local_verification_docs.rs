@@ -8,6 +8,7 @@ const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "shell syntax checks",
     "Avatar asset freshness",
     "README screenshot freshness",
+    "default-startup tmux UI proof host",
     "current-host compatibility",
 ];
 

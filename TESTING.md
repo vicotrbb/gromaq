@@ -101,6 +101,12 @@ Compatibility rows marked as live or not proven require separate evidence from
 a real windowed runtime, hardware-backed frame pacing, native clipboard paste,
 or interactive workflows in tools such as `tmux`, editors, and pagers.
 
+For macOS screenshot and app-identity proof, `--window-screenshot-smoke` is the
+default-startup tmux UI proof host. The helpers fail unless the bounded smoke
+reports `default startup content checked: true`, `tmux status strip rendered:
+true`, and `tmux manager panel rendered: true` before accepting the live-window
+proof path.
+
 For native tmux manager app-window proof, use an isolated tmux target and record
 the exact result. The required manual checklist is:
 
