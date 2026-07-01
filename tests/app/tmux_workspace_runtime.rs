@@ -5,10 +5,11 @@ use gromaq::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig, TmuxManage
 use gromaq::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use gromaq::tmux::{
     TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot,
-    TmuxManagerStatus, TmuxState, TmuxWorkspaceResult,
+    TmuxManagerStatus, TmuxSession, TmuxState, TmuxWorkspaceResult,
 };
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::support::{MockPtySession, MockPtySpawner};
+use crate::support::{MockFrameRenderer, MockPtySession, MockPtySpawner};
 
 #[derive(Debug)]
 struct FakeRunner {
@@ -193,6 +194,56 @@ fn runtime_workspace_launch_attaches_existing_workspace_through_pty_without_runn
         input.last().map(Vec::as_slice),
         Some(b"tmux attach-session -t gromaq\r".as_slice())
     );
+}
+
+#[test]
+fn runtime_workspace_launch_feedback_reaches_status_strip() {
+    let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState::default(),
+        current: None,
+    };
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 120,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.toggle_tmux_manager_panel_with_workspaces(snapshot, vec![workspace_preset()]);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "has-session",
+        "-t",
+        "gromaq",
+    ])]);
+
+    let result = runtime
+        .dispatch_tmux_manager_workspace(TmuxManagerKeyOutcome::WorkspaceLaunchRequested, &runner);
+
+    assert!(matches!(
+        result,
+        Some(Ok(TmuxWorkspaceResult::Existing { .. }))
+    ));
+    runtime.refresh_tmux_manager_panel(TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "gromaq".to_owned(),
+                attached: false,
+            }],
+            windows: Vec::new(),
+            panes: Vec::new(),
+        },
+        current: None,
+    });
+    runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Escape), ModifiersState::empty());
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[7].contains("tmux: detached"));
+    assert!(frame.lines[7].contains("workspace gromaq found session gromaq"));
 }
 
 fn workspace_preset() -> TmuxWorkspaceUiPreset {

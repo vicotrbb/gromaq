@@ -70,11 +70,14 @@ impl<S> NativeTerminalRuntime<S> {
                 if !panel.is_open() {
                     return None;
                 }
-                let action_feedback = panel.last_action_feedback().map(str::to_owned);
+                let last_feedback = panel
+                    .last_action_feedback()
+                    .or_else(|| panel.workspace_feedback())
+                    .map(str::to_owned);
                 Some((
                     panel.workspace_presets().to_vec(),
-                    action_feedback.clone(),
-                    action_feedback.or_else(|| panel.pending_action().map(str::to_owned)),
+                    last_feedback.clone(),
+                    last_feedback.or_else(|| panel.pending_action().map(str::to_owned)),
                     panel.confirmation_message().map(str::to_owned),
                 ))
             })
@@ -133,6 +136,7 @@ impl<S> NativeTerminalRuntime<S> {
         };
         status.pending_feedback = panel
             .last_action_feedback()
+            .or_else(|| panel.workspace_feedback())
             .or_else(|| panel.pending_action())
             .map(str::to_owned);
         status.confirmation_feedback = panel.confirmation_message().map(str::to_owned);
