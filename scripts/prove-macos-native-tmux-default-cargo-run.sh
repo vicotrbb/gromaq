@@ -74,6 +74,10 @@ if strings "${binary_path}" | grep -F "${old_startup_marker}" >> "${binary_marke
   exit 1
 fi
 
+tmux new-session -d -s "${session}" -n code
+tmux split-window -t "${session}:0" -h
+tmux new-session -d -s "${kill_session}" -n disposable
+
 (
   cd "${root}"
   cargo run -- --window-smoke > "${window_smoke_stdout_path}" 2> "${window_smoke_stderr_path}"
@@ -89,8 +93,8 @@ if ! grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}" >/
   exit 1
 fi
 
-if ! grep -F "tmux status pane command rendered:" "${window_smoke_stdout_path}" >/dev/null; then
-  printf '%s\n' "error: default window smoke did not report tmux status pane command coverage." >&2
+if ! grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not render the tmux active pane command." >&2
   exit 1
 fi
 
@@ -113,10 +117,6 @@ if ! grep -F "workspace duplicate prevented: true" "${runtime_tmux_ui_smoke_stdo
   printf '%s\n' "error: runtime tmux UI smoke did not prove workspace duplicate prevention." >&2
   exit 1
 fi
-
-tmux new-session -d -s "${session}" -n code
-tmux split-window -t "${session}:0" -h
-tmux new-session -d -s "${kill_session}" -n disposable
 
 (
   cd "${root}"
