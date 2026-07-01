@@ -32,6 +32,8 @@ mod tmux_actions;
 mod tmux_status;
 #[path = "app/tmux_ui.rs"]
 mod tmux_ui;
+#[path = "app/tmux_ui_navigation.rs"]
+mod tmux_ui_navigation;
 #[path = "app/tmux_workspace_runtime.rs"]
 mod tmux_workspace_runtime;
 #[path = "app/tmux_workspaces.rs"]

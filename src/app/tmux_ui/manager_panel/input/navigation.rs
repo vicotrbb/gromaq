@@ -83,17 +83,15 @@ impl TmuxManagerPanelState {
 }
 
 fn next_index(current: usize, len: usize) -> usize {
-    if len == 0 {
-        0
-    } else {
-        (current + 1).min(len - 1)
-    }
+    if len == 0 { 0 } else { (current + 1) % len }
 }
 
 fn previous_index(current: usize, len: usize) -> usize {
     if len == 0 {
         0
+    } else if current == 0 {
+        len - 1
     } else {
-        current.saturating_sub(1)
+        current - 1
     }
 }
