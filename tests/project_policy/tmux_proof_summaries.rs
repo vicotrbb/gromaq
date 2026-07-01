@@ -22,3 +22,23 @@ fn configured_manual_tmux_proof_summary_surfaces_manager_reference_render_proof(
         }
     }
 }
+
+#[test]
+fn configured_manual_tmux_proof_summary_surfaces_runtime_action_proof() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-macos-native-tmux-manual.sh")).unwrap();
+    let summary_marker = "tmux-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}";
+    assert_eq!(proof_script.match_indices(summary_marker).count(), 2);
+    for (offset, _) in proof_script.match_indices(summary_marker) {
+        let summary = &proof_script[offset..];
+        for marker in [
+            "grep -F \"confirmation path checked: true\" \"${runtime_tmux_ui_smoke_stdout_path}\"",
+            "grep -F \"safe action dispatched: true\" \"${runtime_tmux_ui_smoke_stdout_path}\"",
+            "grep -F \"workspace duplicate prevented: true\" \"${runtime_tmux_ui_smoke_stdout_path}\"",
+            "grep -F \"cleanup killed session: true\" \"${runtime_tmux_ui_smoke_stdout_path}\"",
+        ] {
+            assert!(summary.contains(marker), "{marker}");
+        }
+    }
+}
