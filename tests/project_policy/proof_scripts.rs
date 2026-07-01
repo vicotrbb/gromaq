@@ -179,6 +179,26 @@ fn macos_app_identity_proof_requires_default_tmux_ui_screenshot_smoke() {
 }
 
 #[test]
+fn macos_window_screenshot_proof_requires_tmux_accent_pixels() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/capture-macos-window-proof.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "GROMAQ_SCREENSHOT_MIN_TMUX_PIXELS",
+        "minimumTmuxAccent",
+        "tmuxAccentMatches",
+        "tmux accent sampled pixels:",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must validate tmux-specific accent pixels in the captured PNG, not only smoke-log markers",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
 fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("scripts/prove-ci-compatibility-artifacts.sh");
