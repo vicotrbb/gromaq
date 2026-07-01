@@ -88,6 +88,7 @@ impl NativeAppLauncher for MockAppLauncher {
             window_scale_milliscale: Some(2000),
             glyph_frame_presented: true,
             tmux_status_strip_rendered: config.app.tmux_ui_enabled,
+            tmux_status_pane_command_rendered: config.app.tmux_ui_enabled,
             tmux_manager_panel_rendered: config.app.open_tmux_manager_on_start,
             tmux_manager_sessions: usize::from(config.app.open_tmux_manager_on_start),
             tmux_manager_windows: usize::from(config.app.open_tmux_manager_on_start),
@@ -101,11 +102,7 @@ impl NativeAppLauncher for MockAppLauncher {
             glyph_frame_atlas_bytes: 4096,
             glyph_frame_atlas_occupied_slots: 8,
             glyph_frame_snapshot_written: snapshot_written,
-            glyph_frame_snapshot_bytes: if snapshot_written {
-                snapshot_bytes.len()
-            } else {
-                0
-            },
+            glyph_frame_snapshot_bytes: usize::from(snapshot_written) * snapshot_bytes.len(),
             glyph_frame_snapshot_width: if snapshot_written { 1 } else { 0 },
             glyph_frame_snapshot_height: if snapshot_written { 1 } else { 0 },
             frame_interval_target_fps: 60,

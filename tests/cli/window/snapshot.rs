@@ -91,6 +91,10 @@ fn window_tmux_manager_snapshot_smoke_writes_artifact() {
     );
     assert!(exit.stdout.contains("glyph frame presented: true"));
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
+    assert!(
+        exit.stdout
+            .contains("tmux status pane command rendered: true")
+    );
     assert!(exit.stdout.contains("tmux manager panel rendered: true"));
     assert!(exit.stdout.contains("tmux manager sessions: 1"));
     assert!(exit.stdout.contains("tmux manager windows: 1"));

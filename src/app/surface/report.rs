@@ -7,6 +7,8 @@ pub struct NativeGlyphFramePresentation {
     pub glyph_frame_presented: bool,
     /// Whether the rendered frame included the retained native tmux status strip.
     pub tmux_status_strip_rendered: bool,
+    /// Whether the rendered tmux status strip included the active pane command.
+    pub tmux_status_pane_command_rendered: bool,
     /// Whether the rendered frame included the native tmux manager panel.
     pub tmux_manager_panel_rendered: bool,
     /// Session count in the rendered native tmux manager snapshot.

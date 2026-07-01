@@ -37,6 +37,7 @@ fi
 for marker in \
   "default startup content checked: true" \
   "tmux status strip rendered: true" \
+  "tmux status pane command rendered: true" \
   "tmux manager panel rendered: true" \
   "tmux manager sessions:" \
   "tmux manager windows:" \
@@ -102,6 +103,7 @@ fi
   fi
   grep -F "default startup content checked: true" "${log_path}"
   grep -F "tmux status strip rendered: true" "${log_path}"
+  grep -F "tmux status pane command rendered: true" "${log_path}"
   grep -F "tmux manager panel rendered: true" "${log_path}"
   grep -F "tmux manager sessions:" "${log_path}"
   grep -F "tmux manager windows:" "${log_path}"

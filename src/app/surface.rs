@@ -11,9 +11,11 @@ use super::snapshot::prepared_frame_ppm_bytes;
 use super::{NativeGlyphFrameError, NativeTerminalRuntime};
 
 mod report;
+mod tmux_report;
 mod window;
 
 pub use report::NativeGlyphFramePresentation;
+use tmux_report::plan_contains_tmux_status_pane_command;
 pub use window::NativeWindowSurface;
 
 /// Render dirty terminal state into a prepared glyph frame and present it through a native surface.
@@ -105,6 +107,7 @@ where
         report.tmux_manager_panes = tmux_manager_panes;
         return Ok(report);
     };
+    let tmux_status_pane_command_rendered = plan_contains_tmux_status_pane_command(runtime, plan);
     let glyphs = glyph_cache.rasterize_plan(plan)?;
     let prepared = PreparedSurfaceGlyphFrame::from_render_plan(
         plan,
@@ -131,6 +134,7 @@ where
         rendered: true,
         glyph_frame_presented: false,
         tmux_status_strip_rendered,
+        tmux_status_pane_command_rendered,
         tmux_manager_panel_rendered,
         tmux_manager_sessions,
         tmux_manager_windows,

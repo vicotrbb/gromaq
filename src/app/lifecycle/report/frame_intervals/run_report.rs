@@ -25,6 +25,7 @@ impl PresentedFrameIntervals {
             window_scale_milliscale: input.window_scale_milliscale,
             glyph_frame_presented: input.glyph_frame_presented,
             tmux_status_strip_rendered: input.tmux_status_strip_rendered,
+            tmux_status_pane_command_rendered: input.tmux_status_pane_command_rendered,
             tmux_manager_panel_rendered: input.tmux_manager_panel_rendered,
             tmux_manager_sessions: input.tmux_manager_sessions,
             tmux_manager_windows: input.tmux_manager_windows,

@@ -52,7 +52,9 @@ where
             } else {
                 if report.frames_presented == 0 {
                     window_smoke_no_surface_failure(&report)
-                } else if !report.tmux_status_strip_rendered || !report.tmux_manager_panel_rendered
+                } else if !report.tmux_status_strip_rendered
+                    || !report.tmux_manager_panel_rendered
+                    || !report.tmux_status_pane_command_rendered
                 {
                     window_smoke_no_default_tmux_ui_failure(&report)
                 } else {
@@ -117,6 +119,7 @@ where
         Ok(report)
             if report.glyph_frame_snapshot_written
                 && report.tmux_status_strip_rendered
+                && report.tmux_status_pane_command_rendered
                 && report.tmux_manager_panel_rendered =>
         {
             window_tmux_manager_snapshot_success(path, &report)

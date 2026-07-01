@@ -33,6 +33,17 @@ impl<S> NativeTerminalRuntime<S> {
         self.last_rendered_tmux_status_strip
     }
 
+    /// Return the active pane command expected in the last rendered tmux status strip.
+    pub fn last_rendered_tmux_status_pane_command(&self) -> Option<&str> {
+        if !self.last_rendered_tmux_status_strip {
+            return None;
+        }
+        self.tmux_status_snapshot
+            .as_ref()
+            .and_then(|snapshot| snapshot.active_pane_command.as_deref())
+            .filter(|command| !command.is_empty())
+    }
+
     /// Return whether the last rendered frame applied the native tmux manager panel.
     pub fn last_rendered_tmux_manager_panel(&self) -> bool {
         self.last_rendered_tmux_manager_panel

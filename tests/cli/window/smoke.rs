@@ -20,7 +20,7 @@ fn window_smoke_launches_bounded_native_terminal_app() {
         exit,
         CliExit {
             code: 0,
-            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\nsurface timeouts: 0\nsurface occluded: 0\ntmux status strip rendered: true\ntmux manager panel rendered: true\n".to_owned(),
+            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\nsurface timeouts: 0\nsurface occluded: 0\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
             stderr: String::new(),
         }
     );
@@ -69,7 +69,7 @@ fn window_smoke_fails_when_default_tmux_ui_is_not_rendered() {
     assert!(exit.stdout.is_empty());
     assert!(
         exit.stderr.contains(
-            "window smoke failed: default tmux UI was not rendered; tmux status strip rendered: false; tmux manager panel rendered: false"
+            "window smoke failed: default tmux UI was not rendered; tmux status strip rendered: false; tmux status pane command rendered: false; tmux manager panel rendered: false"
         )
     );
     assert!(backend.requests.borrow().is_empty());

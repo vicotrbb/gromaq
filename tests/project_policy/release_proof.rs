@@ -240,6 +240,7 @@ fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
         "snapshot-session:",
         "default startup content checked: true",
         "tmux status strip rendered: true",
+        "tmux status pane command rendered: true",
         "tmux manager panel rendered: true",
         "tmux manager sessions:",
         "tmux manager windows:",
