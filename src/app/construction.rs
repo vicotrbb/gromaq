@@ -97,6 +97,12 @@ impl NativeTerminalApp {
         }
         if config.tmux_ui_enabled {
             runtime.set_tmux_status_snapshot(super::tmux_status::read_tmux_status_snapshot());
+            if config.open_tmux_manager_on_start {
+                runtime.toggle_tmux_manager_panel_with_workspaces(
+                    super::tmux_status::read_tmux_manager_snapshot(),
+                    config.tmux_workspaces.clone(),
+                );
+            }
         }
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),

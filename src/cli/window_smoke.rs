@@ -6,11 +6,14 @@ use super::{CliExit, NativeAppLauncher};
 mod launch_config;
 mod output;
 
-use launch_config::{window_glyph_frame_snapshot_launch_config, window_smoke_launch_config};
+use launch_config::{
+    window_glyph_frame_snapshot_launch_config, window_smoke_launch_config,
+    window_tmux_manager_snapshot_launch_config,
+};
 use output::{
     window_glyph_frame_snapshot_failure, window_glyph_frame_snapshot_success,
     window_perf_no_glyph_failure, window_perf_success, window_screenshot_smoke_success,
-    window_smoke_no_surface_failure, window_smoke_success,
+    window_smoke_no_surface_failure, window_smoke_success, window_tmux_manager_snapshot_success,
 };
 
 pub(super) fn window_smoke_exit<A>(command: CliCommand<'_>, app_launcher: Option<&A>) -> CliExit
@@ -80,6 +83,39 @@ where
     match app_launcher.launch(launch_config) {
         Ok(report) if report.glyph_frame_snapshot_written => {
             window_glyph_frame_snapshot_success(path, &report)
+        }
+        Ok(report) => window_glyph_frame_snapshot_failure(&report),
+        Err(error) => CliExit {
+            code: 1,
+            stdout: String::new(),
+            stderr: format!("{error}\n"),
+        },
+    }
+}
+
+pub(super) fn window_tmux_manager_snapshot_exit<A>(path: &str, app_launcher: Option<&A>) -> CliExit
+where
+    A: NativeAppLauncher,
+{
+    let Some(app_launcher) = app_launcher else {
+        return CliExit {
+            code: 2,
+            stdout: String::new(),
+            stderr: format!(
+                "{}native app launch unavailable for --window-tmux-manager-snapshot\n",
+                usage()
+            ),
+        };
+    };
+
+    let launch_config = window_tmux_manager_snapshot_launch_config(path);
+    match app_launcher.launch(launch_config) {
+        Ok(report)
+            if report.glyph_frame_snapshot_written
+                && report.tmux_status_strip_rendered
+                && report.tmux_manager_panel_rendered =>
+        {
+            window_tmux_manager_snapshot_success(path, &report)
         }
         Ok(report) => window_glyph_frame_snapshot_failure(&report),
         Err(error) => CliExit {

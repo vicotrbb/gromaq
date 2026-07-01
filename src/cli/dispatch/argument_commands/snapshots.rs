@@ -6,7 +6,9 @@ use crate::cli::gpu::{
 };
 use crate::cli::runtime_glyph_frame_smoke::runtime_glyph_frame_snapshot_exit;
 use crate::cli::theme_smoke::{theme_preview_snapshot_exit, welcome_preview_snapshot_exit};
-use crate::cli::window_smoke::window_glyph_frame_snapshot_exit;
+use crate::cli::window_smoke::{
+    window_glyph_frame_snapshot_exit, window_tmux_manager_snapshot_exit,
+};
 use crate::cli::{CliExit, NativeAppLauncher};
 use crate::native_gpu::GpuBootstrapBackend;
 
@@ -106,4 +108,23 @@ where
         return exit;
     }
     window_glyph_frame_snapshot_exit(path.as_ref(), app_launcher)
+}
+
+pub(super) fn window_tmux_manager_snapshot_command<I, S, A>(
+    args: &mut I,
+    app_launcher: Option<&A>,
+) -> CliExit
+where
+    I: Iterator<Item = S>,
+    S: AsRef<str>,
+    A: NativeAppLauncher,
+{
+    let path = match required_snapshot_path_arg(args, "--window-tmux-manager-snapshot") {
+        Ok(path) => path,
+        Err(exit) => return exit,
+    };
+    if let Err(exit) = reject_extra_args(args) {
+        return exit;
+    }
+    window_tmux_manager_snapshot_exit(path.as_ref(), app_launcher)
 }

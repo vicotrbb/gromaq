@@ -14,6 +14,7 @@ use snapshots::{
     gpu_terminal_text_snapshot_command, gpu_welcome_image_snapshot_command,
     runtime_glyph_frame_snapshot_command, theme_preview_snapshot_command,
     welcome_preview_snapshot_command, window_glyph_frame_snapshot_command,
+    window_tmux_manager_snapshot_command,
 };
 
 pub(super) fn run_argument_command<I, S, B, A>(
@@ -46,6 +47,9 @@ where
         CliCommand::TmuxAction => Some(tmux_action_command(args)),
         CliCommand::WindowGlyphFrameSnapshot => {
             Some(window_glyph_frame_snapshot_command(args, app_launcher))
+        }
+        CliCommand::WindowTmuxManagerSnapshot => {
+            Some(window_tmux_manager_snapshot_command(args, app_launcher))
         }
         CliCommand::WindowSmoke
         | CliCommand::WindowPerfSmoke

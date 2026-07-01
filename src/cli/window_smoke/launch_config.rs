@@ -62,18 +62,38 @@ pub(super) fn window_smoke_launch_config(command: CliCommand<'_>) -> (NativeAppL
 
 pub(super) fn window_glyph_frame_snapshot_launch_config(path: &str) -> NativeAppLaunchConfig {
     let mut launch_config = NativeAppLaunchConfig::default();
-    launch_config.app.exit_after_presented_frames = Some(60);
-    launch_config.app.exit_after_redraw_attempts = Some(60);
-    launch_config.app.redraw_until_presented_frame_limit = true;
-    launch_config.app.glyph_frame_snapshot_path = Some(PathBuf::from(path));
+    configure_snapshot_launch(&mut launch_config, path);
     launch_config.app.startup_text = Some("gromaq window glyph frame snapshot\n".to_owned());
     launch_config.runtime.shell = ShellCommand {
         program: "/bin/sh".into(),
         args: vec![
             "-lc".into(),
-            "printf 'gromaq window glyph frame snapshot\\n'".into(),
+            "printf 'gromaq window glyph frame snapshot\\n'; sleep 1".into(),
         ],
         cwd: None,
     };
     launch_config
+}
+
+pub(super) fn window_tmux_manager_snapshot_launch_config(path: &str) -> NativeAppLaunchConfig {
+    let mut launch_config = NativeAppLaunchConfig::default();
+    configure_snapshot_launch(&mut launch_config, path);
+    launch_config.app.open_tmux_manager_on_start = true;
+    launch_config.app.startup_text = Some("gromaq window tmux manager snapshot\n".to_owned());
+    launch_config.runtime.shell = ShellCommand {
+        program: "/bin/sh".into(),
+        args: vec![
+            "-lc".into(),
+            "printf 'gromaq window tmux manager snapshot\\n'; sleep 1".into(),
+        ],
+        cwd: None,
+    };
+    launch_config
+}
+
+fn configure_snapshot_launch(launch_config: &mut NativeAppLaunchConfig, path: &str) {
+    launch_config.app.exit_after_presented_frames = Some(60);
+    launch_config.app.exit_after_redraw_attempts = Some(60);
+    launch_config.app.redraw_until_presented_frame_limit = true;
+    launch_config.app.glyph_frame_snapshot_path = Some(PathBuf::from(path));
 }

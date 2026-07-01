@@ -92,10 +92,12 @@ where
         return clear_and_present_report(surface, clear_color);
     }
     let tmux_status_strip_rendered = runtime.last_rendered_tmux_status_strip();
+    let tmux_manager_panel_rendered = runtime.last_rendered_tmux_manager_panel();
     let Some(plan) = renderer.last_plan() else {
         let mut report = clear_and_present_report(surface, clear_color)?;
         report.rendered = true;
         report.tmux_status_strip_rendered = tmux_status_strip_rendered;
+        report.tmux_manager_panel_rendered = tmux_manager_panel_rendered;
         return Ok(report);
     };
     let glyphs = glyph_cache.rasterize_plan(plan)?;
@@ -124,6 +126,7 @@ where
         rendered: true,
         glyph_frame_presented: false,
         tmux_status_strip_rendered,
+        tmux_manager_panel_rendered,
         clear_presented: false,
         width: frame.width,
         height: frame.height,

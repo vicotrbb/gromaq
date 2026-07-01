@@ -55,7 +55,7 @@ impl<S> NativeTerminalRuntime<S> {
     where
         R: GpuRenderer,
     {
-        self.render_terminal_frame_with_visuals(renderer, status_overlay, None)
+        self.render_terminal_frame_with_visual_surfaces(renderer, status_overlay, None, None)
     }
 
     /// Render the current terminal frame with a persistent tmux status strip.
@@ -67,7 +67,7 @@ impl<S> NativeTerminalRuntime<S> {
     where
         R: GpuRenderer,
     {
-        self.render_terminal_frame_with_visuals(renderer, None, Some(tmux_snapshot))
+        self.render_terminal_frame_with_visual_surfaces(renderer, None, Some(tmux_snapshot), None)
     }
 
     /// Render the current terminal frame with a native tmux manager panel.
@@ -85,23 +85,6 @@ impl<S> NativeTerminalRuntime<S> {
             None,
             None,
             Some((tmux_snapshot, panel)),
-        )
-    }
-
-    fn render_terminal_frame_with_visuals<R>(
-        &mut self,
-        renderer: &mut R,
-        status_overlay: Option<&str>,
-        tmux_snapshot: Option<&TmuxUiSnapshot>,
-    ) -> GromaqResult<bool>
-    where
-        R: GpuRenderer,
-    {
-        self.render_terminal_frame_with_visual_surfaces(
-            renderer,
-            status_overlay,
-            tmux_snapshot,
-            None,
         )
     }
 
@@ -140,6 +123,7 @@ impl<S> NativeTerminalRuntime<S> {
             dirty_regions.push(region);
         }
         self.last_rendered_tmux_status_strip = false;
+        self.last_rendered_tmux_manager_panel = false;
         let tmux_snapshot = tmux_snapshot.or(self.tmux_status_snapshot.as_ref());
         if let Some(tmux_snapshot) = tmux_snapshot
             && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
@@ -154,6 +138,7 @@ impl<S> NativeTerminalRuntime<S> {
         }) && let Some(region) = apply_tmux_manager_panel(&mut grid, tmux_snapshot, panel)
         {
             dirty_regions.push(region);
+            self.last_rendered_tmux_manager_panel = true;
         }
         if let Err(error) = renderer.render_frame(&grid, cursor, &dirty_regions) {
             self.terminal.invalidate_viewport();

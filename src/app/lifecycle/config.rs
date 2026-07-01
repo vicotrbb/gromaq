@@ -40,6 +40,8 @@ pub struct NativeAppConfig {
     pub screen_capture_allowed: bool,
     /// Whether native tmux status and manager affordances are enabled.
     pub tmux_ui_enabled: bool,
+    /// Whether to open the native tmux manager panel before the first frame.
+    pub open_tmux_manager_on_start: bool,
     /// tmux workspace presets visible in the native manager panel.
     pub tmux_workspaces: Vec<TmuxWorkspaceUiPreset>,
 }
@@ -60,6 +62,7 @@ impl Default for NativeAppConfig {
             welcome_screen: true,
             screen_capture_allowed: true,
             tmux_ui_enabled: true,
+            open_tmux_manager_on_start: false,
             tmux_workspaces: Vec::new(),
         }
     }

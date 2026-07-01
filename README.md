@@ -208,6 +208,7 @@ gromaq --tmux-action split-pane-right
 gromaq --tmux-action kill-session my-session --confirm
 gromaq --runtime-tmux-smoke
 gromaq --runtime-tmux-ui-smoke
+gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
 ```
 
 Inside the native window, Control/Super Shift `T` toggles the tmux manager. Use

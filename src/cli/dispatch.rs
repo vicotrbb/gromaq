@@ -160,6 +160,7 @@ where
         | CliCommand::WindowSmoke
         | CliCommand::WindowPerfSmoke
         | CliCommand::WindowScreenshotSmoke
-        | CliCommand::WindowGlyphFrameSnapshot => unreachable!(),
+        | CliCommand::WindowGlyphFrameSnapshot
+        | CliCommand::WindowTmuxManagerSnapshot => unreachable!(),
     }
 }

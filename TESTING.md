@@ -71,6 +71,7 @@ cargo run -- --tmux-manager
 cargo run -- --tmux-action kill-session gromaq-test
 cargo run -- --runtime-tmux-smoke
 cargo run -- --runtime-tmux-ui-smoke
+cargo run -- --window-tmux-manager-snapshot target/native-tmux-manual-proof/window-tmux-manager-snapshot.ppm
 cargo bench --bench parser_throughput -- --list
 ```
 

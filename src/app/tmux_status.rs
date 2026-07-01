@@ -1,5 +1,7 @@
 use crate::app::{TmuxStatusKind, TmuxUiSnapshot};
-use crate::tmux::{SystemTmuxCommandRunner, TmuxError, TmuxManager, TmuxProbe};
+use crate::tmux::{
+    SystemTmuxCommandRunner, TmuxError, TmuxManager, TmuxManagerSnapshot, TmuxProbe, TmuxState,
+};
 
 pub(super) fn read_tmux_status_snapshot() -> TmuxUiSnapshot {
     let runner = SystemTmuxCommandRunner;
@@ -13,6 +15,15 @@ pub(super) fn read_tmux_status_snapshot() -> TmuxUiSnapshot {
             Err(_) => empty_status(TmuxStatusKind::NoServer),
         },
     }
+}
+
+pub(super) fn read_tmux_manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManager::new(SystemTmuxCommandRunner)
+        .snapshot()
+        .unwrap_or(TmuxManagerSnapshot {
+            state: TmuxState::default(),
+            current: None,
+        })
 }
 
 fn empty_status(status: TmuxStatusKind) -> TmuxUiSnapshot {

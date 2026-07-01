@@ -80,8 +80,7 @@ impl NativeAppLauncher for MockAppLauncher {
             }
             None => false,
         };
-        let tmux_status_strip_rendered = config.app.tmux_ui_enabled;
-        self.launches.borrow_mut().push(config);
+        self.launches.borrow_mut().push(config.clone());
         Ok(NativeAppRunReport {
             redraw_attempts: frames_presented,
             frames_presented,
@@ -91,7 +90,8 @@ impl NativeAppLauncher for MockAppLauncher {
             window_height_px: Some(1600),
             window_scale_milliscale: Some(2000),
             glyph_frame_presented: true,
-            tmux_status_strip_rendered,
+            tmux_status_strip_rendered: config.app.tmux_ui_enabled,
+            tmux_manager_panel_rendered: config.app.open_tmux_manager_on_start,
             glyph_frame_width: 2560,
             glyph_frame_height: 1600,
             glyph_frame_glyph_quads: 12,
