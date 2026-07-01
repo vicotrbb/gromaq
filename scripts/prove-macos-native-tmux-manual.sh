@@ -16,6 +16,7 @@ open_manager_on_start="${GROMAQ_MANUAL_TMUX_OPEN_ON_START:-false}"
 config_path="${proof_root}/gromaq-native-tmux-manual.toml"
 shell_path="${proof_root}/manual-tmux-shell.sh"
 summary_path="${proof_root}/summary.txt"
+git_status_path="${proof_root}/git-status.txt"
 session="gromaq-manual-tmux-$$"
 kill_session="${session}-kill"
 workspace_session="${session}-workspace"
@@ -36,6 +37,12 @@ if ! command -v tmux >/dev/null 2>&1; then
   exit 1
 fi
 tmux_version="$(tmux -V)"
+head_sha="$(git -C "${root}" rev-parse --short HEAD)"
+git_branch="$(git -C "${root}" branch --show-current)"
+git_dirty="clean"
+if [ -n "$(git -C "${root}" status --short)" ]; then
+  git_dirty="dirty"
+fi
 
 case "${open_manager_on_start}" in
   true | false) ;;
@@ -94,6 +101,7 @@ rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
 trap cleanup EXIT INT TERM
 cleanup
+git -C "${root}" status --short --branch > "${git_status_path}"
 printf '%s\n' "${launch_mode}" > "${proof_root}/launch-mode.txt"
 printf '%s\n' "${open_manager_on_start}" > "${proof_root}/open-manager-on-start.txt"
 
@@ -190,6 +198,9 @@ printf '%s\n' "App: ${app_path:-none}"
 printf '%s\n' "Binary: ${executable}"
 printf '%s\n' "Version: ${actual_version}"
 printf '%s\n' "tmux: ${tmux_version}"
+printf '%s\n' "git HEAD: ${head_sha}"
+printf '%s\n' "git branch: ${git_branch}"
+printf '%s\n' "git dirty: ${git_dirty}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
@@ -278,6 +289,10 @@ fi
   printf '%s\n' "Executable: ${executable}"
   printf '%s\n' "Version: ${actual_version}"
   printf '%s\n' "tmux: ${tmux_version}"
+  printf '%s\n' "git HEAD: ${head_sha}"
+  printf '%s\n' "git branch: ${git_branch}"
+  printf '%s\n' "git dirty: ${git_dirty}"
+  printf '%s\n' "git-status.txt: ${git_status_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "workspace-session: ${workspace_session}"

@@ -4,6 +4,7 @@ set -eu
 root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 proof_root="${GROMAQ_DEFAULT_CARGO_TMUX_PROOF_ROOT:-${root}/target/macos-native-tmux-default-cargo-run-proof}"
 summary_path="${proof_root}/summary.txt"
+git_status_path="${proof_root}/git-status.txt"
 session="gromaq-default-cargo-tmux-$$"
 kill_session="${session}-kill"
 
@@ -23,6 +24,11 @@ if ! command -v tmux >/dev/null 2>&1; then
 fi
 tmux_version="$(tmux -V)"
 head_sha="$(git -C "${root}" rev-parse --short HEAD)"
+git_branch="$(git -C "${root}" branch --show-current)"
+git_dirty="clean"
+if [ -n "$(git -C "${root}" status --short)" ]; then
+  git_dirty="dirty"
+fi
 startup_marker="tmux Cmd/Ctrl+Shift+T"
 old_startup_marker="keyboard, mouse, paste"
 binary_path="${root}/target/debug/gromaq"
@@ -30,6 +36,7 @@ binary_markers_path="${proof_root}/tmux-default-cargo-run-binary-markers.txt"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
+git -C "${root}" status --short --branch > "${git_status_path}"
 trap cleanup EXIT INT TERM
 cleanup
 
@@ -40,6 +47,8 @@ tmux new-session -d -s "${kill_session}" -n disposable
 printf '%s\n' "macOS native tmux default cargo run proof"
 printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "git HEAD: ${head_sha}"
+printf '%s\n' "git branch: ${git_branch}"
+printf '%s\n' "git dirty: ${git_dirty}"
 printf '%s\n' "debug binary: ${binary_path}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
@@ -118,6 +127,9 @@ record_confirmation "Confirm prompt/right-prompt layout stayed legible." "right-
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
   printf '%s\n' "tmux: ${tmux_version}"
   printf '%s\n' "git HEAD: ${head_sha}"
+  printf '%s\n' "git branch: ${git_branch}"
+  printf '%s\n' "git dirty: ${git_dirty}"
+  printf '%s\n' "git-status.txt: ${git_status_path}"
   printf '%s\n' "debug binary: ${binary_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "kill-session target: ${kill_session}"

@@ -118,7 +118,7 @@ dispatch, new-window, destructive confirmation against the disposable target,
 shell input after closing the panel, and right-prompt legibility. It records the
 exact `target/debug/gromaq` binary marker used by the `cargo run` launch and
 fails if the old keyboard/mouse/paste startup copy remains in that binary, then
-records confirmation files under
+records git branch/dirty metadata plus confirmation files under
 `target/macos-native-tmux-default-cargo-run-proof`.
 
 `scripts/prove-native-tmux-default-snapshot.sh` is the non-interactive default
@@ -131,6 +131,9 @@ When no packaged app bundle is selected, the helper builds and launches
 `target/debug/gromaq` directly with its generated tmux proof config. Set
 `GROMAQ_MANUAL_TMUX_APP=/path/to/Gromaq.app` to force an app-bundle run, or
 `GROMAQ_MANUAL_TMUX_BINARY=/path/to/gromaq` to force a specific binary.
+The configured helper also records git branch/dirty metadata beside the manual
+confirmation files so the live proof can be tied back to the checkout under
+test.
 By default, the generated tmux proof config starts with the manager closed so
 the tester must open it with Control/Super Shift `T`; set
 `GROMAQ_MANUAL_TMUX_OPEN_ON_START=true` to instead prove startup-open behavior.
