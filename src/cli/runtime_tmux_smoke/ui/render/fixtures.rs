@@ -32,16 +32,30 @@ pub(super) fn current_target_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
         state: TmuxState {
-            sessions: vec![TmuxSession {
-                name: "alpha".to_owned(),
-                attached: true,
-            }],
-            windows: vec![TmuxWindow {
-                session_name: "alpha".to_owned(),
-                index: 1,
-                name: "code".to_owned(),
-                active: true,
-            }],
+            sessions: vec![
+                TmuxSession {
+                    name: "alpha".to_owned(),
+                    attached: true,
+                },
+                TmuxSession {
+                    name: "beta".to_owned(),
+                    attached: false,
+                },
+            ],
+            windows: vec![
+                TmuxWindow {
+                    session_name: "alpha".to_owned(),
+                    index: 0,
+                    name: "shell".to_owned(),
+                    active: false,
+                },
+                TmuxWindow {
+                    session_name: "alpha".to_owned(),
+                    index: 1,
+                    name: "code".to_owned(),
+                    active: true,
+                },
+            ],
             panes: vec![
                 TmuxPane {
                     session_name: "alpha".to_owned(),

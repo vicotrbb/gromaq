@@ -3,7 +3,7 @@
 mod current_marker;
 mod fixtures;
 
-pub(super) use current_marker::render_current_pane_marker;
+pub(super) use current_marker::{render_current_pane_marker, render_current_target_row_markers};
 
 use crate::app::{NativeTerminalRuntimeConfig, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
