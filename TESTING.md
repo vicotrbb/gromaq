@@ -116,7 +116,8 @@ the tester must open it with Control/Super Shift `T`; set
 `GROMAQ_MANUAL_TMUX_OPEN_ON_START=true` to instead prove startup-open behavior.
 
 - Launch `cargo run` or `scripts/prove-macos-native-tmux-manual.sh`.
-- Verify the persistent tmux status strip is visible and legible.
+- Verify the persistent tmux status strip is visible and legible; the harness
+  records this as `tmux-status-strip-visible.txt`.
 - Verify the manager remains visible when startup shell output fills the first window.
 - Press Control/Super Shift `T` and verify a real manager panel opens.
 - Inspect sessions, windows, panes, current target, and pane command text.

@@ -111,7 +111,10 @@ printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
 printf '%s\n' "Use the visible Gromaq window for each step, then type the exact token requested here."
-printf '%s\n' "Confirm the status strip is visible. Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
+printf '%s\n' "Confirm the persistent tmux status strip is visible. Type exactly: status-strip-visible"
+IFS= read -r status_strip_visible
+printf '%s\n' "\${status_strip_visible}" > "${proof_root}/tmux-status-strip-visible.txt"
+printf '%s\n' "Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
 IFS= read -r manager_visible
 printf '%s\n' "\${manager_visible}" > "${proof_root}/tmux-manager-visible.txt"
 printf '%s\n' "Press Control/Super Shift+T if needed, navigate/click rows, and run one safe split-pane action. Type exactly: safe-action"
@@ -188,11 +191,16 @@ else
 fi
 
 manager_visible="$(cat "${proof_root}/tmux-manager-visible.txt" 2>/dev/null || true)"
+status_strip_visible="$(cat "${proof_root}/tmux-status-strip-visible.txt" 2>/dev/null || true)"
 safe_action="$(cat "${proof_root}/tmux-safe-action.txt" 2>/dev/null || true)"
 destructive_confirmation="$(cat "${proof_root}/tmux-destructive-confirmation.txt" 2>/dev/null || true)"
 workspace_visible="$(cat "${proof_root}/tmux-workspace-visible.txt" 2>/dev/null || true)"
 normal_shell_input="$(cat "${proof_root}/tmux-normal-shell-input.txt" 2>/dev/null || true)"
 
+if [ "${status_strip_visible}" != "status-strip-visible" ]; then
+  printf '%s\n' "error: expected status-strip-visible confirmation, got '${status_strip_visible}'." >&2
+  exit 1
+fi
 if [ "${manager_visible}" != "manager-visible" ]; then
   printf '%s\n' "error: expected manager-visible confirmation, got '${manager_visible}'." >&2
   exit 1
@@ -225,6 +233,7 @@ fi
   printf '%s\n' "session: ${session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "workspace-session: ${workspace_session}"
+  printf '%s\n' "tmux-status-strip-visible.txt: ${status_strip_visible}"
   printf '%s\n' "tmux-manager-visible.txt: ${manager_visible}"
   printf '%s\n' "tmux-safe-action.txt: ${safe_action}"
   printf '%s\n' "tmux-destructive-confirmation.txt: ${destructive_confirmation}"

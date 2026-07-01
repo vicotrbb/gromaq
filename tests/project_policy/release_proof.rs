@@ -137,6 +137,7 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
         "gromaq-native-tmux-manual.toml",
         "manual-tmux-shell.sh",
         "tmux-session.txt",
+        "tmux-status-strip-visible.txt",
         "tmux-manager-visible.txt",
         "tmux-safe-action.txt",
         "tmux-destructive-confirmation.txt",
