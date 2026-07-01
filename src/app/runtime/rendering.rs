@@ -131,6 +131,9 @@ impl<S> NativeTerminalRuntime<S> {
             && let Some(tmux_snapshot) = tmux_snapshot
             && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
         {
+            if cursor_inside_region(cursor, region) {
+                render_cursor.visible = false;
+            }
             dirty_regions.push(region);
             self.last_rendered_tmux_status_strip = true;
         }
@@ -206,8 +209,6 @@ impl<S> NativeTerminalRuntime<S> {
 }
 
 fn cursor_inside_region(cursor: crate::CursorSnapshot, region: crate::DirtyRegion) -> bool {
-    cursor.row >= region.row
-        && cursor.row < region.row.saturating_add(region.rows)
-        && cursor.col >= region.col
-        && cursor.col < region.col.saturating_add(region.cols)
+    (region.row..region.row.saturating_add(region.rows)).contains(&cursor.row)
+        && (region.col..region.col.saturating_add(region.cols)).contains(&cursor.col)
 }
