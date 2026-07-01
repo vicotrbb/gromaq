@@ -37,6 +37,8 @@ pub struct NativeAppRunReport {
     pub tmux_status_pane_command_rendered: bool,
     /// Whether the last recorded glyph frame included the native tmux manager panel.
     pub tmux_manager_panel_rendered: bool,
+    /// Whether the last recorded glyph frame included current default startup tmux copy.
+    pub default_startup_content_checked: bool,
     /// Session count in the last recorded native tmux manager snapshot.
     pub tmux_manager_sessions: usize,
     /// Window count in the last recorded native tmux manager snapshot.
@@ -114,6 +116,7 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) tmux_status_strip_rendered: bool,
     pub(super) tmux_status_pane_command_rendered: bool,
     pub(super) tmux_manager_panel_rendered: bool,
+    pub(super) default_startup_content_checked: bool,
     pub(super) tmux_manager_sessions: usize,
     pub(super) tmux_manager_windows: usize,
     pub(super) tmux_manager_panes: usize,

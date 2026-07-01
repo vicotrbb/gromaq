@@ -15,7 +15,7 @@ mod tmux_report;
 mod window;
 
 pub use report::NativeGlyphFramePresentation;
-use tmux_report::plan_contains_tmux_status_pane_command;
+use tmux_report::{plan_contains_tmux_status_pane_command, plan_has_current_startup_copy};
 pub use window::NativeWindowSurface;
 
 /// Render dirty terminal state into a prepared glyph frame and present it through a native surface.
@@ -136,6 +136,7 @@ where
         tmux_status_strip_rendered,
         tmux_status_pane_command_rendered,
         tmux_manager_panel_rendered,
+        default_startup_content_checked: plan_has_current_startup_copy(plan),
         tmux_manager_sessions,
         tmux_manager_windows,
         tmux_manager_panes,
@@ -178,7 +179,6 @@ where
     }
     Ok(report)
 }
-
 fn create_snapshot_parent_dir(path: &Path) -> Result<(), NativeGlyphFrameError> {
     let Some(parent) = path.parent() else {
         return Ok(());

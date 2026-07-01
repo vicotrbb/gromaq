@@ -10,6 +10,9 @@ pub(crate) struct NoTmuxUiFrameAppLauncher;
 #[derive(Debug)]
 pub(crate) struct DroppedFrameAppLauncher;
 
+#[derive(Debug)]
+pub(crate) struct NoServerTmuxUiAppLauncher;
+
 impl NativeAppLauncher for DroppedFrameAppLauncher {
     fn launch(
         &self,
@@ -86,6 +89,25 @@ impl NativeAppLauncher for NoTmuxUiFrameAppLauncher {
             glyph_frame_glyph_quads: 12,
             glyph_frame_background_quads: 1,
             glyph_frame_cursor_quads: 1,
+            ..NativeAppRunReport::default()
+        })
+    }
+}
+
+impl NativeAppLauncher for NoServerTmuxUiAppLauncher {
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
+        let frames_presented = config.app.exit_after_presented_frames.unwrap_or_default();
+        Ok(NativeAppRunReport {
+            redraw_attempts: frames_presented,
+            frames_presented,
+            glyph_frame_presented: true,
+            tmux_status_strip_rendered: true,
+            tmux_status_pane_command_rendered: false,
+            tmux_manager_panel_rendered: true,
+            default_startup_content_checked: true,
             ..NativeAppRunReport::default()
         })
     }

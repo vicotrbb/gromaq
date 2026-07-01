@@ -16,3 +16,11 @@ pub(super) fn plan_contains_tmux_status_pane_command<S>(
             .collect::<String>()
             .contains(command)
 }
+
+pub(super) fn plan_has_current_startup_copy(plan: &RenderPlan) -> bool {
+    let text = plan.glyphs.iter().fold(String::new(), |mut text, glyph| {
+        text.push_str(glyph.text.as_str());
+        text
+    });
+    text.contains("tmuxCmd/Ctrl+Shift+T") && !text.contains("keyboard,mouse,paste")
+}

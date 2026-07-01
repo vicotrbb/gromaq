@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use gromaq::cli::{CliExit, NativeAppLaunchConfig};
 
 use super::super::{MockAppLauncher, MockBackend, run_with_backend, run_with_backend_and_app};
-use super::{NoGlyphFrameAppLauncher, NoTmuxUiFrameAppLauncher};
+use super::{NoGlyphFrameAppLauncher, NoServerTmuxUiAppLauncher, NoTmuxUiFrameAppLauncher};
 
 #[test]
 fn window_smoke_launches_bounded_native_terminal_app() {
@@ -20,7 +20,7 @@ fn window_smoke_launches_bounded_native_terminal_app() {
         exit,
         CliExit {
             code: 0,
-            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\nsurface timeouts: 0\nsurface occluded: 0\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
+            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\nsurface timeouts: 0\nsurface occluded: 0\ndefault startup content checked: true\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
             stderr: String::new(),
         }
     );
@@ -69,8 +69,30 @@ fn window_smoke_fails_when_default_tmux_ui_is_not_rendered() {
     assert!(exit.stdout.is_empty());
     assert!(
         exit.stderr.contains(
-            "window smoke failed: default tmux UI was not rendered; tmux status strip rendered: false; tmux status pane command rendered: false; tmux manager panel rendered: false"
+            "window smoke failed: default tmux UI was not rendered; default startup content checked: false; tmux status strip rendered: false; tmux status pane command rendered: false; tmux manager panel rendered: false"
         )
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
+
+#[test]
+fn window_smoke_accepts_default_tmux_ui_without_server_pane_command() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = NoServerTmuxUiAppLauncher;
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-smoke"], &backend, &app);
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stderr.is_empty());
+    assert!(
+        exit.stdout
+            .contains("default startup content checked: true")
+    );
+    assert!(
+        exit.stdout
+            .contains("tmux status pane command rendered: false")
     );
     assert!(backend.requests.borrow().is_empty());
 }

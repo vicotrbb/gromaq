@@ -30,6 +30,9 @@ impl NativeAppLifecycle {
             tmux_manager_panel_rendered: self
                 .last_glyph_frame_presentation
                 .tmux_manager_panel_rendered,
+            default_startup_content_checked: self
+                .last_glyph_frame_presentation
+                .default_startup_content_checked,
             tmux_manager_sessions: self.last_glyph_frame_presentation.tmux_manager_sessions,
             tmux_manager_windows: self.last_glyph_frame_presentation.tmux_manager_windows,
             tmux_manager_panes: self.last_glyph_frame_presentation.tmux_manager_panes,

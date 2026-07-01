@@ -90,6 +90,8 @@ impl NativeAppLauncher for MockAppLauncher {
             tmux_status_strip_rendered: config.app.tmux_ui_enabled,
             tmux_status_pane_command_rendered: config.app.tmux_ui_enabled,
             tmux_manager_panel_rendered: config.app.open_tmux_manager_on_start,
+            default_startup_content_checked: config.app.startup_text.is_none()
+                && config.app.welcome_screen,
             tmux_manager_sessions: usize::from(config.app.open_tmux_manager_on_start),
             tmux_manager_windows: usize::from(config.app.open_tmux_manager_on_start),
             tmux_manager_panes: usize::from(config.app.open_tmux_manager_on_start),

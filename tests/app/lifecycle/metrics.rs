@@ -114,6 +114,7 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
         tmux_status_strip_rendered: true,
         tmux_status_pane_command_rendered: true,
         tmux_manager_panel_rendered: true,
+        default_startup_content_checked: true,
         tmux_manager_sessions: 2,
         tmux_manager_windows: 3,
         tmux_manager_panes: 4,
@@ -138,6 +139,7 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
     assert!(report.tmux_status_strip_rendered);
     assert!(report.tmux_status_pane_command_rendered);
     assert!(report.tmux_manager_panel_rendered);
+    assert!(report.default_startup_content_checked);
     assert_eq!(report.tmux_manager_sessions, 2);
     assert_eq!(report.tmux_manager_windows, 3);
     assert_eq!(report.tmux_manager_panes, 4);

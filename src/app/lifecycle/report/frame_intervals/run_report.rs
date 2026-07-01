@@ -27,6 +27,7 @@ impl PresentedFrameIntervals {
             tmux_status_strip_rendered: input.tmux_status_strip_rendered,
             tmux_status_pane_command_rendered: input.tmux_status_pane_command_rendered,
             tmux_manager_panel_rendered: input.tmux_manager_panel_rendered,
+            default_startup_content_checked: input.default_startup_content_checked,
             tmux_manager_sessions: input.tmux_manager_sessions,
             tmux_manager_windows: input.tmux_manager_windows,
             tmux_manager_panes: input.tmux_manager_panes,

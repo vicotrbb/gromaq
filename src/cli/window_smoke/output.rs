@@ -9,10 +9,11 @@ pub(super) fn window_smoke_success(report: &NativeAppRunReport) -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\nsurface timeouts: {}\nsurface occluded: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\n",
+            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\nsurface timeouts: {}\nsurface occluded: {}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\n",
             report.redraw_attempts,
             report.surface_frame_timeouts,
             report.surface_frame_occluded,
+            report.default_startup_content_checked,
             report.tmux_status_strip_rendered,
             report.tmux_status_pane_command_rendered,
             report.tmux_manager_panel_rendered
@@ -57,7 +58,8 @@ pub(super) fn window_smoke_no_default_tmux_ui_failure(report: &NativeAppRunRepor
         code: 1,
         stdout: String::new(),
         stderr: format!(
-            "window smoke failed: default tmux UI was not rendered; tmux status strip rendered: {}; tmux status pane command rendered: {}; tmux manager panel rendered: {}\n",
+            "window smoke failed: default tmux UI was not rendered; default startup content checked: {}; tmux status strip rendered: {}; tmux status pane command rendered: {}; tmux manager panel rendered: {}\n",
+            report.default_startup_content_checked,
             report.tmux_status_strip_rendered,
             report.tmux_status_pane_command_rendered,
             report.tmux_manager_panel_rendered
@@ -94,7 +96,8 @@ pub(super) fn window_tmux_manager_snapshot_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "window tmux manager snapshot: ok\npath: {path}\ndefault startup content checked: true\nbytes written: {}\nframe size: {}x{}\nglyph frame presented: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\ntmux manager sessions: {}\ntmux manager windows: {}\ntmux manager panes: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
+            "window tmux manager snapshot: ok\npath: {path}\ndefault startup content checked: {}\nbytes written: {}\nframe size: {}x{}\nglyph frame presented: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\ntmux manager sessions: {}\ntmux manager windows: {}\ntmux manager panes: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
+            report.default_startup_content_checked,
             report.glyph_frame_snapshot_bytes,
             report.glyph_frame_snapshot_width,
             report.glyph_frame_snapshot_height,
@@ -118,8 +121,9 @@ pub(super) fn window_tmux_manager_snapshot_failure(report: &NativeAppRunReport) 
         code: 1,
         stdout: String::new(),
         stderr: format!(
-            "window tmux manager snapshot failed\nsnapshot written: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\nframes presented: {}\nglyph frame presented: {}\nglyph quads: {}\nbackground quads: {}\ncursor quads: {}\n",
+            "window tmux manager snapshot failed\nsnapshot written: {}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\nframes presented: {}\nglyph frame presented: {}\nglyph quads: {}\nbackground quads: {}\ncursor quads: {}\n",
             report.glyph_frame_snapshot_written,
+            report.default_startup_content_checked,
             report.tmux_status_strip_rendered,
             report.tmux_status_pane_command_rendered,
             report.tmux_manager_panel_rendered,

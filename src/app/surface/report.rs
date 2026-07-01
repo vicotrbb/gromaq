@@ -11,6 +11,8 @@ pub struct NativeGlyphFramePresentation {
     pub tmux_status_pane_command_rendered: bool,
     /// Whether the rendered frame included the native tmux manager panel.
     pub tmux_manager_panel_rendered: bool,
+    /// Whether the rendered frame still includes the current default startup tmux copy.
+    pub default_startup_content_checked: bool,
     /// Session count in the rendered native tmux manager snapshot.
     pub tmux_manager_sessions: usize,
     /// Window count in the rendered native tmux manager snapshot.
