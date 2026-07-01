@@ -5,11 +5,13 @@ mod perf;
 
 pub(super) use perf::{window_perf_no_glyph_failure, window_perf_success};
 
+const DEFAULT_STARTUP_MARKER: &str = "tmux Cmd/Ctrl+Shift+T";
+
 pub(super) fn window_smoke_success(report: &NativeAppRunReport) -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "window smoke: ok\npresented frame limit: 3\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\nterminal cells: {}x{}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\n",
+            "window smoke: ok\npresented frame limit: 3\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\nterminal cells: {}x{}\ndefault startup content checked: {}\ndefault startup marker: {DEFAULT_STARTUP_MARKER}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\n",
             report.redraw_attempts,
             report.frames_presented,
             report.surface_frame_timeouts,
@@ -32,7 +34,7 @@ pub(super) fn window_screenshot_smoke_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "window screenshot smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux manager panel rendered: {}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame cursor quads: {}\n",
+            "window screenshot smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\ndefault startup content checked: {}\ndefault startup marker: {DEFAULT_STARTUP_MARKER}\ntmux status strip rendered: {}\ntmux manager panel rendered: {}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame cursor quads: {}\n",
             report.redraw_attempts,
             report.frames_presented,
             report.surface_frame_timeouts,
@@ -117,7 +119,7 @@ pub(super) fn window_tmux_manager_snapshot_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "window tmux manager snapshot: ok\npath: {path}\ndefault startup content checked: {}\nbytes written: {}\nframe size: {}x{}\nterminal cells: {}x{}\nglyph frame presented: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\ntmux manager sessions: {}\ntmux manager windows: {}\ntmux manager panes: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
+            "window tmux manager snapshot: ok\npath: {path}\ndefault startup content checked: {}\ndefault startup marker: {DEFAULT_STARTUP_MARKER}\nbytes written: {}\nframe size: {}x{}\nterminal cells: {}x{}\nglyph frame presented: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\ntmux manager sessions: {}\ntmux manager windows: {}\ntmux manager panes: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
             report.default_startup_content_checked,
             report.glyph_frame_snapshot_bytes,
             report.glyph_frame_snapshot_width,

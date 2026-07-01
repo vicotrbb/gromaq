@@ -20,7 +20,7 @@ fn window_smoke_launches_bounded_native_terminal_app() {
         exit,
         CliExit {
             code: 0,
-            stdout: "window smoke: ok\npresented frame limit: 3\nredraw attempts: 3\nframes presented: 3\nsurface timeouts: 0\nsurface occluded: 0\nterminal cells: 140x35\ndefault startup content checked: true\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
+            stdout: "window smoke: ok\npresented frame limit: 3\nredraw attempts: 3\nframes presented: 3\nsurface timeouts: 0\nsurface occluded: 0\nterminal cells: 140x35\ndefault startup content checked: true\ndefault startup marker: tmux Cmd/Ctrl+Shift+T\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
             stderr: String::new(),
         }
     );
@@ -134,6 +134,10 @@ fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
     assert!(
         exit.stdout
             .contains("default startup content checked: true")
+    );
+    assert!(
+        exit.stdout
+            .contains("default startup marker: tmux Cmd/Ctrl+Shift+T")
     );
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
     assert!(exit.stdout.contains("tmux manager panel rendered: true"));

@@ -90,6 +90,10 @@ fn window_tmux_manager_snapshot_smoke_writes_artifact() {
         exit.stdout
             .contains("default startup content checked: true")
     );
+    assert!(
+        exit.stdout
+            .contains("default startup marker: tmux Cmd/Ctrl+Shift+T")
+    );
     assert!(exit.stdout.contains("glyph frame presented: true"));
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
     assert!(
