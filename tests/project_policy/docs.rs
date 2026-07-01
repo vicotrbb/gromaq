@@ -121,6 +121,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "mouse focus checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "refresh shortcut requested: true",
         ),
         (
