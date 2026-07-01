@@ -14,6 +14,9 @@ impl TmuxManagerPanelState {
                 TmuxManagerKeyOutcome::WorkspaceLaunchRequested
             };
         }
+        if self.focus == TmuxManagerFocus::Panes {
+            return self.activate_action(ActionId::SelectPane);
+        }
         let action_id = PANEL_ACTIONS
             .get(self.selected_action)
             .copied()

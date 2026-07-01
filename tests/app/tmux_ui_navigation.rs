@@ -52,6 +52,25 @@ fn tmux_manager_panel_wraps_selection_navigation() {
     );
 }
 
+#[test]
+fn tmux_manager_panel_enter_selects_focused_pane() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.focus_next();
+    panel.focus_next();
+
+    assert_eq!(panel.focus(), TmuxManagerFocus::Panes);
+    assert_eq!(
+        panel.handle_key(
+            &Key::Named(NamedKey::Enter),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::SelectPane)
+    );
+    assert_eq!(panel.pending_action(), Some("select-pane"));
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
