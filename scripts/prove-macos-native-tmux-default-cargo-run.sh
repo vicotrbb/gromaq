@@ -39,6 +39,8 @@ startup_marker="tmux Cmd/Ctrl+Shift+T"
 old_startup_marker="keyboard, mouse, paste"
 binary_path="${root}/target/debug/gromaq"
 binary_markers_path="${proof_root}/tmux-default-cargo-run-binary-markers.txt"
+window_smoke_stdout_path="${proof_root}/tmux-default-cargo-run-window-smoke.stdout"
+window_smoke_stderr_path="${proof_root}/tmux-default-cargo-run-window-smoke.stderr"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -63,6 +65,21 @@ fi
 
 if strings "${binary_path}" | grep -F "${old_startup_marker}" >> "${binary_markers_path}"; then
   printf '%s\n' "error: unexpected old startup marker '${old_startup_marker}' remains in ${binary_path}." >&2
+  exit 1
+fi
+
+(
+  cd "${root}"
+  cargo run -- --window-smoke > "${window_smoke_stdout_path}" 2> "${window_smoke_stderr_path}"
+)
+
+if ! grep -F "default startup content checked: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not prove current startup content." >&2
+  exit 1
+fi
+
+if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not render the tmux manager panel." >&2
   exit 1
 fi
 
@@ -187,6 +204,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "cargo-build stdout: ${proof_root}/cargo-build.stdout"
   printf '%s\n' "cargo-build stderr: ${proof_root}/cargo-build.stderr"
+  printf '%s\n' "tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}"
+  printf '%s\n' "tmux-default-cargo-run-window-smoke.stderr: ${window_smoke_stderr_path}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
   printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"

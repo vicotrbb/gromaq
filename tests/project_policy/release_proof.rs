@@ -194,6 +194,10 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "target/debug/gromaq",
         "strings \"${binary_path}\"",
         "tmux-default-cargo-run-binary-markers.txt",
+        "cargo run -- --window-smoke",
+        "tmux-default-cargo-run-window-smoke.stdout",
+        "default startup content checked: true",
+        "tmux manager panel rendered: true",
         "unexpected old startup marker",
         "tmux-default-cargo-run-current-startup.txt",
         "tmux-default-cargo-run-status-strip.txt",
@@ -239,6 +243,7 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
         .find("does not contain current startup marker")
         .unwrap();
     let stale_check = proof_script.find("unexpected old startup marker").unwrap();
+    let window_smoke = proof_script.find("cargo run -- --window-smoke").unwrap();
     let interactive_launch = proof_script
         .find("A default Gromaq window will open through plain cargo run.")
         .unwrap();
@@ -246,6 +251,8 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     assert!(build < interactive_launch);
     assert!(marker_check < interactive_launch);
     assert!(stale_check < interactive_launch);
+    assert!(window_smoke < interactive_launch);
+    assert!(stale_check < window_smoke);
 }
 
 #[test]
