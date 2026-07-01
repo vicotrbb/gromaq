@@ -20,6 +20,21 @@ pub(super) fn drive_shortcut_action(
     )
 }
 
+pub(super) fn drive_select_pane_shortcut(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let requested =
+        runtime.handle_tmux_manager_key(&Key::Character("m".into()), ModifiersState::empty());
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::SelectPane,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_destructive_shortcut_confirmation(runtime: &mut super::SmokeRuntime) -> bool {
     let confirmation =
         runtime.handle_tmux_manager_key(&Key::Character("q".into()), ModifiersState::empty());
