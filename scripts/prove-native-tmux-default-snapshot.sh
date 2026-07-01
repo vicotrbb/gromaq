@@ -36,6 +36,7 @@ fi
 
 for marker in \
   "default startup content checked: true" \
+  "default startup marker: tmux Cmd/Ctrl+Shift+T" \
   "tmux status strip rendered: true" \
   "tmux status pane command rendered: true" \
   "tmux manager panel rendered: true" \
@@ -103,6 +104,7 @@ fi
     printf '%s\n' "PNG artifact: ${png_path}"
   fi
   grep -F "default startup content checked: true" "${log_path}"
+  grep -F "default startup marker: tmux Cmd/Ctrl+Shift+T" "${log_path}"
   grep -F "tmux status strip rendered: true" "${log_path}"
   grep -F "tmux status pane command rendered: true" "${log_path}"
   grep -F "tmux manager panel rendered: true" "${log_path}"

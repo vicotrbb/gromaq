@@ -213,6 +213,19 @@ fn macos_window_screenshot_proof_requires_current_startup_marker() {
 }
 
 #[test]
+fn native_tmux_default_snapshot_proof_requires_current_startup_marker() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-native-tmux-default-snapshot.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    assert!(
+        source.contains("default startup marker: tmux Cmd/Ctrl+Shift+T"),
+        "{} must reject stale startup output in the default tmux snapshot proof",
+        relative_path(root, &path)
+    );
+}
+
+#[test]
 fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("scripts/prove-ci-compatibility-artifacts.sh");
