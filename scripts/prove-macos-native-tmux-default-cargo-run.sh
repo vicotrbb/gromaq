@@ -7,6 +7,8 @@ summary_path="${proof_root}/summary.txt"
 git_status_path="${proof_root}/git-status.txt"
 session="gromaq-default-cargo-tmux-$$"
 kill_session="${session}-kill"
+started_session="${session}-started"
+started_session_exists_path="${proof_root}/tmux-default-cargo-run-start-session-exists.txt"
 post_windows_path="${proof_root}/tmux-default-cargo-run-post-windows.txt"
 post_panes_path="${proof_root}/tmux-default-cargo-run-post-panes.txt"
 kill_absent_path="${proof_root}/tmux-default-cargo-run-kill-session-absent.txt"
@@ -14,6 +16,7 @@ kill_absent_path="${proof_root}/tmux-default-cargo-run-kill-session-absent.txt"
 cleanup() {
   tmux kill-session -t "${session}" >/dev/null 2>&1 || true
   tmux kill-session -t "${kill_session}" >/dev/null 2>&1 || true
+  tmux kill-session -t "${started_session}" >/dev/null 2>&1 || true
 }
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -54,6 +57,7 @@ printf '%s\n' "git branch: ${git_branch}"
 printf '%s\n' "git dirty: ${git_dirty}"
 printf '%s\n' "debug binary: ${binary_path}"
 printf '%s\n' "Target session: ${session}"
+printf '%s\n' "Expected started session: ${started_session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "A default Gromaq window will open through plain cargo run."
 printf '%s\n' "In that window, verify the native tmux UI against the checklist below."
@@ -65,7 +69,7 @@ printf '%s\n' "- Persistent tmux status strip is visible and legible."
 printf '%s\n' "- Control/Super Shift+T opens a real manager panel, not a tiny hint."
 printf '%s\n' "- Sessions, windows, panes, current target, and pane command text are visible."
 printf '%s\n' "- Keyboard navigation changes selection."
-printf '%s\n' "- Start a new tmux session from the UI."
+printf '%s\n' "- Start a new tmux session named ${started_session} from the UI."
 printf '%s\n' "- Attach ${session} from the UI, then run a safe split-pane action."
 printf '%s\n' "- Create a tmux window from the UI."
 printf '%s\n' "- A destructive action shows inline confirmation before running."
@@ -117,7 +121,7 @@ record_confirmation "Confirm Control/Super Shift+T opened a real manager panel."
 record_confirmation "Confirm the manager was not a tiny hint or palette." "not-hint" "tmux-default-cargo-run-not-hint.txt"
 record_confirmation "Confirm sessions/windows/panes/current target/pane command text were visible." "state-visible" "tmux-default-cargo-run-state-visible.txt"
 record_confirmation "Confirm keyboard navigation changed selection." "navigation-checked" "tmux-default-cargo-run-navigation.txt"
-record_confirmation "Confirm a new tmux session was started from the UI." "start-session" "tmux-default-cargo-run-start-session.txt"
+record_confirmation "Confirm a new tmux session named ${started_session} was started from the UI." "start-session" "tmux-default-cargo-run-start-session.txt"
 record_confirmation "Confirm ${session} was attached from the UI." "attach-session" "tmux-default-cargo-run-attach-session.txt"
 record_confirmation "Confirm a safe tmux action ran from the UI." "safe-action" "tmux-default-cargo-run-safe-action.txt"
 record_confirmation "Confirm a tmux window was created from the UI." "new-window" "tmux-default-cargo-run-new-window.txt"
@@ -153,6 +157,13 @@ if tmux has-session -t "${kill_session}" >/dev/null 2>&1; then
 fi
 printf '%s\n' "true" > "${kill_absent_path}"
 
+if ! tmux has-session -t "${started_session}" >/dev/null 2>&1; then
+  printf '%s\n' "false" > "${started_session_exists_path}"
+  printf '%s\n' "error: expected started session ${started_session} to exist after start-session proof." >&2
+  exit 1
+fi
+printf '%s\n' "true" > "${started_session_exists_path}"
+
 {
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
   printf '%s\n' "tmux: ${tmux_version}"
@@ -162,6 +173,7 @@ printf '%s\n' "true" > "${kill_absent_path}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
   printf '%s\n' "debug binary: ${binary_path}"
   printf '%s\n' "session: ${session}"
+  printf '%s\n' "started-session: ${started_session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
@@ -173,6 +185,8 @@ printf '%s\n' "true" > "${kill_absent_path}"
   printf '%s\n' "tmux-default-cargo-run-state-visible.txt: state-visible"
   printf '%s\n' "tmux-default-cargo-run-navigation.txt: navigation-checked"
   printf '%s\n' "tmux-default-cargo-run-start-session.txt: start-session"
+  printf '%s\n' "tmux-default-cargo-run-start-session-exists.txt: ${started_session_exists_path}"
+  printf '%s\n' "started-session exists: true"
   printf '%s\n' "tmux-default-cargo-run-attach-session.txt: attach-session"
   printf '%s\n' "tmux-default-cargo-run-safe-action.txt: safe-action"
   printf '%s\n' "tmux-default-cargo-run-new-window.txt: new-window"

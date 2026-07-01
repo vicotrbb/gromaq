@@ -20,6 +20,8 @@ git_status_path="${proof_root}/git-status.txt"
 session="gromaq-manual-tmux-$$"
 kill_session="${session}-kill"
 workspace_session="${session}-workspace"
+started_session="${session}-started"
+started_session_exists_path="${proof_root}/tmux-start-session-exists.txt"
 post_windows_path="${proof_root}/tmux-post-windows.txt"
 post_panes_path="${proof_root}/tmux-post-panes.txt"
 kill_absent_path="${proof_root}/tmux-kill-session-absent.txt"
@@ -28,6 +30,7 @@ cleanup() {
   tmux kill-session -t "${session}" >/dev/null 2>&1 || true
   tmux kill-session -t "${kill_session}" >/dev/null 2>&1 || true
   tmux kill-session -t "${workspace_session}" >/dev/null 2>&1 || true
+  tmux kill-session -t "${started_session}" >/dev/null 2>&1 || true
 }
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -121,6 +124,7 @@ printf '%s\n' "Native tmux manager manual proof"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
+printf '%s\n' "Expected started session: ${started_session}"
 printf '%s\n' "Use the visible Gromaq window for each step, then type the exact token requested here."
 printf '%s\n' "Confirm the persistent tmux status strip is visible. Type exactly: status-strip-visible"
 IFS= read -r status_strip_visible
@@ -134,7 +138,7 @@ printf '%s\n' "\${navigation_checked}" > "${proof_root}/tmux-navigation-checked.
 printf '%s\n' "Verify prompt/right-prompt layout remains legible with the tmux surfaces visible. Type exactly: right-prompt-legible"
 IFS= read -r right_prompt_legible
 printf '%s\n' "\${right_prompt_legible}" > "${proof_root}/tmux-right-prompt-legible.txt"
-printf '%s\n' "Start a named tmux session from the UI. Type exactly: start-session"
+printf '%s\n' "Start a tmux session named ${started_session} from the UI. Type exactly: start-session"
 IFS= read -r start_session
 printf '%s\n' "\${start_session}" > "${proof_root}/tmux-start-session.txt"
 printf '%s\n' "Attach ${session} from the UI so active-target actions can run. Type exactly: attach-session"
@@ -207,6 +211,7 @@ printf '%s\n' "git dirty: ${git_dirty}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
+printf '%s\n' "Expected started session: ${started_session}"
 printf '%s\n' "A Gromaq window will open with tmux UI enabled and open_manager_on_start=${open_manager_on_start}."
 printf '%s\n' "Follow the prompts inside the Gromaq terminal window exactly."
 
@@ -311,6 +316,13 @@ if tmux has-session -t "${kill_session}" >/dev/null 2>&1; then
 fi
 printf '%s\n' "true" > "${kill_absent_path}"
 
+if ! tmux has-session -t "${started_session}" >/dev/null 2>&1; then
+  printf '%s\n' "false" > "${started_session_exists_path}"
+  printf '%s\n' "error: expected started session ${started_session} to exist after start-session proof." >&2
+  exit 1
+fi
+printf '%s\n' "true" > "${started_session_exists_path}"
+
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
   printf '%s\n' "Launch mode: ${launch_mode}"
@@ -324,6 +336,7 @@ printf '%s\n' "true" > "${kill_absent_path}"
   printf '%s\n' "git dirty: ${git_dirty}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
   printf '%s\n' "session: ${session}"
+  printf '%s\n' "started-session: ${started_session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "workspace-session: ${workspace_session}"
   printf '%s\n' "tmux-status-strip-visible.txt: ${status_strip_visible}"
@@ -331,6 +344,8 @@ printf '%s\n' "true" > "${kill_absent_path}"
   printf '%s\n' "tmux-navigation-checked.txt: ${navigation_checked}"
   printf '%s\n' "tmux-right-prompt-legible.txt: ${right_prompt_legible}"
   printf '%s\n' "tmux-start-session.txt: ${start_session}"
+  printf '%s\n' "tmux-start-session-exists.txt: ${started_session_exists_path}"
+  printf '%s\n' "started-session exists: true"
   printf '%s\n' "tmux-attach-session.txt: ${attach_session}"
   printf '%s\n' "tmux-safe-action.txt: ${safe_action}"
   printf '%s\n' "tmux-new-window.txt: ${new_window}"
