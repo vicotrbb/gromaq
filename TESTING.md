@@ -72,6 +72,7 @@ cargo run -- --tmux-action kill-session gromaq-test
 cargo run -- --runtime-tmux-smoke
 cargo run -- --runtime-tmux-ui-smoke
 cargo run -- --window-tmux-manager-snapshot target/native-tmux-manual-proof/window-tmux-manager-snapshot.ppm
+scripts/prove-native-tmux-default-snapshot.sh
 scripts/prove-macos-native-tmux-manual.sh
 cargo bench --bench parser_throughput -- --list
 ```
@@ -116,6 +117,12 @@ navigation, safe action dispatch, destructive confirmation against the
 disposable target, shell input after closing the panel, and right-prompt
 legibility, then records confirmation files under
 `target/macos-native-tmux-default-cargo-run-proof`.
+
+`scripts/prove-native-tmux-default-snapshot.sh` is the non-interactive default
+startup artifact proof. It runs `cargo run -- --window-tmux-manager-snapshot`,
+requires the default startup content plus tmux status strip and manager panel
+proof lines, writes a PPM artifact, and writes a PNG beside it when `sips` is
+available.
 
 When no packaged app bundle is selected, the helper builds and launches
 `target/debug/gromaq` directly with its generated tmux proof config. Set

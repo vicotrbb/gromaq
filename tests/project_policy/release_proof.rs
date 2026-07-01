@@ -190,3 +190,26 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         );
     }
 }
+
+#[test]
+fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-native-tmux-default-snapshot.sh")).unwrap();
+
+    for marker in [
+        "cargo run -- --window-tmux-manager-snapshot",
+        "default startup content checked: true",
+        "tmux status strip rendered: true",
+        "tmux manager panel rendered: true",
+        "gromaq-native-tmux-default-snapshot.ppm",
+        "gromaq-native-tmux-default-snapshot.png",
+        "native tmux default snapshot proof: ok",
+        "summary.txt",
+    ] {
+        assert!(
+            proof_script.contains(marker),
+            "native tmux default snapshot proof must include marker `{marker}`"
+        );
+    }
+}
