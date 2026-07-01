@@ -213,6 +213,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "close the startup-open manager with Esc before proving Control/Super Shift `T` reopens it",
+        ),
+        (
+            "documentation/compatibility.md",
             "cancellation feedback checked: true",
         ),
         (
