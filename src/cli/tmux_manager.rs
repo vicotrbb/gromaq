@@ -101,8 +101,15 @@ fn render_state(installed: bool, current: Option<&str>, state: &TmuxState) -> St
 fn render_manager_actions(output: &mut String) {
     for action in TmuxAction::registry() {
         output.push_str(&format!(
-            "manager action: {}\n  label: {}\n  run: gromaq --tmux-action {}\n",
-            action.stable_id, action.label, action.stable_id
+            "manager action: {}\n  label: {}\n  run: gromaq --tmux-action {}\n  tmux command: {}\n",
+            action.stable_id, action.label, action.stable_id, action.tmux_command
+        ));
+        if let Some(key) = action.key_binding {
+            output.push_str(&format!("  tmux key: {key}\n"));
+        }
+        output.push_str(&format!(
+            "  destructive: {}\n  confirmation required: {}\n",
+            action.destructive, action.confirmation_required
         ));
     }
 }

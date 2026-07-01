@@ -233,6 +233,10 @@ fn tmux_manager_cli_reports_state_or_clean_absence() {
     assert!(exit.stdout.contains("manager action: attach-session"));
     assert!(exit.stdout.contains("manager action: kill-session"));
     assert!(exit.stdout.contains("run: gromaq --tmux-action"));
+    assert!(exit.stdout.contains("tmux command: tmux split-window -h"));
+    assert!(exit.stdout.contains("tmux key: Ctrl-b %"));
+    assert!(exit.stdout.contains("destructive: true"));
+    assert!(exit.stdout.contains("confirmation required: true"));
     assert!(exit.stderr.is_empty());
     assert!(backend.requests.borrow().is_empty());
 }
