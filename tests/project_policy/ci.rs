@@ -11,6 +11,7 @@ const REQUIRED_CI_COMMANDS: &[&str] = &[
     "sh -n scripts/notarize-macos-app.sh",
     "sh -n scripts/capture-macos-window-proof.sh",
     "sh -n scripts/prove-macos-live-input-manual.sh",
+    "sh -n scripts/prove-macos-native-tmux-manual.sh",
     "sh -n scripts/prove-macos-app-identity.sh",
     "sh -n scripts/prove-arch-package.sh",
     "sh -n scripts/prove-debian-package.sh",

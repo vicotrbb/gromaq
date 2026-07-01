@@ -118,3 +118,32 @@ fn macos_live_input_manual_proof_guides_installed_app_typing() {
         );
     }
 }
+
+#[test]
+fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-macos-native-tmux-manual.sh")).unwrap();
+
+    for marker in [
+        "Darwin",
+        "tmux -V",
+        "GROMAQ_MANUAL_TMUX_APP",
+        "open -W -n",
+        "gromaq-native-tmux-manual.toml",
+        "manual-tmux-shell.sh",
+        "tmux-session.txt",
+        "tmux-manager-visible.txt",
+        "tmux-safe-action.txt",
+        "tmux-destructive-confirmation.txt",
+        "tmux-normal-shell-input.txt",
+        "Native tmux manager manual proof",
+        "macOS native tmux manual proof: ok",
+        "summary.txt",
+    ] {
+        assert!(
+            proof_script.contains(marker),
+            "macOS native tmux manual proof must include marker `{marker}`"
+        );
+    }
+}

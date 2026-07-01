@@ -72,6 +72,7 @@ cargo run -- --tmux-action kill-session gromaq-test
 cargo run -- --runtime-tmux-smoke
 cargo run -- --runtime-tmux-ui-smoke
 cargo run -- --window-tmux-manager-snapshot target/native-tmux-manual-proof/window-tmux-manager-snapshot.ppm
+scripts/prove-macos-native-tmux-manual.sh
 cargo bench --bench parser_throughput -- --list
 ```
 
@@ -102,7 +103,11 @@ or interactive workflows in tools such as `tmux`, editors, and pagers.
 For native tmux manager app-window proof, use an isolated tmux target and record
 the exact result. The required manual checklist is:
 
-- Launch `cargo run`.
+```bash
+scripts/prove-macos-native-tmux-manual.sh
+```
+
+- Launch `cargo run` or `scripts/prove-macos-native-tmux-manual.sh`.
 - Verify the persistent tmux status strip is visible and legible.
 - Verify the manager remains visible when startup shell output fills the first window.
 - Press Control/Super Shift `T` and verify a real manager panel opens.
