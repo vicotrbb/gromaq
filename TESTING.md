@@ -107,6 +107,7 @@ the exact result. The required manual checklist is:
 - Press Control/Super Shift `T` and verify a real manager panel opens.
 - Inspect sessions, windows, panes, current target, and pane command text.
 - Navigate with arrows or `h`/`j`/`k`/`l`.
+- Click session/window/pane/action/workspace rows and verify selection moves.
 - Run a safe split-pane action from the UI.
 - Create or rename a window from the inline name prompt.
 - Start a named session or launch a configured workspace preset from the UI.

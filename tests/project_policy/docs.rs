@@ -141,6 +141,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "Use `q` or another destructive shortcut and verify inline confirmation",
         ),
         (
+            "TESTING.md",
+            "Click session/window/pane/action/workspace rows",
+        ),
+        (
             "README.md",
             "`r` refreshes the tmux snapshot without shell input",
         ),
