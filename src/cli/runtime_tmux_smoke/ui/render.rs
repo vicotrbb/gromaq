@@ -1,8 +1,12 @@
 //! Render-plan proof helpers for the native tmux UI smoke.
 
+mod fixtures;
+
 use crate::app::{NativeTerminalRuntimeConfig, TmuxStatusKind, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
-use crate::tmux::{TmuxManagerSnapshot, TmuxManagerStatus, TmuxSession, TmuxState};
+use crate::tmux::TmuxManagerSnapshot;
+
+use fixtures::{detached_snapshot, full_prompt_grid, no_server_snapshot};
 
 pub(super) fn render_status_strip(
     runtime: &mut super::SmokeRuntime,
@@ -41,6 +45,46 @@ pub(super) fn render_manager_panel(
         .render_terminal_frame_with_status_overlay(renderer, None)
         .is_ok_and(|rendered| rendered)
         && last_plan_text(renderer).contains("tmuxmanager")
+}
+
+pub(super) fn render_manager_state(
+    renderer: &mut WgpuRenderer,
+    snapshot: &TmuxManagerSnapshot,
+    session: &str,
+) -> bool {
+    let Ok(mut runtime) = super::smoke_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(snapshot.clone(), Vec::new());
+    if !render_manager_panel(&mut runtime, renderer) {
+        return false;
+    }
+    let text = last_plan_text(renderer);
+    let Some(window) = snapshot
+        .state
+        .windows
+        .iter()
+        .find(|window| window.session_name == session)
+    else {
+        return false;
+    };
+    let Some(pane) = snapshot
+        .state
+        .panes
+        .iter()
+        .find(|pane| pane.session_name == session && pane.window_index == window.index)
+    else {
+        return false;
+    };
+    text.contains("tmuxmanager")
+        && target_rendered(&text, snapshot)
+        && text.contains("Sessions")
+        && text.contains(session)
+        && text.contains("Windows")
+        && text.contains(&format!("{}:{}", window.index, window.name))
+        && text.contains("Panes")
+        && text.contains(&pane.id)
+        && (pane.current_command.is_empty() || text.contains(&pane.current_command))
 }
 
 pub(super) fn render_manager_panel_contains(
@@ -140,34 +184,14 @@ fn last_plan_text(renderer: &WgpuRenderer) -> String {
         .unwrap_or_default()
 }
 
-fn no_server_snapshot() -> TmuxManagerSnapshot {
-    TmuxManagerSnapshot {
-        status: TmuxManagerStatus::NoServer,
-        state: TmuxState::default(),
-        current: None,
-    }
-}
-
-fn detached_snapshot() -> TmuxManagerSnapshot {
-    TmuxManagerSnapshot {
-        status: TmuxManagerStatus::Available,
-        state: TmuxState {
-            sessions: vec![TmuxSession {
-                name: "gromaq-runtime-detached".to_owned(),
-                attached: false,
-            }],
-            windows: Vec::new(),
-            panes: Vec::new(),
+fn target_rendered(text: &str, snapshot: &TmuxManagerSnapshot) -> bool {
+    snapshot.current.as_ref().map_or_else(
+        || text.contains("targetnone"),
+        |current| {
+            text.contains(&format!(
+                "target{}:{}:{}",
+                current.session_name, current.window_index, current.pane_id
+            ))
         },
-        current: None,
-    }
-}
-
-fn full_prompt_grid() -> String {
-    (0..16)
-        .map(|row| format!("gromaq startup line {row:02}\r\n"))
-        .chain(std::iter::once(
-            "Now using node v20.20.0 (npm v10.8.2)\r\n~ ................................ rb 2.7.5 22:17:47\r\n> ".to_owned(),
-        ))
-        .collect()
+    )
 }
