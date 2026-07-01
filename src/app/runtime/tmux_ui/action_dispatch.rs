@@ -81,18 +81,25 @@ impl<S> NativeTerminalRuntime<S> {
             panel.selected_session_name(snapshot)?.to_owned()
         };
         let action = TmuxAction::by_id(ActionId::AttachSession).expect("attach action exists");
-        let result = match self
-            .send_pty_input(&TmuxTerminalCommand::attach_session(&session).to_pty_input())
-        {
-            Ok(()) => TmuxActionResult::Success {
+        let result = if self.shell_session.is_none() {
+            TmuxActionResult::Skipped {
                 action_id: ActionId::AttachSession,
+                reason: "shell not started".to_owned(),
                 teaching_hint: format!("tmux command: {}", action.tmux_command),
-            },
-            Err(error) => TmuxActionResult::Skipped {
-                action_id: ActionId::AttachSession,
-                reason: error.to_string(),
-                teaching_hint: format!("tmux command: {}", action.tmux_command),
-            },
+            }
+        } else {
+            match self.send_pty_input(&TmuxTerminalCommand::attach_session(&session).to_pty_input())
+            {
+                Ok(()) => TmuxActionResult::Success {
+                    action_id: ActionId::AttachSession,
+                    teaching_hint: format!("tmux command: {}", action.tmux_command),
+                },
+                Err(error) => TmuxActionResult::Skipped {
+                    action_id: ActionId::AttachSession,
+                    reason: error.to_string(),
+                    teaching_hint: format!("tmux command: {}", action.tmux_command),
+                },
+            }
         };
         if let Some(panel) = self.tmux_manager_panel.as_mut() {
             panel.record_action_feedback(match &result {
