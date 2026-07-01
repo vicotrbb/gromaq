@@ -19,8 +19,8 @@ use cleanup::TmuxUiSmokeCleanup;
 use pty::TmuxUiSmokePtySession;
 use render::{render_manager_panel, render_manager_panel_contains, render_status_strip};
 use shortcuts::{
-    drive_destructive_shortcut_confirmation, drive_refresh_shortcut, drive_select_pane_shortcut,
-    drive_shortcut_action,
+    drive_destructive_shortcut_confirmation, drive_name_entry_action, drive_refresh_shortcut,
+    drive_select_pane_shortcut, drive_shortcut_action, drive_unavailable_shortcut_block,
 };
 use workspace::{run_workspace_proof, workspace_preset};
 
@@ -78,6 +78,12 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let safe_action_dispatched = drive_safe_action(&mut runtime, &runner);
     let name_entry_dispatched = drive_name_entry_action(&mut runtime, &runner);
     let workspace_result = run_workspace_proof(&snapshot, &workspace_preset, &runner);
+    let unavailable_shortcut_blocked = drive_unavailable_shortcut_block(&mut runtime)
+        && render_manager_panel_contains(
+            &mut runtime,
+            &mut renderer,
+            "split-pane-rightneedsactivetmux",
+        );
     let state = match TmuxStateReader::new(runner.clone()).read_state() {
         Ok(state) => state,
         Err(error) => return ui_failure(format!("tmux UI state reader failed: {error:?}")),
@@ -96,7 +102,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.feedback_checked,
             workspace_result.duplicate_prevented,
             state.sessions.len(),
@@ -169,42 +175,4 @@ fn drive_safe_action(runtime: &mut SmokeRuntime, runner: &SocketTmuxCommandRunne
                 ..
             })
         )
-}
-
-fn drive_name_entry_action(runtime: &mut SmokeRuntime, runner: &SocketTmuxCommandRunner) -> bool {
-    for _ in 0..3 {
-        if matches!(
-            runtime
-                .handle_tmux_manager_key(&Key::Named(NamedKey::ArrowDown), ModifiersState::empty()),
-            TmuxManagerKeyOutcome::Ignored
-        ) {
-            return false;
-        }
-    }
-    if !matches!(
-        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty()),
-        TmuxManagerKeyOutcome::Consumed
-    ) {
-        return false;
-    }
-    for character in "gromaq-runtime-tmux-ui-name".chars() {
-        if !matches!(
-            runtime.handle_tmux_manager_key(
-                &Key::Character(character.to_string().into()),
-                ModifiersState::empty()
-            ),
-            TmuxManagerKeyOutcome::Consumed
-        ) {
-            return false;
-        }
-    }
-    let requested =
-        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
-    matches!(
-        runtime.dispatch_tmux_manager_action(requested, runner),
-        Some(TmuxActionResult::Success {
-            action_id: ActionId::StartSession,
-            ..
-        })
-    )
 }

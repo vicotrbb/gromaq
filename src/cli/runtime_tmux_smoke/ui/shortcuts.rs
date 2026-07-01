@@ -3,7 +3,7 @@
 use winit::keyboard::{Key, ModifiersState};
 
 use crate::app::TmuxManagerKeyOutcome;
-use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult};
+use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult, TmuxManagerSnapshot};
 
 pub(super) fn drive_shortcut_action(
     runtime: &mut super::SmokeRuntime,
@@ -35,6 +35,54 @@ pub(super) fn drive_select_pane_shortcut(
     )
 }
 
+pub(super) fn drive_name_entry_action(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    for _ in 0..3 {
+        if matches!(
+            runtime.handle_tmux_manager_key(
+                &Key::Named(winit::keyboard::NamedKey::ArrowDown),
+                ModifiersState::empty()
+            ),
+            TmuxManagerKeyOutcome::Ignored
+        ) {
+            return false;
+        }
+    }
+    if !matches!(
+        runtime.handle_tmux_manager_key(
+            &Key::Named(winit::keyboard::NamedKey::Enter),
+            ModifiersState::empty()
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    ) {
+        return false;
+    }
+    for character in "gromaq-runtime-tmux-ui-name".chars() {
+        if !matches!(
+            runtime.handle_tmux_manager_key(
+                &Key::Character(character.to_string().into()),
+                ModifiersState::empty()
+            ),
+            TmuxManagerKeyOutcome::Consumed
+        ) {
+            return false;
+        }
+    }
+    let requested = runtime.handle_tmux_manager_key(
+        &Key::Named(winit::keyboard::NamedKey::Enter),
+        ModifiersState::empty(),
+    );
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::StartSession,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_destructive_shortcut_confirmation(runtime: &mut super::SmokeRuntime) -> bool {
     let confirmation =
         runtime.handle_tmux_manager_key(&Key::Character("q".into()), ModifiersState::empty());
@@ -52,5 +100,19 @@ pub(super) fn drive_refresh_shortcut(runtime: &mut super::SmokeRuntime) -> bool 
     matches!(
         runtime.handle_tmux_manager_key(&Key::Character("r".into()), ModifiersState::empty()),
         TmuxManagerKeyOutcome::RefreshRequested
+    )
+}
+
+pub(super) fn drive_unavailable_shortcut_block(runtime: &mut super::SmokeRuntime) -> bool {
+    if runtime.tmux_manager_panel_is_open() {
+        let _ = runtime.handle_tmux_manager_key(
+            &Key::Named(winit::keyboard::NamedKey::Escape),
+            ModifiersState::empty(),
+        );
+    }
+    runtime.toggle_tmux_manager_panel(TmuxManagerSnapshot::no_server());
+    matches!(
+        runtime.handle_tmux_manager_key(&Key::Character("s".into()), ModifiersState::empty()),
+        TmuxManagerKeyOutcome::Consumed
     )
 }
