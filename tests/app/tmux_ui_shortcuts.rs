@@ -48,6 +48,32 @@ fn tmux_manager_panel_shortcuts_switch_windows() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_attach_and_detach_sessions() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("a".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::AttachSession)
+    );
+    assert_eq!(panel.pending_action(), Some("attach-session"));
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("d".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::DetachSession)
+    );
+    assert_eq!(panel.pending_action(), Some("detach-session"));
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_request_refresh() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
