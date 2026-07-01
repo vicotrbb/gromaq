@@ -12,6 +12,8 @@ use crate::error::{GromaqError, Result};
 pub struct TmuxSettings {
     /// Whether tmux-native affordances are enabled.
     pub enabled: bool,
+    /// Whether the native tmux manager opens when the app starts.
+    pub open_manager_on_start: bool,
     /// Named tmux workspace presets.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub workspaces: BTreeMap<String, TmuxWorkspaceSettings>,
@@ -21,6 +23,7 @@ impl Default for TmuxSettings {
     fn default() -> Self {
         Self {
             enabled: true,
+            open_manager_on_start: true,
             workspaces: BTreeMap::new(),
         }
     }

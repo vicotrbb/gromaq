@@ -130,6 +130,23 @@ fn native_app_config_opens_tmux_manager_by_default() {
 }
 
 #[test]
+fn native_app_config_can_keep_tmux_ui_enabled_without_startup_manager() {
+    let user_config = GromaqConfig::from_toml_str(
+        r#"
+        [tmux]
+        enabled = true
+        open_manager_on_start = false
+        "#,
+    )
+    .unwrap();
+
+    let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
+
+    assert!(app_config.tmux_ui_enabled);
+    assert!(!app_config.open_tmux_manager_on_start);
+}
+
+#[test]
 fn native_app_config_can_disable_tmux_ui() {
     let mut user_config = GromaqConfig::default();
     user_config.tmux.enabled = false;

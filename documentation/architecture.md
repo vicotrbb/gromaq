@@ -15,9 +15,9 @@ handoff, and validation tooling.
 - `pty`: shell command resolution, PTY session lifecycle, background output
   reading, writer access, and resize notification.
 - `config`: TOML settings, validation, defaults, theme tokens, and config-file
-  reload state. The `tmux` config child module owns workspace-preset settings
-  and validates session, root, window, and pane command fields before launch
-  code can consume them.
+  reload state. The `tmux` config child module owns tmux enablement, startup
+  manager visibility, workspace-preset settings, and validates session, root,
+  window, and pane command fields before launch code can consume them.
 - `font`: real-font rasterization, glyph image preparation, fallback handling,
   and rasterized glyph caching.
 - `renderer`: CPU-side render planning, glyph atlas metadata, quad generation,

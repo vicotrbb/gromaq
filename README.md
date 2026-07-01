@@ -213,10 +213,10 @@ gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
 ```
 
 Inside the native window, the tmux manager opens on startup when tmux UI is
-enabled. Control/Super Shift `T` toggles it after launch. Use arrows or
-`h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry;
-`r` refreshes the tmux snapshot without shell input; destructive actions
-require `y`; Esc closes or cancels prompts.
+enabled and `open_manager_on_start` is true. Control/Super Shift `T` toggles it
+after launch. Use arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or
+starts name entry; `r` refreshes the tmux snapshot without shell input;
+destructive actions require `y`; Esc closes or cancels prompts.
 
 ## Documentation
 

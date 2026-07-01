@@ -78,7 +78,7 @@ impl NativeAppConfig {
             target_fps: config.performance.target_fps,
             welcome_screen: config.welcome.enabled,
             tmux_ui_enabled: config.tmux.enabled,
-            open_tmux_manager_on_start: config.tmux.enabled,
+            open_tmux_manager_on_start: config.tmux.enabled && config.tmux.open_manager_on_start,
             tmux_workspaces: tmux_workspace_presets(config),
             ..Self::default()
         })
