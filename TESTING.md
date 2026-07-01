@@ -119,7 +119,7 @@ action dispatch, new-window, destructive confirmation against the disposable tar
 shell input after closing the panel, and right-prompt legibility. It records the
 exact `target/debug/gromaq` binary marker used by the `cargo run` launch and
 fails if the old keyboard/mouse/paste startup copy remains in that binary, then
-records a bounded manager reference snapshot as
+records initial tmux window/pane state plus a bounded manager reference snapshot as
 `tmux-default-cargo-run-manager-reference.ppm` plus a PNG when `sips` is
 available. That reference must report current startup content, the tmux status
 strip, active pane command text, `terminal cells:`, and nonzero manager
