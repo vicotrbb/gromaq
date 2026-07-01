@@ -145,6 +145,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "manager header status checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "current pane marker checked: true",
         ),
         (
