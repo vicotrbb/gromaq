@@ -217,6 +217,14 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "`--runtime-tmux-smoke` and `--runtime-tmux-ui-smoke` fail closed",
+        ),
+        (
+            "TESTING.md",
+            "Both runtime tmux smokes are fail-closed proof commands",
+        ),
+        (
+            "documentation/compatibility.md",
             "close the startup-open manager with Esc before proving Control/Super Shift `T` reopens it",
         ),
         (

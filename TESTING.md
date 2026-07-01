@@ -138,6 +138,12 @@ command, and manager panel proof lines, records the rendered manager
 session/window/pane counts from an isolated tmux session, writes a PPM artifact,
 and writes a PNG beside it when `sips` is available.
 
+Both runtime tmux smokes are fail-closed proof commands: `--runtime-tmux-smoke`
+and `--runtime-tmux-ui-smoke` return a failing exit when a required proof line
+is false or required tmux state counts are zero, while still reporting a clean
+skip when tmux is not installed. That automated proof does not replace the live
+app-window checklist below.
+
 When no packaged app bundle is selected, the helper builds and launches
 `target/debug/gromaq` directly with its generated tmux proof config. Set
 `GROMAQ_MANUAL_TMUX_APP=/path/to/Gromaq.app` to force an app-bundle run, or
