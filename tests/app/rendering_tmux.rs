@@ -255,6 +255,7 @@ fn native_terminal_runtime_renders_tmux_manager_executable_actions() {
     assert!(shortcut_line.contains("c new-window"));
     assert!(shortcut_line.contains("n next-window"));
     assert!(shortcut_line.contains("p previous-window"));
+    assert!(shortcut_line.contains("r refresh"));
     assert!(shortcut_line.contains("w kill-window"));
     assert!(shortcut_line.contains("z zoom-pane"));
     for action in [

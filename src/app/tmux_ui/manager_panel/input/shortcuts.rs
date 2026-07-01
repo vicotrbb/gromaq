@@ -28,6 +28,13 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
     }
 }
 
+pub(super) fn is_refresh_shortcut(key: &Key) -> bool {
+    let Key::Character(character) = key else {
+        return false;
+    };
+    character.eq_ignore_ascii_case("r")
+}
+
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts c new-window s split-right v split-down n next-window p previous-window z zoom-pane w kill-window x kill-pane"
+    "shortcuts c new-window s split-right v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
 }

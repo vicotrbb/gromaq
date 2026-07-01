@@ -6,7 +6,7 @@ mod shortcuts;
 
 use super::state::TmuxManagerPanelState;
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
-use shortcuts::shortcut_action;
+use shortcuts::{is_refresh_shortcut, shortcut_action};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 const PANEL_ACTIONS: [ActionId; 16] = [
@@ -45,6 +45,8 @@ pub enum TmuxManagerKeyOutcome {
     ConfirmedAction(ActionId),
     /// The panel requested launching the selected workspace preset.
     WorkspaceLaunchRequested,
+    /// The panel requested rereading tmux state for the open manager.
+    RefreshRequested,
 }
 
 impl TmuxManagerPanelState {
@@ -63,6 +65,9 @@ impl TmuxManagerPanelState {
         }
         if self.confirmation.is_some() {
             return self.handle_confirmation_key(key);
+        }
+        if is_refresh_shortcut(key) {
+            return TmuxManagerKeyOutcome::RefreshRequested;
         }
         if let Some(action_id) = shortcut_action(key) {
             return self.activate_action(action_id);

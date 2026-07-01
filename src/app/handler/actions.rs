@@ -117,6 +117,10 @@ impl NativeTerminalApp {
                 .runtime
                 .handle_tmux_manager_key(&logical_key, self.modifiers);
             if !matches!(tmux_outcome, super::super::TmuxManagerKeyOutcome::Ignored) {
+                let refresh_requested = matches!(
+                    tmux_outcome,
+                    super::super::TmuxManagerKeyOutcome::RefreshRequested
+                );
                 let terminal_dispatched = self
                     .runtime
                     .dispatch_tmux_manager_terminal_action(tmux_outcome.clone())
@@ -138,7 +142,11 @@ impl NativeTerminalApp {
                         &crate::tmux::SystemTmuxCommandRunner,
                     )
                     .is_some();
-                if terminal_dispatched || action_dispatched || workspace_dispatched {
+                if refresh_requested
+                    || terminal_dispatched
+                    || action_dispatched
+                    || workspace_dispatched
+                {
                     self.runtime
                         .refresh_tmux_manager_panel(read_tmux_manager_snapshot());
                 }

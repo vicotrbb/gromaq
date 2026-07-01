@@ -47,6 +47,21 @@ fn tmux_manager_panel_shortcuts_switch_windows() {
     assert_eq!(panel.pending_action(), Some("previous-window"));
 }
 
+#[test]
+fn tmux_manager_panel_shortcuts_request_refresh() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("r".into()),
+            ModifiersState::empty(),
+            &snapshot,
+        ),
+        TmuxManagerKeyOutcome::RefreshRequested
+    );
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
