@@ -149,6 +149,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "refresh focus preserved: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "help catalog checked: true",
         ),
         (
