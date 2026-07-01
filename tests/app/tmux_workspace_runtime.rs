@@ -246,6 +246,47 @@ fn runtime_workspace_launch_feedback_reaches_status_strip() {
     assert!(frame.lines[7].contains("workspace gromaq found session gromaq"));
 }
 
+#[test]
+fn runtime_workspace_launch_reports_skipped_attach_without_shell() {
+    let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState::default(),
+        current: None,
+    };
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 160,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.toggle_tmux_manager_panel_with_workspaces(snapshot, vec![workspace_preset()]);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "has-session",
+        "-t",
+        "gromaq",
+    ])]);
+
+    let result = runtime
+        .dispatch_tmux_manager_workspace(TmuxManagerKeyOutcome::WorkspaceLaunchRequested, &runner);
+
+    assert!(matches!(
+        result,
+        Some(Ok(TmuxWorkspaceResult::Existing { .. }))
+    ));
+    runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Escape), ModifiersState::empty());
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(
+        frame.lines[7].contains("attach skipped: shell not started"),
+        "{:?}",
+        frame.lines[7]
+    );
+}
+
 fn workspace_preset() -> TmuxWorkspaceUiPreset {
     TmuxWorkspaceUiPreset::new(
         "gromaq",

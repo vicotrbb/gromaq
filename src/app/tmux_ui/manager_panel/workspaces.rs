@@ -59,6 +59,17 @@ impl TmuxManagerPanelState {
     pub fn workspace_feedback(&self) -> Option<&str> {
         self.workspace_feedback.as_deref()
     }
+
+    /// Add runtime handoff details to the latest workspace feedback.
+    pub fn append_workspace_feedback(&mut self, feedback: impl AsRef<str>) {
+        match self.workspace_feedback.as_mut() {
+            Some(existing) => {
+                existing.push_str("; ");
+                existing.push_str(feedback.as_ref());
+            }
+            None => self.workspace_feedback = Some(feedback.as_ref().to_owned()),
+        }
+    }
 }
 
 pub(super) fn workspace_row(panel: &TmuxManagerPanelState) -> Option<String> {

@@ -108,16 +108,29 @@ impl<S> NativeTerminalRuntime<S> {
         if !matches!(outcome, TmuxManagerKeyOutcome::WorkspaceLaunchRequested) {
             return None;
         }
-        let panel = self.tmux_manager_panel.as_mut()?;
-        let result = panel.ensure_selected_workspace_started(runner);
+        let result = self
+            .tmux_manager_panel
+            .as_mut()?
+            .ensure_selected_workspace_started(runner);
+        let mut attach_feedback = None;
         if let Some(Ok(workspace)) = result.as_ref() {
             let session = match workspace {
                 TmuxWorkspaceResult::Existing { session }
                 | TmuxWorkspaceResult::Attached { session }
                 | TmuxWorkspaceResult::Started { session, .. } => session,
             };
-            let _ =
-                self.send_pty_input(&TmuxTerminalCommand::attach_session(session).to_pty_input());
+            if self.shell_session.is_none() {
+                attach_feedback = Some("attach skipped: shell not started".to_owned());
+            } else if let Err(error) =
+                self.send_pty_input(&TmuxTerminalCommand::attach_session(session).to_pty_input())
+            {
+                attach_feedback = Some(format!("attach skipped: {error}"));
+            }
+        }
+        if let Some(feedback) = attach_feedback
+            && let Some(panel) = self.tmux_manager_panel.as_mut()
+        {
+            panel.append_workspace_feedback(feedback);
         }
         if result.is_some() {
             self.sync_tmux_status_feedback_from_panel();
