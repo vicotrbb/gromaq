@@ -42,6 +42,16 @@ fn native_terminal_app_new_writes_default_welcome_screen() {
 }
 
 #[test]
+fn native_terminal_app_default_welcome_teaches_tmux_shortcut_copy() {
+    let app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
+    let visible = visible_runtime_text(&app);
+
+    assert!(visible.contains("Input"));
+    assert!(visible.contains("tmux Cmd/Ctrl+Shift+T"));
+    assert!(!visible.contains("keyboard, mouse, paste"));
+}
+
+#[test]
 fn native_terminal_app_default_startup_renders_tmux_manager_first_frame() {
     let mut app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
     let mut renderer = TestFrameRenderer::default();
