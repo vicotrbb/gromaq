@@ -9,8 +9,12 @@ pub(super) fn window_smoke_success(report: &NativeAppRunReport) -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\nsurface timeouts: {}\nsurface occluded: {}\n",
-            report.redraw_attempts, report.surface_frame_timeouts, report.surface_frame_occluded
+            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\nsurface timeouts: {}\nsurface occluded: {}\ntmux status strip rendered: {}\ntmux manager panel rendered: {}\n",
+            report.redraw_attempts,
+            report.surface_frame_timeouts,
+            report.surface_frame_occluded,
+            report.tmux_status_strip_rendered,
+            report.tmux_manager_panel_rendered
         ),
         stderr: String::new(),
     }
@@ -43,6 +47,17 @@ pub(super) fn window_smoke_no_surface_failure(report: &NativeAppRunReport) -> Cl
         stderr: format!(
             "window smoke failed: no surface frame was presented; redraw attempts: {}; surface timeouts: {}; surface occluded: {}\n",
             report.redraw_attempts, report.surface_frame_timeouts, report.surface_frame_occluded
+        ),
+    }
+}
+
+pub(super) fn window_smoke_no_default_tmux_ui_failure(report: &NativeAppRunReport) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!(
+            "window smoke failed: default tmux UI was not rendered; tmux status strip rendered: {}; tmux manager panel rendered: {}\n",
+            report.tmux_status_strip_rendered, report.tmux_manager_panel_rendered
         ),
     }
 }

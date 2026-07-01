@@ -5,6 +5,9 @@ use gromaq::cli::{NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher
 pub(crate) struct NoGlyphFrameAppLauncher;
 
 #[derive(Debug)]
+pub(crate) struct NoTmuxUiFrameAppLauncher;
+
+#[derive(Debug)]
 pub(crate) struct DroppedFrameAppLauncher;
 
 impl NativeAppLauncher for DroppedFrameAppLauncher {
@@ -63,6 +66,26 @@ impl NativeAppLauncher for NoGlyphFrameAppLauncher {
             frame_interval_warmup_frames: config.app.frame_interval_warmup_frames,
             frame_interval_samples: 0,
             glyph_frame_presented: false,
+            ..NativeAppRunReport::default()
+        })
+    }
+}
+
+impl NativeAppLauncher for NoTmuxUiFrameAppLauncher {
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
+        let frames_presented = config.app.exit_after_presented_frames.unwrap_or_default();
+        Ok(NativeAppRunReport {
+            redraw_attempts: frames_presented,
+            frames_presented,
+            glyph_frame_presented: true,
+            glyph_frame_width: 2560,
+            glyph_frame_height: 1600,
+            glyph_frame_glyph_quads: 12,
+            glyph_frame_background_quads: 1,
+            glyph_frame_cursor_quads: 1,
             ..NativeAppRunReport::default()
         })
     }

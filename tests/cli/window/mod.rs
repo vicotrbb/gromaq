@@ -3,4 +3,6 @@ mod perf;
 mod smoke;
 mod snapshot;
 
-pub(super) use launchers::{DroppedFrameAppLauncher, NoGlyphFrameAppLauncher};
+pub(super) use launchers::{
+    DroppedFrameAppLauncher, NoGlyphFrameAppLauncher, NoTmuxUiFrameAppLauncher,
+};
