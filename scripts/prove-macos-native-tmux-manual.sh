@@ -12,6 +12,7 @@ default_dist_app="${root}/target/dist/${app_name}.app"
 default_debug_binary="${root}/target/debug/gromaq"
 app_path="${GROMAQ_MANUAL_TMUX_APP:-}"
 binary_path="${GROMAQ_MANUAL_TMUX_BINARY:-}"
+open_manager_on_start="${GROMAQ_MANUAL_TMUX_OPEN_ON_START:-false}"
 config_path="${proof_root}/gromaq-native-tmux-manual.toml"
 shell_path="${proof_root}/manual-tmux-shell.sh"
 summary_path="${proof_root}/summary.txt"
@@ -35,6 +36,14 @@ if ! command -v tmux >/dev/null 2>&1; then
   exit 1
 fi
 tmux_version="$(tmux -V)"
+
+case "${open_manager_on_start}" in
+  true | false) ;;
+  *)
+    printf '%s\n' "error: GROMAQ_MANUAL_TMUX_OPEN_ON_START must be true or false." >&2
+    exit 1
+    ;;
+esac
 
 launch_mode="app"
 if [ -n "${binary_path}" ]; then
@@ -86,6 +95,7 @@ mkdir -p "${proof_root}"
 trap cleanup EXIT INT TERM
 cleanup
 printf '%s\n' "${launch_mode}" > "${proof_root}/launch-mode.txt"
+printf '%s\n' "${open_manager_on_start}" > "${proof_root}/open-manager-on-start.txt"
 
 tmux new-session -d -s "${session}" -n code
 tmux split-window -t "${session}:0" -h
@@ -101,7 +111,7 @@ printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
 printf '%s\n' "Use the visible Gromaq window for each step, then type the exact token requested here."
-printf '%s\n' "Confirm the status strip and manager are visible. Type exactly: manager-visible"
+printf '%s\n' "Confirm the status strip is visible. Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
 IFS= read -r manager_visible
 printf '%s\n' "\${manager_visible}" > "${proof_root}/tmux-manager-visible.txt"
 printf '%s\n' "Press Control/Super Shift+T if needed, navigate/click rows, and run one safe split-pane action. Type exactly: safe-action"
@@ -137,7 +147,7 @@ enabled = false
 [tmux]
 enabled = true
 show_status_strip = true
-open_manager_on_start = true
+open_manager_on_start = ${open_manager_on_start}
 
 [tmux.workspaces.manual]
 session = "${workspace_session}"
@@ -154,6 +164,7 @@ EOF
 
 printf '%s\n' "macOS native tmux manual proof"
 printf '%s\n' "Launch mode: ${launch_mode}"
+printf '%s\n' "Open manager on start: ${open_manager_on_start}"
 printf '%s\n' "App: ${app_path:-none}"
 printf '%s\n' "Binary: ${executable}"
 printf '%s\n' "Version: ${actual_version}"
@@ -161,7 +172,7 @@ printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
-printf '%s\n' "A Gromaq window will open with tmux UI enabled and the manager open on start."
+printf '%s\n' "A Gromaq window will open with tmux UI enabled and open_manager_on_start=${open_manager_on_start}."
 printf '%s\n' "Follow the prompts inside the Gromaq terminal window exactly."
 
 if [ "${launch_mode}" = "app" ]; then
@@ -206,6 +217,7 @@ fi
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
   printf '%s\n' "Launch mode: ${launch_mode}"
+  printf '%s\n' "Open manager on start: ${open_manager_on_start}"
   printf '%s\n' "App: ${app_path:-none}"
   printf '%s\n' "Executable: ${executable}"
   printf '%s\n' "Version: ${actual_version}"
@@ -219,5 +231,6 @@ fi
   printf '%s\n' "tmux-workspace-visible.txt: ${workspace_visible}"
   printf '%s\n' "tmux-normal-shell-input.txt: ${normal_shell_input}"
   printf '%s\n' "launch-mode.txt: ${launch_mode}"
+  printf '%s\n' "open-manager-on-start.txt: ${open_manager_on_start}"
   printf '%s\n' "Proof root: ${proof_root}"
 } | tee "${summary_path}"

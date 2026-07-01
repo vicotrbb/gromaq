@@ -111,6 +111,9 @@ When no packaged app bundle is selected, the helper builds and launches
 `target/debug/gromaq` directly with its generated tmux proof config. Set
 `GROMAQ_MANUAL_TMUX_APP=/path/to/Gromaq.app` to force an app-bundle run, or
 `GROMAQ_MANUAL_TMUX_BINARY=/path/to/gromaq` to force a specific binary.
+By default, the generated tmux proof config starts with the manager closed so
+the tester must open it with Control/Super Shift `T`; set
+`GROMAQ_MANUAL_TMUX_OPEN_ON_START=true` to instead prove startup-open behavior.
 
 - Launch `cargo run` or `scripts/prove-macos-native-tmux-manual.sh`.
 - Verify the persistent tmux status strip is visible and legible.
