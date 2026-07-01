@@ -75,6 +75,40 @@ pub(super) fn drive_zoom_shortcut(
     )
 }
 
+pub(super) fn drive_rename_window_action(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    if !matches!(
+        runtime.handle_tmux_manager_key(&Key::Character("e".into()), ModifiersState::empty()),
+        TmuxManagerKeyOutcome::Consumed
+    ) {
+        return false;
+    }
+    for character in "ui-smoke-renamed".chars() {
+        if !matches!(
+            runtime.handle_tmux_manager_key(
+                &Key::Character(character.to_string().into()),
+                ModifiersState::empty()
+            ),
+            TmuxManagerKeyOutcome::Consumed
+        ) {
+            return false;
+        }
+    }
+    let requested = runtime.handle_tmux_manager_key(
+        &Key::Named(winit::keyboard::NamedKey::Enter),
+        ModifiersState::empty(),
+    );
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::RenameWindow,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_name_entry_action(
     runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,
