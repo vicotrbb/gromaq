@@ -87,6 +87,11 @@ and write `target/ci-compatibility-proof/summary.txt`.
 
 ## Editors, Pagers, and Multiplexers
 
+Manual tmux proof harnesses distinguish preflight from interactive proof in
+their summaries: non-interactive preflight reports
+`live app-window proof: not run`, while completed live harnesses report
+`live app-window proof: completed`.
+
 | Workflow | Current proof | Status |
 | --- | --- | --- |
 | `vim` launch and navigation workflows | Real PTY command workflow when available. On 2026-06-27, `cargo test --test pty -- --nocapture` passed current-host `vim --version` and scripted edit workflows. A refreshed focused run passed `pty_session_runs_vim_search_navigation_when_available`, proving slash-search navigation to `gromaq-vim-line-040` and command-mode result capture through the PTY. A refreshed `cargo run -- --runtime-tool-workflow-smoke` also passed `vim-version` with 2912 output bytes containing `VIM`. | Proven on current host for launch, edit, search navigation, and runtime version smoke; conditional elsewhere |

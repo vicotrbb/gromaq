@@ -22,7 +22,6 @@ fn readme_keeps_launch_release_shape() {
         );
     }
 }
-
 #[test]
 fn detailed_docs_keep_default_visual_contract_and_proof_commands() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -36,7 +35,6 @@ fn detailed_docs_keep_default_visual_contract_and_proof_commands() {
         );
     }
 }
-
 #[test]
 fn detailed_docs_keep_release_install_boundaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -50,7 +48,6 @@ fn detailed_docs_keep_release_install_boundaries() {
         );
     }
 }
-
 #[test]
 fn readme_keeps_known_completion_gaps_visible() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -65,7 +62,6 @@ fn readme_keeps_known_completion_gaps_visible() {
         );
     }
 }
-
 #[test]
 fn compatibility_matrix_rows_keep_three_columns() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -335,6 +331,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "No-server snapshots may report `tmux status pane command rendered: false` only with `tmux manager panes: 0`",
         ),
+        (compat, "live app-window proof: not run"),
+        (compat, "live app-window proof: completed"),
+        ("TESTING.md", "live app-window proof: not run"),
+        ("TESTING.md", "live app-window proof: completed"),
     ] {
         let path = root.join(relative);
         let source = fs::read_to_string(&path).unwrap();

@@ -130,7 +130,9 @@ through its non-interactive machine checks and write a preflight summary without
 opening the live app window. Preflight mode proves stale-binary checks, isolated
 tmux setup, bounded window-smoke rendering with `presented frame limit: 3`,
 `frames presented: 3`, and generated artifacts; it does not replace the manual
-app-window checklist.
+app-window checklist. Preflight summaries report
+`live app-window proof: not run`; completed interactive harness summaries report
+`live app-window proof: completed`.
 Set `GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS=<n>` to control bounded native-window
 proof retries. The manual tmux harnesses retry only transient `surface occluded`
 or `no surface frame was presented` failures and still fail immediately for
