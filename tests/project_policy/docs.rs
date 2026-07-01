@@ -181,6 +181,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "help catalog action coverage checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "window cycle shortcuts checked: true",
         ),
         (

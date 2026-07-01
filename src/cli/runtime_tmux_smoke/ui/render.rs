@@ -178,7 +178,7 @@ fn status_strip(snapshot: &TmuxManagerSnapshot) -> TmuxUiSnapshot {
     TmuxUiSnapshot::from_manager_snapshot(snapshot)
 }
 
-fn last_plan_text(renderer: &WgpuRenderer) -> String {
+pub(super) fn last_plan_text(renderer: &WgpuRenderer) -> String {
     renderer
         .last_plan()
         .map(|plan| {
