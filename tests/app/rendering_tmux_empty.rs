@@ -66,9 +66,17 @@ fn native_terminal_runtime_renders_outside_tmux_attach_command_hint() {
     let hint_line = &renderer.frames.last().unwrap().lines[7];
     assert!(hint_line.contains("Outside tmux"), "{hint_line}");
     assert!(
-        hint_line.contains("tmux attach-session -t <session>"),
-        "{hint_line}"
+        renderer
+            .frames
+            .last()
+            .unwrap()
+            .lines
+            .iter()
+            .any(|line| line.contains("tmux attach-session -t <session>"))
     );
+    assert!(hint_line.contains("r refresh"), "{hint_line}");
+    assert!(hint_line.contains("? help"), "{hint_line}");
+    assert!(hint_line.contains("Esc close"), "{hint_line}");
 }
 
 #[test]

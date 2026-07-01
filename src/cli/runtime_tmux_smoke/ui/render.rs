@@ -152,6 +152,8 @@ pub(super) fn render_outside_attach_hint(renderer: &mut WgpuRenderer) -> bool {
     runtime.open_tmux_manager_panel_with_workspaces(detached_snapshot(), Vec::new());
     render_manager_panel_contains(&mut runtime, renderer, "Outsidetmux")
         && render_manager_panel_contains(&mut runtime, renderer, "tmuxattach-session-t<session>")
+        && render_manager_panel_contains(&mut runtime, renderer, "rrefresh")
+        && render_manager_panel_contains(&mut runtime, renderer, "?help")
 }
 
 fn status_strip(snapshot: &TmuxManagerSnapshot) -> TmuxUiSnapshot {

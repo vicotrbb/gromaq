@@ -66,8 +66,7 @@ pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
             .to_owned();
     }
     if snapshot.current.is_none() {
-        return "Outside tmux; Enter attach-session | tmux attach-session -t <session> | Esc close"
-            .to_owned();
+        return "Outside tmux; Enter attach-session | r refresh | ? help | Esc close".to_owned();
     }
     format!("Shortcuts {} | Esc close", super::input::shortcut_hint())
 }
