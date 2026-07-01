@@ -12,6 +12,7 @@ const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "default startup marker: tmux Cmd/Ctrl+Shift+T",
     "LaunchServices smoke stdout",
     "window screenshot smoke: ok",
+    "live-app-window-proof.txt",
     "GROMAQ_SCREENSHOT_MIN_TMUX_PIXELS",
     "current-host compatibility",
 ];
