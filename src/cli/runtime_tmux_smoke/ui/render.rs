@@ -51,6 +51,18 @@ pub(super) fn render_manager_panel(
         && last_plan_text(renderer).contains("tmuxmanager")
 }
 
+pub(super) fn render_manager_panel_contains(
+    runtime: &mut NativeTerminalRuntime<()>,
+    renderer: &mut WgpuRenderer,
+    expected: &str,
+) -> bool {
+    runtime.invalidate_terminal_frame();
+    runtime
+        .render_terminal_frame_with_status_overlay(renderer, None)
+        .is_ok_and(|rendered| rendered)
+        && last_plan_text(renderer).contains(expected)
+}
+
 fn tmux_status(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
     if snapshot.state.sessions.is_empty() {
         TmuxStatusKind::NoServer
