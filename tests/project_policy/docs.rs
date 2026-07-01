@@ -67,7 +67,6 @@ fn compatibility_matrix_rows_keep_three_columns() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("documentation/compatibility.md");
     let source = fs::read_to_string(&path).unwrap();
-
     for (line_number, line) in source.lines().enumerate() {
         let trimmed = line.trim();
         if !trimmed.starts_with('|') || trimmed == "| --- | --- | --- |" {
@@ -326,6 +325,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ("README.md", "mouse clicks select visible manager rows"),
         ("README.md", "scripts/prove-native-tmux-default-snapshot.sh"),
         ("ROADMAP.md", "Default native tmux snapshot artifact proof"),
+        ("ROADMAP.md", "live-app-window-proof.txt"),
         (
             "documentation/compatibility.md",
             "No-server snapshots may report `tmux status pane command rendered: false` only with `tmux manager panes: 0`",

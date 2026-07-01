@@ -74,6 +74,7 @@
 - Broader macOS and Linux host compatibility matrix
 - Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows
 - Manual app-window proof for the full native tmux manager workflow, including
-  keyboard/mouse interaction in the real `cargo run` window
+  keyboard/mouse interaction in the real `cargo run` window and
+  `live-app-window-proof.txt = completed`
 - v1 daily-driver hardening for stability, recovery, accessibility, and
   long-session behavior
