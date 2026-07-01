@@ -36,6 +36,29 @@ fn native_terminal_runtime_renders_session_focus_enter_action() {
     );
 }
 
+#[test]
+fn native_terminal_runtime_renders_help_shortcut_hint() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 180,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let shortcut_line = &renderer.frames.last().unwrap().lines[7];
+    assert!(shortcut_line.contains("? help"), "{shortcut_line}");
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,

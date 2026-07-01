@@ -7,7 +7,9 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
     let Key::Character(character) = key else {
         return None;
     };
-    if character.eq_ignore_ascii_case("a") {
+    if character == "?" {
+        Some(ActionId::ShowHelp)
+    } else if character.eq_ignore_ascii_case("a") {
         Some(ActionId::AttachSession)
     } else if character.eq_ignore_ascii_case("c") {
         Some(ActionId::NewWindow)
@@ -42,5 +44,5 @@ pub(super) fn is_refresh_shortcut(key: &Key) -> bool {
 }
 
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts a attach-session c new-window d detach-session s split-right t start-session v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
+    "shortcuts ? help a attach-session c new-window d detach-session s split-right t start-session v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
 }

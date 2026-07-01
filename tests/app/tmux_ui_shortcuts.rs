@@ -93,6 +93,22 @@ fn tmux_manager_panel_shortcuts_start_session_name_input() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_open_help() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("?".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::ShowHelp)
+    );
+    assert_eq!(panel.pending_action(), Some("show-help"));
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_request_refresh() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
