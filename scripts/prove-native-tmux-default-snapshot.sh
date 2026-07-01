@@ -49,6 +49,27 @@ do
   fi
 done
 
+require_positive_tmux_count() {
+  label="$1"
+  value="$(grep -F "${label}:" "${log_path}" | tail -n 1 | awk '{print $NF}')"
+  case "${value}" in
+    ''|*[!0-9]*)
+      printf '%s\n' "error: native tmux default snapshot proof could not parse ${label} count." >&2
+      cat "${log_path}" >&2
+      exit 1
+      ;;
+  esac
+  if [ "${value}" -le 0 ]; then
+    printf '%s\n' "error: native tmux default snapshot proof reported ${label}: ${value}." >&2
+    cat "${log_path}" >&2
+    exit 1
+  fi
+}
+
+require_positive_tmux_count "tmux manager sessions"
+require_positive_tmux_count "tmux manager windows"
+require_positive_tmux_count "tmux manager panes"
+
 if [ ! -s "${ppm_path}" ]; then
   printf '%s\n' "error: native tmux default snapshot proof did not write ${ppm_path}" >&2
   exit 1
