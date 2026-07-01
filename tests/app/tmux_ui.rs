@@ -150,6 +150,49 @@ fn tmux_manager_panel_supports_discoverable_action_shortcuts() {
 }
 
 #[test]
+fn empty_tmux_manager_panel_defaults_to_start_session_name_entry() {
+    let snapshot = empty_manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.focus_next();
+    panel.focus_next();
+    panel.focus_next();
+
+    assert_eq!(panel.focus(), TmuxManagerFocus::Actions);
+    assert_eq!(
+        panel.handle_key(
+            &Key::Named(NamedKey::Enter),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert_eq!(
+        panel.action_input_prompt(),
+        Some("start-session name: ".to_owned())
+    );
+}
+
+#[test]
+fn detached_tmux_manager_panel_defaults_to_attach_session() {
+    let snapshot = detached_manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.focus_next();
+    panel.focus_next();
+    panel.focus_next();
+
+    assert_eq!(panel.focus(), TmuxManagerFocus::Actions);
+    assert_eq!(
+        panel.handle_key(
+            &Key::Named(NamedKey::Enter),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::AttachSession)
+    );
+    assert_eq!(panel.pending_action(), Some("attach-session"));
+}
+
+#[test]
 fn runtime_toggle_opens_and_closes_renderable_tmux_manager_panel() {
     let snapshot = manager_snapshot();
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
@@ -277,5 +320,30 @@ fn refreshed_manager_snapshot() -> TmuxManagerSnapshot {
             window_index: 0,
             pane_id: "%9".to_owned(),
         }),
+    }
+}
+
+fn empty_manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        state: TmuxState {
+            sessions: Vec::new(),
+            windows: Vec::new(),
+            panes: Vec::new(),
+        },
+        current: None,
+    }
+}
+
+fn detached_manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "alpha".to_owned(),
+                attached: false,
+            }],
+            windows: Vec::new(),
+            panes: Vec::new(),
+        },
+        current: None,
     }
 }

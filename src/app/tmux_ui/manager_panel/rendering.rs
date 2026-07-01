@@ -1,6 +1,7 @@
 //! Native tmux manager panel rendering.
 
-use super::input::{panel_actions, shortcut_hint};
+use super::hints::hint_row;
+use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
 use super::workspaces::workspace_row;
@@ -61,7 +62,7 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
             .or_else(|| panel.confirmation.clone())
             .or_else(|| panel.workspace_feedback.clone())
             .or_else(|| panel.last_action_feedback.clone())
-            .unwrap_or_else(shortcut_row),
+            .unwrap_or_else(|| hint_row(snapshot)),
     );
     lines
 }
@@ -141,10 +142,6 @@ fn action_row(panel: &TmuxManagerPanelState) -> String {
             .key_binding
             .unwrap_or(selected_action.tmux_command)
     )
-}
-
-fn shortcut_row() -> String {
-    format!("Shortcuts {} | Esc close", shortcut_hint())
 }
 
 fn pane_label(pane: &TmuxPane, selected: bool) -> String {

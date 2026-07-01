@@ -1,0 +1,15 @@
+//! User-facing tmux manager hint rows.
+
+use crate::tmux::TmuxManagerSnapshot;
+
+pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
+    if snapshot.state.sessions.is_empty() {
+        return "No tmux server; Enter start-session to create a tmux session | Esc close"
+            .to_owned();
+    }
+    if snapshot.current.is_none() {
+        return "Outside tmux; Enter attach-session to attach selected session | Esc close"
+            .to_owned();
+    }
+    format!("Shortcuts {} | Esc close", super::input::shortcut_hint())
+}

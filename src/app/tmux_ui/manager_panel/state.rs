@@ -1,5 +1,6 @@
 //! Native tmux manager panel state.
 
+use super::initial_action::initial_selected_action;
 use super::selection::{
     selected_pane_index, selected_panes, selected_session_index, selected_window_index,
     selected_windows, window_label,
@@ -69,7 +70,7 @@ impl TmuxManagerPanelState {
             selected_session,
             selected_window,
             selected_pane,
-            selected_action: 0,
+            selected_action: initial_selected_action(snapshot),
             pending_action: None,
             pending_action_name: None,
             confirmation: None,
