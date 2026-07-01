@@ -308,21 +308,20 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
         .unwrap();
     let pre_window = &proof_script[interactive_launch..cargo_run];
     assert!(pre_window.contains("native terminal control, not web UI"));
-    let summary = &proof_script[proof_script
-        .find("tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}")
-        .unwrap()..];
+    let summary = &proof_script[proof_script.find("native window proof attempts:").unwrap()..];
+    let require = |marker: &str| assert!(summary.contains(marker), "{marker}");
     for marker in [
         "grep -F \"tmux status pane command rendered: true\" \"${window_smoke_stdout_path}\"",
         "grep -F \"skipped pty handoffs checked: attach=true start=true workspace=true\"",
         "grep -F \"workspace duplicate prevented: true\"",
+        "grep -F \"tmux status strip rendered: true\" \"${manager_reference_stdout_path}\"",
+        "grep -F \"tmux status pane command rendered: true\" \"${manager_reference_stdout_path}\"",
+        "grep -F \"tmux manager panel rendered: true\" \"${manager_reference_stdout_path}\"",
         "grep -F \"tmux manager sessions:\" \"${manager_reference_stdout_path}\"",
         "grep -F \"tmux manager windows:\" \"${manager_reference_stdout_path}\"",
         "grep -F \"tmux manager panes:\" \"${manager_reference_stdout_path}\"",
     ] {
-        assert!(
-            summary.contains(marker),
-            "missing summary marker `{marker}`"
-        );
+        require(marker);
     }
 }
 #[test]
