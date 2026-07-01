@@ -113,9 +113,10 @@ scripts/prove-macos-native-tmux-manual.sh
 path through plain `cargo run`, matching the no-argument developer workflow. It
 prepares uniquely named tmux sessions, asks the tester to verify the default
 startup shortcut copy, status strip, Control/Super Shift `T` manager panel,
-visible tmux state, navigation, safe action dispatch, destructive confirmation
-against the disposable target, shell input after closing the panel, and
-right-prompt legibility, then records confirmation files under
+visible tmux state, navigation, start-session, attach-session, safe action
+dispatch, new-window, destructive confirmation against the disposable target,
+shell input after closing the panel, and right-prompt legibility, then records
+confirmation files under
 `target/macos-native-tmux-default-cargo-run-proof`.
 
 `scripts/prove-native-tmux-default-snapshot.sh` is the non-interactive default
