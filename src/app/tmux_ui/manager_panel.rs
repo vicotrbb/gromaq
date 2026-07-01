@@ -11,7 +11,7 @@ mod selection;
 mod state;
 mod workspaces;
 
-pub use input::TmuxManagerKeyOutcome;
+pub use input::{TmuxManagerKeyOutcome, TmuxManagerMouseOutcome};
 pub use rendering::apply_tmux_manager_panel;
 pub use state::{TmuxManagerFocus, TmuxManagerPanelState};
 pub use workspaces::TmuxWorkspaceUiPreset;

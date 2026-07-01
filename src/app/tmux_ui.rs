@@ -6,8 +6,8 @@ mod status_snapshot;
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 
 pub use manager_panel::{
-    TmuxManagerFocus, TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset,
-    apply_tmux_manager_panel,
+    TmuxManagerFocus, TmuxManagerKeyOutcome, TmuxManagerMouseOutcome, TmuxManagerPanelState,
+    TmuxWorkspaceUiPreset, apply_tmux_manager_panel,
 };
 
 /// High-level tmux status shown in native tmux UI surfaces.

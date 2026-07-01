@@ -4,8 +4,10 @@ use crate::tmux::TmuxManagerSnapshot;
 
 use super::NativeTerminalRuntime;
 use crate::app::{
-    TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxUiSnapshot, TmuxWorkspaceUiPreset,
+    TmuxManagerKeyOutcome, TmuxManagerMouseOutcome, TmuxManagerPanelState, TmuxUiSnapshot,
+    TmuxWorkspaceUiPreset,
 };
+use crate::mouse::MouseEvent;
 
 impl<S> NativeTerminalRuntime<S> {
     /// Retain a tmux status snapshot for the normal native render path.
@@ -34,6 +36,35 @@ impl<S> NativeTerminalRuntime<S> {
     /// Return whether the last rendered frame applied the native tmux manager panel.
     pub fn last_rendered_tmux_manager_panel(&self) -> bool {
         self.last_rendered_tmux_manager_panel
+    }
+
+    /// Let the rendered tmux manager panel handle a grid-relative mouse event.
+    pub fn handle_tmux_manager_mouse_event(
+        &mut self,
+        event: MouseEvent,
+    ) -> TmuxManagerMouseOutcome {
+        let Some(region) = self.last_rendered_tmux_manager_region else {
+            return TmuxManagerMouseOutcome::Ignored;
+        };
+        if event.row < region.row
+            || event.row >= region.row.saturating_add(region.rows)
+            || event.col < region.col
+            || event.col >= region.col.saturating_add(region.cols)
+        {
+            return TmuxManagerMouseOutcome::Ignored;
+        }
+        let Some(panel) = self.tmux_manager_panel.as_mut() else {
+            return TmuxManagerMouseOutcome::Ignored;
+        };
+        let mut panel_event = event;
+        panel_event.row = panel_event.row.saturating_sub(region.row);
+        panel_event.col = panel_event.col.saturating_sub(region.col);
+        let outcome = panel.handle_mouse_event(panel_event);
+        if matches!(outcome, TmuxManagerMouseOutcome::Consumed) {
+            self.sync_tmux_status_feedback_from_panel();
+            self.terminal.invalidate_viewport();
+        }
+        outcome
     }
 
     /// Toggle the native tmux manager panel using a freshly read snapshot.

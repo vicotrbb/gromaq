@@ -1,6 +1,7 @@
 //! Native tmux manager panel keyboard handling.
 
 mod activation;
+mod mouse;
 mod navigation;
 mod shortcuts;
 
@@ -8,6 +9,8 @@ use super::state::TmuxManagerPanelState;
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 use shortcuts::{is_refresh_shortcut, shortcut_action};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
+
+pub use mouse::TmuxManagerMouseOutcome;
 
 const PANEL_ACTIONS: [ActionId; 16] = [
     ActionId::SplitPaneRight,

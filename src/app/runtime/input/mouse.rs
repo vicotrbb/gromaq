@@ -6,7 +6,7 @@ use crate::app::native_input::{
 };
 use crate::app::{NativeAppError, NativePtySessionIo};
 use crate::mouse::{MouseButton, MouseEventKind};
-use crate::{MouseEvent, SelectionPoint, SelectionRange};
+use crate::{MouseEvent, SelectionPoint, SelectionRange, app::TmuxManagerMouseOutcome};
 
 use super::super::NativeTerminalRuntime;
 
@@ -77,6 +77,16 @@ where
         ) else {
             return Ok(NativeWindowMouseInputResult::default());
         };
+        if matches!(
+            self.handle_tmux_manager_mouse_event(event),
+            TmuxManagerMouseOutcome::Consumed
+        ) {
+            self.selection_drag_anchor = None;
+            return Ok(NativeWindowMouseInputResult {
+                handled: true,
+                needs_redraw: true,
+            });
+        }
         if self.send_mouse_input(event)? {
             self.selection_drag_anchor = None;
             return Ok(NativeWindowMouseInputResult {

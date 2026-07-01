@@ -124,6 +124,7 @@ impl<S> NativeTerminalRuntime<S> {
         }
         self.last_rendered_tmux_status_strip = false;
         self.last_rendered_tmux_manager_panel = false;
+        self.last_rendered_tmux_manager_region = None;
         let tmux_snapshot = tmux_snapshot.or(self.tmux_status_snapshot.as_ref());
         if self.tmux_status_strip_enabled
             && let Some(tmux_snapshot) = tmux_snapshot
@@ -140,6 +141,7 @@ impl<S> NativeTerminalRuntime<S> {
         {
             dirty_regions.push(region);
             self.last_rendered_tmux_manager_panel = true;
+            self.last_rendered_tmux_manager_region = Some(region);
         }
         if let Err(error) = renderer.render_frame(&grid, cursor, &dirty_regions) {
             self.terminal.invalidate_viewport();

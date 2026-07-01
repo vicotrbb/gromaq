@@ -38,6 +38,8 @@ mod tmux_start_session_runtime;
 mod tmux_status;
 #[path = "app/tmux_ui.rs"]
 mod tmux_ui;
+#[path = "app/tmux_ui_mouse.rs"]
+mod tmux_ui_mouse;
 #[path = "app/tmux_ui_navigation.rs"]
 mod tmux_ui_navigation;
 #[path = "app/tmux_ui_shortcuts.rs"]
