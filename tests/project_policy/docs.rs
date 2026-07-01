@@ -121,6 +121,14 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "no-server start hint checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
+            "outside attach hint checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "mouse focus checked: true",
         ),
         (
@@ -138,6 +146,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         (
             "documentation/compatibility.md",
             "status pane command checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
+            "status feedback checked: true",
         ),
         (
             "documentation/compatibility.md",
@@ -177,7 +189,15 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "select pane shortcut checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "rename window action dispatched: true",
+        ),
+        (
+            "documentation/compatibility.md",
+            "safe action dispatched: true",
         ),
         (
             "documentation/compatibility.md",
@@ -198,6 +218,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         (
             "documentation/compatibility.md",
             "kill session confirmation dispatched: true",
+        ),
+        (
+            "documentation/compatibility.md",
+            "name entry action dispatched: true",
         ),
         (
             "documentation/compatibility.md",
