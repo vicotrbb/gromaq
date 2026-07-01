@@ -110,7 +110,9 @@ the exact result. The required manual checklist is:
 - Run a safe split-pane action from the UI.
 - Create or rename a window from the inline name prompt.
 - Start a named session or launch a configured workspace preset from the UI.
-- Attempt a kill action and verify inline confirmation appears before tmux runs.
+- Press `r` and verify the manager refreshes without sending shell input.
+- Use `q` or another destructive shortcut and verify inline confirmation appears
+  before tmux runs.
 - Confirm a kill only against an isolated test target.
 - Close the panel and verify normal shell input still reaches the terminal.
 - Check a right-prompt or long prompt layout for legible overlap behavior.

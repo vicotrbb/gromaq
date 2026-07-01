@@ -213,7 +213,8 @@ gromaq --window-tmux-manager-snapshot target/native-tmux-manager.ppm
 
 Inside the native window, Control/Super Shift `T` toggles the tmux manager. Use
 arrows or `h`/`j`/`k`/`l` to move; Enter runs actions or starts name entry;
-destructive actions require `y`; Esc closes or cancels prompts.
+`r` refreshes the tmux snapshot without shell input; destructive actions require
+`y`; Esc closes or cancels prompts.
 
 ## Documentation
 

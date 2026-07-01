@@ -108,6 +108,38 @@ fn public_docs_avoid_drift_prone_current_head_remote_proof_claims() {
 }
 
 #[test]
+fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for (relative, marker) in [
+        (
+            "documentation/compatibility.md",
+            "destructive shortcut checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
+            "refresh shortcut requested: true",
+        ),
+        ("TESTING.md", "Press `r` and verify the manager refreshes"),
+        (
+            "TESTING.md",
+            "Use `q` or another destructive shortcut and verify inline confirmation",
+        ),
+        (
+            "README.md",
+            "`r` refreshes the tmux snapshot without shell input",
+        ),
+    ] {
+        let path = root.join(relative);
+        let source = fs::read_to_string(&path).unwrap();
+        assert!(
+            source.contains(marker),
+            "{} must document `{marker}` for native tmux UI proof boundaries",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
 fn readme_stays_concise_for_public_onboarding() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("README.md");
