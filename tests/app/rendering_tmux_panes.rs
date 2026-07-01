@@ -3,6 +3,7 @@ use gromaq::tmux::{
     TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
     TmuxWindow,
 };
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::support::{MockFrameRenderer, MockPtySession};
 
@@ -54,6 +55,37 @@ fn native_terminal_runtime_renders_current_target_pane_details_in_header() {
     assert!(header.contains("target alpha:1:%2"), "{header}");
     assert!(header.contains("editor:nvim"), "{header}");
     assert!(header.contains("100x30"), "{header}");
+}
+
+#[test]
+fn native_terminal_runtime_marks_current_pane_after_selection_moves() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 112,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.focus_next();
+    panel.focus_next();
+    panel.handle_key(
+        &Key::Named(NamedKey::ArrowUp),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let pane_line = &renderer.frames.last().unwrap().lines[5];
+    assert!(pane_line.contains("%1 shell:zsh* 100x30"), "{pane_line}");
+    assert!(pane_line.contains("%2 editor:nvim 100x30@"), "{pane_line}");
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {

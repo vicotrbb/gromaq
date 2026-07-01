@@ -40,3 +40,11 @@ pub(super) fn pane_dimensions(pane: &TmuxPane) -> String {
         _ => String::new(),
     }
 }
+
+pub(super) fn is_current_pane(snapshot: &TmuxManagerSnapshot, pane: &TmuxPane) -> bool {
+    snapshot.current.as_ref().is_some_and(|current| {
+        current.session_name == pane.session_name
+            && current.window_index == pane.window_index
+            && current.pane_id == pane.id
+    })
+}

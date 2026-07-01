@@ -5,7 +5,7 @@ use super::hints::{action_choice_label, action_hint, enter_action_label, hint_ro
 use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
-use super::target::{current_target_label, pane_command_label, pane_dimensions};
+use super::target::{current_target_label, is_current_pane, pane_command_label, pane_dimensions};
 use super::workspaces::workspace_row;
 use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxPane};
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
@@ -107,7 +107,13 @@ fn pane_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> St
     panes
         .iter()
         .enumerate()
-        .map(|(index, pane)| pane_label(pane, index == panel.selected_pane))
+        .map(|(index, pane)| {
+            pane_label(
+                pane,
+                index == panel.selected_pane,
+                is_current_pane(snapshot, pane),
+            )
+        })
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -133,13 +139,14 @@ fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> 
     )
 }
 
-fn pane_label(pane: &TmuxPane, selected: bool) -> String {
+fn pane_label(pane: &TmuxPane, selected: bool, current: bool) -> String {
     let mut command = pane_command_label(pane);
     if selected {
         command.push('*');
     }
     let dimensions = pane_dimensions(pane);
-    format!("{} {}{}", pane.id, command, dimensions)
+    let current_marker = if current { "@" } else { "" };
+    format!("{} {}{}{}", pane.id, command, dimensions, current_marker)
 }
 
 fn selected_label(label: &str, selected: bool) -> String {

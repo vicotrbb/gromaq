@@ -47,6 +47,7 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
         assert!(exit.stdout.contains("manager panel rendered: true"));
         assert!(exit.stdout.contains("manager state checked: true"));
         assert!(exit.stdout.contains("target pane detail checked: true"));
+        assert!(exit.stdout.contains("current pane marker checked: true"));
         assert!(
             exit.stdout
                 .contains("startup manager after shell prompt checked: true")

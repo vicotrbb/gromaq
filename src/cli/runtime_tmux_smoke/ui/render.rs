@@ -1,6 +1,9 @@
 //! Render-plan proof helpers for the native tmux UI smoke.
 
+mod current_marker;
 mod fixtures;
+
+pub(super) use current_marker::render_current_pane_marker;
 
 use crate::app::{NativeTerminalRuntimeConfig, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
