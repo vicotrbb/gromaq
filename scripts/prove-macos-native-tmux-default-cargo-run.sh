@@ -58,9 +58,11 @@ manager_reference_png_path="${proof_root}/tmux-default-cargo-run-manager-referen
 manager_reference_stdout_path="${proof_root}/tmux-default-cargo-run-manager-reference.stdout"
 manager_reference_stderr_path="${proof_root}/tmux-default-cargo-run-manager-reference.stderr"
 native_window_proof_attempts="${GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS:-3}"
+native_window_attempt_log_path="${proof_root}/native-window-proof-attempts.txt"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
+: > "${native_window_attempt_log_path}"
 git -C "${root}" status --short --branch > "${git_status_path}"
 trap cleanup EXIT INT TERM
 cleanup
@@ -103,16 +105,21 @@ run_native_window_proof_with_retry() {
   shift 3
   attempt=1
   while [ "${attempt}" -le "${native_window_proof_attempts}" ]; do
+    printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts}: ${label}" >> "${native_window_attempt_log_path}"
     if "$@" > "${stdout_path}" 2> "${stderr_path}"; then
+      printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts}: ${label}: ok" >> "${native_window_attempt_log_path}"
       return 0
     fi
     if ! grep -Eq "surface occluded|no surface frame was presented" "${stderr_path}"; then
+      printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts}: ${label}: failed" >> "${native_window_attempt_log_path}"
       return 1
     fi
     if [ "${attempt}" -ge "${native_window_proof_attempts}" ]; then
+      printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts}: ${label}: surface occluded; attempts exhausted" >> "${native_window_attempt_log_path}"
       return 1
     fi
     printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts} for ${label} hit surface occlusion; retrying." >> "${stderr_path}"
+    printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts}: ${label}: surface occluded; retrying" >> "${native_window_attempt_log_path}"
     attempt=$((attempt + 1))
     sleep 1
   done
@@ -250,6 +257,9 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"
     printf '%s\n' "tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}"
     printf '%s\n' "tmux-default-cargo-run-window-smoke.stderr: ${window_smoke_stderr_path}"
+    printf '%s\n' "native window proof attempts: ${native_window_proof_attempts}"
+    printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
+    printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
     grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
     grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
@@ -397,6 +407,9 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "cargo-build stderr: ${proof_root}/cargo-build.stderr"
   printf '%s\n' "tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-window-smoke.stderr: ${window_smoke_stderr_path}"
+  printf '%s\n' "native window proof attempts: ${native_window_proof_attempts}"
+  printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
+  printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
   grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
   grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"

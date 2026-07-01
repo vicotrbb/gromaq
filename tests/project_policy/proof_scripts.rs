@@ -206,6 +206,9 @@ fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
             "surface occluded",
             "no surface frame was presented",
             "native window proof attempt",
+            "native-window-proof-attempts.txt",
+            "native window proof attempts:",
+            "native window proof attempt log:",
         ] {
             assert!(
                 source.contains(marker),
