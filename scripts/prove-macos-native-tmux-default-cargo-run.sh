@@ -24,6 +24,9 @@ fi
 tmux_version="$(tmux -V)"
 head_sha="$(git -C "${root}" rev-parse --short HEAD)"
 startup_marker="tmux Cmd/Ctrl+Shift+T"
+old_startup_marker="keyboard, mouse, paste"
+binary_path="${root}/target/debug/gromaq"
+binary_markers_path="${proof_root}/tmux-default-cargo-run-binary-markers.txt"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -37,6 +40,7 @@ tmux new-session -d -s "${kill_session}" -n disposable
 printf '%s\n' "macOS native tmux default cargo run proof"
 printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "git HEAD: ${head_sha}"
+printf '%s\n' "debug binary: ${binary_path}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "A default Gromaq window will open through plain cargo run."
@@ -61,6 +65,26 @@ printf '%s\n' "- Check prompt/right-prompt layout for legible overlap behavior."
   cd "${root}"
   cargo run > "${proof_root}/cargo-run.stdout" 2> "${proof_root}/cargo-run.stderr"
 )
+
+if [ ! -x "${binary_path}" ]; then
+  printf '%s\n' "error: expected cargo run debug binary at ${binary_path}." >&2
+  exit 1
+fi
+
+if ! grep -F "Running \`target/debug/gromaq\`" "${proof_root}/cargo-run.stderr" >/dev/null; then
+  printf '%s\n' "error: cargo run stderr did not show target/debug/gromaq launch." >&2
+  exit 1
+fi
+
+if ! strings "${binary_path}" | grep -F "${startup_marker}" > "${binary_markers_path}"; then
+  printf '%s\n' "error: ${binary_path} does not contain current startup marker '${startup_marker}'." >&2
+  exit 1
+fi
+
+if strings "${binary_path}" | grep -F "${old_startup_marker}" >> "${binary_markers_path}"; then
+  printf '%s\n' "error: unexpected old startup marker '${old_startup_marker}' remains in ${binary_path}." >&2
+  exit 1
+fi
 
 record_confirmation() {
   prompt="$1"
@@ -94,10 +118,12 @@ record_confirmation "Confirm prompt/right-prompt layout stayed legible." "right-
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
   printf '%s\n' "tmux: ${tmux_version}"
   printf '%s\n' "git HEAD: ${head_sha}"
+  printf '%s\n' "debug binary: ${binary_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
+  printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"
   printf '%s\n' "tmux-default-cargo-run-current-startup.txt: current-startup-copy"
   printf '%s\n' "tmux-default-cargo-run-status-strip.txt: status-strip-visible"
   printf '%s\n' "tmux-default-cargo-run-manager-visible.txt: manager-visible"
