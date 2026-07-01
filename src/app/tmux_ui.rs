@@ -3,6 +3,7 @@
 mod manager_panel;
 mod status_snapshot;
 
+use crate::tmux::shell_quote;
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 
 pub use manager_panel::{
@@ -63,7 +64,7 @@ impl TmuxUiSnapshot {
         let mut parts = vec![format!("tmux: {}", self.status_label())];
         parts.push("manager Cmd/Ctrl+Shift+T".to_owned());
         if let Some(guidance) = self.status_guidance() {
-            parts.push(guidance.to_owned());
+            parts.push(guidance);
         }
         push_optional(&mut parts, self.current_session.as_deref());
         push_optional(&mut parts, self.current_window.as_deref());
@@ -88,11 +89,17 @@ impl TmuxUiSnapshot {
         parts.join(" | ")
     }
 
-    fn status_guidance(&self) -> Option<&'static str> {
+    fn status_guidance(&self) -> Option<String> {
         match self.status {
-            TmuxStatusKind::Missing => Some("install tmux"),
-            TmuxStatusKind::NoServer => Some("start session"),
-            TmuxStatusKind::Detached => Some("attach session"),
+            TmuxStatusKind::Missing => Some("install tmux".to_owned()),
+            TmuxStatusKind::NoServer => Some("start session".to_owned()),
+            TmuxStatusKind::Detached => Some(
+                self.current_session
+                    .as_deref()
+                    .filter(|session| !session.is_empty())
+                    .map(|session| format!("attach session {}", shell_quote(session)))
+                    .unwrap_or_else(|| "attach session".to_owned()),
+            ),
             TmuxStatusKind::Disabled | TmuxStatusKind::Attached => None,
         }
     }

@@ -87,7 +87,7 @@ fn status_strip_teaches_missing_no_server_and_detached_next_steps() {
     for (snapshot, expected) in [
         (empty_status(TmuxStatusKind::Missing), "install tmux"),
         (empty_status(TmuxStatusKind::NoServer), "start session"),
-        (detached_snapshot(), "attach session"),
+        (detached_snapshot(), "attach session 'delta work'"),
     ] {
         let mut runtime =
             NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
@@ -153,7 +153,7 @@ fn attached_snapshot() -> TmuxUiSnapshot {
 fn detached_snapshot() -> TmuxUiSnapshot {
     TmuxUiSnapshot {
         status: TmuxStatusKind::Detached,
-        current_session: Some("alpha".to_owned()),
+        current_session: Some("delta work".to_owned()),
         current_window: Some("1:code".to_owned()),
         visible_windows: vec!["0:shell".to_owned(), "1:code*".to_owned()],
         pane_count: Some(2),
