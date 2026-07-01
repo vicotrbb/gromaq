@@ -119,8 +119,14 @@ impl TmuxManagerPanelState {
     pub fn request_action(&mut self, stable_id: &str, destructive: bool) {
         self.pending_action_name = None;
         if destructive {
-            self.confirmation = Some(format!("confirm {stable_id} with y, n/Esc cancels"));
-            self.confirmation_action = action_id_for_stable_id(stable_id);
+            let action = TmuxAction::by_stable_id(stable_id);
+            let command = action
+                .map(|action| action.tmux_command)
+                .unwrap_or("<unknown tmux command>");
+            self.confirmation = Some(format!(
+                "confirm {stable_id} ({command}) with y, n/Esc cancels"
+            ));
+            self.confirmation_action = action.map(|action| action.id);
             self.pending_action = None;
         } else {
             self.pending_action = Some(stable_id.to_owned());
@@ -194,8 +200,4 @@ impl TmuxManagerPanelState {
             .get(self.selected_pane)
             .map(|pane| pane.id.as_str())
     }
-}
-
-fn action_id_for_stable_id(stable_id: &str) -> Option<ActionId> {
-    TmuxAction::by_stable_id(stable_id).map(|action| action.id)
 }

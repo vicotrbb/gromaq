@@ -155,7 +155,7 @@ fn tmux_manager_panel_shortcuts_kill_session_requires_confirmation() {
     );
     assert_eq!(
         panel.confirmation_message(),
-        Some("confirm kill-session with y, n/Esc cancels")
+        Some("confirm kill-session (tmux kill-session -t <session>) with y, n/Esc cancels")
     );
 }
 
