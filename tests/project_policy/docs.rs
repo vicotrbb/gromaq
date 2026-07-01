@@ -327,6 +327,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "README.md",
             "`r` refreshes the tmux snapshot without shell input",
         ),
+        ("README.md", "concrete attach target"),
         ("README.md", "mouse clicks select visible manager rows"),
         ("README.md", "scripts/prove-native-tmux-default-snapshot.sh"),
         ("ROADMAP.md", "Default native tmux snapshot artifact proof"),
@@ -344,7 +345,6 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         );
     }
 }
-
 #[test]
 fn readme_stays_concise_for_public_onboarding() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
