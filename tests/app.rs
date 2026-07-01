@@ -54,6 +54,8 @@ mod tmux_ui_shortcuts;
 mod tmux_ui_startup;
 #[path = "app/tmux_window_cycle_action.rs"]
 mod tmux_window_cycle_action;
+#[path = "app/tmux_workspace_rendering.rs"]
+mod tmux_workspace_rendering;
 #[path = "app/tmux_workspace_runtime.rs"]
 mod tmux_workspace_runtime;
 #[path = "app/tmux_workspaces.rs"]

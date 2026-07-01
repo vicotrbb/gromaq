@@ -97,6 +97,9 @@ pub(super) fn workspace_labels_start_col(panel: &TmuxManagerPanelState) -> usize
 
 pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) -> String {
     let marker = if selected { "*" } else { "" };
+    if let Some(reason) = workspace_invalid_reason(&preset.settings) {
+        return format!("{}{marker} invalid: {reason}", preset.key);
+    }
     let root = preset.settings.root.as_deref().unwrap_or("-");
     let windows = preset
         .settings
@@ -120,10 +123,31 @@ fn selected_workspace_command_hint(panel: &TmuxManagerPanelState) -> String {
 }
 
 fn workspace_command_hint(preset: &TmuxWorkspaceUiPreset) -> String {
+    if let Some(reason) = workspace_invalid_reason(&preset.settings) {
+        return format!(" | invalid: {reason}");
+    }
     let session = shell_quote(&preset.settings.session);
     format!(
         " | Enter start/attach | tmux new-session -d -s {session} | tmux attach-session -t {session}"
     )
+}
+
+fn workspace_invalid_reason(workspace: &TmuxWorkspaceSettings) -> Option<&'static str> {
+    if workspace.session.trim().is_empty() {
+        return Some("session is empty");
+    }
+    if workspace.windows.is_empty() {
+        return Some("windows are empty");
+    }
+    for window in &workspace.windows {
+        if window.name.trim().is_empty() {
+            return Some("window name is empty");
+        }
+        if window.panes.is_empty() || window.panes.iter().any(|pane| pane.trim().is_empty()) {
+            return Some("pane command is empty");
+        }
+    }
+    None
 }
 
 fn workspace_feedback(key: &str, result: &Result<TmuxWorkspaceResult, TmuxError>) -> String {
