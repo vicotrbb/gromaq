@@ -10,7 +10,6 @@ const REQUIRED_GITHUB_RELEASE_ASSETS: &[&str] = &[
     "SHA256SUMS-linux-${release_arch}",
     "SHA256SUMS-macos-app",
 ];
-
 #[test]
 fn github_release_install_proof_checks_complete_published_asset_set() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -277,6 +276,7 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "native terminal control, not web UI",
         "macOS native tmux default cargo run proof: ok",
         "summary.txt",
+        "startup manager small-grid cells: 69x17",
     ] {
         assert!(
             proof_script.contains(marker),

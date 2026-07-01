@@ -192,6 +192,11 @@ fi
   cargo run -- --runtime-tmux-ui-smoke > "${runtime_tmux_ui_smoke_stdout_path}" 2> "${runtime_tmux_ui_smoke_stderr_path}"
 )
 
+if ! grep -F "startup manager small-grid cells: 69x17" "${runtime_tmux_ui_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: runtime tmux UI smoke did not prove small-grid startup manager rendering." >&2
+  exit 1
+fi
+
 if ! grep -F "skipped pty handoffs checked: attach=true start=true workspace=true" "${runtime_tmux_ui_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: runtime tmux UI smoke did not prove skipped PTY handoffs." >&2
   exit 1
@@ -312,6 +317,7 @@ if [ "${preflight_only}" = "true" ]; then
     grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
     printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
     printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
+    grep -F "startup manager small-grid cells: 69x17" "${runtime_tmux_ui_smoke_stdout_path}"
     printf '%s\n' "tmux-default-cargo-run-manager-reference.ppm: ${manager_reference_ppm_path}"
     if [ -f "${manager_reference_png_path}" ]; then
       printf '%s\n' "tmux-default-cargo-run-manager-reference.png: ${manager_reference_png_path}"
@@ -470,6 +476,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
+  grep -F "startup manager small-grid cells: 69x17" "${runtime_tmux_ui_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-manager-reference.ppm: ${manager_reference_ppm_path}"
   if [ -f "${manager_reference_png_path}" ]; then
     printf '%s\n' "tmux-default-cargo-run-manager-reference.png: ${manager_reference_png_path}"
