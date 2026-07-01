@@ -15,6 +15,8 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
         Some(ActionId::DetachSession)
     } else if character.eq_ignore_ascii_case("s") {
         Some(ActionId::SplitPaneRight)
+    } else if character.eq_ignore_ascii_case("t") {
+        Some(ActionId::StartSession)
     } else if character.eq_ignore_ascii_case("v") {
         Some(ActionId::SplitPaneDown)
     } else if character.eq_ignore_ascii_case("n") {
@@ -40,5 +42,5 @@ pub(super) fn is_refresh_shortcut(key: &Key) -> bool {
 }
 
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts a attach-session c new-window d detach-session s split-right v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
+    "shortcuts a attach-session c new-window d detach-session s split-right t start-session v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
 }

@@ -74,6 +74,25 @@ fn tmux_manager_panel_shortcuts_attach_and_detach_sessions() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_start_session_name_input() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("t".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert_eq!(
+        panel.action_input_prompt(),
+        Some("start-session name: ".to_owned())
+    );
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_request_refresh() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
