@@ -122,7 +122,10 @@ the tester must open it with Control/Super Shift `T`; set
 - Press Control/Super Shift `T` and verify a real manager panel opens.
 - Inspect sessions, windows, panes, current target, and pane command text.
 - Navigate with arrows or `h`/`j`/`k`/`l`.
-- Click session/window/pane/action/workspace rows and verify selection moves.
+- Click session/window/pane/action/workspace rows and verify selection moves;
+  the harness records this as `tmux-navigation-checked.txt`.
+- Check a right-prompt or long prompt layout for legible overlap behavior; the
+  harness records this as `tmux-right-prompt-legible.txt`.
 - Run a safe split-pane action from the UI.
 - Create or rename a window from the inline name prompt.
 - Start a named session or launch a configured workspace preset from the UI.
@@ -131,7 +134,6 @@ the tester must open it with Control/Super Shift `T`; set
   before tmux runs.
 - Confirm a kill only against an isolated test target.
 - Close the panel and verify normal shell input still reaches the terminal.
-- Check a right-prompt or long prompt layout for legible overlap behavior.
 
 Until that manual checklist has been performed in the current session, native
 tmux manager behavior is proven only by automated model/render/runtime smokes

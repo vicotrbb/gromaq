@@ -117,7 +117,13 @@ printf '%s\n' "\${status_strip_visible}" > "${proof_root}/tmux-status-strip-visi
 printf '%s\n' "Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible"
 IFS= read -r manager_visible
 printf '%s\n' "\${manager_visible}" > "${proof_root}/tmux-manager-visible.txt"
-printf '%s\n' "Press Control/Super Shift+T if needed, navigate/click rows, and run one safe split-pane action. Type exactly: safe-action"
+printf '%s\n' "Navigate with arrows or h/j/k/l and click at least one session/window/pane/action/workspace row. Type exactly: navigation-checked"
+IFS= read -r navigation_checked
+printf '%s\n' "\${navigation_checked}" > "${proof_root}/tmux-navigation-checked.txt"
+printf '%s\n' "Verify prompt/right-prompt layout remains legible with the tmux surfaces visible. Type exactly: right-prompt-legible"
+IFS= read -r right_prompt_legible
+printf '%s\n' "\${right_prompt_legible}" > "${proof_root}/tmux-right-prompt-legible.txt"
+printf '%s\n' "Run one safe split-pane action from the UI. Type exactly: safe-action"
 IFS= read -r safe_action
 printf '%s\n' "\${safe_action}" > "${proof_root}/tmux-safe-action.txt"
 printf '%s\n' "Use q or another destructive shortcut, verify inline confirmation appears, and only confirm against ${kill_session}. Type exactly: destructive-confirmation"
@@ -192,6 +198,8 @@ fi
 
 manager_visible="$(cat "${proof_root}/tmux-manager-visible.txt" 2>/dev/null || true)"
 status_strip_visible="$(cat "${proof_root}/tmux-status-strip-visible.txt" 2>/dev/null || true)"
+navigation_checked="$(cat "${proof_root}/tmux-navigation-checked.txt" 2>/dev/null || true)"
+right_prompt_legible="$(cat "${proof_root}/tmux-right-prompt-legible.txt" 2>/dev/null || true)"
 safe_action="$(cat "${proof_root}/tmux-safe-action.txt" 2>/dev/null || true)"
 destructive_confirmation="$(cat "${proof_root}/tmux-destructive-confirmation.txt" 2>/dev/null || true)"
 workspace_visible="$(cat "${proof_root}/tmux-workspace-visible.txt" 2>/dev/null || true)"
@@ -203,6 +211,14 @@ if [ "${status_strip_visible}" != "status-strip-visible" ]; then
 fi
 if [ "${manager_visible}" != "manager-visible" ]; then
   printf '%s\n' "error: expected manager-visible confirmation, got '${manager_visible}'." >&2
+  exit 1
+fi
+if [ "${navigation_checked}" != "navigation-checked" ]; then
+  printf '%s\n' "error: expected navigation-checked confirmation, got '${navigation_checked}'." >&2
+  exit 1
+fi
+if [ "${right_prompt_legible}" != "right-prompt-legible" ]; then
+  printf '%s\n' "error: expected right-prompt-legible confirmation, got '${right_prompt_legible}'." >&2
   exit 1
 fi
 if [ "${safe_action}" != "safe-action" ]; then
@@ -235,6 +251,8 @@ fi
   printf '%s\n' "workspace-session: ${workspace_session}"
   printf '%s\n' "tmux-status-strip-visible.txt: ${status_strip_visible}"
   printf '%s\n' "tmux-manager-visible.txt: ${manager_visible}"
+  printf '%s\n' "tmux-navigation-checked.txt: ${navigation_checked}"
+  printf '%s\n' "tmux-right-prompt-legible.txt: ${right_prompt_legible}"
   printf '%s\n' "tmux-safe-action.txt: ${safe_action}"
   printf '%s\n' "tmux-destructive-confirmation.txt: ${destructive_confirmation}"
   printf '%s\n' "tmux-workspace-visible.txt: ${workspace_visible}"
