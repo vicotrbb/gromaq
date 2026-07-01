@@ -53,6 +53,20 @@ pub(super) fn workspace_preset() -> TmuxWorkspaceUiPreset {
     )
 }
 
+pub(super) fn docs_workspace_preset() -> TmuxWorkspaceUiPreset {
+    TmuxWorkspaceUiPreset::new(
+        "docs-ui-smoke",
+        TmuxWorkspaceSettings {
+            session: "gromaq-runtime-tmux-ui-docs".to_owned(),
+            root: None,
+            windows: vec![TmuxWorkspaceWindowSettings {
+                name: "docs".to_owned(),
+                panes: vec!["sleep 60".to_owned()],
+            }],
+        },
+    )
+}
+
 fn session_count(runner: &SocketTmuxCommandRunner, name: &str) -> Option<usize> {
     let state = TmuxStateReader::new(runner.clone()).read_state().ok()?;
     Some(

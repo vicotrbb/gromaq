@@ -5,14 +5,16 @@ use winit::keyboard::ModifiersState;
 use crate::app::NativeWindowMouseInput;
 use crate::{MouseButton, MouseEventKind};
 
-const SMOKE_WINDOW_WIDTH_PX: u32 = 960;
+const SMOKE_WINDOW_WIDTH_PX: u32 = 2200;
 const SMOKE_WINDOW_HEIGHT_PX: u32 = 100;
 const SMOKE_CELL_WIDTH_PX: u16 = 10;
 const SMOKE_LINE_HEIGHT_PX: u16 = 10;
 const MANAGER_START_ROW: u16 = 2;
 const MANAGER_WINDOW_ROW: u16 = MANAGER_START_ROW + 2;
+const MANAGER_WORKSPACE_ROW: u16 = MANAGER_START_ROW + 4;
 const MANAGER_ACTION_ROW: u16 = MANAGER_START_ROW + 5;
 const KILL_WINDOW_ACTION_COL: u16 = 90;
+const DOCS_WORKSPACE_COL: u16 = 95;
 
 pub(super) fn drive_mouse_focus(runtime: &mut super::SmokeRuntime) -> bool {
     send_manager_mouse_press(runtime, 1, MANAGER_WINDOW_ROW)
@@ -20,6 +22,10 @@ pub(super) fn drive_mouse_focus(runtime: &mut super::SmokeRuntime) -> bool {
 
 pub(super) fn drive_mouse_action_selection(runtime: &mut super::SmokeRuntime) -> bool {
     send_manager_mouse_press(runtime, KILL_WINDOW_ACTION_COL, MANAGER_ACTION_ROW)
+}
+
+pub(super) fn drive_mouse_workspace_selection(runtime: &mut super::SmokeRuntime) -> bool {
+    send_manager_mouse_press(runtime, DOCS_WORKSPACE_COL, MANAGER_WORKSPACE_ROW)
 }
 
 fn send_manager_mouse_press(runtime: &mut super::SmokeRuntime, col: u16, row: u16) -> bool {

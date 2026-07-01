@@ -17,7 +17,7 @@ use crate::tmux::{
     TmuxCommandRunner, TmuxManager, TmuxProbe, TmuxStateReader,
 };
 use cleanup::TmuxUiSmokeCleanup;
-use mouse::{drive_mouse_action_selection, drive_mouse_focus};
+use mouse::{drive_mouse_action_selection, drive_mouse_focus, drive_mouse_workspace_selection};
 use pty::TmuxUiSmokePtySession;
 use render::{
     render_manager_panel, render_manager_panel_contains, render_startup_manager_after_shell_prompt,
@@ -27,7 +27,7 @@ use shortcuts::{
     drive_destructive_shortcut_confirmation, drive_name_entry_action, drive_refresh_shortcut,
     drive_select_pane_shortcut, drive_shortcut_action, drive_unavailable_shortcut_block,
 };
-use workspace::{run_workspace_proof, workspace_preset};
+use workspace::{docs_workspace_preset, run_workspace_proof, workspace_preset};
 
 const UI_SESSION: &str = "gromaq-runtime-tmux-ui";
 
@@ -67,9 +67,10 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
 
     let status_rendered = render_status_strip(&mut runtime, &mut renderer, &snapshot);
     let workspace_preset = workspace_preset();
+    let docs_workspace_preset = docs_workspace_preset();
     runtime.toggle_tmux_manager_panel_with_workspaces(
         snapshot.clone(),
-        vec![workspace_preset.clone()],
+        vec![workspace_preset.clone(), docs_workspace_preset],
     );
     let manager_opened = runtime.tmux_manager_panel_is_open();
     let manager_rendered = render_manager_panel(&mut runtime, &mut renderer);
@@ -91,6 +92,9 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let mouse_action_selection_checked = render_manager_panel(&mut runtime, &mut renderer)
         && drive_mouse_action_selection(&mut runtime)
         && render_manager_panel_contains(&mut runtime, &mut renderer, "Enterkill-window");
+    let mouse_workspace_selection_checked = render_manager_panel(&mut runtime, &mut renderer)
+        && drive_mouse_workspace_selection(&mut runtime)
+        && render_manager_panel_contains(&mut runtime, &mut renderer, "docs-ui-smoke*");
     let unavailable_shortcut_blocked = drive_unavailable_shortcut_block(&mut runtime)
         && render_manager_panel_contains(
             &mut runtime,
@@ -115,7 +119,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.feedback_checked,
             workspace_result.duplicate_prevented,
             state.sessions.len(),
@@ -130,7 +134,7 @@ type SmokeRuntime = NativeTerminalRuntime<TmuxUiSmokePtySession>;
 
 fn smoke_runtime() -> Result<SmokeRuntime, String> {
     let mut runtime = SmokeRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 96,
+        terminal_cols: 220,
         terminal_rows: 10,
         ..NativeTerminalRuntimeConfig::default()
     })
