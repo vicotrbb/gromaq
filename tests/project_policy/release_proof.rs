@@ -300,30 +300,30 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     assert!(marker_check < interactive_launch);
     assert!(stale_check < interactive_launch);
     assert!(window_smoke < interactive_launch);
-    assert!(stale_check < window_smoke);
     assert!(runtime_tmux_ui_smoke < interactive_launch);
+    assert!(stale_check < window_smoke);
     assert!(window_smoke < runtime_tmux_ui_smoke);
-    assert!(
-        proof_script[interactive_launch
-            ..proof_script
-                .find("cargo run > \"${proof_root}/cargo-run.stdout\"")
-                .unwrap()]
-            .contains(
-                "printf '%s\\n' \"- Confirm the UI felt like native terminal control, not web UI.\""
-            )
-    );
-    let summary_window_smoke = proof_script
-        .find("tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}")
+    let cargo_run = proof_script
+        .find("cargo run > \"${proof_root}/cargo-run.stdout\"")
         .unwrap();
-    let summary = &proof_script[summary_window_smoke..];
-    assert!(
-        summary.contains(
-            "grep -F \"tmux status pane command rendered: true\" \"${window_smoke_stdout_path}\""
-        ) && summary.contains(
-            "grep -F \"skipped pty handoffs checked: attach=true start=true workspace=true\""
-        ) && summary.contains("grep -F \"workspace duplicate prevented: true\""),
-        "default cargo-run proof summary must surface active-pane and runtime UI proof lines"
-    );
+    let pre_window = &proof_script[interactive_launch..cargo_run];
+    assert!(pre_window.contains("native terminal control, not web UI"));
+    let summary = &proof_script[proof_script
+        .find("tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}")
+        .unwrap()..];
+    for marker in [
+        "grep -F \"tmux status pane command rendered: true\" \"${window_smoke_stdout_path}\"",
+        "grep -F \"skipped pty handoffs checked: attach=true start=true workspace=true\"",
+        "grep -F \"workspace duplicate prevented: true\"",
+        "grep -F \"tmux manager sessions:\" \"${manager_reference_stdout_path}\"",
+        "grep -F \"tmux manager windows:\" \"${manager_reference_stdout_path}\"",
+        "grep -F \"tmux manager panes:\" \"${manager_reference_stdout_path}\"",
+    ] {
+        assert!(
+            summary.contains(marker),
+            "missing summary marker `{marker}`"
+        );
+    }
 }
 #[test]
 fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
