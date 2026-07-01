@@ -15,12 +15,10 @@ fn github_release_install_proof_checks_complete_published_asset_set() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-github-release-install.sh")).unwrap();
-
     assert!(proof_script.contains("gh release view"));
     assert!(proof_script.contains("--json assets"));
     assert!(proof_script.contains("verify_release_asset"));
     assert!(proof_script.contains("published release asset missing"));
-
     for asset in REQUIRED_GITHUB_RELEASE_ASSETS {
         assert!(
             proof_script.contains(asset),
@@ -33,7 +31,6 @@ fn github_release_publication_proof_checks_tag_and_assets() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-github-release-publication.sh")).unwrap();
-
     for marker in [
         "gh release view",
         "--json tagName,isDraft,isPrerelease,url,assets",
@@ -64,7 +61,6 @@ fn github_release_macos_install_proof_checks_downloaded_app_bundle() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-github-release-macos-install.sh")).unwrap();
-
     for marker in [
         "Darwin",
         "gh release view",
@@ -94,7 +90,6 @@ fn macos_live_input_manual_proof_guides_installed_app_typing() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-macos-live-input-manual.sh")).unwrap();
-
     for marker in [
         "Darwin",
         "GROMAQ_MANUAL_INPUT_APP",
@@ -119,7 +114,6 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-macos-native-tmux-manual.sh")).unwrap();
-
     for marker in [
         "Darwin",
         "tmux -V",
@@ -274,7 +268,6 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "tmux-default-cargo-run-shell-input.txt",
         "tmux-default-cargo-run-right-prompt.txt",
         "tmux-default-cargo-run-native-control-plane.txt",
-        "native terminal control, not web UI",
         "macOS native tmux default cargo run proof: ok",
         "live app-window proof: completed",
         "summary.txt",
@@ -305,7 +298,6 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     let interactive_launch = proof_script
         .find("A default Gromaq window will open through plain cargo run.")
         .unwrap();
-
     assert!(build < interactive_launch);
     assert!(marker_check < interactive_launch);
     assert!(stale_check < interactive_launch);
@@ -313,7 +305,15 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     assert!(stale_check < window_smoke);
     assert!(runtime_tmux_ui_smoke < interactive_launch);
     assert!(window_smoke < runtime_tmux_ui_smoke);
-
+    assert!(
+        proof_script[interactive_launch
+            ..proof_script
+                .find("cargo run > \"${proof_root}/cargo-run.stdout\"")
+                .unwrap()]
+            .contains(
+                "printf '%s\\n' \"- Confirm the UI felt like native terminal control, not web UI.\""
+            )
+    );
     let summary_window_smoke = proof_script
         .find("tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}")
         .unwrap();

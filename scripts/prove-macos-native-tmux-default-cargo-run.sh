@@ -391,6 +391,7 @@ printf '%s\n' "- A destructive action shows inline confirmation before running."
 printf '%s\n' "- Confirm a kill-session action only against ${kill_session}."
 printf '%s\n' "- Close the panel and verify normal shell input still reaches the prompt."
 printf '%s\n' "- Check prompt/right-prompt layout for legible overlap behavior."
+printf '%s\n' "- Confirm the UI felt like native terminal control, not web UI."
 
 (
   cd "${root}"
