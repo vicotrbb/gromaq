@@ -18,7 +18,8 @@ impl TmuxUiSnapshot {
                     .iter()
                     .find(|pane| pane.id == current.pane_id)
             })
-            .or_else(|| selected_panes.iter().copied().find(|pane| pane.active));
+            .or_else(|| selected_panes.iter().copied().find(|pane| pane.active))
+            .or_else(|| selected_panes.first().copied());
         Self {
             status: status_kind(snapshot),
             current_session: current_session(snapshot),
@@ -84,6 +85,7 @@ fn selected_window(snapshot: &TmuxManagerSnapshot) -> Option<&TmuxWindow> {
     selected_windows(snapshot)
         .into_iter()
         .find(|window| window.active)
+        .or_else(|| selected_windows(snapshot).into_iter().next())
 }
 
 fn current_window_label(

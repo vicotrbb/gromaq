@@ -108,6 +108,19 @@ fn detached_status_snapshot_surfaces_available_window_and_active_pane() {
 }
 
 #[test]
+fn detached_status_snapshot_falls_back_to_first_window_and_pane_without_active_flags() {
+    let snapshot =
+        TmuxUiSnapshot::from_manager_snapshot(&detached_manager_snapshot_without_active_flags());
+
+    assert_eq!(snapshot.status, TmuxStatusKind::Detached);
+    assert_eq!(snapshot.current_session.as_deref(), Some("alpha"));
+    assert_eq!(snapshot.current_window.as_deref(), Some("0:shell"));
+    assert_eq!(snapshot.pane_count, Some(1));
+    assert_eq!(snapshot.active_pane_id.as_deref(), Some("%1"));
+    assert_eq!(snapshot.active_pane_command.as_deref(), Some("zsh"));
+}
+
+#[test]
 fn attached_status_snapshot_keeps_current_window_index_when_state_is_incomplete() {
     let mut manager = detached_manager_snapshot_with_state();
     manager.current = Some(gromaq::tmux::TmuxManagerCurrent {
@@ -207,6 +220,36 @@ fn detached_manager_snapshot_with_state() -> TmuxManagerSnapshot {
                     height: Some(30),
                 },
             ],
+        },
+        current: None,
+    }
+}
+
+fn detached_manager_snapshot_without_active_flags() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "alpha".to_owned(),
+                attached: false,
+            }],
+            windows: vec![TmuxWindow {
+                session_name: "alpha".to_owned(),
+                index: 0,
+                name: "shell".to_owned(),
+                active: false,
+            }],
+            panes: vec![TmuxPane {
+                session_name: "alpha".to_owned(),
+                window_index: 0,
+                index: 0,
+                id: "%1".to_owned(),
+                title: "shell".to_owned(),
+                current_command: "zsh".to_owned(),
+                active: false,
+                width: Some(100),
+                height: Some(30),
+            }],
         },
         current: None,
     }
