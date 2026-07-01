@@ -125,6 +125,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "mouse clicks select session/window/pane/action/workspace rows",
+        ),
+        (
+            "documentation/compatibility.md",
             "refresh shortcut requested: true",
         ),
         (
