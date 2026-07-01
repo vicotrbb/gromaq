@@ -3,6 +3,7 @@
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::app::TmuxManagerKeyOutcome;
+use crate::renderer::WgpuRenderer;
 use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult, TmuxCommandRunner};
 
 pub(in crate::cli::runtime_tmux_smoke::ui) fn drive_rename_window_action(
@@ -67,6 +68,24 @@ pub(in crate::cli::runtime_tmux_smoke::ui) fn drive_start_session_pty_handoff(
         && type_name(&mut runtime, "gromaq-runtime-tmux-ui-start-handoff")
         && dispatch_name_entry(&mut runtime, runner, ActionId::StartSession)
         && runtime.dump_runtime_perf_metrics().pty_input_writes == before + 1
+}
+
+pub(in crate::cli::runtime_tmux_smoke::ui) fn drive_start_session_feedback(
+    runner: &SocketTmuxCommandRunner,
+    renderer: &mut WgpuRenderer,
+) -> bool {
+    let Ok(mut runtime) = super::super::smoke_runtime() else {
+        return false;
+    };
+    runtime.toggle_tmux_manager_panel(crate::tmux::TmuxManagerSnapshot::no_server());
+    start_name_entry(&mut runtime, "t")
+        && type_name(&mut runtime, "gromaq-runtime-tmux-ui-start-feedback")
+        && dispatch_name_entry(&mut runtime, runner, ActionId::StartSession)
+        && super::super::render::render_manager_panel_contains(
+            &mut runtime,
+            renderer,
+            "start-sessionsuccess",
+        )
 }
 
 fn start_name_entry(runtime: &mut super::super::SmokeRuntime, shortcut: &str) -> bool {
