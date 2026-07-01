@@ -1,6 +1,7 @@
 //! Native tmux manager UI runtime smoke.
 
 mod cleanup;
+mod pty;
 mod render;
 mod shortcuts;
 mod workspace;
@@ -15,6 +16,7 @@ use crate::tmux::{
     TmuxCommandRunner, TmuxManager, TmuxProbe, TmuxStateReader,
 };
 use cleanup::TmuxUiSmokeCleanup;
+use pty::TmuxUiSmokePtySession;
 use render::{render_manager_panel, render_manager_panel_contains, render_status_strip};
 use shortcuts::{
     drive_destructive_shortcut_confirmation, drive_refresh_shortcut, drive_shortcut_action,
@@ -102,8 +104,10 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     }
 }
 
-fn smoke_runtime() -> Result<NativeTerminalRuntime<()>, String> {
-    let mut runtime = NativeTerminalRuntime::<()>::new(NativeTerminalRuntimeConfig {
+type SmokeRuntime = NativeTerminalRuntime<TmuxUiSmokePtySession>;
+
+fn smoke_runtime() -> Result<SmokeRuntime, String> {
+    let mut runtime = SmokeRuntime::new(NativeTerminalRuntimeConfig {
         terminal_cols: 96,
         terminal_rows: 10,
         ..NativeTerminalRuntimeConfig::default()
@@ -123,7 +127,7 @@ fn ui_failure(message: String) -> CliExit {
     }
 }
 
-fn drive_confirmation_cancel(runtime: &mut NativeTerminalRuntime<()>) -> bool {
+fn drive_confirmation_cancel(runtime: &mut SmokeRuntime) -> bool {
     for key in [
         Key::Named(NamedKey::ArrowRight),
         Key::Named(NamedKey::ArrowRight),
@@ -148,10 +152,7 @@ fn drive_confirmation_cancel(runtime: &mut NativeTerminalRuntime<()>) -> bool {
     ) && matches!(canceled, TmuxManagerKeyOutcome::Consumed)
 }
 
-fn drive_safe_action(
-    runtime: &mut NativeTerminalRuntime<()>,
-    runner: &SocketTmuxCommandRunner,
-) -> bool {
+fn drive_safe_action(runtime: &mut SmokeRuntime, runner: &SocketTmuxCommandRunner) -> bool {
     let previous_action =
         runtime.handle_tmux_manager_key(&Key::Named(NamedKey::ArrowUp), ModifiersState::empty());
     let requested =
@@ -167,10 +168,7 @@ fn drive_safe_action(
         )
 }
 
-fn drive_name_entry_action(
-    runtime: &mut NativeTerminalRuntime<()>,
-    runner: &SocketTmuxCommandRunner,
-) -> bool {
+fn drive_name_entry_action(runtime: &mut SmokeRuntime, runner: &SocketTmuxCommandRunner) -> bool {
     for _ in 0..3 {
         if matches!(
             runtime

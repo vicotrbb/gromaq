@@ -30,6 +30,8 @@ mod surface;
 mod tmux_action_names;
 #[path = "app/tmux_actions.rs"]
 mod tmux_actions;
+#[path = "app/tmux_start_session_runtime.rs"]
+mod tmux_start_session_runtime;
 #[path = "app/tmux_status.rs"]
 mod tmux_status;
 #[path = "app/tmux_ui.rs"]

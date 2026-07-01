@@ -1,11 +1,11 @@
 //! Render-plan proof helpers for the native tmux UI smoke.
 
-use crate::app::{NativeTerminalRuntime, TmuxStatusKind, TmuxUiSnapshot};
+use crate::app::{TmuxStatusKind, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
 use crate::tmux::TmuxManagerSnapshot;
 
 pub(super) fn render_status_strip(
-    runtime: &mut NativeTerminalRuntime<()>,
+    runtime: &mut super::SmokeRuntime,
     renderer: &mut WgpuRenderer,
     snapshot: &TmuxManagerSnapshot,
 ) -> bool {
@@ -41,7 +41,7 @@ pub(super) fn render_status_strip(
 }
 
 pub(super) fn render_manager_panel(
-    runtime: &mut NativeTerminalRuntime<()>,
+    runtime: &mut super::SmokeRuntime,
     renderer: &mut WgpuRenderer,
 ) -> bool {
     runtime.invalidate_terminal_frame();
@@ -52,7 +52,7 @@ pub(super) fn render_manager_panel(
 }
 
 pub(super) fn render_manager_panel_contains(
-    runtime: &mut NativeTerminalRuntime<()>,
+    runtime: &mut super::SmokeRuntime,
     renderer: &mut WgpuRenderer,
     expected: &str,
 ) -> bool {

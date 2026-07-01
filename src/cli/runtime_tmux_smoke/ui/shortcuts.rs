@@ -2,11 +2,11 @@
 
 use winit::keyboard::{Key, ModifiersState};
 
-use crate::app::{NativeTerminalRuntime, TmuxManagerKeyOutcome};
+use crate::app::TmuxManagerKeyOutcome;
 use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult};
 
 pub(super) fn drive_shortcut_action(
-    runtime: &mut NativeTerminalRuntime<()>,
+    runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,
 ) -> bool {
     let requested =
@@ -20,9 +20,7 @@ pub(super) fn drive_shortcut_action(
     )
 }
 
-pub(super) fn drive_destructive_shortcut_confirmation(
-    runtime: &mut NativeTerminalRuntime<()>,
-) -> bool {
+pub(super) fn drive_destructive_shortcut_confirmation(runtime: &mut super::SmokeRuntime) -> bool {
     let confirmation =
         runtime.handle_tmux_manager_key(&Key::Character("q".into()), ModifiersState::empty());
     let canceled = runtime.handle_tmux_manager_key(
@@ -35,7 +33,7 @@ pub(super) fn drive_destructive_shortcut_confirmation(
     ) && matches!(canceled, TmuxManagerKeyOutcome::Consumed)
 }
 
-pub(super) fn drive_refresh_shortcut(runtime: &mut NativeTerminalRuntime<()>) -> bool {
+pub(super) fn drive_refresh_shortcut(runtime: &mut super::SmokeRuntime) -> bool {
     matches!(
         runtime.handle_tmux_manager_key(&Key::Character("r".into()), ModifiersState::empty()),
         TmuxManagerKeyOutcome::RefreshRequested
