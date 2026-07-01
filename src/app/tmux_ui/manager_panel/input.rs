@@ -93,7 +93,7 @@ impl TmuxManagerPanelState {
                 self.move_previous(snapshot);
                 TmuxManagerKeyOutcome::Consumed
             }
-            Key::Named(NamedKey::Enter) => self.activate_selected_action(),
+            Key::Named(NamedKey::Enter) => self.activate_selected_action(snapshot),
             Key::Character(character) if character.eq_ignore_ascii_case("l") => {
                 self.focus_next();
                 TmuxManagerKeyOutcome::Consumed

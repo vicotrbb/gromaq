@@ -3,15 +3,25 @@
 use super::super::state::{TmuxActionInputState, TmuxManagerFocus, TmuxManagerPanelState};
 use super::PANEL_ACTIONS;
 use crate::app::TmuxManagerKeyOutcome;
-use crate::tmux::{ActionId, TmuxAction};
+use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
 
 impl TmuxManagerPanelState {
-    pub(super) fn activate_selected_action(&mut self) -> TmuxManagerKeyOutcome {
+    pub(super) fn activate_selected_action(
+        &mut self,
+        snapshot: &TmuxManagerSnapshot,
+    ) -> TmuxManagerKeyOutcome {
         if self.focus == TmuxManagerFocus::Workspaces {
             return if self.workspace_presets.is_empty() {
                 TmuxManagerKeyOutcome::Consumed
             } else {
                 TmuxManagerKeyOutcome::WorkspaceLaunchRequested
+            };
+        }
+        if self.focus == TmuxManagerFocus::Sessions {
+            return if self.selected_session_name(snapshot).is_some() {
+                self.activate_action(ActionId::AttachSession)
+            } else {
+                self.activate_action(ActionId::StartSession)
             };
         }
         if self.focus == TmuxManagerFocus::Panes {

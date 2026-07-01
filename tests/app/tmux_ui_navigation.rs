@@ -71,6 +71,29 @@ fn tmux_manager_panel_enter_selects_focused_pane() {
     assert_eq!(panel.pending_action(), Some("select-pane"));
 }
 
+#[test]
+fn tmux_manager_panel_enter_attaches_focused_session() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.handle_key(
+        &Key::Named(NamedKey::ArrowDown),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+
+    assert_eq!(panel.focus(), TmuxManagerFocus::Sessions);
+    assert_eq!(panel.selected_session_name(&snapshot), Some("beta"));
+    assert_eq!(
+        panel.handle_key(
+            &Key::Named(NamedKey::Enter),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::AttachSession)
+    );
+    assert_eq!(panel.pending_action(), Some("attach-session"));
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
