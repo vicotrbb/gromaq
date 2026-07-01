@@ -71,6 +71,7 @@ fn render_state(installed: bool, current: Option<&str>, state: &TmuxState) -> St
     if let Some(current) = current {
         output.push_str(&format!("current: {current}\n"));
     }
+    output.push_str(&status_guidance(installed, current, state));
     for session in &state.sessions {
         output.push_str(&format!(
             "session: {} attached={}\n",
@@ -98,6 +99,20 @@ fn render_state(installed: bool, current: Option<&str>, state: &TmuxState) -> St
     output
 }
 
+fn status_guidance(installed: bool, current: Option<&str>, state: &TmuxState) -> String {
+    if !installed {
+        return "status: missing\nnext: install tmux or disable tmux workflows\n".to_owned();
+    }
+    if current.is_some() {
+        return "status: attached\n".to_owned();
+    }
+    if state.sessions.is_empty() {
+        return "status: no server\nnext: run gromaq --tmux-action start-session <session>\n"
+            .to_owned();
+    }
+    "status: detached\nnext: run gromaq --tmux-action attach-session <session>\n".to_owned()
+}
+
 fn render_manager_actions(output: &mut String) {
     for action in TmuxAction::registry() {
         output.push_str(&format!(
@@ -119,5 +134,19 @@ fn error_exit(error: TmuxError) -> CliExit {
         code: 1,
         stdout: String::new(),
         stderr: format!("tmux manager failed: {error:?}\n"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::render_state;
+    use crate::tmux::TmuxState;
+
+    #[test]
+    fn tmux_manager_report_teaches_no_server_next_step() {
+        let report = render_state(true, None, &TmuxState::default());
+
+        assert!(report.contains("status: no server"));
+        assert!(report.contains("next: run gromaq --tmux-action start-session <session>"));
     }
 }
