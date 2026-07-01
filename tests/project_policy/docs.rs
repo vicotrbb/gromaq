@@ -161,6 +161,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "rename session action dispatched: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "workspace feedback checked: true",
         ),
         (
