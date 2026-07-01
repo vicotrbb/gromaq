@@ -9,35 +9,27 @@ pub(super) fn render_status_strip(
     renderer: &mut WgpuRenderer,
     snapshot: &TmuxManagerSnapshot,
 ) -> bool {
-    let strip = TmuxUiSnapshot {
-        status: tmux_status(snapshot),
-        current_session: snapshot
-            .current
-            .as_ref()
-            .map(|current| current.session_name.clone()),
-        current_window: snapshot
-            .current
-            .as_ref()
-            .map(|current| current.window_index.to_string()),
-        visible_windows: snapshot
-            .state
-            .windows
-            .iter()
-            .map(|window| format!("{}:{}", window.index, window.name))
-            .collect(),
-        pane_count: Some(snapshot.state.panes.len()),
-        active_pane_id: snapshot
-            .current
-            .as_ref()
-            .map(|current| current.pane_id.clone()),
-        active_pane_command: None,
-        pending_feedback: None,
-        confirmation_feedback: None,
-    };
+    let strip = status_strip(snapshot);
     runtime
         .render_terminal_frame_with_tmux_status_strip(renderer, &strip)
         .is_ok_and(|rendered| rendered)
         && last_plan_text(renderer).contains("tmux:")
+}
+
+pub(super) fn render_status_feedback(
+    runtime: &mut super::SmokeRuntime,
+    renderer: &mut WgpuRenderer,
+    snapshot: &TmuxManagerSnapshot,
+) -> bool {
+    let mut strip = status_strip(snapshot);
+    strip.pending_feedback = Some("split-pane-right success".to_owned());
+    strip.confirmation_feedback = Some("confirm kill-window | Ctrl-b &".to_owned());
+    runtime.invalidate_terminal_frame();
+    runtime
+        .render_terminal_frame_with_tmux_status_strip(renderer, &strip)
+        .is_ok_and(|rendered| rendered)
+        && last_plan_text(renderer).contains("split-pane-rightsuccess")
+        && last_plan_text(renderer).contains("confirm:confirmkill-window|Ctrl-b&")
 }
 
 pub(super) fn render_manager_panel(
@@ -105,6 +97,34 @@ fn tmux_status(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
         TmuxStatusKind::NoServer
     } else {
         TmuxStatusKind::Detached
+    }
+}
+
+fn status_strip(snapshot: &TmuxManagerSnapshot) -> TmuxUiSnapshot {
+    TmuxUiSnapshot {
+        status: tmux_status(snapshot),
+        current_session: snapshot
+            .current
+            .as_ref()
+            .map(|current| current.session_name.clone()),
+        current_window: snapshot
+            .current
+            .as_ref()
+            .map(|current| current.window_index.to_string()),
+        visible_windows: snapshot
+            .state
+            .windows
+            .iter()
+            .map(|window| format!("{}:{}", window.index, window.name))
+            .collect(),
+        pane_count: Some(snapshot.state.panes.len()),
+        active_pane_id: snapshot
+            .current
+            .as_ref()
+            .map(|current| current.pane_id.clone()),
+        active_pane_command: None,
+        pending_feedback: None,
+        confirmation_feedback: None,
     }
 }
 
