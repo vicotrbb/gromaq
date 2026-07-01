@@ -51,6 +51,8 @@
 - Native tmux assist and manager proof, including action discovery, isolated
   action execution, state reading, native manager action/name-entry paths, and
   workspace preset launchers
+- Default native tmux snapshot artifact proof for the startup manager/status
+  strip frame with isolated live tmux state
 - Screenshot/reference comparisons
 - 144Hz frame pacing proof
 - Idle CPU and memory-growth validation
@@ -71,6 +73,7 @@
 - Developer ID signed and notarized macOS release
 - Broader macOS and Linux host compatibility matrix
 - Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows
-- Manual app-window proof for the full native tmux manager workflow
+- Manual app-window proof for the full native tmux manager workflow, including
+  keyboard/mouse interaction in the real `cargo run` window
 - v1 daily-driver hardening for stability, recovery, accessibility, and
   long-session behavior
