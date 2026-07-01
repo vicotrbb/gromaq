@@ -6,6 +6,7 @@ mod enter_action;
 mod hints;
 mod initial_action;
 mod input;
+mod refresh;
 mod rendering;
 mod selection;
 mod state;

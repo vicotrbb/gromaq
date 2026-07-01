@@ -135,17 +135,18 @@ impl<S> NativeTerminalRuntime<S> {
 
     /// Refresh the open tmux manager panel with a newly read snapshot.
     pub fn refresh_tmux_manager_panel(&mut self, snapshot: TmuxManagerSnapshot) {
-        let Some((workspace_presets, action_feedback, pending_feedback, confirmation_feedback)) =
+        let Some((mut panel, action_feedback, pending_feedback, confirmation_feedback)) =
             self.tmux_manager_panel.as_ref().and_then(|panel| {
                 if !panel.is_open() {
                     return None;
                 }
+                let workspace_presets = panel.workspace_presets().to_vec();
                 let last_feedback = panel
                     .last_action_feedback()
                     .or_else(|| panel.workspace_feedback())
                     .map(str::to_owned);
                 Some((
-                    panel.workspace_presets().to_vec(),
+                    panel.refresh_for_snapshot_with_workspaces(&snapshot, workspace_presets),
                     last_feedback.clone(),
                     last_feedback.or_else(|| panel.pending_action().map(str::to_owned)),
                     panel.confirmation_message().map(str::to_owned),
@@ -154,8 +155,6 @@ impl<S> NativeTerminalRuntime<S> {
         else {
             return;
         };
-        let mut panel =
-            TmuxManagerPanelState::open_for_snapshot_with_workspaces(&snapshot, workspace_presets);
         if let Some(feedback) = action_feedback {
             panel.record_action_feedback(feedback);
         }

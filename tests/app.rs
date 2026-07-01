@@ -34,6 +34,8 @@ mod tmux_action_feedback_runtime;
 mod tmux_action_names;
 #[path = "app/tmux_actions.rs"]
 mod tmux_actions;
+#[path = "app/tmux_refresh.rs"]
+mod tmux_refresh;
 #[path = "app/tmux_start_session_runtime.rs"]
 mod tmux_start_session_runtime;
 #[path = "app/tmux_status.rs"]
