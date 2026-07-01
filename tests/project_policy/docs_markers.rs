@@ -48,6 +48,10 @@ pub(super) const REQUIRED_RELEASE_DOC_MARKERS: &[(&str, &str)] = &[
     ),
     (
         "documentation/compatibility.md",
+        "default-startup tmux UI proof host",
+    ),
+    (
+        "documentation/compatibility.md",
         "Developer ID signed/notarized macOS app distribution",
     ),
     (
