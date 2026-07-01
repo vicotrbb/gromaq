@@ -1,9 +1,12 @@
 //! Native tmux manager panel keyboard handling.
 
+mod activation;
 mod navigation;
+mod shortcuts;
 
-use super::state::{TmuxActionInputState, TmuxManagerFocus, TmuxManagerPanelState};
+use super::state::TmuxManagerPanelState;
 use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot};
+use shortcuts::shortcut_action;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 const PANEL_ACTIONS: [ActionId; 16] = [
@@ -60,6 +63,9 @@ impl TmuxManagerPanelState {
         }
         if self.confirmation.is_some() {
             return self.handle_confirmation_key(key);
+        }
+        if let Some(action_id) = shortcut_action(key) {
+            return self.activate_action(action_id);
         }
         match key {
             Key::Named(NamedKey::Escape) => {
@@ -162,48 +168,12 @@ impl TmuxManagerPanelState {
             _ => TmuxManagerKeyOutcome::Consumed,
         }
     }
-
-    fn activate_selected_action(&mut self) -> TmuxManagerKeyOutcome {
-        if self.focus == TmuxManagerFocus::Workspaces {
-            return if self.workspace_presets.is_empty() {
-                TmuxManagerKeyOutcome::Consumed
-            } else {
-                TmuxManagerKeyOutcome::WorkspaceLaunchRequested
-            };
-        }
-        let action_id = PANEL_ACTIONS
-            .get(self.selected_action)
-            .copied()
-            .unwrap_or(ActionId::SplitPaneRight);
-        let action = TmuxAction::by_id(action_id).expect("panel action is registered");
-        if action_needs_name(action_id) {
-            self.action_input = Some(TmuxActionInputState {
-                action_id,
-                value: String::new(),
-            });
-            self.pending_action = None;
-            self.pending_action_name = None;
-            self.confirmation = None;
-            self.confirmation_action = None;
-            return TmuxManagerKeyOutcome::Consumed;
-        }
-        self.pending_action_name = None;
-        if action.confirmation_required {
-            self.request_action(action.stable_id, true);
-            return TmuxManagerKeyOutcome::ConfirmationRequired(action_id);
-        }
-        self.request_action(action.stable_id, false);
-        TmuxManagerKeyOutcome::ActionRequested(action_id)
-    }
 }
 
 pub(super) fn panel_actions() -> &'static [ActionId] {
     &PANEL_ACTIONS
 }
 
-fn action_needs_name(action_id: ActionId) -> bool {
-    matches!(
-        action_id,
-        ActionId::StartSession | ActionId::RenameSession | ActionId::RenameWindow
-    )
+pub(super) fn shortcut_hint() -> &'static str {
+    shortcuts::shortcut_hint()
 }

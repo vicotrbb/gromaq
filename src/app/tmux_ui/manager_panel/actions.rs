@@ -63,9 +63,8 @@ fn action_target(
         | ActionId::SplitPaneDown
         | ActionId::SelectPane
         | ActionId::KillPane => panel.selected_pane_id(snapshot).map(str::to_owned),
-        ActionId::NewWindow | ActionId::RenameWindow | ActionId::KillWindow => {
-            selected_window_target(panel, snapshot)
-        }
+        ActionId::NewWindow => panel.selected_session_name(snapshot).map(str::to_owned),
+        ActionId::RenameWindow | ActionId::KillWindow => selected_window_target(panel, snapshot),
         ActionId::DetachSession
         | ActionId::NextWindow
         | ActionId::PreviousWindow

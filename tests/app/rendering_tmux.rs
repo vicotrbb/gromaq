@@ -244,7 +244,12 @@ fn native_terminal_runtime_renders_tmux_manager_executable_actions() {
             .unwrap()
     );
 
-    let action_line = &renderer.frames.last().unwrap().lines[6];
+    let frame = renderer.frames.last().unwrap();
+    let action_line = &frame.lines[6];
+    let shortcut_line = &frame.lines[7];
+    assert!(shortcut_line.contains("Shortcuts"));
+    assert!(shortcut_line.contains("c new-window"));
+    assert!(shortcut_line.contains("w kill-window"));
     for action in [
         "attach-session",
         "start-session",

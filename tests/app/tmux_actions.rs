@@ -102,6 +102,32 @@ fn tmux_manager_panel_dispatches_safe_action_through_action_runner() {
 }
 
 #[test]
+fn tmux_manager_panel_dispatches_new_window_shortcut_to_session_target() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&["new-window", "-t", "alpha"])]);
+
+    let outcome = panel.handle_key(
+        &Key::Character("c".into()),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    let result = panel
+        .dispatch_action_outcome(outcome, &snapshot, &runner)
+        .unwrap();
+
+    assert!(matches!(
+        result,
+        TmuxActionResult::Success {
+            action_id: ActionId::NewWindow,
+            ..
+        }
+    ));
+    assert_eq!(runner.remaining_calls(), 0);
+    assert_eq!(panel.last_action_feedback(), Some("new-window success"));
+}
+
+#[test]
 fn tmux_manager_panel_waits_for_confirmation_before_kill_action_dispatch() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);

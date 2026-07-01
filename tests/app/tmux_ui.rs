@@ -121,6 +121,35 @@ fn closed_tmux_manager_panel_does_not_consume_shell_input() {
 }
 
 #[test]
+fn tmux_manager_panel_supports_discoverable_action_shortcuts() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("c".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::NewWindow)
+    );
+    assert_eq!(panel.pending_action(), Some("new-window"));
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("w".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ConfirmationRequired(ActionId::KillWindow)
+    );
+    assert_eq!(
+        panel.confirmation_message(),
+        Some("confirm kill-window with y")
+    );
+}
+
+#[test]
 fn runtime_toggle_opens_and_closes_renderable_tmux_manager_panel() {
     let snapshot = manager_snapshot();
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
