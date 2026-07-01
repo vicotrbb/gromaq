@@ -29,6 +29,8 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
         Some(ActionId::NextWindow)
     } else if character.eq_ignore_ascii_case("p") {
         Some(ActionId::PreviousWindow)
+    } else if character.eq_ignore_ascii_case("q") {
+        Some(ActionId::KillSession)
     } else if character.eq_ignore_ascii_case("w") {
         Some(ActionId::KillWindow)
     } else if character.eq_ignore_ascii_case("x") {
@@ -48,5 +50,5 @@ pub(super) fn is_refresh_shortcut(key: &Key) -> bool {
 }
 
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts ? help a attach-session c new-window d detach-session e rename-window s split-right t start-session u rename-session v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
+    "shortcuts ? help q kill-session a attach-session c new-window d detach-session e rename-window s split-right t start-session u rename-session v split-down n next-window p previous-window z zoom-pane r refresh w kill-window x kill-pane"
 }

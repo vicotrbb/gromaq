@@ -141,6 +141,25 @@ fn tmux_manager_panel_shortcuts_rename_session_with_name_input() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_kill_session_requires_confirmation() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("q".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ConfirmationRequired(ActionId::KillSession)
+    );
+    assert_eq!(
+        panel.confirmation_message(),
+        Some("confirm kill-session with y, n/Esc cancels")
+    );
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_open_help() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);

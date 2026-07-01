@@ -62,6 +62,7 @@ fn native_terminal_runtime_renders_help_shortcut_hint() {
         shortcut_line.contains("u rename-session"),
         "{shortcut_line}"
     );
+    assert!(shortcut_line.contains("q kill-session"), "{shortcut_line}");
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
