@@ -243,6 +243,17 @@ if [ "${app_status}" -ne 0 ]; then
   exit "${app_status}"
 fi
 
+for required_smoke_marker in \
+  "default startup content checked: true" \
+  "tmux status strip rendered: true" \
+  "tmux manager panel rendered: true"
+do
+  if ! grep -F "${required_smoke_marker}" "${log_path}" >/dev/null; then
+    printf '%s\n' "error: window smoke did not report ${required_smoke_marker}; see ${log_path}." >&2
+    exit 1
+  fi
+done
+
 validation_status=0
 validate_screenshot_contains_terminal_background "${output}" "${min_background_pixels}" "${min_foreground_pixels}" >> "${log_path}" 2> "${validation_stderr}" || validation_status="$?"
 if [ -s "${validation_stderr}" ]; then
