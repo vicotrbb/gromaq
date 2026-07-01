@@ -76,7 +76,7 @@ fn tmux_manager_panel_renders_workspace_preset_summary() {
         vec![workspace_preset()],
     );
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 88,
+        terminal_cols: 180,
         terminal_rows: 8,
         ..NativeTerminalRuntimeConfig::default()
     })
@@ -99,6 +99,9 @@ fn tmux_manager_panel_renders_workspace_preset_summary() {
     assert!(workspace_line.contains("session gromaq"));
     assert!(workspace_line.contains("root /repo"));
     assert!(workspace_line.contains("windows code(2) test(1)"));
+    assert!(workspace_line.contains("Enter start/attach"));
+    assert!(workspace_line.contains("tmux new-session -d -s gromaq"));
+    assert!(workspace_line.contains("tmux attach-session -t gromaq"));
 }
 
 #[test]

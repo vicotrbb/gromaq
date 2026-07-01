@@ -72,7 +72,12 @@ pub(super) fn workspace_row(panel: &TmuxManagerPanelState) -> Option<String> {
         .map(|(index, preset)| workspace_summary(preset, index == panel.selected_workspace))
         .collect::<Vec<_>>()
         .join(" ");
-    Some(format!("Workspaces {presets}"))
+    let hint = panel
+        .workspace_presets
+        .get(panel.selected_workspace)
+        .map(workspace_command_hint)
+        .unwrap_or_default();
+    Some(format!("Workspaces {presets}{hint}"))
 }
 
 pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) -> String {
@@ -88,6 +93,13 @@ pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) 
     format!(
         "{}{marker} session {} root {root} windows {windows}",
         preset.key, preset.settings.session
+    )
+}
+
+fn workspace_command_hint(preset: &TmuxWorkspaceUiPreset) -> String {
+    format!(
+        " | Enter start/attach | tmux new-session -d -s {} | tmux attach-session -t {}",
+        preset.settings.session, preset.settings.session
     )
 }
 
