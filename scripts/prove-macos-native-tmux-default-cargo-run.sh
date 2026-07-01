@@ -15,6 +15,8 @@ started_session_exists_path="${proof_root}/tmux-default-cargo-run-start-session-
 post_windows_path="${proof_root}/tmux-default-cargo-run-post-windows.txt"
 post_panes_path="${proof_root}/tmux-default-cargo-run-post-panes.txt"
 kill_absent_path="${proof_root}/tmux-default-cargo-run-kill-session-absent.txt"
+live_window_started_at_path="${proof_root}/tmux-default-cargo-run-live-window-started-at.txt"
+live_window_finished_at_path="${proof_root}/tmux-default-cargo-run-live-window-finished-at.txt"
 
 cleanup() {
   tmux kill-session -t "${session}" >/dev/null 2>&1 || true
@@ -347,7 +349,9 @@ printf '%s\n' "- Check prompt/right-prompt layout for legible overlap behavior."
 
 (
   cd "${root}"
+  date -u +%Y-%m-%dT%H:%M:%SZ > "${live_window_started_at_path}"
   cargo run > "${proof_root}/cargo-run.stdout" 2> "${proof_root}/cargo-run.stderr"
+  date -u +%Y-%m-%dT%H:%M:%SZ > "${live_window_finished_at_path}"
 )
 
 if [ ! -x "${binary_path}" ]; then
@@ -479,6 +483,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "post tmux windows: ${post_window_count}"
   printf '%s\n' "tmux-default-cargo-run-post-panes.txt: ${post_panes_path}"
   printf '%s\n' "post tmux panes: ${post_pane_count}"
+  printf '%s\n' "tmux-default-cargo-run-live-window-started-at.txt: $(cat "${live_window_started_at_path}")"
+  printf '%s\n' "tmux-default-cargo-run-live-window-finished-at.txt: $(cat "${live_window_finished_at_path}")"
   printf '%s\n' "tmux-default-cargo-run-destructive-confirmation.txt: destructive-confirmation"
   printf '%s\n' "tmux-default-cargo-run-isolated-kill.txt: isolated-kill-confirmed"
   printf '%s\n' "tmux-default-cargo-run-kill-session-absent.txt: ${kill_absent_path}"

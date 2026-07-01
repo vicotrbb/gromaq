@@ -29,6 +29,8 @@ workspace_exists_path="${proof_root}/tmux-workspace-session-exists.txt"
 post_windows_path="${proof_root}/tmux-post-windows.txt"
 post_panes_path="${proof_root}/tmux-post-panes.txt"
 kill_absent_path="${proof_root}/tmux-kill-session-absent.txt"
+live_window_started_at_path="${proof_root}/live-window-started-at.txt"
+live_window_finished_at_path="${proof_root}/live-window-finished-at.txt"
 
 cleanup() {
   tmux kill-session -t "${session}" >/dev/null 2>&1 || true
@@ -450,6 +452,7 @@ printf '%s\n' "Manual checklist: ${manual_checklist_path}"
 printf '%s\n' "A Gromaq window will open with tmux UI enabled and open_manager_on_start=${open_manager_on_start}."
 printf '%s\n' "Follow the prompts inside the Gromaq terminal window exactly."
 
+date -u +%Y-%m-%dT%H:%M:%SZ > "${live_window_started_at_path}"
 if [ "${launch_mode}" = "app" ]; then
   open -W -n \
     -o "${proof_root}/open.stdout" \
@@ -461,6 +464,7 @@ else
     > "${proof_root}/binary.stdout" \
     2> "${proof_root}/binary.stderr"
 fi
+date -u +%Y-%m-%dT%H:%M:%SZ > "${live_window_finished_at_path}"
 
 manager_visible="$(cat "${proof_root}/tmux-manager-visible.txt" 2>/dev/null || true)"
 manager_not_hint="$(cat "${proof_root}/tmux-manager-not-hint.txt" 2>/dev/null || true)"
@@ -638,6 +642,8 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   printf '%s\n' "post tmux windows: ${post_window_count}"
   printf '%s\n' "tmux-post-panes.txt: ${post_panes_path}"
   printf '%s\n' "post tmux panes: ${post_pane_count}"
+  printf '%s\n' "live-window-started-at.txt: $(cat "${live_window_started_at_path}")"
+  printf '%s\n' "live-window-finished-at.txt: $(cat "${live_window_finished_at_path}")"
   printf '%s\n' "tmux-refresh-checked.txt: ${refresh_checked}"
   printf '%s\n' "tmux-destructive-confirmation.txt: ${destructive_confirmation}"
   printf '%s\n' "tmux-kill-session-absent.txt: ${kill_absent_path}"
