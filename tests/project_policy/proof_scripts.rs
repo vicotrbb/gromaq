@@ -340,5 +340,16 @@ fn native_tmux_manual_proofs_write_live_app_window_proof_artifact() {
                 relative_path(root, &path)
             );
         }
+        let reset = source
+            .find("printf '%s\\n' \"not-run\" > \"${live_app_window_proof_path}\"")
+            .unwrap();
+        let preflight_branch = source
+            .find("if [ \"${preflight_only}\" = \"true\" ]; then")
+            .unwrap();
+        assert!(
+            reset < preflight_branch,
+            "{} must reset live-app-window-proof.txt before branching into preflight or live proof",
+            relative_path(root, &path)
+        );
     }
 }

@@ -166,6 +166,7 @@ fi
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
+printf '%s\n' "not-run" > "${live_app_window_proof_path}"
 : > "${native_window_attempt_log_path}"
 
 actual_version="$("${executable}" --version 2>/dev/null || true)"
@@ -334,7 +335,6 @@ if grep -F "Control/Super Shift" "${manual_checklist_path}" >/dev/null; then
 fi
 
 if [ "${preflight_only}" = "true" ]; then
-  printf '%s\n' "not-run" > "${live_app_window_proof_path}"
   {
     printf '%s\n' "macOS native tmux manual preflight: ok"
     printf '%s\n' "manual preflight only requested; skipping live app-window launch"

@@ -66,6 +66,7 @@ manual_checklist_path="${proof_root}/manual-checklist.txt"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
+printf '%s\n' "not-run" > "${live_app_window_proof_path}"
 : > "${native_window_attempt_log_path}"
 git -C "${root}" status --short --branch > "${git_status_path}"
 trap cleanup EXIT INT TERM
@@ -303,7 +304,6 @@ if grep -F "Control/Super Shift" "${manual_checklist_path}" >/dev/null; then
 fi
 
 if [ "${preflight_only}" = "true" ]; then
-  printf '%s\n' "not-run" > "${live_app_window_proof_path}"
   {
     printf '%s\n' "macOS native tmux default cargo run preflight: ok"
     printf '%s\n' "default cargo run preflight only requested; skipping live cargo run window"
