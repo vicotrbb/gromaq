@@ -65,20 +65,34 @@ impl<S> NativeTerminalRuntime<S> {
 
     /// Refresh the open tmux manager panel with a newly read snapshot.
     pub fn refresh_tmux_manager_panel(&mut self, snapshot: TmuxManagerSnapshot) {
-        let Some(panel) = self.tmux_manager_panel.as_ref() else {
+        let Some((workspace_presets, action_feedback, pending_feedback, confirmation_feedback)) =
+            self.tmux_manager_panel.as_ref().and_then(|panel| {
+                if !panel.is_open() {
+                    return None;
+                }
+                let action_feedback = panel.last_action_feedback().map(str::to_owned);
+                Some((
+                    panel.workspace_presets().to_vec(),
+                    action_feedback.clone(),
+                    action_feedback.or_else(|| panel.pending_action().map(str::to_owned)),
+                    panel.confirmation_message().map(str::to_owned),
+                ))
+            })
+        else {
             return;
         };
-        if !panel.is_open() {
-            return;
+        let mut panel =
+            TmuxManagerPanelState::open_for_snapshot_with_workspaces(&snapshot, workspace_presets);
+        if let Some(feedback) = action_feedback {
+            panel.record_action_feedback(feedback);
         }
-        let workspace_presets = panel.workspace_presets().to_vec();
-        self.tmux_manager_panel = Some(TmuxManagerPanelState::open_for_snapshot_with_workspaces(
-            &snapshot,
-            workspace_presets,
-        ));
+        self.tmux_manager_panel = Some(panel);
         self.tmux_manager_snapshot = Some(snapshot);
         if let Some(snapshot) = self.tmux_manager_snapshot.as_ref() {
-            self.tmux_status_snapshot = Some(TmuxUiSnapshot::from_manager_snapshot(snapshot));
+            let mut status = TmuxUiSnapshot::from_manager_snapshot(snapshot);
+            status.pending_feedback = pending_feedback;
+            status.confirmation_feedback = confirmation_feedback;
+            self.tmux_status_snapshot = Some(status);
         }
         self.terminal.invalidate_viewport();
     }
@@ -89,20 +103,38 @@ impl<S> NativeTerminalRuntime<S> {
         key: &winit::keyboard::Key,
         modifiers: winit::keyboard::ModifiersState,
     ) -> TmuxManagerKeyOutcome {
-        let (Some(snapshot), Some(panel)) = (
-            self.tmux_manager_snapshot.as_ref(),
-            self.tmux_manager_panel.as_mut(),
-        ) else {
-            return TmuxManagerKeyOutcome::Ignored;
+        let (outcome, panel_open) = {
+            let (Some(snapshot), Some(panel)) = (
+                self.tmux_manager_snapshot.as_ref(),
+                self.tmux_manager_panel.as_mut(),
+            ) else {
+                return TmuxManagerKeyOutcome::Ignored;
+            };
+            let outcome = panel.handle_key(key, modifiers, snapshot);
+            (outcome, panel.is_open())
         };
-        let outcome = panel.handle_key(key, modifiers, snapshot);
         if !matches!(outcome, TmuxManagerKeyOutcome::Ignored) {
+            self.sync_tmux_status_feedback_from_panel();
             self.terminal.invalidate_viewport();
         }
-        if !panel.is_open() {
+        if !panel_open {
             self.tmux_manager_panel = None;
             self.tmux_manager_snapshot = None;
         }
         outcome
+    }
+
+    pub(super) fn sync_tmux_status_feedback_from_panel(&mut self) {
+        let (Some(panel), Some(status)) = (
+            self.tmux_manager_panel.as_ref(),
+            self.tmux_status_snapshot.as_mut(),
+        ) else {
+            return;
+        };
+        status.pending_feedback = panel
+            .last_action_feedback()
+            .or_else(|| panel.pending_action())
+            .map(str::to_owned);
+        status.confirmation_feedback = panel.confirmation_message().map(str::to_owned);
     }
 }

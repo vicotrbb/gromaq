@@ -26,6 +26,8 @@ mod runtime_input;
 mod support;
 #[path = "app/surface.rs"]
 mod surface;
+#[path = "app/tmux_action_feedback_runtime.rs"]
+mod tmux_action_feedback_runtime;
 #[path = "app/tmux_action_names.rs"]
 mod tmux_action_names;
 #[path = "app/tmux_actions.rs"]

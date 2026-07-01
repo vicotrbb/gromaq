@@ -42,6 +42,7 @@ impl<S> NativeTerminalRuntime<S> {
                 self.send_pty_input(&TmuxTerminalCommand::attach_session(&session).to_pty_input());
         }
         if result.is_some() {
+            self.sync_tmux_status_feedback_from_panel();
             self.terminal.invalidate_viewport();
         }
         result
@@ -89,6 +90,7 @@ impl<S> NativeTerminalRuntime<S> {
                 _ => "attach-session skipped".to_owned(),
             });
         }
+        self.sync_tmux_status_feedback_from_panel();
         self.terminal.invalidate_viewport();
         Some(result)
     }
@@ -118,6 +120,7 @@ impl<S> NativeTerminalRuntime<S> {
                 self.send_pty_input(&TmuxTerminalCommand::attach_session(session).to_pty_input());
         }
         if result.is_some() {
+            self.sync_tmux_status_feedback_from_panel();
             self.terminal.invalidate_viewport();
         }
         result
