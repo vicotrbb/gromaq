@@ -246,6 +246,8 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "tmux-default-cargo-run-isolated-kill.txt",
         "tmux-default-cargo-run-shell-input.txt",
         "tmux-default-cargo-run-right-prompt.txt",
+        "tmux-default-cargo-run-native-control-plane.txt",
+        "native terminal control, not web UI",
         "macOS native tmux default cargo run proof: ok",
         "summary.txt",
     ] {

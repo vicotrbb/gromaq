@@ -181,7 +181,8 @@ the tester must open it with Control/Super Shift `T`; set
 - Check a right-prompt or long prompt layout for legible overlap behavior; the
   harness records this as `tmux-right-prompt-legible.txt`.
 - Confirm the UI feels like native terminal control, not web UI; the configured
-  manual proof records this as `tmux-native-control-plane.txt`.
+  manual proof records this as `tmux-native-control-plane.txt`, and the default
+  no-argument proof records `tmux-default-cargo-run-native-control-plane.txt`.
 - Start a named session from the UI; the harness records this as
   `tmux-start-session.txt`.
 - Attach the prepared session from the UI; the harness records this as

@@ -228,6 +228,7 @@ record_confirmation "Confirm a destructive action showed inline confirmation fir
 record_confirmation "Confirm a kill-session action was performed only against ${kill_session}." "isolated-kill-confirmed" "tmux-default-cargo-run-isolated-kill.txt"
 record_confirmation "Confirm normal shell input still worked after closing the panel." "shell-input" "tmux-default-cargo-run-shell-input.txt"
 record_confirmation "Confirm prompt/right-prompt layout stayed legible." "right-prompt-legible" "tmux-default-cargo-run-right-prompt.txt"
+record_confirmation "Confirm the UI felt like native terminal control, not web UI." "native-control-plane" "tmux-default-cargo-run-native-control-plane.txt"
 
 if ! tmux list-windows -t "${session}" -F "#{window_id} #{window_name}" > "${post_windows_path}"; then
   printf '%s\n' "error: could not read post-proof tmux windows for ${session}." >&2
@@ -311,5 +312,6 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "kill-session absent: true"
   printf '%s\n' "tmux-default-cargo-run-shell-input.txt: shell-input"
   printf '%s\n' "tmux-default-cargo-run-right-prompt.txt: right-prompt-legible"
+  printf '%s\n' "tmux-default-cargo-run-native-control-plane.txt: native-control-plane"
   printf '%s\n' "Proof root: ${proof_root}"
 } | tee "${summary_path}"
