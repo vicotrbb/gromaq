@@ -2,6 +2,7 @@
 
 use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset};
 use crate::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
+use crate::pty::ShellCommand;
 use crate::renderer::WgpuRenderer;
 use crate::tmux::{
     SocketTmuxCommandRunner, TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner, TmuxError,
@@ -16,6 +17,7 @@ const UI_WORKSPACE_SESSION: &str = "gromaq-runtime-tmux-ui-workspace";
 pub(super) struct WorkspaceProof {
     pub(super) started: bool,
     pub(super) feedback_checked: bool,
+    pub(super) command_hints_checked: bool,
     pub(super) existing_attach_checked: bool,
     pub(super) duplicate_prevented: bool,
     pub(super) failure_feedback_checked: bool,
@@ -40,10 +42,12 @@ pub(super) fn run_workspace_proof(
     let _ = panel.launch_selected_workspace(runner);
     let after = session_count(runner, UI_WORKSPACE_SESSION);
     let existing_attach_checked = drive_workspace_existing_attach(snapshot, preset, runner);
+    let command_hints_checked = drive_workspace_command_hints(snapshot, preset, renderer);
     let failure_feedback_checked = drive_workspace_failure_feedback(snapshot, runner, renderer);
     WorkspaceProof {
         started,
         feedback_checked,
+        command_hints_checked,
         existing_attach_checked,
         duplicate_prevented: before == Some(1) && after == Some(1),
         failure_feedback_checked,
@@ -76,6 +80,46 @@ pub(super) fn docs_workspace_preset() -> TmuxWorkspaceUiPreset {
             }],
         },
     )
+}
+
+fn drive_workspace_command_hints(
+    snapshot: &TmuxManagerSnapshot,
+    preset: &TmuxWorkspaceUiPreset,
+    renderer: &mut WgpuRenderer,
+) -> bool {
+    let Ok(mut runtime) = workspace_hint_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(snapshot.clone(), vec![preset.clone()]);
+    render_manager_panel_contains(&mut runtime, renderer, "Enterstart/attach")
+        && render_manager_panel_contains(
+            &mut runtime,
+            renderer,
+            "tmuxnew-session-d-sgromaq-runtime-tmux-ui-workspace",
+        )
+        && render_manager_panel_contains(
+            &mut runtime,
+            renderer,
+            "tmuxattach-session-tgromaq-runtime-tmux-ui-workspace",
+        )
+}
+
+fn workspace_hint_runtime() -> Result<super::SmokeRuntime, String> {
+    let mut runtime = super::SmokeRuntime::new(crate::app::NativeTerminalRuntimeConfig {
+        terminal_cols: 320,
+        terminal_rows: 10,
+        shell: ShellCommand {
+            program: "/bin/sh".into(),
+            args: Vec::new(),
+            cwd: None,
+        },
+        ..crate::app::NativeTerminalRuntimeConfig::default()
+    })
+    .map_err(|error| error.to_string())?;
+    runtime
+        .write_startup_text("gromaq tmux workspace hint smoke\r\n> ")
+        .map_err(|error| error.to_string())?;
+    Ok(runtime)
 }
 
 fn drive_workspace_failure_feedback(
