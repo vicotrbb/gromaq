@@ -137,6 +137,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "status pane command checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "mouse clicks select session/window/pane/action/workspace rows",
         ),
         (
