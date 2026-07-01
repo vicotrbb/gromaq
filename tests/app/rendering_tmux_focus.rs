@@ -57,6 +57,11 @@ fn native_terminal_runtime_renders_help_shortcut_hint() {
 
     let shortcut_line = &renderer.frames.last().unwrap().lines[7];
     assert!(shortcut_line.contains("? help"), "{shortcut_line}");
+    assert!(shortcut_line.contains("e rename-window"), "{shortcut_line}");
+    assert!(
+        shortcut_line.contains("u rename-session"),
+        "{shortcut_line}"
+    );
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {

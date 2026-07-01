@@ -93,6 +93,54 @@ fn tmux_manager_panel_shortcuts_start_session_name_input() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_rename_with_name_input() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("e".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert_eq!(
+        panel.action_input_prompt(),
+        Some("rename-window name: ".to_owned())
+    );
+
+    panel.handle_key(
+        &Key::Character("n".into()),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    assert_eq!(
+        panel.action_input_prompt(),
+        Some("rename-window name: n".to_owned())
+    );
+}
+
+#[test]
+fn tmux_manager_panel_shortcuts_rename_session_with_name_input() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("u".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert_eq!(
+        panel.action_input_prompt(),
+        Some("rename-session name: ".to_owned())
+    );
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_open_help() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
