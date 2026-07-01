@@ -85,6 +85,10 @@ fn window_tmux_manager_snapshot_smoke_writes_artifact() {
     assert_eq!(exit.code, 0);
     assert!(exit.stderr.is_empty());
     assert!(exit.stdout.contains("window tmux manager snapshot: ok"));
+    assert!(
+        exit.stdout
+            .contains("default startup content checked: true")
+    );
     assert!(exit.stdout.contains("glyph frame presented: true"));
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
     assert!(exit.stdout.contains("tmux manager panel rendered: true"));
