@@ -35,6 +35,21 @@ pub(super) fn drive_select_pane_shortcut(
     )
 }
 
+pub(super) fn drive_split_down_shortcut(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let requested =
+        runtime.handle_tmux_manager_key(&Key::Character("v".into()), ModifiersState::empty());
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::SplitPaneDown,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_window_cycle_shortcuts(
     runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,
