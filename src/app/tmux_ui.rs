@@ -61,6 +61,7 @@ impl TmuxUiSnapshot {
 
     fn status_line(&self) -> String {
         let mut parts = vec![format!("tmux: {}", self.status_label())];
+        parts.push("manager Cmd/Ctrl+Shift+T".to_owned());
         push_optional(&mut parts, self.current_session.as_deref());
         push_optional(&mut parts, self.current_window.as_deref());
         if let Some(pane_count) = self.pane_count {

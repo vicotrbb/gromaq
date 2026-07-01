@@ -71,7 +71,7 @@ fn native_terminal_runtime_renders_tmux_assist_overlay_below_right_prompt() {
 #[test]
 fn native_terminal_runtime_renders_persistent_tmux_status_strip_without_mutating_grid() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 72,
+        terminal_cols: 120,
         terminal_rows: 5,
         ..NativeTerminalRuntimeConfig::default()
     })
@@ -88,6 +88,7 @@ fn native_terminal_runtime_renders_persistent_tmux_status_strip_without_mutating
 
     let frame = renderer.frames.last().unwrap();
     assert!(frame.lines[4].contains("tmux: attached"));
+    assert!(frame.lines[4].contains("manager Cmd/Ctrl+Shift+T"));
     assert!(frame.lines[4].contains("alpha"));
     assert!(frame.lines[4].contains("1:code"));
     assert!(frame.lines[4].contains("panes 3"));
@@ -96,14 +97,14 @@ fn native_terminal_runtime_renders_persistent_tmux_status_strip_without_mutating
     assert_eq!(runtime.terminal().dump_grid().line_text(0), "ready");
     assert_eq!(runtime.terminal().dump_grid().line_text(1), ">");
     assert!(frame.dirty_regions.iter().any(|region| {
-        region.row == 4 && region.col == 0 && region.rows == 1 && region.cols == 72
+        region.row == 4 && region.col == 0 && region.rows == 1 && region.cols == 120
     }));
 }
 
 #[test]
 fn native_terminal_runtime_renders_tmux_no_server_status_strip() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 40,
+        terminal_cols: 64,
         terminal_rows: 3,
         ..NativeTerminalRuntimeConfig::default()
     })
@@ -128,7 +129,9 @@ fn native_terminal_runtime_renders_tmux_no_server_status_strip() {
             .unwrap()
     );
 
-    assert!(renderer.frames.last().unwrap().lines[2].contains("tmux: no server"));
+    let strip = &renderer.frames.last().unwrap().lines[2];
+    assert!(strip.contains("tmux: no server"));
+    assert!(strip.contains("manager Cmd/Ctrl+Shift+T"));
 }
 
 #[test]
