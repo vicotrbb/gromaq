@@ -53,13 +53,16 @@ impl<S> NativeTerminalRuntime<S> {
         {
             return TmuxManagerMouseOutcome::Ignored;
         }
-        let Some(panel) = self.tmux_manager_panel.as_mut() else {
+        let (Some(snapshot), Some(panel)) = (
+            self.tmux_manager_snapshot.as_ref(),
+            self.tmux_manager_panel.as_mut(),
+        ) else {
             return TmuxManagerMouseOutcome::Ignored;
         };
         let mut panel_event = event;
         panel_event.row = panel_event.row.saturating_sub(region.row);
         panel_event.col = panel_event.col.saturating_sub(region.col);
-        let outcome = panel.handle_mouse_event(panel_event);
+        let outcome = panel.handle_mouse_event(panel_event, snapshot);
         if matches!(outcome, TmuxManagerMouseOutcome::Consumed) {
             self.sync_tmux_status_feedback_from_panel();
             self.terminal.invalidate_viewport();

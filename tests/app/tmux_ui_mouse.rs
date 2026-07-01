@@ -69,19 +69,28 @@ fn tmux_manager_panel_mouse_press_focuses_visible_rows() {
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
 
     assert_eq!(
-        panel.handle_mouse_event(panel_mouse(MouseEventKind::Press, MouseButton::Left, 2)),
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Left, 2, 0),
+            &snapshot,
+        ),
         TmuxManagerMouseOutcome::Consumed
     );
     assert_eq!(panel.focus(), TmuxManagerFocus::Windows);
 
     assert_eq!(
-        panel.handle_mouse_event(panel_mouse(MouseEventKind::Press, MouseButton::Left, 3)),
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Left, 3, 0),
+            &snapshot,
+        ),
         TmuxManagerMouseOutcome::Consumed
     );
     assert_eq!(panel.focus(), TmuxManagerFocus::Panes);
 
     assert_eq!(
-        panel.handle_mouse_event(panel_mouse(MouseEventKind::Press, MouseButton::Left, 4)),
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Left, 4, 0),
+            &snapshot,
+        ),
         TmuxManagerMouseOutcome::Consumed
     );
     assert_eq!(panel.focus(), TmuxManagerFocus::Actions);
@@ -93,47 +102,121 @@ fn tmux_manager_panel_mouse_ignores_non_selection_events() {
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
 
     assert_eq!(
-        panel.handle_mouse_event(panel_mouse(MouseEventKind::Drag, MouseButton::Left, 2)),
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Drag, MouseButton::Left, 2, 0),
+            &snapshot,
+        ),
         TmuxManagerMouseOutcome::Ignored
     );
     assert_eq!(panel.focus(), TmuxManagerFocus::Sessions);
 
     assert_eq!(
-        panel.handle_mouse_event(panel_mouse(MouseEventKind::Press, MouseButton::Right, 2)),
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Right, 2, 0),
+            &snapshot,
+        ),
         TmuxManagerMouseOutcome::Ignored
     );
     assert_eq!(panel.focus(), TmuxManagerFocus::Sessions);
 }
 
-fn panel_mouse(kind: MouseEventKind, button: MouseButton, row: u16) -> MouseEvent {
-    MouseEvent::new(kind, button, 0, row)
+#[test]
+fn tmux_manager_panel_mouse_press_selects_clicked_items() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Left, 1, 17),
+            &snapshot,
+        ),
+        TmuxManagerMouseOutcome::Consumed
+    );
+    assert_eq!(panel.focus(), TmuxManagerFocus::Sessions);
+    assert_eq!(panel.selected_session_name(&snapshot), Some("beta"));
+
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    assert_eq!(
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Left, 2, 18),
+            &snapshot,
+        ),
+        TmuxManagerMouseOutcome::Consumed
+    );
+    assert_eq!(panel.focus(), TmuxManagerFocus::Windows);
+    assert_eq!(
+        panel.selected_window_label(&snapshot),
+        Some("2:test".to_owned())
+    );
+
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    assert_eq!(
+        panel.handle_mouse_event(
+            panel_mouse(MouseEventKind::Press, MouseButton::Left, 3, 35),
+            &snapshot,
+        ),
+        TmuxManagerMouseOutcome::Consumed
+    );
+    assert_eq!(panel.focus(), TmuxManagerFocus::Panes);
+    assert_eq!(panel.selected_pane_id(&snapshot), Some("%3"));
+}
+
+fn panel_mouse(kind: MouseEventKind, button: MouseButton, row: u16, col: u16) -> MouseEvent {
+    MouseEvent::new(kind, button, col, row)
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
         state: TmuxState {
-            sessions: vec![TmuxSession {
-                name: "alpha".to_owned(),
-                attached: true,
-            }],
-            windows: vec![TmuxWindow {
-                session_name: "alpha".to_owned(),
-                index: 1,
-                name: "code".to_owned(),
-                active: true,
-            }],
-            panes: vec![TmuxPane {
-                session_name: "alpha".to_owned(),
-                window_index: 1,
-                index: 0,
-                id: "%2".to_owned(),
-                title: "editor".to_owned(),
-                current_command: "nvim".to_owned(),
-                active: true,
-                width: Some(100),
-                height: Some(30),
-            }],
+            sessions: vec![
+                TmuxSession {
+                    name: "alpha".to_owned(),
+                    attached: true,
+                },
+                TmuxSession {
+                    name: "beta".to_owned(),
+                    attached: false,
+                },
+            ],
+            windows: vec![
+                TmuxWindow {
+                    session_name: "alpha".to_owned(),
+                    index: 1,
+                    name: "code".to_owned(),
+                    active: true,
+                },
+                TmuxWindow {
+                    session_name: "alpha".to_owned(),
+                    index: 2,
+                    name: "test".to_owned(),
+                    active: false,
+                },
+            ],
+            panes: vec![
+                TmuxPane {
+                    session_name: "alpha".to_owned(),
+                    window_index: 1,
+                    index: 0,
+                    id: "%2".to_owned(),
+                    title: "editor".to_owned(),
+                    current_command: "nvim".to_owned(),
+                    active: true,
+                    width: Some(100),
+                    height: Some(30),
+                },
+                TmuxPane {
+                    session_name: "alpha".to_owned(),
+                    window_index: 1,
+                    index: 1,
+                    id: "%3".to_owned(),
+                    title: "shell".to_owned(),
+                    current_command: "zsh".to_owned(),
+                    active: false,
+                    width: Some(80),
+                    height: Some(24),
+                },
+            ],
         },
         current: Some(TmuxManagerCurrent {
             session_name: "alpha".to_owned(),
