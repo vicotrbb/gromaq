@@ -154,3 +154,39 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
     assert_eq!(report.glyph_frame_snapshot_width, 80);
     assert_eq!(report.glyph_frame_snapshot_height, 24);
 }
+
+#[test]
+fn native_app_lifecycle_preserves_written_snapshot_artifact_report() {
+    let mut lifecycle = NativeAppLifecycle::new(NativeAppConfig::default());
+
+    lifecycle.record_glyph_frame_presentation(NativeGlyphFramePresentation {
+        rendered: true,
+        glyph_frame_presented: false,
+        snapshot_written: true,
+        snapshot_bytes: 42,
+        snapshot_width: 80,
+        snapshot_height: 24,
+        ..NativeGlyphFramePresentation::default()
+    });
+    lifecycle.record_glyph_frame_presentation(NativeGlyphFramePresentation {
+        rendered: true,
+        glyph_frame_presented: true,
+        width: 2560,
+        height: 1600,
+        glyph_quads: 12,
+        background_quads: 1,
+        atlas_bytes: 4096,
+        atlas_occupied_slots: 8,
+        ..NativeGlyphFramePresentation::default()
+    });
+
+    let report = lifecycle.run_report();
+
+    assert!(report.glyph_frame_presented);
+    assert!(report.glyph_frame_snapshot_written);
+    assert_eq!(report.glyph_frame_snapshot_bytes, 42);
+    assert_eq!(report.glyph_frame_snapshot_width, 80);
+    assert_eq!(report.glyph_frame_snapshot_height, 24);
+    assert_eq!(report.glyph_frame_width, 2560);
+    assert_eq!(report.glyph_frame_height, 1600);
+}

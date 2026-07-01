@@ -113,6 +113,25 @@ pub(super) fn window_tmux_manager_snapshot_success(
     }
 }
 
+pub(super) fn window_tmux_manager_snapshot_failure(report: &NativeAppRunReport) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!(
+            "window tmux manager snapshot failed\nsnapshot written: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\nframes presented: {}\nglyph frame presented: {}\nglyph quads: {}\nbackground quads: {}\ncursor quads: {}\n",
+            report.glyph_frame_snapshot_written,
+            report.tmux_status_strip_rendered,
+            report.tmux_status_pane_command_rendered,
+            report.tmux_manager_panel_rendered,
+            report.frames_presented,
+            report.glyph_frame_presented,
+            report.glyph_frame_glyph_quads,
+            report.glyph_frame_background_quads,
+            report.glyph_frame_cursor_quads,
+        ),
+    }
+}
+
 pub(super) fn window_glyph_frame_snapshot_failure(report: &NativeAppRunReport) -> CliExit {
     CliExit {
         code: 1,

@@ -110,7 +110,9 @@ impl NativeAppLifecycle {
     /// Record the latest native terminal glyph-frame presentation metrics.
     pub fn record_glyph_frame_presentation(&mut self, report: NativeGlyphFramePresentation) {
         if report.glyph_frame_presented || report.snapshot_written {
-            self.last_glyph_frame_presentation = report;
+            self.last_glyph_frame_presentation = self
+                .last_glyph_frame_presentation
+                .with_preserved_snapshot(report);
         }
     }
 

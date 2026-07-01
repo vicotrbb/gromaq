@@ -44,3 +44,16 @@ pub struct NativeGlyphFramePresentation {
     /// Snapshot artifact height in pixels.
     pub snapshot_height: u32,
 }
+
+impl NativeGlyphFramePresentation {
+    /// Return `next` while preserving prior snapshot artifact metadata when absent.
+    pub fn with_preserved_snapshot(self, mut next: Self) -> Self {
+        if !next.snapshot_written && self.snapshot_written {
+            next.snapshot_written = true;
+            next.snapshot_bytes = self.snapshot_bytes;
+            next.snapshot_width = self.snapshot_width;
+            next.snapshot_height = self.snapshot_height;
+        }
+        next
+    }
+}
