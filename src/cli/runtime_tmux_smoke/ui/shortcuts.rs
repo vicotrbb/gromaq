@@ -11,6 +11,7 @@ use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult, TmuxManag
 pub(super) use missing::drive_missing_tmux_feedback;
 pub(super) use name_entry::{
     drive_name_entry_action, drive_rename_session_action, drive_rename_window_action,
+    drive_start_session_pty_handoff,
 };
 
 pub(super) fn drive_shortcut_action(

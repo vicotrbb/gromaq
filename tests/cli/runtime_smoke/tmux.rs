@@ -94,6 +94,10 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
                 .contains("kill session confirmation dispatched: true")
         );
         assert!(exit.stdout.contains("name entry action dispatched: true"));
+        assert!(
+            exit.stdout
+                .contains("start session pty handoff checked: true")
+        );
         assert!(exit.stdout.contains("workspace launch: started"));
         assert!(exit.stdout.contains("workspace feedback checked: true"));
         assert!(

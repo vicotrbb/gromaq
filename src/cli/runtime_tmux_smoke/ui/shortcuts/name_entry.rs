@@ -55,6 +55,20 @@ pub(in crate::cli::runtime_tmux_smoke::ui) fn drive_name_entry_action(
         && dispatch_name_entry(runtime, runner, ActionId::StartSession)
 }
 
+pub(in crate::cli::runtime_tmux_smoke::ui) fn drive_start_session_pty_handoff(
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let Ok(mut runtime) = super::super::smoke_runtime() else {
+        return false;
+    };
+    runtime.toggle_tmux_manager_panel(crate::tmux::TmuxManagerSnapshot::no_server());
+    let before = runtime.dump_runtime_perf_metrics().pty_input_writes;
+    start_name_entry(&mut runtime, "t")
+        && type_name(&mut runtime, "gromaq-runtime-tmux-ui-start-handoff")
+        && dispatch_name_entry(&mut runtime, runner, ActionId::StartSession)
+        && runtime.dump_runtime_perf_metrics().pty_input_writes == before + 1
+}
+
 fn start_name_entry(runtime: &mut super::super::SmokeRuntime, shortcut: &str) -> bool {
     matches!(
         runtime.handle_tmux_manager_key(&Key::Character(shortcut.into()), ModifiersState::empty()),
