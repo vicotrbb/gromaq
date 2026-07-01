@@ -111,6 +111,7 @@ impl<S> NativeTerminalRuntime<S> {
         }
         let render_started = std::time::Instant::now();
         let cursor = self.terminal.dump_cursor();
+        let mut render_cursor = cursor;
         let mut grid = self.terminal.dump_grid();
         let pending_overlay = self.pending_status_overlay.take();
         if let Some(pending_overlay) = pending_overlay.as_deref() {
@@ -139,11 +140,14 @@ impl<S> NativeTerminalRuntime<S> {
                 .zip(self.tmux_manager_panel.as_ref())
         }) && let Some(region) = apply_tmux_manager_panel(&mut grid, tmux_snapshot, panel)
         {
+            if cursor_inside_region(cursor, region) {
+                render_cursor.visible = false;
+            }
             dirty_regions.push(region);
             self.last_rendered_tmux_manager_panel = true;
             self.last_rendered_tmux_manager_region = Some(region);
         }
-        if let Err(error) = renderer.render_frame(&grid, cursor, &dirty_regions) {
+        if let Err(error) = renderer.render_frame(&grid, render_cursor, &dirty_regions) {
             self.terminal.invalidate_viewport();
             return Err(error);
         }
@@ -199,4 +203,11 @@ impl<S> NativeTerminalRuntime<S> {
             .input_to_render_histogram
             .p95_upper_bound_ns(self.perf.input_to_render_samples);
     }
+}
+
+fn cursor_inside_region(cursor: crate::CursorSnapshot, region: crate::DirtyRegion) -> bool {
+    cursor.row >= region.row
+        && cursor.row < region.row.saturating_add(region.rows)
+        && cursor.col >= region.col
+        && cursor.col < region.col.saturating_add(region.cols)
 }
