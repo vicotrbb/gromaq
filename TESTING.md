@@ -153,6 +153,10 @@ confirmation files and writes `tmux-binary-markers.txt` for the selected
 executable. It fails if that executable still contains the old
 keyboard/mouse/paste startup copy, so app-bundle and explicit-binary runs cannot
 silently validate stale startup text.
+It also runs the selected executable through `--window-smoke` after preparing
+the isolated tmux state, records `tmux-window-smoke.stdout`, and fails unless
+the status strip, active pane command, and manager panel render before the live
+interactive window opens.
 After the live prompts finish, it reads tmux state directly and requires the
 named started session to exist, the target session to show the new window and
 split pane, and the disposable kill-session target to be removed before writing

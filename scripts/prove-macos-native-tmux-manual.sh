@@ -55,6 +55,8 @@ fi
 startup_marker="tmux Cmd/Ctrl+Shift+T"
 old_startup_marker="keyboard, mouse, paste"
 binary_markers_path="${proof_root}/tmux-binary-markers.txt"
+window_smoke_stdout_path="${proof_root}/tmux-window-smoke.stdout"
+window_smoke_stderr_path="${proof_root}/tmux-window-smoke.stderr"
 
 case "${open_manager_on_start}" in
   true | false) ;;
@@ -148,6 +150,21 @@ fi
 initial_pane_count="$(wc -l < "${initial_panes_path}" | tr -d '[:space:]')"
 if [ "${initial_pane_count}" -lt 2 ]; then
   printf '%s\n' "error: expected at least 2 initial tmux panes in ${session}, got ${initial_pane_count}." >&2
+  exit 1
+fi
+
+"${executable}" --window-smoke > "${window_smoke_stdout_path}" 2> "${window_smoke_stderr_path}"
+
+if ! grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable window smoke did not render the tmux status strip." >&2
+  exit 1
+fi
+if ! grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable window smoke did not render the tmux active pane command." >&2
+  exit 1
+fi
+if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable window smoke did not render the tmux manager panel." >&2
   exit 1
 fi
 
@@ -402,6 +419,11 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   printf '%s\n' "git dirty: ${git_dirty}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
   printf '%s\n' "tmux-binary-markers.txt: ${startup_marker}"
+  printf '%s\n' "tmux-window-smoke.stdout: ${window_smoke_stdout_path}"
+  printf '%s\n' "tmux-window-smoke.stderr: ${window_smoke_stderr_path}"
+  grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
+  grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
+  grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "tmux-initial-windows.txt: ${initial_windows_path}"
   printf '%s\n' "initial tmux windows: ${initial_window_count}"
