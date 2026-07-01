@@ -5,7 +5,7 @@ use gromaq::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig, TmuxManage
 use gromaq::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use gromaq::tmux::{
     TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot,
-    TmuxState, TmuxWorkspaceResult,
+    TmuxManagerStatus, TmuxState, TmuxWorkspaceResult,
 };
 
 use crate::support::{MockPtySession, MockPtySpawner};
@@ -64,6 +64,7 @@ impl TmuxCommandRunner for FakeRunner {
 #[test]
 fn runtime_dispatches_workspace_launch_outcome_through_launcher() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };
@@ -96,6 +97,7 @@ fn runtime_dispatches_workspace_launch_outcome_through_launcher() {
 #[test]
 fn runtime_workspace_launch_attaches_started_workspace_through_pty() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };
@@ -158,6 +160,7 @@ fn runtime_workspace_launch_attaches_started_workspace_through_pty() {
 #[test]
 fn runtime_workspace_launch_attaches_existing_workspace_through_pty_without_runner_attach() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };

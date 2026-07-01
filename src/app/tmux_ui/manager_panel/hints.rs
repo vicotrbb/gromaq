@@ -1,6 +1,6 @@
 //! User-facing tmux manager hint rows.
 
-use crate::tmux::{TmuxAction, TmuxManagerSnapshot};
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxManagerStatus};
 
 pub(super) fn action_hint(action: &TmuxAction) -> String {
     match action.key_binding {
@@ -10,6 +10,9 @@ pub(super) fn action_hint(action: &TmuxAction) -> String {
 }
 
 pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
+    if snapshot.status == TmuxManagerStatus::Missing {
+        return "tmux missing; install tmux or disable tmux workflows | Esc close".to_owned();
+    }
     if snapshot.state.sessions.is_empty() {
         return "No tmux server; Enter start-session to create a tmux session | Esc close"
             .to_owned();

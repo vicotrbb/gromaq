@@ -3,7 +3,8 @@ use gromaq::app::{
     TmuxManagerPanelState,
 };
 use gromaq::tmux::{
-    ActionId, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxPane, TmuxSession, TmuxState, TmuxWindow,
+    ActionId, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession,
+    TmuxState, TmuxWindow,
 };
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
@@ -245,6 +246,7 @@ fn runtime_refreshes_open_tmux_manager_panel_snapshot() {
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: vec![
                 TmuxSession {
@@ -292,6 +294,7 @@ fn manager_snapshot() -> TmuxManagerSnapshot {
 
 fn refreshed_manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: vec![TmuxSession {
                 name: "gamma".to_owned(),
@@ -325,6 +328,7 @@ fn refreshed_manager_snapshot() -> TmuxManagerSnapshot {
 
 fn empty_manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: Vec::new(),
             windows: Vec::new(),
@@ -336,6 +340,7 @@ fn empty_manager_snapshot() -> TmuxManagerSnapshot {
 
 fn detached_manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: vec![TmuxSession {
                 name: "alpha".to_owned(),

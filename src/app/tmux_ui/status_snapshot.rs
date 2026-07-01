@@ -1,5 +1,5 @@
 use crate::app::{TmuxStatusKind, TmuxUiSnapshot};
-use crate::tmux::TmuxManagerSnapshot;
+use crate::tmux::{TmuxManagerSnapshot, TmuxManagerStatus};
 
 impl TmuxUiSnapshot {
     /// Build a status-strip snapshot from a native tmux manager snapshot.
@@ -31,12 +31,14 @@ impl TmuxUiSnapshot {
 }
 
 fn status_kind(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
-    if snapshot.current.is_some() {
-        TmuxStatusKind::Attached
-    } else if snapshot.state.sessions.is_empty() {
-        TmuxStatusKind::NoServer
-    } else {
-        TmuxStatusKind::Detached
+    match snapshot.status {
+        TmuxManagerStatus::Missing => TmuxStatusKind::Missing,
+        TmuxManagerStatus::NoServer => TmuxStatusKind::NoServer,
+        TmuxManagerStatus::Available if snapshot.current.is_some() => TmuxStatusKind::Attached,
+        TmuxManagerStatus::Available if snapshot.state.sessions.is_empty() => {
+            TmuxStatusKind::NoServer
+        }
+        TmuxManagerStatus::Available => TmuxStatusKind::Detached,
     }
 }
 

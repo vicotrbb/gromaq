@@ -6,8 +6,8 @@ use gromaq::app::{
 };
 use gromaq::tmux::{
     ActionId, TmuxActionResult, TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner,
-    TmuxError, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxPane, TmuxSession, TmuxState,
-    TmuxWindow,
+    TmuxError, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession,
+    TmuxState, TmuxWindow,
 };
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
@@ -282,6 +282,7 @@ fn runtime_dispatches_attach_session_action_through_terminal_pty() {
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: vec![TmuxSession {
                 name: "alpha".to_owned(),

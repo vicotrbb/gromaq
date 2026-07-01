@@ -3,7 +3,8 @@ use std::cell::RefCell;
 use gromaq::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState};
 use gromaq::tmux::{
     ActionId, TmuxActionResult, TmuxCommandOutput, TmuxCommandRunner, TmuxError,
-    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxPane, TmuxSession, TmuxState, TmuxWindow,
+    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
+    TmuxWindow,
 };
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
@@ -187,6 +188,7 @@ fn submit_action_name(
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: vec![TmuxSession {
                 name: "alpha".to_owned(),

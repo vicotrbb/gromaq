@@ -21,13 +21,45 @@ pub struct TmuxManagerCurrent {
 /// Full manager snapshot for native manager views and CLI diagnostics.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TmuxManagerSnapshot {
+    /// Availability state of the tmux manager source.
+    pub status: TmuxManagerStatus,
     /// Read-only tmux server state.
     pub state: TmuxState,
     /// Current target when a client context is available.
     pub current: Option<TmuxManagerCurrent>,
 }
 
+/// Availability state for native tmux manager snapshots.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TmuxManagerStatus {
+    /// tmux state was read successfully.
+    Available,
+    /// tmux is not installed or not on PATH.
+    Missing,
+    /// tmux is installed but no server state is available.
+    NoServer,
+}
+
 impl TmuxManagerSnapshot {
+    /// Build a snapshot from successfully read tmux state.
+    pub fn available(state: TmuxState, current: Option<TmuxManagerCurrent>) -> Self {
+        Self {
+            status: TmuxManagerStatus::Available,
+            state,
+            current,
+        }
+    }
+
+    /// Build an empty snapshot for missing tmux.
+    pub fn missing() -> Self {
+        Self::empty(TmuxManagerStatus::Missing)
+    }
+
+    /// Build an empty snapshot for an installed tmux binary without server state.
+    pub fn no_server() -> Self {
+        Self::empty(TmuxManagerStatus::NoServer)
+    }
+
     /// Return the current session when tmux client metadata matches state.
     pub fn current_session(&self) -> Option<&TmuxSession> {
         let current = self.current.as_ref()?;
@@ -63,6 +95,14 @@ impl TmuxManagerSnapshot {
             })
             .collect()
     }
+
+    fn empty(status: TmuxManagerStatus) -> Self {
+        Self {
+            status,
+            state: TmuxState::default(),
+            current: None,
+        }
+    }
 }
 
 /// Read-only tmux manager backed by the tmux CLI.
@@ -83,10 +123,7 @@ where
     /// Read tmux state and best-effort current target metadata.
     pub fn snapshot(&self) -> Result<TmuxManagerSnapshot, TmuxError> {
         let state = TmuxStateReader::new(&self.runner).read_state()?;
-        Ok(TmuxManagerSnapshot {
-            state,
-            current: self.current().ok(),
-        })
+        Ok(TmuxManagerSnapshot::available(state, self.current().ok()))
     }
 
     /// Read the current target from tmux client context.

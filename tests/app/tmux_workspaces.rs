@@ -7,7 +7,7 @@ use gromaq::app::{
 use gromaq::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use gromaq::tmux::{
     TmuxCommandFailure, TmuxCommandOutput, TmuxCommandRunner, TmuxError, TmuxManagerSnapshot,
-    TmuxState, TmuxWorkspaceResult,
+    TmuxManagerStatus, TmuxState, TmuxWorkspaceResult,
 };
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
@@ -67,6 +67,7 @@ impl TmuxCommandRunner for FakeRunner {
 #[test]
 fn tmux_manager_panel_renders_workspace_preset_summary() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };
@@ -99,6 +100,7 @@ fn tmux_manager_panel_renders_workspace_preset_summary() {
 #[test]
 fn tmux_manager_panel_keyboard_launches_selected_workspace_preset() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };
@@ -137,6 +139,7 @@ fn tmux_manager_panel_keyboard_launches_selected_workspace_preset() {
 #[test]
 fn tmux_manager_panel_workspace_launch_attaches_existing_session_without_duplication() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };
@@ -167,6 +170,7 @@ fn tmux_manager_panel_workspace_launch_attaches_existing_session_without_duplica
 #[test]
 fn tmux_manager_panel_invalid_workspace_does_not_launch_and_reports_feedback() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };
@@ -198,6 +202,7 @@ fn tmux_manager_panel_invalid_workspace_does_not_launch_and_reports_feedback() {
 #[test]
 fn tmux_manager_panel_workspace_launch_starts_absent_session() {
     let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState::default(),
         current: None,
     };

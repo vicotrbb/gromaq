@@ -14,7 +14,7 @@ mod workspace;
 pub use action::{ActionId, TmuxAction};
 pub use action_runner::{TmuxActionRequest, TmuxActionResult, TmuxActionRunner};
 pub use error::TmuxError;
-pub use manager::{TmuxManager, TmuxManagerCurrent, TmuxManagerSnapshot};
+pub use manager::{TmuxManager, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus};
 pub use probe::{TmuxProbe, TmuxProbeStatus, TmuxVersion};
 pub use reader::TmuxStateReader;
 pub use runner::{

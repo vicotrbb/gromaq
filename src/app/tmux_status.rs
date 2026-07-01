@@ -1,6 +1,6 @@
 use crate::app::{TmuxStatusKind, TmuxUiSnapshot};
 use crate::tmux::{
-    SystemTmuxCommandRunner, TmuxError, TmuxManager, TmuxManagerSnapshot, TmuxProbe, TmuxState,
+    SystemTmuxCommandRunner, TmuxError, TmuxManager, TmuxManagerSnapshot, TmuxProbe,
 };
 
 pub(super) fn read_tmux_status_snapshot() -> TmuxUiSnapshot {
@@ -20,9 +20,9 @@ pub(super) fn read_tmux_status_snapshot() -> TmuxUiSnapshot {
 pub(super) fn read_tmux_manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManager::new(SystemTmuxCommandRunner)
         .snapshot()
-        .unwrap_or(TmuxManagerSnapshot {
-            state: TmuxState::default(),
-            current: None,
+        .unwrap_or_else(|error| match error {
+            TmuxError::Missing => TmuxManagerSnapshot::missing(),
+            _ => TmuxManagerSnapshot::no_server(),
         })
 }
 

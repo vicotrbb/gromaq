@@ -2,6 +2,7 @@ use std::cell::RefCell;
 
 use gromaq::tmux::{
     TmuxCommandOutput, TmuxCommandRunner, TmuxError, TmuxManager, TmuxManagerCurrent,
+    TmuxManagerStatus,
 };
 
 #[derive(Debug, Clone)]
@@ -105,6 +106,7 @@ fn tmux_manager_snapshot_filters_current_scope() {
     )
     .unwrap();
     let snapshot = gromaq::tmux::TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state,
         current: Some(TmuxManagerCurrent {
             session_name: "alpha".to_owned(),

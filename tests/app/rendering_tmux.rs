@@ -1,7 +1,8 @@
 use gromaq::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
 use gromaq::app::{TmuxManagerFocus, TmuxManagerPanelState, TmuxStatusKind, TmuxUiSnapshot};
 use gromaq::tmux::{
-    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxPane, TmuxSession, TmuxState, TmuxWindow,
+    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
+    TmuxWindow,
 };
 
 use crate::support::{MockFrameRenderer, MockPtySession};
@@ -291,6 +292,7 @@ fn attached_snapshot() -> TmuxUiSnapshot {
 
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
         state: TmuxState {
             sessions: vec![
                 TmuxSession {
