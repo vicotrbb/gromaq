@@ -65,11 +65,11 @@ fn action_target(
         | ActionId::ZoomPane
         | ActionId::KillPane => panel.selected_pane_id(snapshot).map(str::to_owned),
         ActionId::NewWindow => panel.selected_session_name(snapshot).map(str::to_owned),
-        ActionId::RenameWindow | ActionId::KillWindow => selected_window_target(panel, snapshot),
-        ActionId::DetachSession
+        ActionId::RenameWindow
         | ActionId::NextWindow
         | ActionId::PreviousWindow
-        | ActionId::ShowHelp => None,
+        | ActionId::KillWindow => selected_window_target(panel, snapshot),
+        ActionId::DetachSession | ActionId::ShowHelp => None,
     }
 }
 
