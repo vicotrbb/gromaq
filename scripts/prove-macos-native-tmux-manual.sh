@@ -17,6 +17,7 @@ preflight_only="${GROMAQ_MANUAL_TMUX_PREFLIGHT_ONLY:-false}"
 config_path="${proof_root}/gromaq-native-tmux-manual.toml"
 shell_path="${proof_root}/manual-tmux-shell.sh"
 summary_path="${proof_root}/summary.txt"
+live_app_window_proof_path="${proof_root}/live-app-window-proof.txt"
 git_status_path="${proof_root}/git-status.txt"
 session="gromaq-manual-tmux-$$"
 kill_session="${session}-kill"
@@ -333,10 +334,12 @@ if grep -F "Control/Super Shift" "${manual_checklist_path}" >/dev/null; then
 fi
 
 if [ "${preflight_only}" = "true" ]; then
+  printf '%s\n' "not-run" > "${live_app_window_proof_path}"
   {
     printf '%s\n' "macOS native tmux manual preflight: ok"
     printf '%s\n' "manual preflight only requested; skipping live app-window launch"
     printf '%s\n' "live app-window proof: not run"
+    printf '%s\n' "live-app-window-proof.txt: ${live_app_window_proof_path}"
     printf '%s\n' "Launch mode: ${launch_mode}"
     printf '%s\n' "Open manager on start: ${open_manager_on_start}"
     printf '%s\n' "App: ${app_path:-none}"
@@ -626,10 +629,12 @@ if ! tmux has-session -t "${workspace_session}" >/dev/null 2>&1; then
   exit 1
 fi
 printf '%s\n' "true" > "${workspace_exists_path}"
+printf '%s\n' "completed" > "${live_app_window_proof_path}"
 
 {
   printf '%s\n' "macOS native tmux manual proof: ok"
   printf '%s\n' "live app-window proof: completed"
+  printf '%s\n' "live-app-window-proof.txt: ${live_app_window_proof_path}"
   printf '%s\n' "Launch mode: ${launch_mode}"
   printf '%s\n' "Open manager on start: ${open_manager_on_start}"
   printf '%s\n' "App: ${app_path:-none}"

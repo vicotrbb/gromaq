@@ -5,6 +5,7 @@ root="$(CDPATH= cd "$(dirname "$0")/.." && pwd)"
 proof_root="${GROMAQ_DEFAULT_CARGO_TMUX_PROOF_ROOT:-${root}/target/macos-native-tmux-default-cargo-run-proof}"
 preflight_only="${GROMAQ_DEFAULT_CARGO_TMUX_PREFLIGHT_ONLY:-false}"
 summary_path="${proof_root}/summary.txt"
+live_app_window_proof_path="${proof_root}/live-app-window-proof.txt"
 git_status_path="${proof_root}/git-status.txt"
 session="gromaq-default-cargo-tmux-$$"
 kill_session="${session}-kill"
@@ -302,10 +303,12 @@ if grep -F "Control/Super Shift" "${manual_checklist_path}" >/dev/null; then
 fi
 
 if [ "${preflight_only}" = "true" ]; then
+  printf '%s\n' "not-run" > "${live_app_window_proof_path}"
   {
     printf '%s\n' "macOS native tmux default cargo run preflight: ok"
     printf '%s\n' "default cargo run preflight only requested; skipping live cargo run window"
     printf '%s\n' "live app-window proof: not run"
+    printf '%s\n' "live-app-window-proof.txt: ${live_app_window_proof_path}"
     printf '%s\n' "tmux: ${tmux_version}"
     printf '%s\n' "git HEAD: ${head_sha}"
     printf '%s\n' "git branch: ${git_branch}"
@@ -465,10 +468,12 @@ if ! tmux has-session -t "${started_session}" >/dev/null 2>&1; then
   exit 1
 fi
 printf '%s\n' "true" > "${started_session_exists_path}"
+printf '%s\n' "completed" > "${live_app_window_proof_path}"
 
 {
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
   printf '%s\n' "live app-window proof: completed"
+  printf '%s\n' "live-app-window-proof.txt: ${live_app_window_proof_path}"
   printf '%s\n' "tmux: ${tmux_version}"
   printf '%s\n' "git HEAD: ${head_sha}"
   printf '%s\n' "git branch: ${git_branch}"

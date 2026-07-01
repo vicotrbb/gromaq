@@ -318,3 +318,27 @@ fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
         }
     }
 }
+
+#[test]
+fn native_tmux_manual_proofs_write_live_app_window_proof_artifact() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for script in [
+        "scripts/prove-macos-native-tmux-manual.sh",
+        "scripts/prove-macos-native-tmux-default-cargo-run.sh",
+    ] {
+        let path = root.join(script);
+        let source = fs::read_to_string(&path).unwrap();
+        for marker in [
+            "live_app_window_proof_path=",
+            "live-app-window-proof.txt:",
+            "printf '%s\\n' \"not-run\" > \"${live_app_window_proof_path}\"",
+            "printf '%s\\n' \"completed\" > \"${live_app_window_proof_path}\"",
+        ] {
+            assert!(
+                source.contains(marker),
+                "{} must write `{marker}` so preflight and live manual proof have a machine-readable state artifact",
+                relative_path(root, &path)
+            );
+        }
+    }
+}
