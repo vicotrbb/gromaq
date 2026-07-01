@@ -21,6 +21,9 @@ impl NativeAppLifecycle {
             window_height_px: self.window_height_px,
             window_scale_milliscale: self.window_scale_milliscale,
             glyph_frame_presented: self.last_glyph_frame_presentation.glyph_frame_presented,
+            tmux_status_strip_rendered: self
+                .last_glyph_frame_presentation
+                .tmux_status_strip_rendered,
             glyph_frame_width: self.last_glyph_frame_presentation.width,
             glyph_frame_height: self.last_glyph_frame_presentation.height,
             glyph_frame_glyph_quads: self.last_glyph_frame_presentation.glyph_quads,

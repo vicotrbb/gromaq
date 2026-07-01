@@ -5,6 +5,8 @@ pub struct NativeGlyphFramePresentation {
     pub rendered: bool,
     /// Whether a glyph frame was presented through the native surface backend.
     pub glyph_frame_presented: bool,
+    /// Whether the rendered frame included the retained native tmux status strip.
+    pub tmux_status_strip_rendered: bool,
     /// Whether the surface was cleared without a glyph frame.
     pub clear_presented: bool,
     /// Presented frame width in pixels.

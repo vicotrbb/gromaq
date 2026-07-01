@@ -111,6 +111,7 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
     lifecycle.record_glyph_frame_presentation(NativeGlyphFramePresentation {
         rendered: true,
         glyph_frame_presented: true,
+        tmux_status_strip_rendered: true,
         clear_presented: false,
         width: 2560,
         height: 1600,
@@ -129,6 +130,7 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
     let report = lifecycle.run_report();
 
     assert!(report.glyph_frame_presented);
+    assert!(report.tmux_status_strip_rendered);
     assert_eq!(report.glyph_frame_width, 2560);
     assert_eq!(report.glyph_frame_height, 1600);
     assert_eq!(report.glyph_frame_glyph_quads, 12);

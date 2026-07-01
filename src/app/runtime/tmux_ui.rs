@@ -22,6 +22,11 @@ impl<S> NativeTerminalRuntime<S> {
         self.terminal.invalidate_viewport();
     }
 
+    /// Return whether the last rendered frame applied the native tmux status strip.
+    pub fn last_rendered_tmux_status_strip(&self) -> bool {
+        self.last_rendered_tmux_status_strip
+    }
+
     /// Toggle the native tmux manager panel using a freshly read snapshot.
     pub fn toggle_tmux_manager_panel(&mut self, snapshot: TmuxManagerSnapshot) {
         self.toggle_tmux_manager_panel_with_workspaces(snapshot, Vec::new());

@@ -139,11 +139,13 @@ impl<S> NativeTerminalRuntime<S> {
         {
             dirty_regions.push(region);
         }
+        self.last_rendered_tmux_status_strip = false;
         let tmux_snapshot = tmux_snapshot.or(self.tmux_status_snapshot.as_ref());
         if let Some(tmux_snapshot) = tmux_snapshot
             && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
         {
             dirty_regions.push(region);
+            self.last_rendered_tmux_status_strip = true;
         }
         if let Some((tmux_snapshot, panel)) = tmux_manager_panel.or_else(|| {
             self.tmux_manager_snapshot

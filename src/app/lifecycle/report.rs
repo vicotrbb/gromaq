@@ -31,6 +31,8 @@ pub struct NativeAppRunReport {
     pub window_scale_milliscale: Option<u32>,
     /// Whether the last recorded presentation included a terminal glyph frame.
     pub glyph_frame_presented: bool,
+    /// Whether the last recorded glyph frame included the native tmux status strip.
+    pub tmux_status_strip_rendered: bool,
     /// Width of the last presented terminal glyph frame in pixels.
     pub glyph_frame_width: u32,
     /// Height of the last presented terminal glyph frame in pixels.
@@ -99,6 +101,7 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) window_height_px: Option<u32>,
     pub(super) window_scale_milliscale: Option<u32>,
     pub(super) glyph_frame_presented: bool,
+    pub(super) tmux_status_strip_rendered: bool,
     pub(super) glyph_frame_width: u32,
     pub(super) glyph_frame_height: u32,
     pub(super) glyph_frame_glyph_quads: usize,

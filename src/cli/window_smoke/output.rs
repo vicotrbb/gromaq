@@ -54,11 +54,12 @@ pub(super) fn window_glyph_frame_snapshot_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "window glyph frame snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
+            "window glyph frame snapshot: ok\npath: {path}\nbytes written: {}\nframe size: {}x{}\nglyph frame presented: {}\ntmux status strip rendered: {}\nglyph frame glyph quads: {}\nglyph frame background quads: {}\nglyph frame cursor quads: {}\n",
             report.glyph_frame_snapshot_bytes,
             report.glyph_frame_snapshot_width,
             report.glyph_frame_snapshot_height,
             report.glyph_frame_presented,
+            report.tmux_status_strip_rendered,
             report.glyph_frame_glyph_quads,
             report.glyph_frame_background_quads,
             report.glyph_frame_cursor_quads,

@@ -30,6 +30,7 @@ fn window_glyph_frame_snapshot_smoke_writes_artifact() {
     assert!(exit.stdout.contains("bytes written: 14"));
     assert!(exit.stdout.contains("frame size: 1x1"));
     assert!(exit.stdout.contains("glyph frame presented: true"));
+    assert!(exit.stdout.contains("tmux status strip rendered: true"));
     let bytes = fs::read(&path).unwrap();
     let _ = fs::remove_file(&path);
     assert_eq!(bytes, b"P6\n1 1\n255\n\x17\x1b$");

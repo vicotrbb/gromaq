@@ -24,6 +24,7 @@ impl PresentedFrameIntervals {
             window_height_px: input.window_height_px,
             window_scale_milliscale: input.window_scale_milliscale,
             glyph_frame_presented: input.glyph_frame_presented,
+            tmux_status_strip_rendered: input.tmux_status_strip_rendered,
             glyph_frame_width: input.glyph_frame_width,
             glyph_frame_height: input.glyph_frame_height,
             glyph_frame_glyph_quads: input.glyph_frame_glyph_quads,
