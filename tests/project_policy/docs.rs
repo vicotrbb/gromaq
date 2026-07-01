@@ -149,6 +149,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "current session/window/pane row markers remain visible after selection moves",
+        ),
+        (
+            "documentation/compatibility.md",
             "mouse clicks select session/window/pane/action/workspace rows",
         ),
         (
