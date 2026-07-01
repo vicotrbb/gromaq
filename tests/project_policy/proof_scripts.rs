@@ -167,6 +167,7 @@ fn macos_app_identity_proof_requires_default_tmux_ui_screenshot_smoke() {
 
     for marker in [
         "default startup content checked: true",
+        "default startup marker: tmux Cmd/Ctrl+Shift+T",
         "tmux status strip rendered: true",
         "tmux manager panel rendered: true",
     ] {
@@ -196,6 +197,19 @@ fn macos_window_screenshot_proof_requires_tmux_accent_pixels() {
             relative_path(root, &path)
         );
     }
+}
+
+#[test]
+fn macos_window_screenshot_proof_requires_current_startup_marker() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/capture-macos-window-proof.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    assert!(
+        source.contains("default startup marker: tmux Cmd/Ctrl+Shift+T"),
+        "{} must reject stale pre-tmux startup output during live screenshot proof",
+        relative_path(root, &path)
+    );
 }
 
 #[test]

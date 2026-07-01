@@ -260,6 +260,7 @@ fi
 
 for required_smoke_marker in \
   "default startup content checked: true" \
+  "default startup marker: tmux Cmd/Ctrl+Shift+T" \
   "tmux status strip rendered: true" \
   "tmux manager panel rendered: true"
 do
