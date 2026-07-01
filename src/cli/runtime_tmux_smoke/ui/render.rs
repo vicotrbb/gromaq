@@ -141,6 +141,8 @@ pub(super) fn render_no_server_start_hint(renderer: &mut WgpuRenderer) -> bool {
     render_manager_panel_contains(&mut runtime, renderer, "Enterstart-session")
         && render_manager_panel_contains(&mut runtime, renderer, "tmuxnew-session-d-s<session>")
         && render_manager_panel_contains(&mut runtime, renderer, "Enterstart-sessiontocreate")
+        && render_manager_panel_contains(&mut runtime, renderer, "rrefresh")
+        && render_manager_panel_contains(&mut runtime, renderer, "?help")
 }
 
 pub(super) fn render_outside_attach_hint(renderer: &mut WgpuRenderer) -> bool {

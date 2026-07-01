@@ -62,7 +62,7 @@ pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
         return "tmux missing; install tmux or disable tmux workflows | Esc close".to_owned();
     }
     if snapshot.state.sessions.is_empty() {
-        return "No tmux server; Enter start-session to create | tmux new-session -d -s <session> | Esc close"
+        return "No tmux server; Enter start-session to create | r refresh | ? help | Esc close"
             .to_owned();
     }
     if snapshot.current.is_none() {
