@@ -30,6 +30,18 @@ pub(super) fn action_choice_label(
     label
 }
 
+pub(super) fn enter_action_label(
+    action: &TmuxAction,
+    snapshot: &TmuxManagerSnapshot,
+    panel: &TmuxManagerPanelState,
+) -> String {
+    let mut label = action.stable_id.to_owned();
+    if !action_available(action, snapshot, panel) {
+        label.push_str("[needs-active]");
+    }
+    label
+}
+
 pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
     if snapshot.status == TmuxManagerStatus::Missing {
         return "tmux missing; install tmux or disable tmux workflows | Esc close".to_owned();

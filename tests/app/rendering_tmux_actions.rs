@@ -3,6 +3,7 @@ use gromaq::tmux::{
     TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
     TmuxWindow,
 };
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::support::{MockFrameRenderer, MockPtySession};
 
@@ -76,7 +77,17 @@ fn native_terminal_runtime_marks_unavailable_actions_without_active_tmux_target(
         state: TmuxState::default(),
         current: None,
     };
-    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.focus_next();
+    panel.focus_next();
+    panel.focus_next();
+    for _ in 0..3 {
+        panel.handle_key(
+            &Key::Named(NamedKey::ArrowUp),
+            ModifiersState::empty(),
+            &snapshot,
+        );
+    }
     let mut renderer = MockFrameRenderer::default();
 
     assert!(
@@ -86,10 +97,14 @@ fn native_terminal_runtime_marks_unavailable_actions_without_active_tmux_target(
     );
 
     let action_line = &renderer.frames.last().unwrap().lines[6];
-    assert!(action_line.contains("s split-pane-right[needs-active]"));
+    assert!(
+        action_line.contains("Enter split-pane-right[needs-active]"),
+        "{action_line}"
+    );
+    assert!(action_line.contains("s split-pane-right[needs-active]*"));
     assert!(action_line.contains("v split-pane-down[needs-active]"));
     assert!(action_line.contains("z zoom-pane[needs-active]"));
-    assert!(action_line.contains("t start-session*"));
+    assert!(action_line.contains("t start-session"));
     assert!(!action_line.contains("t start-session[needs-active]"));
     assert!(action_line.contains("? show-help"));
     assert!(!action_line.contains("? show-help[needs-active]"));
