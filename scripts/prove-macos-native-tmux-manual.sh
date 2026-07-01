@@ -126,6 +126,9 @@ printf '%s\n' "\${right_prompt_legible}" > "${proof_root}/tmux-right-prompt-legi
 printf '%s\n' "Start a named tmux session from the UI. Type exactly: start-session"
 IFS= read -r start_session
 printf '%s\n' "\${start_session}" > "${proof_root}/tmux-start-session.txt"
+printf '%s\n' "Attach ${session} from the UI so active-target actions can run. Type exactly: attach-session"
+IFS= read -r attach_session
+printf '%s\n' "\${attach_session}" > "${proof_root}/tmux-attach-session.txt"
 printf '%s\n' "Run one safe split-pane action from the UI. Type exactly: safe-action"
 IFS= read -r safe_action
 printf '%s\n' "\${safe_action}" > "${proof_root}/tmux-safe-action.txt"
@@ -210,6 +213,7 @@ status_strip_visible="$(cat "${proof_root}/tmux-status-strip-visible.txt" 2>/dev
 navigation_checked="$(cat "${proof_root}/tmux-navigation-checked.txt" 2>/dev/null || true)"
 right_prompt_legible="$(cat "${proof_root}/tmux-right-prompt-legible.txt" 2>/dev/null || true)"
 start_session="$(cat "${proof_root}/tmux-start-session.txt" 2>/dev/null || true)"
+attach_session="$(cat "${proof_root}/tmux-attach-session.txt" 2>/dev/null || true)"
 safe_action="$(cat "${proof_root}/tmux-safe-action.txt" 2>/dev/null || true)"
 new_window="$(cat "${proof_root}/tmux-new-window.txt" 2>/dev/null || true)"
 refresh_checked="$(cat "${proof_root}/tmux-refresh-checked.txt" 2>/dev/null || true)"
@@ -235,6 +239,10 @@ if [ "${right_prompt_legible}" != "right-prompt-legible" ]; then
 fi
 if [ "${start_session}" != "start-session" ]; then
   printf '%s\n' "error: expected start-session confirmation, got '${start_session}'." >&2
+  exit 1
+fi
+if [ "${attach_session}" != "attach-session" ]; then
+  printf '%s\n' "error: expected attach-session confirmation, got '${attach_session}'." >&2
   exit 1
 fi
 if [ "${safe_action}" != "safe-action" ]; then
@@ -278,6 +286,7 @@ fi
   printf '%s\n' "tmux-navigation-checked.txt: ${navigation_checked}"
   printf '%s\n' "tmux-right-prompt-legible.txt: ${right_prompt_legible}"
   printf '%s\n' "tmux-start-session.txt: ${start_session}"
+  printf '%s\n' "tmux-attach-session.txt: ${attach_session}"
   printf '%s\n' "tmux-safe-action.txt: ${safe_action}"
   printf '%s\n' "tmux-new-window.txt: ${new_window}"
   printf '%s\n' "tmux-refresh-checked.txt: ${refresh_checked}"

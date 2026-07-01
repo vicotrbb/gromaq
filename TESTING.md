@@ -146,6 +146,8 @@ the tester must open it with Control/Super Shift `T`; set
   harness records this as `tmux-right-prompt-legible.txt`.
 - Start a named session from the UI; the harness records this as
   `tmux-start-session.txt`.
+- Attach the prepared session from the UI; the harness records this as
+  `tmux-attach-session.txt` in the configured manual proof.
 - Run a safe split-pane action from the UI; the harness records this as
   `tmux-safe-action.txt`.
 - Create a tmux window from the UI; the harness records this as
@@ -155,6 +157,8 @@ the tester must open it with Control/Super Shift `T`; set
 - Use `q` or another destructive shortcut and verify inline confirmation appears
   before tmux runs.
 - Confirm a kill only against an isolated test target.
+- Launch or inspect the configured workspace preset; the configured manual
+  harness records this as `tmux-workspace-visible.txt`.
 - Close the panel and verify normal shell input still reaches the terminal.
 
 Until that manual checklist has been performed in the current session, native
