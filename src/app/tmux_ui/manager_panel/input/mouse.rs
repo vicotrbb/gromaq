@@ -1,8 +1,10 @@
 //! Native tmux manager panel mouse handling.
 
+use super::super::enter_action::enter_action_id;
+use super::super::hints::{action_choice_label, action_hint, enter_action_label};
 use super::super::selection::{selected_panes, selected_windows, window_label};
 use super::super::state::{TmuxManagerFocus, TmuxManagerPanelState};
-use crate::tmux::{TmuxManagerSnapshot, TmuxPane};
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxPane};
 use crate::{MouseButton, MouseEvent, MouseEventKind};
 
 /// Result of handling a mouse event while the tmux manager panel may be open.
@@ -88,7 +90,29 @@ impl TmuxManagerPanelState {
                     self.selected_pane = index;
                 }
             }
-            TmuxManagerFocus::Workspaces | TmuxManagerFocus::Actions => {}
+            TmuxManagerFocus::Actions => {
+                if let Some(index) = hit_label_index(
+                    col,
+                    action_choices_start_col(snapshot, self),
+                    super::PANEL_ACTIONS.iter().filter_map(|action_id| {
+                        TmuxAction::by_id(*action_id).map(|action| {
+                            action_choice_label(
+                                action,
+                                action.id
+                                    == super::PANEL_ACTIONS
+                                        .get(self.selected_action)
+                                        .copied()
+                                        .unwrap_or(super::PANEL_ACTIONS[0]),
+                                snapshot,
+                                self,
+                            )
+                        })
+                    }),
+                ) {
+                    self.selected_action = index;
+                }
+            }
+            TmuxManagerFocus::Workspaces => {}
         }
     }
 }
@@ -120,6 +144,21 @@ fn hit_label_index(
         start = end.saturating_add(1);
     }
     None
+}
+
+fn action_choices_start_col(
+    snapshot: &TmuxManagerSnapshot,
+    panel: &TmuxManagerPanelState,
+) -> usize {
+    let selected_action =
+        TmuxAction::by_id(enter_action_id(snapshot, panel)).expect("panel action is registered");
+    format!(
+        "Actions | Enter {} | {} | ",
+        enter_action_label(selected_action, snapshot, panel),
+        action_hint(selected_action)
+    )
+    .chars()
+    .count()
 }
 
 fn selected_label(label: &str, selected: bool) -> String {

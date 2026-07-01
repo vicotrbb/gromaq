@@ -1,12 +1,13 @@
 use gromaq::app::{
     NativeTerminalRuntime, NativeTerminalRuntimeConfig, NativeWindowMouseInput, TmuxManagerFocus,
-    TmuxManagerMouseOutcome, TmuxManagerPanelState,
+    TmuxManagerKeyOutcome, TmuxManagerMouseOutcome, TmuxManagerPanelState,
 };
 use gromaq::tmux::{
-    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
-    TmuxWindow,
+    ActionId, TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession,
+    TmuxState, TmuxWindow,
 };
 use gromaq::{MouseButton, MouseEvent, MouseEventKind};
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::support::{MockFrameRenderer, MockPtySession};
 
@@ -159,6 +160,51 @@ fn tmux_manager_panel_mouse_press_selects_clicked_items() {
     );
     assert_eq!(panel.focus(), TmuxManagerFocus::Panes);
     assert_eq!(panel.selected_pane_id(&snapshot), Some("%3"));
+}
+
+#[test]
+fn tmux_manager_panel_mouse_press_selects_clicked_action() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 320,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+    let action_line = &renderer.frames.last().unwrap().lines[6];
+    let new_window_col = action_line
+        .find("c new-window")
+        .expect("new-window action should render");
+
+    assert_eq!(
+        panel.handle_mouse_event(
+            panel_mouse(
+                MouseEventKind::Press,
+                MouseButton::Left,
+                4,
+                u16::try_from(new_window_col + 2).unwrap(),
+            ),
+            &snapshot,
+        ),
+        TmuxManagerMouseOutcome::Consumed
+    );
+    assert_eq!(
+        panel.handle_key(
+            &Key::Named(NamedKey::Enter),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::NewWindow)
+    );
 }
 
 fn panel_mouse(kind: MouseEventKind, button: MouseButton, row: u16, col: u16) -> MouseEvent {
