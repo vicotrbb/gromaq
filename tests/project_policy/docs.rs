@@ -217,6 +217,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "workspace invalid preflight checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "`--runtime-tmux-smoke` and `--runtime-tmux-ui-smoke` fail closed",
         ),
         (
