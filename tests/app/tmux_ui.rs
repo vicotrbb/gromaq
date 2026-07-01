@@ -82,7 +82,7 @@ fn tmux_manager_panel_handles_navigation_actions_confirmation_and_close() {
     );
     assert_eq!(
         panel.confirmation_message(),
-        Some("confirm kill-window with y")
+        Some("confirm kill-window with y, n/Esc cancels")
     );
     assert_eq!(
         panel.handle_key(
@@ -146,7 +146,7 @@ fn tmux_manager_panel_supports_discoverable_action_shortcuts() {
     );
     assert_eq!(
         panel.confirmation_message(),
-        Some("confirm kill-window with y")
+        Some("confirm kill-window with y, n/Esc cancels")
     );
 }
 

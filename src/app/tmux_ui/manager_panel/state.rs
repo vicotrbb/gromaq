@@ -119,7 +119,7 @@ impl TmuxManagerPanelState {
     pub fn request_action(&mut self, stable_id: &str, destructive: bool) {
         self.pending_action_name = None;
         if destructive {
-            self.confirmation = Some(format!("confirm {stable_id} with y"));
+            self.confirmation = Some(format!("confirm {stable_id} with y, n/Esc cancels"));
             self.confirmation_action = action_id_for_stable_id(stable_id);
             self.pending_action = None;
         } else {
