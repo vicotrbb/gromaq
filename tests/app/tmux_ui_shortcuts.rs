@@ -21,6 +21,32 @@ fn tmux_manager_panel_shortcuts_zoom_selected_pane() {
     assert_eq!(panel.pending_action(), Some("zoom-pane"));
 }
 
+#[test]
+fn tmux_manager_panel_shortcuts_switch_windows() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("n".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::NextWindow)
+    );
+    assert_eq!(panel.pending_action(), Some("next-window"));
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("p".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::PreviousWindow)
+    );
+    assert_eq!(panel.pending_action(), Some("previous-window"));
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,

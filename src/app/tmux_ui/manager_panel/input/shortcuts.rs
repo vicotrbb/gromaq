@@ -13,6 +13,10 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
         Some(ActionId::SplitPaneRight)
     } else if character.eq_ignore_ascii_case("v") {
         Some(ActionId::SplitPaneDown)
+    } else if character.eq_ignore_ascii_case("n") {
+        Some(ActionId::NextWindow)
+    } else if character.eq_ignore_ascii_case("p") {
+        Some(ActionId::PreviousWindow)
     } else if character.eq_ignore_ascii_case("w") {
         Some(ActionId::KillWindow)
     } else if character.eq_ignore_ascii_case("x") {
@@ -25,5 +29,5 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
 }
 
 pub(super) fn shortcut_hint() -> &'static str {
-    "shortcuts c new-window s split-right v split-down z zoom-pane w kill-window x kill-pane"
+    "shortcuts c new-window s split-right v split-down n next-window p previous-window z zoom-pane w kill-window x kill-pane"
 }
