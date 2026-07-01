@@ -50,6 +50,7 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
         assert!(exit.stdout.contains("safe action dispatched: true"));
         assert!(exit.stdout.contains("name entry action dispatched: true"));
         assert!(exit.stdout.contains("workspace launch: started"));
+        assert!(exit.stdout.contains("workspace feedback checked: true"));
         assert!(exit.stdout.contains("workspace duplicate prevented: true"));
         assert!(exit.stdout.contains("state reader observed session: true"));
         assert!(exit.stdout.contains("cleanup killed session: true"));

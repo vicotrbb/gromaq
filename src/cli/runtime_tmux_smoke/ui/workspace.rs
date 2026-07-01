@@ -11,6 +11,7 @@ const UI_WORKSPACE_SESSION: &str = "gromaq-runtime-tmux-ui-workspace";
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct WorkspaceProof {
     pub(super) started: bool,
+    pub(super) feedback_checked: bool,
     pub(super) duplicate_prevented: bool,
 }
 
@@ -25,11 +26,15 @@ pub(super) fn run_workspace_proof(
         panel.launch_selected_workspace(runner),
         Some(Ok(TmuxWorkspaceResult::Started { .. }))
     );
+    let feedback_checked = panel
+        .workspace_feedback()
+        .is_some_and(|feedback| feedback.contains("workspace gromaq-ui-smoke started session"));
     let before = session_count(runner, UI_WORKSPACE_SESSION);
     let _ = panel.launch_selected_workspace(runner);
     let after = session_count(runner, UI_WORKSPACE_SESSION);
     WorkspaceProof {
         started,
+        feedback_checked,
         duplicate_prevented: before == Some(1) && after == Some(1),
     }
 }
