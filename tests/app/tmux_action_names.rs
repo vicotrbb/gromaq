@@ -78,6 +78,38 @@ fn tmux_manager_panel_collects_name_and_starts_session() {
         }
     ));
     assert_eq!(runner.remaining_calls(), 0);
+    assert_eq!(
+        panel.last_action_feedback(),
+        Some("start-session success; attach with tmux attach-session -t delta")
+    );
+}
+
+#[test]
+fn tmux_manager_panel_quotes_start_session_attach_feedback() {
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    focus_action_index(&mut panel, &snapshot, 3);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "new-session",
+        "-d",
+        "-s",
+        "delta work",
+    ])]);
+
+    submit_action_name(&mut panel, &snapshot, "delta work");
+    let outcome = panel.handle_key(
+        &Key::Named(NamedKey::Enter),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    panel
+        .dispatch_action_outcome(outcome, &snapshot, &runner)
+        .unwrap();
+
+    assert_eq!(
+        panel.last_action_feedback(),
+        Some("start-session success; attach with tmux attach-session -t 'delta work'")
+    );
 }
 
 #[test]

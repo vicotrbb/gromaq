@@ -5,7 +5,7 @@ use super::selection::selected_windows;
 use super::state::TmuxManagerPanelState;
 use crate::tmux::{
     ActionId, TmuxAction, TmuxActionRequest, TmuxActionResult, TmuxActionRunner, TmuxCommandRunner,
-    TmuxManagerSnapshot,
+    TmuxManagerSnapshot, TmuxTerminalCommand,
 };
 
 impl TmuxManagerPanelState {
@@ -26,7 +26,7 @@ impl TmuxManagerPanelState {
         };
         let request = action_request(action_id, confirmed, self, snapshot);
         let result = TmuxActionRunner::new(runner).run(request);
-        self.last_action_feedback = Some(action_feedback(&result));
+        self.last_action_feedback = Some(action_feedback(&result, self));
         Some(result)
     }
 }
@@ -91,9 +91,17 @@ fn selected_window_target(
         .map(|window| format!("{}:{}", window.session_name, window.index))
 }
 
-fn action_feedback(result: &TmuxActionResult) -> String {
+fn action_feedback(result: &TmuxActionResult, panel: &TmuxManagerPanelState) -> String {
     match result {
         TmuxActionResult::Success { action_id, .. } => {
+            if let (ActionId::StartSession, Some(session)) =
+                (action_id, panel.pending_action_name())
+            {
+                return format!(
+                    "start-session success; attach with {}",
+                    attach_command_hint(session)
+                );
+            }
             format!("{} success", stable_id(*action_id))
         }
         TmuxActionResult::CommandFailed {
@@ -120,6 +128,11 @@ fn action_feedback(result: &TmuxActionResult) -> String {
             format!("{} skipped: {reason}", stable_id(*action_id))
         }
     }
+}
+
+fn attach_command_hint(session: &str) -> String {
+    let input = TmuxTerminalCommand::attach_session(session).to_pty_input();
+    String::from_utf8_lossy(input.strip_suffix(b"\r").unwrap_or(input.as_slice())).into_owned()
 }
 
 fn stable_id(action_id: ActionId) -> &'static str {
