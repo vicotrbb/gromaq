@@ -165,8 +165,10 @@ if ! grep -F "default startup content checked: true" "${window_smoke_stdout_path
   exit 1
 fi
 
-if ! grep -F "terminal cells:" "${window_smoke_stdout_path}" >/dev/null; then
-  printf '%s\n' "error: default window smoke did not report terminal cells." >&2
+if ! grep -F "presented frame limit: 3" "${window_smoke_stdout_path}" >/dev/null ||
+  ! grep -F "frames presented: 3" "${window_smoke_stdout_path}" >/dev/null ||
+  ! grep -F "terminal cells:" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default window smoke did not present three settled frames." >&2
   exit 1
 fi
 
@@ -302,6 +304,8 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
     printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
     grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
+    grep -F "presented frame limit: 3" "${window_smoke_stdout_path}"
+    grep -F "frames presented: 3" "${window_smoke_stdout_path}"
     grep -F "terminal cells:" "${window_smoke_stdout_path}"
     grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
@@ -458,6 +462,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
   printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
   grep -F "default startup content checked: true" "${window_smoke_stdout_path}"
+  grep -F "presented frame limit: 3" "${window_smoke_stdout_path}"
+  grep -F "frames presented: 3" "${window_smoke_stdout_path}"
   grep -F "terminal cells:" "${window_smoke_stdout_path}"
   grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
