@@ -86,8 +86,7 @@ pub(super) fn render_and_present_terminal_glyph_frame_report_with_snapshot_and_s
 where
     B: SurfaceBackend + SurfaceFrameBackend,
 {
-    // Swapchain frames are not retained. Until native partial-present support exists,
-    // every surface presentation must redraw the full visible terminal contents.
+    // Swapchain frames are not retained; redraw full visible terminal contents.
     runtime.invalidate_terminal_frame();
     let clear_color = renderer.config().clear_color;
     if !runtime.render_terminal_frame_with_status_overlay(renderer, status_overlay)? {
@@ -140,6 +139,8 @@ where
         tmux_manager_sessions,
         tmux_manager_windows,
         tmux_manager_panes,
+        terminal_cols: plan.viewport_cols,
+        terminal_rows: plan.viewport_rows,
         clear_presented: false,
         width: frame.width,
         height: frame.height,

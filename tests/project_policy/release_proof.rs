@@ -302,6 +302,7 @@ fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
         "tmux status strip rendered: true",
         "tmux status pane command rendered: true",
         "tmux manager panel rendered: true",
+        "terminal cells:",
         "tmux manager sessions:",
         "tmux manager windows:",
         "tmux manager panes:",

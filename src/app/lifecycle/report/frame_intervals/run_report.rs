@@ -31,6 +31,8 @@ impl PresentedFrameIntervals {
             tmux_manager_sessions: input.tmux_manager_sessions,
             tmux_manager_windows: input.tmux_manager_windows,
             tmux_manager_panes: input.tmux_manager_panes,
+            terminal_cols: input.terminal_cols,
+            terminal_rows: input.terminal_rows,
             glyph_frame_width: input.glyph_frame_width,
             glyph_frame_height: input.glyph_frame_height,
             glyph_frame_glyph_quads: input.glyph_frame_glyph_quads,

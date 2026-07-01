@@ -36,6 +36,8 @@ impl NativeAppLifecycle {
             tmux_manager_sessions: self.last_glyph_frame_presentation.tmux_manager_sessions,
             tmux_manager_windows: self.last_glyph_frame_presentation.tmux_manager_windows,
             tmux_manager_panes: self.last_glyph_frame_presentation.tmux_manager_panes,
+            terminal_cols: self.last_glyph_frame_presentation.terminal_cols,
+            terminal_rows: self.last_glyph_frame_presentation.terminal_rows,
             glyph_frame_width: self.last_glyph_frame_presentation.width,
             glyph_frame_height: self.last_glyph_frame_presentation.height,
             glyph_frame_glyph_quads: self.last_glyph_frame_presentation.glyph_quads,

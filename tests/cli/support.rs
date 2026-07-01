@@ -28,7 +28,6 @@ pub(crate) struct MockContext {
 pub(crate) struct MockAppLauncher {
     pub(crate) launches: RefCell<Vec<NativeAppLaunchConfig>>,
 }
-
 #[derive(Debug)]
 pub(crate) struct ReadOnlyClipboard {
     pub(crate) text: String,
@@ -95,6 +94,8 @@ impl NativeAppLauncher for MockAppLauncher {
             tmux_manager_sessions: usize::from(config.app.open_tmux_manager_on_start),
             tmux_manager_windows: usize::from(config.app.open_tmux_manager_on_start),
             tmux_manager_panes: usize::from(config.app.open_tmux_manager_on_start),
+            terminal_cols: 140,
+            terminal_rows: 35,
             glyph_frame_width: 2560,
             glyph_frame_height: 1600,
             glyph_frame_glyph_quads: 12,

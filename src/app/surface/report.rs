@@ -19,6 +19,10 @@ pub struct NativeGlyphFramePresentation {
     pub tmux_manager_windows: usize,
     /// Pane count in the rendered native tmux manager snapshot.
     pub tmux_manager_panes: usize,
+    /// Terminal columns represented by the rendered glyph frame.
+    pub terminal_cols: u16,
+    /// Terminal rows represented by the rendered glyph frame.
+    pub terminal_rows: u16,
     /// Whether the surface was cleared without a glyph frame.
     pub clear_presented: bool,
     /// Presented frame width in pixels.

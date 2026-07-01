@@ -45,6 +45,10 @@ pub struct NativeAppRunReport {
     pub tmux_manager_windows: usize,
     /// Pane count in the last recorded native tmux manager snapshot.
     pub tmux_manager_panes: usize,
+    /// Terminal columns in the last recorded glyph frame.
+    pub terminal_cols: u16,
+    /// Terminal rows in the last recorded glyph frame.
+    pub terminal_rows: u16,
     /// Width of the last presented terminal glyph frame in pixels.
     pub glyph_frame_width: u32,
     /// Height of the last presented terminal glyph frame in pixels.
@@ -120,6 +124,8 @@ pub(super) struct NativeAppRunReportInput {
     pub(super) tmux_manager_sessions: usize,
     pub(super) tmux_manager_windows: usize,
     pub(super) tmux_manager_panes: usize,
+    pub(super) terminal_cols: u16,
+    pub(super) terminal_rows: u16,
     pub(super) glyph_frame_width: u32,
     pub(super) glyph_frame_height: u32,
     pub(super) glyph_frame_glyph_quads: usize,

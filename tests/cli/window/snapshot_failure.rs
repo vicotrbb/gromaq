@@ -35,6 +35,7 @@ fn window_tmux_manager_snapshot_failure_reports_missing_pane_command() {
             .contains("tmux status pane command rendered: false")
     );
     assert!(exit.stderr.contains("tmux manager panel rendered: true"));
+    assert!(exit.stderr.contains("terminal cells: 140x35"));
     assert!(!exit.stderr.contains("no snapshot was written"));
     assert!(path.exists());
     let _ = fs::remove_file(&path);
@@ -61,6 +62,8 @@ impl NativeAppLauncher for MissingPaneCommandAppLauncher {
             tmux_status_strip_rendered: true,
             tmux_status_pane_command_rendered: false,
             tmux_manager_panel_rendered: true,
+            terminal_cols: 140,
+            terminal_rows: 35,
             glyph_frame_glyph_quads: 12,
             glyph_frame_background_quads: 1,
             ..NativeAppRunReport::default()

@@ -39,6 +39,7 @@ for marker in \
   "tmux status strip rendered: true" \
   "tmux status pane command rendered: true" \
   "tmux manager panel rendered: true" \
+  "terminal cells:" \
   "tmux manager sessions:" \
   "tmux manager windows:" \
   "tmux manager panes:"
@@ -105,6 +106,7 @@ fi
   grep -F "tmux status strip rendered: true" "${log_path}"
   grep -F "tmux status pane command rendered: true" "${log_path}"
   grep -F "tmux manager panel rendered: true" "${log_path}"
+  grep -F "terminal cells:" "${log_path}"
   grep -F "tmux manager sessions:" "${log_path}"
   grep -F "tmux manager windows:" "${log_path}"
   grep -F "tmux manager panes:" "${log_path}"

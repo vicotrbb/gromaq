@@ -118,6 +118,8 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
         tmux_manager_sessions: 2,
         tmux_manager_windows: 3,
         tmux_manager_panes: 4,
+        terminal_cols: 69,
+        terminal_rows: 17,
         clear_presented: false,
         width: 2560,
         height: 1600,
@@ -143,6 +145,8 @@ fn native_app_lifecycle_reports_last_glyph_frame_presentation() {
     assert_eq!(report.tmux_manager_sessions, 2);
     assert_eq!(report.tmux_manager_windows, 3);
     assert_eq!(report.tmux_manager_panes, 4);
+    assert_eq!(report.terminal_cols, 69);
+    assert_eq!(report.terminal_rows, 17);
     assert_eq!(report.glyph_frame_width, 2560);
     assert_eq!(report.glyph_frame_height, 1600);
     assert_eq!(report.glyph_frame_glyph_quads, 12);
