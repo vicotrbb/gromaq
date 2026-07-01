@@ -24,10 +24,10 @@ use render::{
     render_status_strip,
 };
 use shortcuts::{
-    drive_destructive_shortcut_confirmation, drive_name_entry_action, drive_refresh_shortcut,
-    drive_rename_session_action, drive_rename_window_action, drive_select_pane_shortcut,
-    drive_shortcut_action, drive_split_down_shortcut, drive_unavailable_shortcut_block,
-    drive_window_cycle_shortcuts, drive_zoom_shortcut,
+    drive_destructive_shortcut_confirmation, drive_kill_pane_confirmation, drive_name_entry_action,
+    drive_refresh_shortcut, drive_rename_session_action, drive_rename_window_action,
+    drive_select_pane_shortcut, drive_shortcut_action, drive_split_down_shortcut,
+    drive_unavailable_shortcut_block, drive_window_cycle_shortcuts, drive_zoom_shortcut,
 };
 use workspace::{docs_workspace_preset, run_workspace_proof, workspace_preset};
 
@@ -96,6 +96,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
         UI_SESSION,
         "gromaq-runtime-tmux-ui-rn",
     );
+    let kill_pane_confirmation_dispatched = drive_kill_pane_confirmation(&mut runtime, &runner);
     let name_entry_dispatched = drive_name_entry_action(&mut runtime, &runner);
     let workspace_result = run_workspace_proof(&snapshot, &workspace_preset, &runner);
     let mouse_focus_checked = render_manager_panel(&mut runtime, &mut renderer)
@@ -131,7 +132,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nwindow cycle shortcuts checked: {window_cycle_shortcuts_checked}\nzoom shortcut checked: {zoom_shortcut_checked}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsplit down shortcut checked: {split_down_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nrename window action dispatched: {rename_window_dispatched}\nrename session action dispatched: {rename_session_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nwindow cycle shortcuts checked: {window_cycle_shortcuts_checked}\nzoom shortcut checked: {zoom_shortcut_checked}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsplit down shortcut checked: {split_down_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nrename window action dispatched: {rename_window_dispatched}\nrename session action dispatched: {rename_session_dispatched}\nkill pane confirmation dispatched: {kill_pane_confirmation_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.feedback_checked,
             workspace_result.duplicate_prevented,
             state.sessions.len(),

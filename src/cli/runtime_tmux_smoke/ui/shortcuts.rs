@@ -109,6 +109,29 @@ pub(super) fn drive_destructive_shortcut_confirmation(runtime: &mut super::Smoke
     ) && matches!(canceled, TmuxManagerKeyOutcome::Consumed)
 }
 
+pub(super) fn drive_kill_pane_confirmation(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let confirmation =
+        runtime.handle_tmux_manager_key(&Key::Character("x".into()), ModifiersState::empty());
+    if !matches!(
+        confirmation,
+        TmuxManagerKeyOutcome::ConfirmationRequired(ActionId::KillPane)
+    ) {
+        return false;
+    }
+    let confirmed =
+        runtime.handle_tmux_manager_key(&Key::Character("y".into()), ModifiersState::empty());
+    matches!(
+        runtime.dispatch_tmux_manager_action(confirmed, runner),
+        Some(TmuxActionResult::Success {
+            action_id: ActionId::KillPane,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_refresh_shortcut(runtime: &mut super::SmokeRuntime) -> bool {
     matches!(
         runtime.handle_tmux_manager_key(&Key::Character("r".into()), ModifiersState::empty()),
