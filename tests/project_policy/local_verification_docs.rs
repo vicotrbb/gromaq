@@ -9,6 +9,7 @@ const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "Avatar asset freshness",
     "README screenshot freshness",
     "default-startup tmux UI proof host",
+    "default startup marker: tmux Cmd/Ctrl+Shift+T",
     "GROMAQ_SCREENSHOT_MIN_TMUX_PIXELS",
     "current-host compatibility",
 ];
