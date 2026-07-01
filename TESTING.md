@@ -113,8 +113,9 @@ scripts/prove-macos-native-tmux-manual.sh
 path through plain `cargo run`, matching the no-argument developer workflow. It
 prepares uniquely named tmux sessions, asks the tester to verify the default
 startup shortcut copy, status strip, Control/Super Shift `T` manager panel,
-visible tmux state, navigation, start-session, attach-session, safe action
-dispatch, new-window, destructive confirmation against the disposable target,
+visible tmux state, visible Enter/`r`/`?`/Esc hint controls in missing/no-server
+and outside-tmux manager states, navigation, start-session, attach-session, safe
+action dispatch, new-window, destructive confirmation against the disposable target,
 shell input after closing the panel, and right-prompt legibility. It records the
 exact `target/debug/gromaq` binary marker used by the `cargo run` launch and
 fails if the old keyboard/mouse/paste startup copy remains in that binary, then
