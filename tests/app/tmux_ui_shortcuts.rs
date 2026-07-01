@@ -64,6 +64,34 @@ fn tmux_manager_panel_shortcuts_switch_windows() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_use_selected_targets_outside_attached_client() {
+    let mut snapshot = manager_snapshot();
+    snapshot.current = None;
+    snapshot.state.sessions[0].attached = false;
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("z".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::ZoomPane)
+    );
+    assert_eq!(panel.pending_action(), Some("zoom-pane"));
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("n".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::ActionRequested(ActionId::NextWindow)
+    );
+    assert_eq!(panel.pending_action(), Some("next-window"));
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_attach_and_detach_sessions() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);

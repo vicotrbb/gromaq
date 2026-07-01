@@ -24,15 +24,17 @@ fn action_has_selected_target(
         ActionId::SplitPaneRight
         | ActionId::SplitPaneDown
         | ActionId::SelectPane
+        | ActionId::ZoomPane
         | ActionId::KillPane => panel.selected_pane_id(snapshot).is_some(),
         ActionId::NewWindow | ActionId::RenameSession | ActionId::KillSession => {
             panel.selected_session_name(snapshot).is_some()
         }
-        ActionId::RenameWindow | ActionId::KillWindow => {
-            selected_windows(snapshot, panel.selected_session)
-                .get(panel.selected_window)
-                .is_some()
-        }
+        ActionId::RenameWindow
+        | ActionId::NextWindow
+        | ActionId::PreviousWindow
+        | ActionId::KillWindow => selected_windows(snapshot, panel.selected_session)
+            .get(panel.selected_window)
+            .is_some(),
         _ => false,
     }
 }
