@@ -170,6 +170,10 @@ fn macos_app_identity_proof_requires_default_tmux_ui_screenshot_smoke() {
         "default startup marker: tmux Cmd/Ctrl+Shift+T",
         "tmux status strip rendered: true",
         "tmux manager panel rendered: true",
+        "grep -F \"window screenshot smoke: ok\" \"${open_stdout}\"",
+        "grep -F \"default startup marker: tmux Cmd/Ctrl+Shift+T\" \"${open_stdout}\"",
+        "grep -F \"tmux status strip rendered: true\" \"${open_stdout}\"",
+        "grep -F \"tmux manager panel rendered: true\" \"${open_stdout}\"",
     ] {
         assert!(
             source.contains(marker),
