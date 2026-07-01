@@ -232,7 +232,7 @@ fn native_terminal_runtime_renders_compact_tmux_manager_panel() {
 #[test]
 fn native_terminal_runtime_renders_tmux_manager_executable_actions() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 320,
+        terminal_cols: 900,
         terminal_rows: 9,
         ..NativeTerminalRuntimeConfig::default()
     })

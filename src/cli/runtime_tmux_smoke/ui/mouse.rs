@@ -13,7 +13,7 @@ const MANAGER_START_ROW: u16 = 2;
 const MANAGER_WINDOW_ROW: u16 = MANAGER_START_ROW + 2;
 const MANAGER_WORKSPACE_ROW: u16 = MANAGER_START_ROW + 4;
 const MANAGER_ACTION_ROW: u16 = MANAGER_START_ROW + 5;
-const KILL_WINDOW_ACTION_COL: u16 = 90;
+const KILL_WINDOW_ACTION_COL: u16 = 130;
 const DOCS_WORKSPACE_COL: u16 = 240;
 
 pub(super) fn drive_mouse_focus(runtime: &mut super::SmokeRuntime) -> bool {

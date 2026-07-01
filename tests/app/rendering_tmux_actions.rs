@@ -39,7 +39,7 @@ fn native_terminal_runtime_renders_selected_action_command_and_key_hint() {
 #[test]
 fn native_terminal_runtime_renders_action_choices_with_shortcuts() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 320,
+        terminal_cols: 900,
         terminal_rows: 8,
         ..NativeTerminalRuntimeConfig::default()
     })
@@ -56,11 +56,26 @@ fn native_terminal_runtime_renders_action_choices_with_shortcuts() {
     );
 
     let action_line = &renderer.frames.last().unwrap().lines[6];
-    assert!(action_line.contains("s split-pane-right"), "{action_line}");
-    assert!(action_line.contains("v split-pane-down"), "{action_line}");
-    assert!(action_line.contains("c new-window"), "{action_line}");
-    assert!(action_line.contains("q kill-session"), "{action_line}");
-    assert!(action_line.contains("? show-help"), "{action_line}");
+    assert!(
+        action_line.contains("s split-pane-right tmux split-window -h Ctrl-b %"),
+        "{action_line}"
+    );
+    assert!(
+        action_line.contains("v split-pane-down tmux split-window -v Ctrl-b \""),
+        "{action_line}"
+    );
+    assert!(
+        action_line.contains("c new-window tmux new-window Ctrl-b c"),
+        "{action_line}"
+    );
+    assert!(
+        action_line.contains("q kill-session tmux kill-session -t <session>"),
+        "{action_line}"
+    );
+    assert!(
+        action_line.contains("? show-help tmux list-keys Ctrl-b ?"),
+        "{action_line}"
+    );
 }
 
 #[test]
@@ -99,7 +114,7 @@ fn native_terminal_runtime_renders_help_catalog_after_help_shortcut() {
 #[test]
 fn native_terminal_runtime_marks_unavailable_actions_without_active_tmux_target() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 900,
+        terminal_cols: 2200,
         terminal_rows: 8,
         ..NativeTerminalRuntimeConfig::default()
     })
@@ -134,13 +149,20 @@ fn native_terminal_runtime_marks_unavailable_actions_without_active_tmux_target(
         action_line.contains("Enter split-pane-right[needs-active]"),
         "{action_line}"
     );
-    assert!(action_line.contains("s split-pane-right[needs-active]*"));
-    assert!(action_line.contains("v split-pane-down[needs-active]"));
-    assert!(action_line.contains("z zoom-pane[needs-active]"));
-    assert!(action_line.contains("t start-session"));
-    assert!(!action_line.contains("t start-session[needs-active]"));
-    assert!(action_line.contains("? show-help"));
-    assert!(!action_line.contains("? show-help[needs-active]"));
+    assert!(
+        action_line.contains("s split-pane-right tmux split-window -h Ctrl-b %[needs-active]*")
+    );
+    assert!(action_line.contains("v split-pane-down tmux split-window -v Ctrl-b \"[needs-active]"));
+    assert!(action_line.contains("z zoom-pane tmux resize-pane -Z Ctrl-b z[needs-active]"));
+    assert!(action_line.contains("t start-session tmux new-session -d -s <session>"));
+    assert!(
+        !action_line.contains("t start-session tmux new-session -d -s <session>[needs-active]")
+    );
+    assert!(
+        action_line.contains("? show-help tmux list-keys Ctrl-b ?"),
+        "{action_line}"
+    );
+    assert!(!action_line.contains("? show-help tmux list-keys Ctrl-b ?[needs-active]"));
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {

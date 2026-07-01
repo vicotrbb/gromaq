@@ -33,8 +33,12 @@ pub(super) fn action_choice_label(
     panel: &TmuxManagerPanelState,
 ) -> String {
     let mut label = match super::input::action_shortcut(action.id) {
-        Some(shortcut) => format!("{shortcut} {}", action.stable_id),
-        None => action.stable_id.to_owned(),
+        Some(shortcut) => format!(
+            "{shortcut} {} {}",
+            action.stable_id,
+            action_command_teaching(action)
+        ),
+        None => format!("{} {}", action.stable_id, action_command_teaching(action)),
     };
     if !action_available(action, snapshot, panel) {
         label.push_str("[needs-active]");
@@ -43,6 +47,13 @@ pub(super) fn action_choice_label(
         label.push('*');
     }
     label
+}
+
+fn action_command_teaching(action: &TmuxAction) -> String {
+    match action.key_binding {
+        Some(key) => format!("{} {key}", action.tmux_command),
+        None => action.tmux_command.to_owned(),
+    }
 }
 
 pub(super) fn enter_action_label(
