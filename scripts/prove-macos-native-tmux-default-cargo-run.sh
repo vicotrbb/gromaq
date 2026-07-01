@@ -41,6 +41,8 @@ binary_path="${root}/target/debug/gromaq"
 binary_markers_path="${proof_root}/tmux-default-cargo-run-binary-markers.txt"
 window_smoke_stdout_path="${proof_root}/tmux-default-cargo-run-window-smoke.stdout"
 window_smoke_stderr_path="${proof_root}/tmux-default-cargo-run-window-smoke.stderr"
+runtime_tmux_ui_smoke_stdout_path="${proof_root}/tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout"
+runtime_tmux_ui_smoke_stderr_path="${proof_root}/tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -80,6 +82,21 @@ fi
 
 if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: default window smoke did not render the tmux manager panel." >&2
+  exit 1
+fi
+
+(
+  cd "${root}"
+  cargo run -- --runtime-tmux-ui-smoke > "${runtime_tmux_ui_smoke_stdout_path}" 2> "${runtime_tmux_ui_smoke_stderr_path}"
+)
+
+if ! grep -F "skipped pty handoffs checked: attach=true start=true workspace=true" "${runtime_tmux_ui_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: runtime tmux UI smoke did not prove skipped PTY handoffs." >&2
+  exit 1
+fi
+
+if ! grep -F "workspace duplicate prevented: true" "${runtime_tmux_ui_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: runtime tmux UI smoke did not prove workspace duplicate prevention." >&2
   exit 1
 fi
 
@@ -206,6 +223,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "cargo-build stderr: ${proof_root}/cargo-build.stderr"
   printf '%s\n' "tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-window-smoke.stderr: ${window_smoke_stderr_path}"
+  printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
+  printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
   printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"

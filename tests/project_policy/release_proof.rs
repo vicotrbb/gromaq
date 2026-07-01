@@ -198,6 +198,10 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "tmux-default-cargo-run-window-smoke.stdout",
         "default startup content checked: true",
         "tmux manager panel rendered: true",
+        "cargo run -- --runtime-tmux-ui-smoke",
+        "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout",
+        "skipped pty handoffs checked: attach=true start=true workspace=true",
+        "workspace duplicate prevented: true",
         "unexpected old startup marker",
         "tmux-default-cargo-run-current-startup.txt",
         "tmux-default-cargo-run-status-strip.txt",
@@ -244,6 +248,9 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
         .unwrap();
     let stale_check = proof_script.find("unexpected old startup marker").unwrap();
     let window_smoke = proof_script.find("cargo run -- --window-smoke").unwrap();
+    let runtime_tmux_ui_smoke = proof_script
+        .find("cargo run -- --runtime-tmux-ui-smoke")
+        .unwrap();
     let interactive_launch = proof_script
         .find("A default Gromaq window will open through plain cargo run.")
         .unwrap();
@@ -253,6 +260,8 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     assert!(stale_check < interactive_launch);
     assert!(window_smoke < interactive_launch);
     assert!(stale_check < window_smoke);
+    assert!(runtime_tmux_ui_smoke < interactive_launch);
+    assert!(window_smoke < runtime_tmux_ui_smoke);
 }
 
 #[test]
