@@ -11,6 +11,9 @@ use crate::tmux::TmuxManagerSnapshot;
 
 use fixtures::{current_target_snapshot, detached_snapshot, full_prompt_grid, no_server_snapshot};
 
+pub(super) const STARTUP_MANAGER_SMALL_GRID_COLS: u16 = 69;
+pub(super) const STARTUP_MANAGER_SMALL_GRID_ROWS: u16 = 17;
+
 pub(super) fn render_status_strip(
     runtime: &mut super::SmokeRuntime,
     renderer: &mut WgpuRenderer,
@@ -138,8 +141,8 @@ pub(super) fn render_startup_manager_after_shell_prompt(
     snapshot: &TmuxManagerSnapshot,
 ) -> bool {
     let Ok(mut runtime) = super::SmokeRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 69,
-        terminal_rows: 17,
+        terminal_cols: STARTUP_MANAGER_SMALL_GRID_COLS,
+        terminal_rows: STARTUP_MANAGER_SMALL_GRID_ROWS,
         ..NativeTerminalRuntimeConfig::default()
     }) else {
         return false;

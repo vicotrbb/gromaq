@@ -125,6 +125,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "startup manager small-grid cells: 69x17",
+        ),
+        (
+            "documentation/compatibility.md",
             "status pane command checked: true",
         ),
         (
