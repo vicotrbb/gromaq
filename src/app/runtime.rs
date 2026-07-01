@@ -10,9 +10,9 @@ use crate::tmux::TmuxManagerSnapshot;
 use crate::{SelectionPoint, SelectionRange, Terminal};
 
 use super::NativeAppError;
-use super::TmuxManagerPanelState;
 use super::perf::{NativeRuntimePerfSnapshot, RuntimeDurationHistogram};
 use super::pty_bridge::{NativePtySpawner, NativeTerminalRuntimeConfig};
+use super::{TmuxManagerPanelState, TmuxUiSnapshot};
 
 mod input;
 mod pty;
@@ -31,6 +31,7 @@ pub struct NativeTerminalRuntime<S> {
     input_to_render_histogram: RuntimeDurationHistogram,
     pending_input_to_render_started: Option<Instant>,
     pending_status_overlay: Option<String>,
+    tmux_status_snapshot: Option<TmuxUiSnapshot>,
     tmux_manager_snapshot: Option<TmuxManagerSnapshot>,
     tmux_manager_panel: Option<TmuxManagerPanelState>,
     selection_drag_anchor: Option<SelectionPoint>,
@@ -57,6 +58,7 @@ impl<S> NativeTerminalRuntime<S> {
             input_to_render_histogram: RuntimeDurationHistogram::default(),
             pending_input_to_render_started: None,
             pending_status_overlay: None,
+            tmux_status_snapshot: None,
             tmux_manager_snapshot: None,
             tmux_manager_panel: None,
             selection_drag_anchor: None,

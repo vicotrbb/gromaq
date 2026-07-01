@@ -102,7 +102,8 @@ impl NativeTerminalApp {
                 self.modifiers
             ),
             Some(super::super::NativeTmuxAssistAction::ToggleManager)
-        ) {
+        ) && self.lifecycle.config().tmux_ui_enabled
+        {
             self.runtime.toggle_tmux_manager_panel_with_workspaces(
                 read_tmux_manager_snapshot(),
                 self.lifecycle.config().tmux_workspaces.clone(),

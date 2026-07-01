@@ -32,6 +32,7 @@ mod surface;
 mod tests;
 mod text_zoom;
 mod text_zoom_action;
+mod tmux_status;
 mod tmux_ui;
 mod viewport_resize;
 mod welcome;

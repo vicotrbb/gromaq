@@ -22,6 +22,8 @@ mod surface;
 mod tmux_action_names;
 #[path = "app/tmux_actions.rs"]
 mod tmux_actions;
+#[path = "app/tmux_status.rs"]
+mod tmux_status;
 #[path = "app/tmux_ui.rs"]
 mod tmux_ui;
 #[path = "app/tmux_workspace_runtime.rs"]

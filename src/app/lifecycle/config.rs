@@ -38,6 +38,8 @@ pub struct NativeAppConfig {
     pub welcome_screen: bool,
     /// Whether platform screenshot APIs may read the native window contents.
     pub screen_capture_allowed: bool,
+    /// Whether native tmux status and manager affordances are enabled.
+    pub tmux_ui_enabled: bool,
     /// tmux workspace presets visible in the native manager panel.
     pub tmux_workspaces: Vec<TmuxWorkspaceUiPreset>,
 }
@@ -57,6 +59,7 @@ impl Default for NativeAppConfig {
             startup_text: None,
             welcome_screen: true,
             screen_capture_allowed: true,
+            tmux_ui_enabled: true,
             tmux_workspaces: Vec::new(),
         }
     }
@@ -71,6 +74,7 @@ impl NativeAppConfig {
         Ok(Self {
             target_fps: config.performance.target_fps,
             welcome_screen: config.welcome.enabled,
+            tmux_ui_enabled: config.tmux.enabled,
             tmux_workspaces: tmux_workspace_presets(config),
             ..Self::default()
         })

@@ -15,6 +15,7 @@ fn config_template_cli_prints_parseable_default_toml_without_gpu_bootstrap() {
     assert!(exit.stdout.contains("# program = \"/bin/zsh\""));
     assert!(exit.stdout.contains("[welcome]"));
     assert!(exit.stdout.contains("enabled = true"));
+    assert!(exit.stdout.contains("[tmux]"));
     assert!(exit.stdout.contains("[font]"));
     assert!(
         exit.stdout

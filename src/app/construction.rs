@@ -95,6 +95,9 @@ impl NativeTerminalApp {
                 default_welcome_text(&config, runtime.config(), &renderer_config, &font_family);
             runtime.write_startup_text(&startup_text)?;
         }
+        if config.tmux_ui_enabled {
+            runtime.set_tmux_status_snapshot(super::tmux_status::read_tmux_status_snapshot());
+        }
         Ok(Self {
             lifecycle: NativeAppLifecycle::new(config),
             runtime,

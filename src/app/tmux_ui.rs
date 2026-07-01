@@ -1,6 +1,7 @@
 //! Native tmux UI state and frame-only rendering helpers.
 
 mod manager_panel;
+mod status_snapshot;
 
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 

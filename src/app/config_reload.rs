@@ -97,6 +97,12 @@ impl NativeTerminalApp {
             self.font_fallback_families
                 .clone_from(&config.font.fallback_families);
         }
+        if app_config.tmux_ui_enabled {
+            self.runtime
+                .set_tmux_status_snapshot(super::tmux_status::read_tmux_status_snapshot());
+        } else {
+            self.runtime.clear_tmux_status_snapshot();
+        }
         self.resize_mapper = resize_mapper;
         self.lifecycle.apply_config(app_config);
         self.renderer.reconfigure(renderer_config);

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::{GromaqError, Result};
 
 /// tmux integration configuration.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct TmuxSettings {
     /// Whether tmux-native affordances are enabled.
@@ -15,6 +15,15 @@ pub struct TmuxSettings {
     /// Named tmux workspace presets.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub workspaces: BTreeMap<String, TmuxWorkspaceSettings>,
+}
+
+impl Default for TmuxSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            workspaces: BTreeMap::new(),
+        }
+    }
 }
 
 /// A project-aware tmux workspace preset.

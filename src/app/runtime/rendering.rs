@@ -139,6 +139,7 @@ impl<S> NativeTerminalRuntime<S> {
         {
             dirty_regions.push(region);
         }
+        let tmux_snapshot = tmux_snapshot.or(self.tmux_status_snapshot.as_ref());
         if let Some(tmux_snapshot) = tmux_snapshot
             && let Some(region) = apply_tmux_status_strip(&mut grid, tmux_snapshot)
         {

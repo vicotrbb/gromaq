@@ -110,6 +110,25 @@ fn native_app_config_carries_enabled_tmux_workspace_presets() {
 }
 
 #[test]
+fn native_app_config_enables_tmux_ui_by_default() {
+    let user_config = GromaqConfig::default();
+
+    let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
+
+    assert!(app_config.tmux_ui_enabled);
+}
+
+#[test]
+fn native_app_config_can_disable_tmux_ui() {
+    let mut user_config = GromaqConfig::default();
+    user_config.tmux.enabled = false;
+
+    let app_config = NativeAppConfig::from_gromaq_config(&user_config).unwrap();
+
+    assert!(!app_config.tmux_ui_enabled);
+}
+
+#[test]
 fn native_app_config_rejects_invalid_gromaq_performance_target() {
     let mut user_config = GromaqConfig::default();
     user_config.performance.target_fps = 0;
