@@ -57,6 +57,7 @@ manager_reference_ppm_path="${proof_root}/tmux-default-cargo-run-manager-referen
 manager_reference_png_path="${proof_root}/tmux-default-cargo-run-manager-reference.png"
 manager_reference_stdout_path="${proof_root}/tmux-default-cargo-run-manager-reference.stdout"
 manager_reference_stderr_path="${proof_root}/tmux-default-cargo-run-manager-reference.stderr"
+native_window_proof_attempts="${GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS:-3}"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -84,6 +85,40 @@ if strings "${binary_path}" | grep -F "${old_startup_marker}" >> "${binary_marke
   exit 1
 fi
 
+case "${native_window_proof_attempts}" in
+  '' | *[!0-9]*)
+    printf '%s\n' "error: GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS must be a positive integer." >&2
+    exit 1
+    ;;
+  0)
+    printf '%s\n' "error: GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS must be greater than zero." >&2
+    exit 1
+    ;;
+esac
+
+run_native_window_proof_with_retry() {
+  label="$1"
+  stdout_path="$2"
+  stderr_path="$3"
+  shift 3
+  attempt=1
+  while [ "${attempt}" -le "${native_window_proof_attempts}" ]; do
+    if "$@" > "${stdout_path}" 2> "${stderr_path}"; then
+      return 0
+    fi
+    if ! grep -Eq "surface occluded|no surface frame was presented" "${stderr_path}"; then
+      return 1
+    fi
+    if [ "${attempt}" -ge "${native_window_proof_attempts}" ]; then
+      return 1
+    fi
+    printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts} for ${label} hit surface occlusion; retrying." >> "${stderr_path}"
+    attempt=$((attempt + 1))
+    sleep 1
+  done
+  return 1
+}
+
 tmux new-session -d -s "${session}" -n code
 tmux split-window -t "${session}:0" -h
 tmux new-session -d -s "${kill_session}" -n disposable
@@ -108,7 +143,11 @@ fi
 
 (
   cd "${root}"
-  cargo run -- --window-smoke > "${window_smoke_stdout_path}" 2> "${window_smoke_stderr_path}"
+  run_native_window_proof_with_retry \
+    "default cargo run window smoke" \
+    "${window_smoke_stdout_path}" \
+    "${window_smoke_stderr_path}" \
+    cargo run -- --window-smoke
 )
 
 if ! grep -F "default startup content checked: true" "${window_smoke_stdout_path}" >/dev/null; then
@@ -148,7 +187,11 @@ fi
 
 (
   cd "${root}"
-  cargo run -- --window-tmux-manager-snapshot "${manager_reference_ppm_path}" > "${manager_reference_stdout_path}" 2> "${manager_reference_stderr_path}"
+  run_native_window_proof_with_retry \
+    "default cargo run manager reference" \
+    "${manager_reference_stdout_path}" \
+    "${manager_reference_stderr_path}" \
+    cargo run -- --window-tmux-manager-snapshot "${manager_reference_ppm_path}"
 )
 
 if ! grep -F "default startup content checked: true" "${manager_reference_stdout_path}" >/dev/null; then

@@ -62,6 +62,7 @@ manager_reference_ppm_path="${proof_root}/tmux-manager-reference.ppm"
 manager_reference_png_path="${proof_root}/tmux-manager-reference.png"
 manager_reference_stdout_path="${proof_root}/tmux-manager-reference.stdout"
 manager_reference_stderr_path="${proof_root}/tmux-manager-reference.stderr"
+native_window_proof_attempts="${GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS:-3}"
 
 case "${open_manager_on_start}" in
   true | false) ;;
@@ -78,6 +79,40 @@ case "${preflight_only}" in
     exit 1
     ;;
 esac
+
+case "${native_window_proof_attempts}" in
+  '' | *[!0-9]*)
+    printf '%s\n' "error: GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS must be a positive integer." >&2
+    exit 1
+    ;;
+  0)
+    printf '%s\n' "error: GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS must be greater than zero." >&2
+    exit 1
+    ;;
+esac
+
+run_native_window_proof_with_retry() {
+  label="$1"
+  stdout_path="$2"
+  stderr_path="$3"
+  shift 3
+  attempt=1
+  while [ "${attempt}" -le "${native_window_proof_attempts}" ]; do
+    if "$@" > "${stdout_path}" 2> "${stderr_path}"; then
+      return 0
+    fi
+    if ! grep -Eq "surface occluded|no surface frame was presented" "${stderr_path}"; then
+      return 1
+    fi
+    if [ "${attempt}" -ge "${native_window_proof_attempts}" ]; then
+      return 1
+    fi
+    printf '%s\n' "native window proof attempt ${attempt}/${native_window_proof_attempts} for ${label} hit surface occlusion; retrying." >> "${stderr_path}"
+    attempt=$((attempt + 1))
+    sleep 1
+  done
+  return 1
+}
 
 launch_mode="app"
 if [ -n "${binary_path}" ]; then
@@ -166,7 +201,11 @@ if [ "${initial_pane_count}" -lt 2 ]; then
   exit 1
 fi
 
-"${executable}" --window-smoke > "${window_smoke_stdout_path}" 2> "${window_smoke_stderr_path}"
+run_native_window_proof_with_retry \
+  "selected executable window smoke" \
+  "${window_smoke_stdout_path}" \
+  "${window_smoke_stderr_path}" \
+  "${executable}" --window-smoke
 
 if ! grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: selected executable window smoke did not render the tmux status strip." >&2
@@ -181,9 +220,11 @@ if ! grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}" >
   exit 1
 fi
 
-"${executable}" --window-tmux-manager-snapshot "${manager_reference_ppm_path}" \
-  > "${manager_reference_stdout_path}" \
-  2> "${manager_reference_stderr_path}"
+run_native_window_proof_with_retry \
+  "selected executable manager reference" \
+  "${manager_reference_stdout_path}" \
+  "${manager_reference_stderr_path}" \
+  "${executable}" --window-tmux-manager-snapshot "${manager_reference_ppm_path}"
 
 if ! grep -F "tmux status strip rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
   printf '%s\n' "error: selected executable manager reference did not render the tmux status strip." >&2

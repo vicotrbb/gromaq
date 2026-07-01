@@ -115,6 +115,10 @@ through its non-interactive machine checks and write a preflight summary without
 opening the live app window. Preflight mode proves stale-binary checks, isolated
 tmux setup, bounded window-smoke rendering, and generated artifacts; it does not
 replace the manual app-window checklist.
+Set `GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS=<n>` to control bounded native-window
+proof retries. The manual tmux harnesses retry only transient `surface occluded`
+or `no surface frame was presented` failures and still fail immediately for
+other command errors or missing proof lines.
 
 `scripts/prove-macos-native-tmux-default-cargo-run.sh` opens the default app
 path through plain `cargo run`, matching the no-argument developer workflow. It

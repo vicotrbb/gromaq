@@ -190,3 +190,28 @@ fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
         );
     }
 }
+
+#[test]
+fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for script in [
+        "scripts/prove-macos-native-tmux-manual.sh",
+        "scripts/prove-macos-native-tmux-default-cargo-run.sh",
+    ] {
+        let path = root.join(script);
+        let source = fs::read_to_string(&path).unwrap();
+        for marker in [
+            "run_native_window_proof_with_retry",
+            "GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS",
+            "surface occluded",
+            "no surface frame was presented",
+            "native window proof attempt",
+        ] {
+            assert!(
+                source.contains(marker),
+                "{} must retry transient native-window occlusion without hiding other failures",
+                relative_path(root, &path)
+            );
+        }
+    }
+}
