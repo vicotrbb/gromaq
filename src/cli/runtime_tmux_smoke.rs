@@ -1,6 +1,7 @@
 //! Isolated tmux action and state-reader runtime smoke.
 
 mod availability;
+mod report;
 mod ui;
 
 use crate::cli::CliExit;
@@ -9,6 +10,7 @@ use crate::tmux::{
     TmuxActionResult, TmuxActionRunner, TmuxCommandRunner, TmuxProbe, TmuxStateReader,
 };
 use availability::tmux_missing_skip_exit;
+use report::runtime_tmux_smoke_result;
 pub(super) use ui::runtime_tmux_ui_smoke_exit;
 
 const SESSION: &str = "gromaq-runtime-tmux";
@@ -51,16 +53,12 @@ pub(super) fn runtime_tmux_smoke_exit() -> CliExit {
     let observed_session = state.sessions.iter().any(|session| session.name == SESSION);
     let cleanup_ok = cleanup.kill_server();
 
-    CliExit {
-        code: 0,
-        stdout: format!(
-            "runtime tmux smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {SESSION}\ncreated session: true\nsplit pane action: success\nnew window action: success\nstate sessions: {}\nstate windows: {}\nstate panes: {}\nstate reader observed session: {observed_session}\ncleanup killed session: {cleanup_ok}\n",
-            state.sessions.len(),
-            state.windows.len(),
-            state.panes.len()
-        ),
-        stderr: String::new(),
-    }
+    runtime_tmux_smoke_result(format!(
+        "runtime tmux smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {SESSION}\ncreated session: true\nsplit pane action: success\nnew window action: success\nstate sessions: {}\nstate windows: {}\nstate panes: {}\nstate reader observed session: {observed_session}\ncleanup killed session: {cleanup_ok}\n",
+        state.sessions.len(),
+        state.windows.len(),
+        state.panes.len()
+    ))
 }
 
 fn failure(message: String) -> CliExit {
