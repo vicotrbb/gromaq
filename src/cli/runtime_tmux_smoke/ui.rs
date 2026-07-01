@@ -16,7 +16,9 @@ use crate::tmux::{
 };
 use cleanup::TmuxUiSmokeCleanup;
 use render::{render_manager_panel, render_status_strip};
-use shortcuts::drive_shortcut_action;
+use shortcuts::{
+    drive_destructive_shortcut_confirmation, drive_refresh_shortcut, drive_shortcut_action,
+};
 use workspace::{run_workspace_proof, workspace_preset};
 
 const UI_SESSION: &str = "gromaq-runtime-tmux-ui";
@@ -64,6 +66,8 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let manager_opened = runtime.tmux_manager_panel_is_open();
     let manager_rendered = render_manager_panel(&mut runtime, &mut renderer);
     let confirmation_checked = drive_confirmation_cancel(&mut runtime);
+    let destructive_shortcut_checked = drive_destructive_shortcut_confirmation(&mut runtime);
+    let refresh_shortcut_requested = drive_refresh_shortcut(&mut runtime);
     let shortcut_action_dispatched = drive_shortcut_action(&mut runtime, &runner);
     let safe_action_dispatched = drive_safe_action(&mut runtime, &runner);
     let name_entry_dispatched = drive_name_entry_action(&mut runtime, &runner);
@@ -86,7 +90,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nconfirmation path checked: {confirmation_checked}\nshortcut action dispatched: {shortcut_action_dispatched}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nconfirmation path checked: {confirmation_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nsafe action dispatched: {safe_action_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.duplicate_prevented,
             state.sessions.len(),
             state.windows.len(),

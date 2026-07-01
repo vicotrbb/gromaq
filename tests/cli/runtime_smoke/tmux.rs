@@ -44,6 +44,8 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
         assert!(exit.stdout.contains("status strip rendered: true"));
         assert!(exit.stdout.contains("manager panel rendered: true"));
         assert!(exit.stdout.contains("confirmation path checked: true"));
+        assert!(exit.stdout.contains("destructive shortcut checked: true"));
+        assert!(exit.stdout.contains("refresh shortcut requested: true"));
         assert!(exit.stdout.contains("safe action dispatched: true"));
         assert!(exit.stdout.contains("name entry action dispatched: true"));
         assert!(exit.stdout.contains("workspace launch: started"));
