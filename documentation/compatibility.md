@@ -91,7 +91,9 @@ Manual tmux proof harnesses distinguish preflight from interactive proof in
 their summaries: non-interactive preflight reports
 `live app-window proof: not run`, while completed live harnesses report
 `live app-window proof: completed`. They also write the same state to
-`live-app-window-proof.txt` under the proof root.
+`live-app-window-proof.txt` under the proof root: `not-run` for preflight,
+`incomplete` for a started live checklist that has not reached final proof, and
+`completed` after the live checklist.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |

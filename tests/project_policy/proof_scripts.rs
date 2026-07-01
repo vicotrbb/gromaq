@@ -284,7 +284,6 @@ fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
         );
     }
 }
-
 #[test]
 fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -318,7 +317,6 @@ fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
         }
     }
 }
-
 #[test]
 fn native_tmux_manual_proofs_write_live_app_window_proof_artifact() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -332,6 +330,7 @@ fn native_tmux_manual_proofs_write_live_app_window_proof_artifact() {
             "live_app_window_proof_path=",
             "live-app-window-proof.txt:",
             "printf '%s\\n' \"not-run\" > \"${live_app_window_proof_path}\"",
+            "printf '%s\\n' \"incomplete\" > \"${live_app_window_proof_path}\"",
             "printf '%s\\n' \"completed\" > \"${live_app_window_proof_path}\"",
         ] {
             assert!(
@@ -340,15 +339,21 @@ fn native_tmux_manual_proofs_write_live_app_window_proof_artifact() {
                 relative_path(root, &path)
             );
         }
-        let reset = source
-            .find("printf '%s\\n' \"not-run\" > \"${live_app_window_proof_path}\"")
-            .unwrap();
-        let preflight_branch = source
-            .find("if [ \"${preflight_only}\" = \"true\" ]; then")
-            .unwrap();
+        let [reset, preflight_branch, incomplete, completed] = [
+            "printf '%s\\n' \"not-run\" > \"${live_app_window_proof_path}\"",
+            "if [ \"${preflight_only}\" = \"true\" ]; then",
+            "printf '%s\\n' \"incomplete\" > \"${live_app_window_proof_path}\"",
+            "printf '%s\\n' \"completed\" > \"${live_app_window_proof_path}\"",
+        ]
+        .map(|marker| source.find(marker).unwrap());
         assert!(
             reset < preflight_branch,
             "{} must reset live-app-window-proof.txt before branching into preflight or live proof",
+            relative_path(root, &path)
+        );
+        assert!(
+            preflight_branch < incomplete && incomplete < completed,
+            "{} must mark live-app-window-proof.txt incomplete before it can mark the live proof completed",
             relative_path(root, &path)
         );
     }

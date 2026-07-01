@@ -389,6 +389,7 @@ if [ "${preflight_only}" = "true" ]; then
   exit 0
 fi
 
+printf '%s\n' "incomplete" > "${live_app_window_proof_path}"
 cat > "${shell_path}" <<EOF
 #!/bin/sh
 set -eu

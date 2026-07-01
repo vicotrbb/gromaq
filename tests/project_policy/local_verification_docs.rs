@@ -13,6 +13,7 @@ const REQUIRED_TESTING_DOC_MARKERS: &[&str] = &[
     "LaunchServices smoke stdout",
     "window screenshot smoke: ok",
     "live-app-window-proof.txt",
+    "`incomplete`",
     "GROMAQ_SCREENSHOT_MIN_TMUX_PIXELS",
     "current-host compatibility",
 ];

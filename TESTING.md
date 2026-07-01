@@ -133,8 +133,9 @@ tmux setup, bounded window-smoke rendering with `presented frame limit: 3`,
 app-window checklist. Preflight summaries report
 `live app-window proof: not run`; completed interactive harness summaries report
 `live app-window proof: completed`. The same state is written to
-`live-app-window-proof.txt` under the proof root as `not-run` for preflight and
-`completed` after the live checklist.
+`live-app-window-proof.txt` under the proof root as `not-run` for preflight,
+`incomplete` for a started live checklist that has not reached the final state,
+and `completed` after the live checklist.
 Set `GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS=<n>` to control bounded native-window
 proof retries. The manual tmux harnesses retry only transient `surface occluded`
 or `no surface frame was presented` failures and still fail immediately for

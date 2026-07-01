@@ -356,6 +356,7 @@ if [ "${preflight_only}" = "true" ]; then
   exit 0
 fi
 
+printf '%s\n' "incomplete" > "${live_app_window_proof_path}"
 printf '%s\n' "macOS native tmux default cargo run proof"
 printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "git HEAD: ${head_sha}"
