@@ -91,10 +91,14 @@ fn tmux_manager_panel_renders_workspace_preset_summary() {
     );
 
     let frame = renderer.frames.last().unwrap();
-    assert!(frame.lines[6].contains("Workspaces gromaq*"));
-    assert!(frame.lines[6].contains("session gromaq"));
-    assert!(frame.lines[6].contains("root /repo"));
-    assert!(frame.lines[6].contains("windows code(2) test(1)"));
+    let workspace_line = frame
+        .lines
+        .iter()
+        .find(|line| line.contains("Workspaces gromaq*"))
+        .expect("workspace preset row should render");
+    assert!(workspace_line.contains("session gromaq"));
+    assert!(workspace_line.contains("root /repo"));
+    assert!(workspace_line.contains("windows code(2) test(1)"));
 }
 
 #[test]

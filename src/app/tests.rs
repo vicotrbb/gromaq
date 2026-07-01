@@ -1,4 +1,7 @@
 use super::*;
+use crate::dirty::DirtyRegion;
+use crate::renderer::GpuRenderer;
+use crate::{CursorSnapshot, GridSnapshot};
 
 #[test]
 fn native_terminal_app_new_rejects_zero_window_reference_size() {
@@ -36,6 +39,19 @@ fn native_terminal_app_new_writes_default_welcome_screen() {
     assert!(visible.contains("Terminal"));
     assert!(visible.contains("Renderer"));
     assert!(visible.contains("Theme"));
+}
+
+#[test]
+fn native_terminal_app_default_startup_renders_tmux_manager_first_frame() {
+    let mut app = NativeTerminalApp::new(NativeAppConfig::default()).unwrap();
+    let mut renderer = TestFrameRenderer::default();
+
+    assert!(app.runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap().join("\n");
+    assert!(frame.contains("tmux manager"));
+    assert!(frame.contains("Actions | Enter"), "{frame}");
+    assert!(app.runtime.last_rendered_tmux_manager_panel());
 }
 
 #[test]
@@ -89,4 +105,22 @@ fn visible_runtime_text(app: &NativeTerminalApp) -> String {
         .map(|row| grid.line_text(row))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+#[derive(Default)]
+struct TestFrameRenderer {
+    frames: Vec<Vec<String>>,
+}
+
+impl GpuRenderer for TestFrameRenderer {
+    fn render_frame(
+        &mut self,
+        grid: &GridSnapshot,
+        _cursor: CursorSnapshot,
+        _dirty_regions: &[DirtyRegion],
+    ) -> crate::Result<()> {
+        self.frames
+            .push((0..grid.rows).map(|row| grid.line_text(row)).collect());
+        Ok(())
+    }
 }
