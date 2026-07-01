@@ -35,6 +35,33 @@ fn native_terminal_runtime_renders_selected_action_command_and_key_hint() {
     assert!(action_line.contains("Ctrl-b %"));
 }
 
+#[test]
+fn native_terminal_runtime_renders_action_choices_with_shortcuts() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 320,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let action_line = &renderer.frames.last().unwrap().lines[6];
+    assert!(action_line.contains("s split-pane-right"), "{action_line}");
+    assert!(action_line.contains("v split-pane-down"), "{action_line}");
+    assert!(action_line.contains("c new-window"), "{action_line}");
+    assert!(action_line.contains("q kill-session"), "{action_line}");
+    assert!(action_line.contains("? show-help"), "{action_line}");
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,

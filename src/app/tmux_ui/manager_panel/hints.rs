@@ -9,6 +9,17 @@ pub(super) fn action_hint(action: &TmuxAction) -> String {
     }
 }
 
+pub(super) fn action_choice_label(action: &TmuxAction, selected: bool) -> String {
+    let mut label = match super::input::action_shortcut(action.id) {
+        Some(shortcut) => format!("{shortcut} {}", action.stable_id),
+        None => action.stable_id.to_owned(),
+    };
+    if selected {
+        label.push('*');
+    }
+    label
+}
+
 pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
     if snapshot.status == TmuxManagerStatus::Missing {
         return "tmux missing; install tmux or disable tmux workflows | Esc close".to_owned();

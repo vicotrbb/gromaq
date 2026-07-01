@@ -182,3 +182,7 @@ pub(super) fn panel_actions() -> &'static [ActionId] {
 pub(super) fn shortcut_hint() -> &'static str {
     shortcuts::shortcut_hint()
 }
+
+pub(super) fn action_shortcut(action_id: ActionId) -> Option<&'static str> {
+    shortcuts::action_shortcut(action_id)
+}

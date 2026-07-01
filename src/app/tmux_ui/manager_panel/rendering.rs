@@ -1,7 +1,7 @@
 //! Native tmux manager panel rendering.
 
 use super::enter_action::enter_action_id;
-use super::hints::{action_hint, hint_row};
+use super::hints::{action_choice_label, action_hint, hint_row};
 use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
@@ -129,12 +129,12 @@ fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> 
         .enumerate()
         .filter_map(|(index, action_id)| {
             TmuxAction::by_id(*action_id)
-                .map(|action| selected_label(action.stable_id, index == panel.selected_action))
+                .map(|action| action_choice_label(action, index == panel.selected_action))
         })
         .collect::<Vec<_>>()
         .join(" ");
     format!(
-        "Actions | Enter {} | {} | choices {actions} | Esc close",
+        "Actions | Enter {} | {} | {actions} | Esc close",
         selected_action.stable_id,
         action_hint(selected_action)
     )

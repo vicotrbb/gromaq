@@ -44,6 +44,27 @@ pub(super) fn shortcut_action(key: &Key) -> Option<ActionId> {
     }
 }
 
+pub(super) fn action_shortcut(action_id: ActionId) -> Option<&'static str> {
+    match action_id {
+        ActionId::AttachSession => Some("a"),
+        ActionId::NewWindow => Some("c"),
+        ActionId::DetachSession => Some("d"),
+        ActionId::RenameWindow => Some("e"),
+        ActionId::SplitPaneRight => Some("s"),
+        ActionId::StartSession => Some("t"),
+        ActionId::RenameSession => Some("u"),
+        ActionId::SplitPaneDown => Some("v"),
+        ActionId::SelectPane => Some("m"),
+        ActionId::NextWindow => Some("n"),
+        ActionId::PreviousWindow => Some("p"),
+        ActionId::KillSession => Some("q"),
+        ActionId::KillWindow => Some("w"),
+        ActionId::KillPane => Some("x"),
+        ActionId::ZoomPane => Some("z"),
+        ActionId::ShowHelp => Some("?"),
+    }
+}
+
 pub(super) fn is_refresh_shortcut(key: &Key) -> bool {
     let Key::Character(character) = key else {
         return false;
