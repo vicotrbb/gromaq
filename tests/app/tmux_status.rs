@@ -83,6 +83,24 @@ fn retained_tmux_status_strip_renders_when_viewport_has_no_blank_row() {
 }
 
 #[test]
+fn retained_tmux_status_strip_keeps_visible_windows_on_compact_width() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 96,
+        terminal_rows: 3,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("> ").unwrap();
+    runtime.set_tmux_status_snapshot(attached_snapshot());
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let strip = &renderer.frames.last().unwrap().lines[2];
+    assert!(strip.contains("windows 0:shell 1:code*"), "{strip}");
+}
+
+#[test]
 fn status_strip_teaches_missing_no_server_and_detached_next_steps() {
     for (snapshot, expected) in [
         (empty_status(TmuxStatusKind::Missing), "install tmux"),

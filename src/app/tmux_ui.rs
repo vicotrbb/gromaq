@@ -60,14 +60,33 @@ impl TmuxUiSnapshot {
         }
     }
 
-    fn status_line(&self) -> String {
+    fn status_line(&self, cols: usize) -> String {
+        let full = self.status_line_with_current_window(true);
+        if full.chars().count() <= cols {
+            return full;
+        }
+        if self.current_window.is_some() && !self.visible_windows.is_empty() {
+            let compact = self.status_line_with_current_window(false);
+            if compact.chars().count() <= cols {
+                return compact;
+            }
+        }
+        full
+    }
+
+    fn status_line_with_current_window(&self, include_current_window: bool) -> String {
         let mut parts = vec![format!("tmux: {}", self.status_label())];
         parts.push("manager Cmd/Ctrl+Shift+T".to_owned());
         if let Some(guidance) = self.status_guidance() {
             parts.push(guidance);
         }
         push_optional(&mut parts, self.current_session.as_deref());
-        push_optional(&mut parts, self.current_window.as_deref());
+        if include_current_window {
+            push_optional(&mut parts, self.current_window.as_deref());
+        }
+        if !self.visible_windows.is_empty() {
+            parts.push(format!("windows {}", self.visible_windows.join(" ")));
+        }
         if let Some(pane_count) = self.pane_count {
             parts.push(format!("panes {pane_count}"));
         }
@@ -82,9 +101,6 @@ impl TmuxUiSnapshot {
         push_optional(&mut parts, self.pending_feedback.as_deref());
         if let Some(confirmation) = self.confirmation_feedback.as_deref() {
             parts.push(format!("confirm: {confirmation}"));
-        }
-        if !self.visible_windows.is_empty() {
-            parts.push(format!("windows {}", self.visible_windows.join(" ")));
         }
         parts.join(" | ")
     }
@@ -117,7 +133,8 @@ pub fn apply_tmux_status_strip(
         .rev()
         .find(|row| grid.line_text(*row).is_empty())
         .unwrap_or(grid.rows - 1);
-    let line = fit_status_line(&snapshot.status_line(), usize::from(grid.cols));
+    let cols = usize::from(grid.cols);
+    let line = fit_status_line(&snapshot.status_line(cols), cols);
     let style = tmux_status_strip_style();
     for col in 0..grid.cols {
         let text = line
