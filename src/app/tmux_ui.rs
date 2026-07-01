@@ -96,7 +96,8 @@ pub fn apply_tmux_status_strip(
     }
     let row = (0..grid.rows)
         .rev()
-        .find(|row| grid.line_text(*row).is_empty())?;
+        .find(|row| grid.line_text(*row).is_empty())
+        .unwrap_or(grid.rows - 1);
     let line = fit_status_line(&snapshot.status_line(), usize::from(grid.cols));
     let style = tmux_status_strip_style();
     for col in 0..grid.cols {

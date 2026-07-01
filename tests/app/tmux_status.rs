@@ -50,6 +50,34 @@ fn retained_tmux_status_strip_renders_when_terminal_frame_is_clean() {
     assert!(frame.lines[4].contains("alpha"));
 }
 
+#[test]
+fn retained_tmux_status_strip_renders_when_viewport_has_no_blank_row() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 96,
+        terminal_rows: 3,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime
+        .write_startup_text(
+            "build finished\r\n................................ rb 2.7.5 15:42\r\n> ",
+        )
+        .unwrap();
+    runtime.set_tmux_status_snapshot(attached_snapshot());
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[2].contains("tmux: attached"));
+    assert!(frame.lines[2].contains("manager Cmd/Ctrl+Shift+T"));
+    assert_eq!(
+        runtime.terminal().dump_grid().line_text(2),
+        ">",
+        "status strip must stay frame-only and not mutate shell grid"
+    );
+}
+
 fn attached_snapshot() -> TmuxUiSnapshot {
     TmuxUiSnapshot {
         status: TmuxStatusKind::Attached,
