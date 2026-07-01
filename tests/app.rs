@@ -44,6 +44,8 @@ mod tmux_ui_mouse;
 mod tmux_ui_navigation;
 #[path = "app/tmux_ui_shortcuts.rs"]
 mod tmux_ui_shortcuts;
+#[path = "app/tmux_ui_startup.rs"]
+mod tmux_ui_startup;
 #[path = "app/tmux_workspace_runtime.rs"]
 mod tmux_workspace_runtime;
 #[path = "app/tmux_workspaces.rs"]
