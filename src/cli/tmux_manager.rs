@@ -3,7 +3,7 @@
 use super::CliExit;
 use crate::tmux::{
     SystemTmuxCommandRunner, TmuxAction, TmuxError, TmuxManager, TmuxManagerSnapshot, TmuxProbe,
-    TmuxState,
+    TmuxState, shell_quote,
 };
 
 /// Report native tmux manager state without mutating tmux.
@@ -110,7 +110,10 @@ fn status_guidance(installed: bool, current: Option<&str>, state: &TmuxState) ->
         return "status: no server\nnext: run gromaq --tmux-action start-session <session>\n"
             .to_owned();
     }
-    "status: detached\nnext: run gromaq --tmux-action attach-session <session>\n".to_owned()
+    format!(
+        "status: detached\nnext: run gromaq --tmux-action attach-session {}\n",
+        shell_quote(&state.sessions[0].name)
+    )
 }
 
 fn render_manager_actions(output: &mut String) {
@@ -140,7 +143,7 @@ fn error_exit(error: TmuxError) -> CliExit {
 #[cfg(test)]
 mod tests {
     use super::render_state;
-    use crate::tmux::TmuxState;
+    use crate::tmux::{TmuxSession, TmuxState};
 
     #[test]
     fn tmux_manager_report_teaches_no_server_next_step() {
@@ -148,5 +151,23 @@ mod tests {
 
         assert!(report.contains("status: no server"));
         assert!(report.contains("next: run gromaq --tmux-action start-session <session>"));
+    }
+
+    #[test]
+    fn tmux_manager_report_teaches_detached_session_next_step() {
+        let report = render_state(
+            true,
+            None,
+            &TmuxState {
+                sessions: vec![TmuxSession {
+                    name: "delta work".to_owned(),
+                    attached: false,
+                }],
+                ..TmuxState::default()
+            },
+        );
+
+        assert!(report.contains("status: detached"));
+        assert!(report.contains("next: run gromaq --tmux-action attach-session 'delta work'"));
     }
 }
