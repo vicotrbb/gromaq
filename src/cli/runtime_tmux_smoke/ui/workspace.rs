@@ -16,6 +16,7 @@ const UI_WORKSPACE_SESSION: &str = "gromaq-runtime-tmux-ui-workspace";
 pub(super) struct WorkspaceProof {
     pub(super) started: bool,
     pub(super) feedback_checked: bool,
+    pub(super) existing_attach_checked: bool,
     pub(super) duplicate_prevented: bool,
     pub(super) failure_feedback_checked: bool,
 }
@@ -38,10 +39,12 @@ pub(super) fn run_workspace_proof(
     let before = session_count(runner, UI_WORKSPACE_SESSION);
     let _ = panel.launch_selected_workspace(runner);
     let after = session_count(runner, UI_WORKSPACE_SESSION);
+    let existing_attach_checked = drive_workspace_existing_attach(snapshot, preset, runner);
     let failure_feedback_checked = drive_workspace_failure_feedback(snapshot, runner, renderer);
     WorkspaceProof {
         started,
         feedback_checked,
+        existing_attach_checked,
         duplicate_prevented: before == Some(1) && after == Some(1),
         failure_feedback_checked,
     }
@@ -95,6 +98,26 @@ fn drive_workspace_failure_feedback(
     };
     matches!(result, Err(TmuxError::Command(_)))
         && render_manager_panel_contains(&mut runtime, renderer, "workspacegromaq-ui-failfailed")
+}
+
+fn drive_workspace_existing_attach(
+    snapshot: &TmuxManagerSnapshot,
+    preset: &TmuxWorkspaceUiPreset,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let Ok(mut runtime) = super::smoke_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(snapshot.clone(), vec![preset.clone()]);
+    let before = runtime.dump_runtime_perf_metrics().pty_input_writes;
+    let result = runtime
+        .dispatch_tmux_manager_workspace(TmuxManagerKeyOutcome::WorkspaceLaunchRequested, runner);
+    let after = runtime.dump_runtime_perf_metrics().pty_input_writes;
+    matches!(
+        result,
+        Some(Ok(TmuxWorkspaceResult::Existing { session }))
+            if session == UI_WORKSPACE_SESSION
+    ) && after == before + 1
 }
 
 fn failing_workspace_preset() -> TmuxWorkspaceUiPreset {
