@@ -199,14 +199,12 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
         );
     }
 }
-
 #[test]
 fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
         fs::read_to_string(root.join("scripts/prove-macos-native-tmux-default-cargo-run.sh"))
             .unwrap();
-
     for marker in [
         "Darwin",
         "tmux -V",
@@ -288,7 +286,6 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         );
     }
 }
-
 #[test]
 fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -327,7 +324,6 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
         "default cargo-run proof summary must surface the active-pane window-smoke line"
     );
 }
-
 #[test]
 fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
