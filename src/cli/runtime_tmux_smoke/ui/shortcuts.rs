@@ -3,6 +3,7 @@
 mod missing;
 mod name_entry;
 mod split;
+mod zoom;
 
 use winit::keyboard::{Key, ModifiersState};
 
@@ -15,6 +16,7 @@ pub(super) use name_entry::{
     drive_start_session_pty_handoff,
 };
 pub(super) use split::{drive_split_down_shortcut, drive_split_right_shortcut};
+pub(super) use zoom::{drive_zoom_shortcut, drive_zoom_toggle_shortcut};
 
 pub(super) fn drive_new_window_shortcut(
     runtime: &mut super::SmokeRuntime,
@@ -96,21 +98,6 @@ pub(super) fn drive_window_cycle_shortcuts(
         previous_result,
         Some(TmuxActionResult::Success {
             action_id: ActionId::PreviousWindow,
-            ..
-        })
-    )
-}
-
-pub(super) fn drive_zoom_shortcut(
-    runtime: &mut super::SmokeRuntime,
-    runner: &SocketTmuxCommandRunner,
-) -> bool {
-    let requested =
-        runtime.handle_tmux_manager_key(&Key::Character("z".into()), ModifiersState::empty());
-    matches!(
-        runtime.dispatch_tmux_manager_action(requested, runner),
-        Some(TmuxActionResult::Success {
-            action_id: ActionId::ZoomPane,
             ..
         })
     )
