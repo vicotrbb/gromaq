@@ -123,8 +123,12 @@ impl TmuxManagerPanelState {
             let command = action
                 .map(|action| action.tmux_command)
                 .unwrap_or("<unknown tmux command>");
+            let key_hint = action
+                .and_then(|action| action.key_binding)
+                .map(|key| format!(" | {key}"))
+                .unwrap_or_default();
             self.confirmation = Some(format!(
-                "confirm {stable_id} ({command}) with y, n/Esc cancels"
+                "confirm {stable_id} ({command}{key_hint}) with y, n/Esc cancels"
             ));
             self.confirmation_action = action.map(|action| action.id);
             self.pending_action = None;

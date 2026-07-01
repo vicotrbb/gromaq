@@ -151,8 +151,7 @@ fn native_terminal_runtime_truncates_tmux_status_strip_on_narrow_width() {
     snapshot.active_pane_id = Some("%22".to_owned());
     snapshot.active_pane_command = Some("long-running-editor".to_owned());
     snapshot.pending_feedback = None;
-    snapshot.confirmation_feedback =
-        Some("confirm kill-window (tmux kill-window -t <window>) with y, n/Esc cancels".to_owned());
+    snapshot.confirmation_feedback = Some("confirm kill-window | Ctrl-b &".to_owned());
     let mut renderer = MockFrameRenderer::default();
 
     assert!(
@@ -186,7 +185,7 @@ fn tmux_manager_panel_state_opens_on_current_target_and_tracks_confirmation() {
     panel.request_action("kill-window", true);
     assert_eq!(
         panel.confirmation_message(),
-        Some("confirm kill-window (tmux kill-window -t <window>) with y, n/Esc cancels")
+        Some("confirm kill-window (tmux kill-window -t <window> | Ctrl-b &) with y, n/Esc cancels")
     );
     panel.cancel_confirmation();
     assert_eq!(panel.confirmation_message(), None);
@@ -225,7 +224,7 @@ fn native_terminal_runtime_renders_compact_tmux_manager_panel() {
     assert!(frame.lines[5].contains("Panes %1 shell:zsh 100x30 %2 editor:nvim* 100x30"));
     assert!(frame.lines[6].contains("Enter split-pane-right"));
     assert!(frame.lines[6].contains("Ctrl-b %"));
-    assert!(frame.lines[7].contains("tmux kill-window -t <window>"));
+    assert!(frame.lines[7].contains("tmux kill-window -t <window> | Ctrl-b &"));
     assert_eq!(runtime.terminal().dump_grid().line_text(0), "ready");
     assert_eq!(runtime.terminal().dump_grid().line_text(1), ">");
 }
