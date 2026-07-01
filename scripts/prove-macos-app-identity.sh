@@ -109,6 +109,16 @@ if ! grep -q "presented frame limit: 900" "${open_stdout}"; then
   printf '%s\n' "error: packaged app smoke did not use the bounded 900-frame screenshot host; see ${open_stdout}." >&2
   exit 1
 fi
+for required_smoke_marker in \
+  "default startup content checked: true" \
+  "tmux status strip rendered: true" \
+  "tmux manager panel rendered: true"
+do
+  if ! grep -F "${required_smoke_marker}" "${open_stdout}" >/dev/null; then
+    printf '%s\n' "error: packaged app smoke did not report ${required_smoke_marker}; see ${open_stdout}." >&2
+    exit 1
+  fi
+done
 
 {
   printf '%s\n' "macOS app identity proof: ok"

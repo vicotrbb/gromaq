@@ -160,6 +160,25 @@ fn high_refresh_window_perf_proof_includes_input_latency_gate() {
 }
 
 #[test]
+fn macos_app_identity_proof_requires_default_tmux_ui_screenshot_smoke() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join("scripts/prove-macos-app-identity.sh");
+    let source = fs::read_to_string(&path).unwrap();
+
+    for marker in [
+        "default startup content checked: true",
+        "tmux status strip rendered: true",
+        "tmux manager panel rendered: true",
+    ] {
+        assert!(
+            source.contains(marker),
+            "{} must require `{marker}` from packaged --window-screenshot-smoke output",
+            relative_path(root, &path)
+        );
+    }
+}
+
+#[test]
 fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path = root.join("scripts/prove-ci-compatibility-artifacts.sh");
