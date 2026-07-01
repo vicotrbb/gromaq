@@ -7,9 +7,24 @@ ppm_path="${proof_dir}/gromaq-native-tmux-default-snapshot.ppm"
 png_path="${proof_dir}/gromaq-native-tmux-default-snapshot.png"
 log_path="${proof_dir}/window-tmux-manager-snapshot.log"
 summary_path="${proof_dir}/summary.txt"
+snapshot_session="gromaq-default-snapshot-$$"
+
+cleanup() {
+  tmux kill-session -t "${snapshot_session}" >/dev/null 2>&1 || true
+}
 
 rm -rf "${proof_dir}"
 mkdir -p "${proof_dir}"
+trap cleanup EXIT INT TERM
+
+if command -v tmux >/dev/null 2>&1; then
+  cleanup
+  tmux new-session -d -s "${snapshot_session}" -n code
+  tmux split-window -t "${snapshot_session}:0" -h
+else
+  printf '%s\n' "error: tmux is required for native tmux default snapshot proof." >&2
+  exit 1
+fi
 
 if ! (
   cd "${root}"
@@ -55,6 +70,7 @@ fi
 {
   printf '%s\n' "native tmux default snapshot proof: ok"
   printf '%s\n' "Command: cargo run -- --window-tmux-manager-snapshot ${ppm_path}"
+  printf '%s\n' "snapshot-session: ${snapshot_session}"
   printf '%s\n' "Log: ${log_path}"
   printf '%s\n' "PPM artifact: ${ppm_path}"
   if [ -s "${png_path}" ]; then

@@ -199,6 +199,9 @@ fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
 
     for marker in [
         "cargo run -- --window-tmux-manager-snapshot",
+        "tmux new-session -d -s",
+        "snapshot_session=",
+        "snapshot-session:",
         "default startup content checked: true",
         "tmux status strip rendered: true",
         "tmux manager panel rendered: true",
