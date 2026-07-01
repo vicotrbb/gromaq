@@ -1,6 +1,7 @@
 //! Action activation helpers for native tmux manager keyboard input.
 
 use super::super::availability::action_available;
+use super::super::hints::help_catalog;
 use super::super::state::{TmuxActionInputState, TmuxManagerFocus, TmuxManagerPanelState};
 use super::PANEL_ACTIONS;
 use crate::app::TmuxManagerKeyOutcome;
@@ -41,6 +42,15 @@ impl TmuxManagerPanelState {
         snapshot: &TmuxManagerSnapshot,
     ) -> TmuxManagerKeyOutcome {
         let action = TmuxAction::by_id(action_id).expect("panel action is registered");
+        if action_id == ActionId::ShowHelp {
+            self.pending_action = None;
+            self.pending_action_name = None;
+            self.confirmation = None;
+            self.confirmation_action = None;
+            self.action_input = None;
+            self.record_action_feedback(help_catalog());
+            return TmuxManagerKeyOutcome::Consumed;
+        }
         if !action_available(action, snapshot, self) {
             self.pending_action = None;
             self.pending_action_name = None;

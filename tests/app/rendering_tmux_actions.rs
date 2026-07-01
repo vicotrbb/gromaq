@@ -64,6 +64,38 @@ fn native_terminal_runtime_renders_action_choices_with_shortcuts() {
 }
 
 #[test]
+fn native_terminal_runtime_renders_help_catalog_after_help_shortcut() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 900,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    panel.handle_key(
+        &Key::Character("?".into()),
+        ModifiersState::empty(),
+        &snapshot,
+    );
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let help_line = &renderer.frames.last().unwrap().lines[7];
+    assert!(help_line.contains("tmux help"));
+    assert!(help_line.contains("s split-pane-right tmux split-window -h Ctrl-b %"));
+    assert!(help_line.contains("c new-window tmux new-window Ctrl-b c"));
+    assert!(help_line.contains("q kill-session tmux kill-session -t <session>"));
+    assert!(help_line.contains("? show-help tmux list-keys Ctrl-b ?"));
+}
+
+#[test]
 fn native_terminal_runtime_marks_unavailable_actions_without_active_tmux_target() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
         terminal_cols: 900,

@@ -226,9 +226,14 @@ fn tmux_manager_panel_shortcuts_open_help() {
             ModifiersState::empty(),
             &snapshot
         ),
-        TmuxManagerKeyOutcome::ActionRequested(ActionId::ShowHelp)
+        TmuxManagerKeyOutcome::Consumed
     );
-    assert_eq!(panel.pending_action(), Some("show-help"));
+    assert_eq!(panel.pending_action(), None);
+    assert!(
+        panel
+            .last_action_feedback()
+            .is_some_and(|feedback| feedback.contains("s split-pane-right tmux split-window -h"))
+    );
 }
 
 #[test]

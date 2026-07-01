@@ -48,7 +48,12 @@ fn tmux_manager_panel_wraps_selection_navigation() {
             ModifiersState::empty(),
             &snapshot
         ),
-        TmuxManagerKeyOutcome::ActionRequested(ActionId::ShowHelp)
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert!(
+        panel
+            .last_action_feedback()
+            .is_some_and(|feedback| feedback.contains("tmux help"))
     );
 }
 

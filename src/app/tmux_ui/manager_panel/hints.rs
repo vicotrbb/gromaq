@@ -11,6 +11,24 @@ pub(super) fn action_hint(action: &TmuxAction) -> String {
     }
 }
 
+pub(super) fn help_catalog() -> String {
+    let entries = TmuxAction::registry()
+        .iter()
+        .filter_map(|action| {
+            super::input::action_shortcut(action.id).map(|shortcut| {
+                format!(
+                    "{shortcut} {} {} {}",
+                    action.stable_id,
+                    action.tmux_command,
+                    action.key_binding.unwrap_or("no tmux key")
+                )
+            })
+        })
+        .collect::<Vec<_>>()
+        .join(" | ");
+    format!("tmux help | {entries} | Esc close")
+}
+
 pub(super) fn action_choice_label(
     action: &TmuxAction,
     selected: bool,
