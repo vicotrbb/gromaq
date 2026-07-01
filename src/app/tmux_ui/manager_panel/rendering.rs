@@ -3,11 +3,11 @@
 use super::enter_action::enter_action_id;
 use super::hints::{action_choice_label, action_hint, enter_action_label, hint_row};
 use super::input::panel_actions;
-use super::selection::{selected_panes, selected_windows, window_label};
+use super::rows::{pane_row, session_row, window_row};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
-use super::target::{current_target_label, is_current_pane, pane_command_label, pane_dimensions};
+use super::target::current_target_label;
 use super::workspaces::workspace_row;
-use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxPane};
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot};
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 
 /// Apply a compact tmux manager panel to a cloned grid snapshot.
@@ -70,54 +70,6 @@ fn focus_label(focus: TmuxManagerFocus) -> &'static str {
     }
 }
 
-fn session_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> String {
-    if snapshot.state.sessions.is_empty() {
-        return "none".to_owned();
-    }
-    snapshot
-        .state
-        .sessions
-        .iter()
-        .enumerate()
-        .map(|(index, session)| selected_label(&session.name, index == panel.selected_session))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn window_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> String {
-    let windows = selected_windows(snapshot, panel.selected_session);
-    if windows.is_empty() {
-        return "none".to_owned();
-    }
-    windows
-        .iter()
-        .enumerate()
-        .map(|(index, window)| {
-            selected_label(&window_label(window), index == panel.selected_window)
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn pane_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> String {
-    let panes = selected_panes(snapshot, panel.selected_session, panel.selected_window);
-    if panes.is_empty() {
-        return "none".to_owned();
-    }
-    panes
-        .iter()
-        .enumerate()
-        .map(|(index, pane)| {
-            pane_label(
-                pane,
-                index == panel.selected_pane,
-                is_current_pane(snapshot, pane),
-            )
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
 fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> String {
     let selected_action_id = enter_action_id(snapshot, panel);
     let selected_action =
@@ -137,20 +89,6 @@ fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> 
         enter_action_label(selected_action, snapshot, panel),
         action_hint(selected_action)
     )
-}
-
-fn pane_label(pane: &TmuxPane, selected: bool, current: bool) -> String {
-    let mut command = pane_command_label(pane);
-    if selected {
-        command.push('*');
-    }
-    let dimensions = pane_dimensions(pane);
-    let current_marker = if current { "@" } else { "" };
-    format!("{} {}{}{}", pane.id, command, dimensions, current_marker)
-}
-
-fn selected_label(label: &str, selected: bool) -> String {
-    format!("{label}{}", if selected { "*" } else { "" })
 }
 
 fn panel_start_row(grid: &GridSnapshot, panel_rows: usize) -> u16 {

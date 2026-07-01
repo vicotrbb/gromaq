@@ -8,6 +8,7 @@ mod initial_action;
 mod input;
 mod refresh;
 mod rendering;
+mod rows;
 mod selection;
 mod state;
 mod target;

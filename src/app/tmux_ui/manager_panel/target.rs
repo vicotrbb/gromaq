@@ -48,3 +48,20 @@ pub(super) fn is_current_pane(snapshot: &TmuxManagerSnapshot, pane: &TmuxPane) -
             && current.pane_id == pane.id
     })
 }
+
+pub(super) fn is_current_session(snapshot: &TmuxManagerSnapshot, session_name: &str) -> bool {
+    snapshot
+        .current
+        .as_ref()
+        .is_some_and(|current| current.session_name == session_name)
+}
+
+pub(super) fn is_current_window(
+    snapshot: &TmuxManagerSnapshot,
+    session_name: &str,
+    window_index: u16,
+) -> bool {
+    snapshot.current.as_ref().is_some_and(|current| {
+        current.session_name == session_name && current.window_index == window_index
+    })
+}

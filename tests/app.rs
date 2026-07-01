@@ -12,6 +12,8 @@ mod rendering;
 mod rendering_tmux;
 #[path = "app/rendering_tmux_actions.rs"]
 mod rendering_tmux_actions;
+#[path = "app/rendering_tmux_current.rs"]
+mod rendering_tmux_current;
 #[path = "app/rendering_tmux_cursor.rs"]
 mod rendering_tmux_cursor;
 #[path = "app/rendering_tmux_empty.rs"]
