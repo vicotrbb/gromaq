@@ -21,6 +21,8 @@ session="gromaq-manual-tmux-$$"
 kill_session="${session}-kill"
 workspace_session="${session}-workspace"
 started_session="${session}-started"
+initial_windows_path="${proof_root}/tmux-initial-windows.txt"
+initial_panes_path="${proof_root}/tmux-initial-panes.txt"
 started_session_exists_path="${proof_root}/tmux-start-session-exists.txt"
 post_windows_path="${proof_root}/tmux-post-windows.txt"
 post_panes_path="${proof_root}/tmux-post-panes.txt"
@@ -129,6 +131,24 @@ tmux new-session -d -s "${session}" -n code
 tmux split-window -t "${session}:0" -h
 tmux new-session -d -s "${kill_session}" -n disposable
 printf '%s\n' "${session}" > "${proof_root}/tmux-session.txt"
+if ! tmux list-windows -t "${session}" -F "#{window_id} #{window_name}" > "${initial_windows_path}"; then
+  printf '%s\n' "error: could not read initial tmux windows for ${session}." >&2
+  exit 1
+fi
+initial_window_count="$(wc -l < "${initial_windows_path}" | tr -d '[:space:]')"
+if [ "${initial_window_count}" -lt 1 ]; then
+  printf '%s\n' "error: expected at least 1 initial tmux window in ${session}, got ${initial_window_count}." >&2
+  exit 1
+fi
+if ! tmux list-panes -s -t "${session}" -F "#{pane_id} #{pane_current_command}" > "${initial_panes_path}"; then
+  printf '%s\n' "error: could not read initial tmux panes for ${session}." >&2
+  exit 1
+fi
+initial_pane_count="$(wc -l < "${initial_panes_path}" | tr -d '[:space:]')"
+if [ "${initial_pane_count}" -lt 2 ]; then
+  printf '%s\n' "error: expected at least 2 initial tmux panes in ${session}, got ${initial_pane_count}." >&2
+  exit 1
+fi
 
 cat > "${shell_path}" <<EOF
 #!/bin/sh
@@ -375,6 +395,10 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
   printf '%s\n' "tmux-binary-markers.txt: ${startup_marker}"
   printf '%s\n' "session: ${session}"
+  printf '%s\n' "tmux-initial-windows.txt: ${initial_windows_path}"
+  printf '%s\n' "initial tmux windows: ${initial_window_count}"
+  printf '%s\n' "tmux-initial-panes.txt: ${initial_panes_path}"
+  printf '%s\n' "initial tmux panes: ${initial_pane_count}"
   printf '%s\n' "started-session: ${started_session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "workspace-session: ${workspace_session}"
