@@ -126,10 +126,14 @@ the tester must open it with Control/Super Shift `T`; set
   the harness records this as `tmux-navigation-checked.txt`.
 - Check a right-prompt or long prompt layout for legible overlap behavior; the
   harness records this as `tmux-right-prompt-legible.txt`.
-- Run a safe split-pane action from the UI.
-- Create or rename a window from the inline name prompt.
-- Start a named session or launch a configured workspace preset from the UI.
-- Press `r` and verify the manager refreshes without sending shell input.
+- Start a named session from the UI; the harness records this as
+  `tmux-start-session.txt`.
+- Run a safe split-pane action from the UI; the harness records this as
+  `tmux-safe-action.txt`.
+- Create a tmux window from the UI; the harness records this as
+  `tmux-new-window.txt`.
+- Press `r` and verify the manager refreshes without sending shell input; the
+  harness records this as `tmux-refresh-checked.txt`.
 - Use `q` or another destructive shortcut and verify inline confirmation appears
   before tmux runs.
 - Confirm a kill only against an isolated test target.
