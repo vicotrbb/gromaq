@@ -38,8 +38,21 @@ impl<S> NativeTerminalRuntime<S> {
             (result, started_session)
         };
         if let Some(session) = started_session {
-            let _ =
-                self.send_pty_input(&TmuxTerminalCommand::attach_session(&session).to_pty_input());
+            let attach_feedback = if self.shell_session.is_none() {
+                Some("attach skipped: shell not started".to_owned())
+            } else {
+                self.send_pty_input(&TmuxTerminalCommand::attach_session(&session).to_pty_input())
+                    .err()
+                    .map(|error| format!("attach skipped: {error}"))
+            };
+            if let Some(feedback) = attach_feedback
+                && let Some(panel) = self.tmux_manager_panel.as_mut()
+            {
+                let existing = panel
+                    .last_action_feedback()
+                    .unwrap_or("start-session success");
+                panel.record_action_feedback(format!("{existing}; {feedback}"));
+            }
         }
         if result.is_some() {
             self.sync_tmux_status_feedback_from_panel();

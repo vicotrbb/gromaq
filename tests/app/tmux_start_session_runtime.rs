@@ -7,7 +7,7 @@ use gromaq::tmux::{
 };
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::support::{MockPtySession, MockPtySpawner};
+use crate::support::{MockFrameRenderer, MockPtySession, MockPtySpawner};
 
 #[derive(Debug)]
 struct FakeRunner {
@@ -102,5 +102,66 @@ fn runtime_start_session_action_attaches_created_session_through_pty() {
     assert_eq!(
         input.last().map(Vec::as_slice),
         Some(b"tmux attach-session -t delta\r".as_slice())
+    );
+}
+
+#[test]
+fn runtime_start_session_action_reports_skipped_attach_without_shell() {
+    let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState::default(),
+        current: None,
+    };
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 160,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    runtime.toggle_tmux_manager_panel(snapshot);
+    let runner = FakeRunner::new(vec![ExpectedCall::success(&[
+        "new-session",
+        "-d",
+        "-s",
+        "delta",
+    ])]);
+
+    assert_eq!(
+        runtime.handle_tmux_manager_key(&Key::Character("t".into()), ModifiersState::empty()),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    for character in "delta".chars() {
+        assert_eq!(
+            runtime.handle_tmux_manager_key(
+                &Key::Character(character.to_string().into()),
+                ModifiersState::empty()
+            ),
+            TmuxManagerKeyOutcome::Consumed
+        );
+    }
+    let outcome =
+        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
+    let result = runtime
+        .dispatch_tmux_manager_action(outcome, &runner)
+        .unwrap();
+
+    assert!(matches!(
+        result,
+        TmuxActionResult::Success {
+            action_id: ActionId::StartSession,
+            ..
+        }
+    ));
+    runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Escape), ModifiersState::empty());
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(
+        frame.lines[7].contains("attach skipped: shell not started"),
+        "{:?}",
+        frame.lines[7]
     );
 }
