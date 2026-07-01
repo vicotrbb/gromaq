@@ -132,6 +132,10 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
             exit.stdout
                 .contains("workspace failure feedback checked: true")
         );
+        assert!(
+            exit.stdout
+                .contains("workspace invalid preflight checked: true")
+        );
         assert!(exit.stdout.contains("workspace duplicate prevented: true"));
         assert!(exit.stdout.contains("state reader observed session: true"));
         assert!(exit.stdout.contains("cleanup killed session: true"));

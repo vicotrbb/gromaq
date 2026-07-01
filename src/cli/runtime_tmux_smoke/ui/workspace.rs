@@ -1,5 +1,6 @@
 //! Workspace launcher proof helpers for the native tmux UI smoke.
 
+mod invalid;
 use crate::app::{TmuxManagerKeyOutcome, TmuxManagerPanelState, TmuxWorkspaceUiPreset};
 use crate::config::{TmuxWorkspaceSettings, TmuxWorkspaceWindowSettings};
 use crate::pty::ShellCommand;
@@ -21,6 +22,7 @@ pub(super) struct WorkspaceProof {
     pub(super) existing_attach_checked: bool,
     pub(super) duplicate_prevented: bool,
     pub(super) failure_feedback_checked: bool,
+    pub(super) invalid_preflight_checked: bool,
 }
 
 pub(super) fn run_workspace_proof(
@@ -44,6 +46,7 @@ pub(super) fn run_workspace_proof(
     let existing_attach_checked = drive_workspace_existing_attach(snapshot, preset, runner);
     let command_hints_checked = drive_workspace_command_hints(snapshot, preset, renderer);
     let failure_feedback_checked = drive_workspace_failure_feedback(snapshot, runner, renderer);
+    let invalid_preflight_checked = invalid::drive_invalid_workspace_preflight(snapshot, renderer);
     WorkspaceProof {
         started,
         feedback_checked,
@@ -51,6 +54,7 @@ pub(super) fn run_workspace_proof(
         existing_attach_checked,
         duplicate_prevented: before == Some(1) && after == Some(1),
         failure_feedback_checked,
+        invalid_preflight_checked,
     }
 }
 
