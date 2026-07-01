@@ -7,19 +7,16 @@ use gromaq::tmux::{
 use crate::support::{MockFrameRenderer, MockPtySession};
 
 #[test]
-fn native_terminal_runtime_renders_selected_action_command_and_key_hint() {
+fn native_terminal_runtime_renders_session_focus_enter_action() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 180,
+        terminal_cols: 160,
         terminal_rows: 8,
         ..NativeTerminalRuntimeConfig::default()
     })
     .unwrap();
     runtime.write_startup_text("ready\r\n> ").unwrap();
     let snapshot = manager_snapshot();
-    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
-    panel.focus_next();
-    panel.focus_next();
-    panel.focus_next();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
     let mut renderer = MockFrameRenderer::default();
 
     assert!(
@@ -28,11 +25,15 @@ fn native_terminal_runtime_renders_selected_action_command_and_key_hint() {
             .unwrap()
     );
 
-    let frame = renderer.frames.last().unwrap();
-    let action_line = &frame.lines[6];
-    assert!(action_line.contains("Enter split-pane-right"));
-    assert!(action_line.contains("tmux split-window -h"));
-    assert!(action_line.contains("Ctrl-b %"));
+    let action_line = &renderer.frames.last().unwrap().lines[6];
+    assert!(
+        action_line.contains("Enter attach-session"),
+        "{action_line}"
+    );
+    assert!(
+        action_line.contains("tmux attach-session -t <session>"),
+        "{action_line}"
+    );
 }
 
 fn manager_snapshot() -> TmuxManagerSnapshot {

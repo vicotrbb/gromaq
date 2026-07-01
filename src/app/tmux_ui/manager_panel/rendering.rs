@@ -1,11 +1,12 @@
 //! Native tmux manager panel rendering.
 
+use super::enter_action::enter_action_id;
 use super::hints::{action_hint, hint_row};
 use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
 use super::workspaces::workspace_row;
-use crate::tmux::{ActionId, TmuxAction, TmuxManagerSnapshot, TmuxPane};
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxPane};
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 
 /// Apply a compact tmux manager panel to a cloned grid snapshot.
@@ -55,7 +56,7 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
     if let Some(workspace_row) = workspace_row(panel) {
         lines.push(workspace_row);
     }
-    lines.push(action_row(panel));
+    lines.push(action_row(snapshot, panel));
     lines.push(
         panel
             .action_input_prompt()
@@ -119,11 +120,8 @@ fn pane_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> St
         .join(" ")
 }
 
-fn action_row(panel: &TmuxManagerPanelState) -> String {
-    let selected_action_id = panel_actions()
-        .get(panel.selected_action)
-        .copied()
-        .unwrap_or(ActionId::SplitPaneRight);
+fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> String {
+    let selected_action_id = enter_action_id(snapshot, panel);
     let selected_action =
         TmuxAction::by_id(selected_action_id).expect("panel action is registered");
     let actions = panel_actions()
