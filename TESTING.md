@@ -149,8 +149,10 @@ When no packaged app bundle is selected, the helper builds and launches
 `GROMAQ_MANUAL_TMUX_APP=/path/to/Gromaq.app` to force an app-bundle run, or
 `GROMAQ_MANUAL_TMUX_BINARY=/path/to/gromaq` to force a specific binary.
 The configured helper also records git branch/dirty metadata beside the manual
-confirmation files so the live proof can be tied back to the checkout under
-test.
+confirmation files and writes `tmux-binary-markers.txt` for the selected
+executable. It fails if that executable still contains the old
+keyboard/mouse/paste startup copy, so app-bundle and explicit-binary runs cannot
+silently validate stale startup text.
 After the live prompts finish, it reads tmux state directly and requires the
 named started session to exist, the target session to show the new window and
 split pane, and the disposable kill-session target to be removed before writing

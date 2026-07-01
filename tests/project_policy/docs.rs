@@ -243,6 +243,12 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "close the startup-open manager with Esc before proving Control/Super Shift `T` reopens it",
         ),
+        ("documentation/compatibility.md", "tmux-binary-markers.txt"),
+        (
+            "documentation/compatibility.md",
+            "fails if the selected executable still contains the old keyboard/mouse/paste startup copy",
+        ),
+        ("TESTING.md", "tmux-binary-markers.txt"),
         (
             "documentation/compatibility.md",
             "cancellation feedback checked: true",
