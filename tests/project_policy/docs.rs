@@ -116,6 +116,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         (compat, "unavailable shortcut blocked: true"),
         (compat, "no-server start hint checked: true"),
         (compat, "outside attach hint checked: true"),
+        (compat, "outside attach target checked: true"),
         (compat, "mouse focus checked: true"),
         (compat, "mouse action selection checked: true"),
         (compat, "mouse workspace selection checked: true"),
