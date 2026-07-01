@@ -131,6 +131,12 @@ fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
         exit.stdout
             .starts_with("window screenshot smoke: ok\npresented frame limit: 900\n")
     );
+    assert!(
+        exit.stdout
+            .contains("default startup content checked: false")
+    );
+    assert!(exit.stdout.contains("tmux status strip rendered: true"));
+    assert!(exit.stdout.contains("tmux manager panel rendered: true"));
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
     assert_eq!(launch.app.exit_after_presented_frames, Some(900));
@@ -160,7 +166,7 @@ fn window_screenshot_smoke_fails_when_tmux_ui_is_not_rendered() {
     assert!(exit.stdout.is_empty());
     assert!(
         exit.stderr.contains(
-            "window screenshot smoke failed: default tmux UI was not rendered; default startup content checked: false; tmux status strip rendered: false; tmux manager panel rendered: false"
+            "window screenshot smoke failed: tmux UI was not rendered; default startup content checked: false; tmux status strip rendered: false; tmux manager panel rendered: false"
         )
     );
     assert!(backend.requests.borrow().is_empty());

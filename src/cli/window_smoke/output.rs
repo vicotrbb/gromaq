@@ -32,11 +32,14 @@ pub(super) fn window_screenshot_smoke_success(
     CliExit {
         code: 0,
         stdout: format!(
-            "window screenshot smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame cursor quads: {}\n",
+            "window screenshot smoke: ok\npresented frame limit: {frame_limit}\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux manager panel rendered: {}\nglyph frame presented: {}\nglyph frame glyph quads: {}\nglyph frame cursor quads: {}\n",
             report.redraw_attempts,
             report.frames_presented,
             report.surface_frame_timeouts,
             report.surface_frame_occluded,
+            report.default_startup_content_checked,
+            report.tmux_status_strip_rendered,
+            report.tmux_manager_panel_rendered,
             report.glyph_frame_presented,
             report.glyph_frame_glyph_quads,
             report.glyph_frame_cursor_quads
@@ -77,7 +80,7 @@ pub(super) fn window_screenshot_smoke_no_default_tmux_ui_failure(
         code: 1,
         stdout: String::new(),
         stderr: format!(
-            "window screenshot smoke failed: default tmux UI was not rendered; default startup content checked: {}; tmux status strip rendered: {}; tmux manager panel rendered: {}\n",
+            "window screenshot smoke failed: tmux UI was not rendered; default startup content checked: {}; tmux status strip rendered: {}; tmux manager panel rendered: {}\n",
             report.default_startup_content_checked,
             report.tmux_status_strip_rendered,
             report.tmux_manager_panel_rendered
