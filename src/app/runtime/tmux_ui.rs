@@ -38,6 +38,15 @@ impl<S> NativeTerminalRuntime<S> {
         self.last_rendered_tmux_manager_panel
     }
 
+    /// Return tmux state counts from the last rendered native manager panel.
+    pub fn last_rendered_tmux_manager_state_counts(&self) -> (usize, usize, usize) {
+        (
+            self.last_rendered_tmux_manager_sessions,
+            self.last_rendered_tmux_manager_windows,
+            self.last_rendered_tmux_manager_panes,
+        )
+    }
+
     /// Let the rendered tmux manager panel handle a grid-relative mouse event.
     pub fn handle_tmux_manager_mouse_event(
         &mut self,

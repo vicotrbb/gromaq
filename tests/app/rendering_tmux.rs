@@ -1,11 +1,10 @@
+use crate::support::{MockFrameRenderer, MockPtySession};
 use gromaq::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
 use gromaq::app::{TmuxManagerFocus, TmuxManagerPanelState, TmuxStatusKind, TmuxUiSnapshot};
 use gromaq::tmux::{
     TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
     TmuxWindow,
 };
-
-use crate::support::{MockFrameRenderer, MockPtySession};
 
 #[test]
 fn native_terminal_runtime_renders_tmux_assist_overlay_once() {
@@ -225,6 +224,7 @@ fn native_terminal_runtime_renders_compact_tmux_manager_panel() {
     assert!(frame.lines[6].contains("Enter split-pane-right"));
     assert!(frame.lines[6].contains("Ctrl-b %"));
     assert!(frame.lines[7].contains("tmux kill-window -t <window> | Ctrl-b &"));
+    assert_eq!(runtime.last_rendered_tmux_manager_state_counts(), (2, 2, 2));
     assert_eq!(runtime.terminal().dump_grid().line_text(0), "ready");
     assert_eq!(runtime.terminal().dump_grid().line_text(1), ">");
 }

@@ -93,11 +93,16 @@ where
     }
     let tmux_status_strip_rendered = runtime.last_rendered_tmux_status_strip();
     let tmux_manager_panel_rendered = runtime.last_rendered_tmux_manager_panel();
+    let (tmux_manager_sessions, tmux_manager_windows, tmux_manager_panes) =
+        runtime.last_rendered_tmux_manager_state_counts();
     let Some(plan) = renderer.last_plan() else {
         let mut report = clear_and_present_report(surface, clear_color)?;
         report.rendered = true;
         report.tmux_status_strip_rendered = tmux_status_strip_rendered;
         report.tmux_manager_panel_rendered = tmux_manager_panel_rendered;
+        report.tmux_manager_sessions = tmux_manager_sessions;
+        report.tmux_manager_windows = tmux_manager_windows;
+        report.tmux_manager_panes = tmux_manager_panes;
         return Ok(report);
     };
     let glyphs = glyph_cache.rasterize_plan(plan)?;
@@ -127,6 +132,9 @@ where
         glyph_frame_presented: false,
         tmux_status_strip_rendered,
         tmux_manager_panel_rendered,
+        tmux_manager_sessions,
+        tmux_manager_windows,
+        tmux_manager_panes,
         clear_presented: false,
         width: frame.width,
         height: frame.height,

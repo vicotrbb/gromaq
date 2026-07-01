@@ -46,7 +46,8 @@ handoff, and validation tooling.
   `--tmux-action` executes registry actions with confirmation gates, and
   `--runtime-tmux-smoke`, `--runtime-tmux-ui-smoke`, and
   `--window-tmux-manager-snapshot` prove the isolated tmux state/action,
-  workspace, and native manager UI snapshot paths when tmux is installed.
+  workspace, and native manager UI snapshot paths when tmux is installed,
+  including manager session/window/pane counts in the window snapshot report.
 - `test_api`: deterministic integration hooks used by tests and future debug
   tooling.
 - `tmux`: native tmux domain boundary. Probe, state reader, manager snapshot,

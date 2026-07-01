@@ -16,6 +16,7 @@ use super::{TmuxManagerPanelState, TmuxUiSnapshot};
 
 mod input;
 mod pty;
+mod render_state;
 mod rendering;
 mod status_overlay;
 mod tmux_ui;
@@ -35,6 +36,9 @@ pub struct NativeTerminalRuntime<S> {
     tmux_status_strip_enabled: bool,
     last_rendered_tmux_status_strip: bool,
     last_rendered_tmux_manager_panel: bool,
+    last_rendered_tmux_manager_sessions: usize,
+    last_rendered_tmux_manager_windows: usize,
+    last_rendered_tmux_manager_panes: usize,
     last_rendered_tmux_manager_region: Option<crate::DirtyRegion>,
     tmux_manager_snapshot: Option<TmuxManagerSnapshot>,
     tmux_manager_panel: Option<TmuxManagerPanelState>,
@@ -66,6 +70,9 @@ impl<S> NativeTerminalRuntime<S> {
             tmux_status_strip_enabled: true,
             last_rendered_tmux_status_strip: false,
             last_rendered_tmux_manager_panel: false,
+            last_rendered_tmux_manager_sessions: 0,
+            last_rendered_tmux_manager_windows: 0,
+            last_rendered_tmux_manager_panes: 0,
             last_rendered_tmux_manager_region: None,
             tmux_manager_snapshot: None,
             tmux_manager_panel: None,

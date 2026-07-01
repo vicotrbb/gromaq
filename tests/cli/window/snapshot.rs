@@ -92,6 +92,9 @@ fn window_tmux_manager_snapshot_smoke_writes_artifact() {
     assert!(exit.stdout.contains("glyph frame presented: true"));
     assert!(exit.stdout.contains("tmux status strip rendered: true"));
     assert!(exit.stdout.contains("tmux manager panel rendered: true"));
+    assert!(exit.stdout.contains("tmux manager sessions: 1"));
+    assert!(exit.stdout.contains("tmux manager windows: 1"));
+    assert!(exit.stdout.contains("tmux manager panes: 1"));
     let bytes = fs::read(&path).unwrap();
     let _ = fs::remove_file(&path);
     assert_eq!(bytes, b"P6\n1 1\n255\n\x17\x1b$");

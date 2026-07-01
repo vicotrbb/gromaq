@@ -2,6 +2,7 @@ use crate::error::Result as GromaqResult;
 use crate::renderer::GpuRenderer;
 
 use super::NativeTerminalRuntime;
+use super::render_state::tmux_manager_counts;
 use super::status_overlay::{apply_status_overlay, apply_status_overlay_nearby};
 use crate::app::perf::{
     NativeRuntimePerfSnapshot, NativeRuntimeStateSnapshot, add_usize_counter,
@@ -123,9 +124,7 @@ impl<S> NativeTerminalRuntime<S> {
         {
             dirty_regions.push(region);
         }
-        self.last_rendered_tmux_status_strip = false;
-        self.last_rendered_tmux_manager_panel = false;
-        self.last_rendered_tmux_manager_region = None;
+        self.reset_last_rendered_visual_surfaces();
         let tmux_snapshot = tmux_snapshot.or(self.tmux_status_snapshot.as_ref());
         if self.tmux_status_strip_enabled
             && let Some(tmux_snapshot) = tmux_snapshot
@@ -147,8 +146,7 @@ impl<S> NativeTerminalRuntime<S> {
                 render_cursor.visible = false;
             }
             dirty_regions.push(region);
-            self.last_rendered_tmux_manager_panel = true;
-            self.last_rendered_tmux_manager_region = Some(region);
+            self.record_rendered_tmux_manager(tmux_manager_counts(tmux_snapshot), region);
         }
         if let Err(error) = renderer.render_frame(&grid, render_cursor, &dirty_regions) {
             self.terminal.invalidate_viewport();

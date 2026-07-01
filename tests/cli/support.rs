@@ -13,7 +13,6 @@ use gromaq::native_gpu::{
     GpuTextAtlasUploadReport, GpuTextAtlasUploadRunner, GpuTextureUploadReport,
     GpuTextureUploadRunner, GpuTexturedQuadReport, GpuTexturedQuadRunner,
 };
-
 #[path = "support/gpu_welcome_image.rs"]
 mod gpu_welcome_image;
 
@@ -21,12 +20,10 @@ mod gpu_welcome_image;
 pub(crate) struct MockBackend {
     pub(crate) requests: RefCell<Vec<GpuBootstrapRequest>>,
 }
-
 #[derive(Debug)]
 pub(crate) struct MockContext {
     adapter: GpuAdapterSnapshot,
 }
-
 #[derive(Debug)]
 pub(crate) struct MockAppLauncher {
     pub(crate) launches: RefCell<Vec<NativeAppLaunchConfig>>,
@@ -92,6 +89,9 @@ impl NativeAppLauncher for MockAppLauncher {
             glyph_frame_presented: true,
             tmux_status_strip_rendered: config.app.tmux_ui_enabled,
             tmux_manager_panel_rendered: config.app.open_tmux_manager_on_start,
+            tmux_manager_sessions: usize::from(config.app.open_tmux_manager_on_start),
+            tmux_manager_windows: usize::from(config.app.open_tmux_manager_on_start),
+            tmux_manager_panes: usize::from(config.app.open_tmux_manager_on_start),
             glyph_frame_width: 2560,
             glyph_frame_height: 1600,
             glyph_frame_glyph_quads: 12,

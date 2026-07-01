@@ -37,7 +37,10 @@ fi
 for marker in \
   "default startup content checked: true" \
   "tmux status strip rendered: true" \
-  "tmux manager panel rendered: true"
+  "tmux manager panel rendered: true" \
+  "tmux manager sessions:" \
+  "tmux manager windows:" \
+  "tmux manager panes:"
 do
   if ! grep -F "${marker}" "${log_path}" >/dev/null; then
     printf '%s\n' "error: native tmux default snapshot proof missing '${marker}'." >&2
@@ -79,4 +82,7 @@ fi
   grep -F "default startup content checked: true" "${log_path}"
   grep -F "tmux status strip rendered: true" "${log_path}"
   grep -F "tmux manager panel rendered: true" "${log_path}"
+  grep -F "tmux manager sessions:" "${log_path}"
+  grep -F "tmux manager windows:" "${log_path}"
+  grep -F "tmux manager panes:" "${log_path}"
 } | tee "${summary_path}"
