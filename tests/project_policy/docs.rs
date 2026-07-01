@@ -141,6 +141,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "status missing/no server/detached/attached in the manager header",
+        ),
+        (
+            "documentation/compatibility.md",
             "current pane marker checked: true",
         ),
         (

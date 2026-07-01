@@ -7,7 +7,7 @@ use super::rows::{pane_row, session_row, window_row};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
 use super::target::current_target_label;
 use super::workspaces::workspace_row;
-use crate::tmux::{TmuxAction, TmuxManagerSnapshot};
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxManagerStatus};
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
 
 /// Apply a compact tmux manager panel to a cloned grid snapshot.
@@ -38,7 +38,8 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
     let target = current_target_label(snapshot);
     let mut lines = vec![
         format!(
-            "tmux manager | focus {} | target {target}",
+            "tmux manager | status {} | focus {} | target {target}",
+            status_label(snapshot),
             focus_label(panel.focus)
         ),
         format!("Sessions {}", session_row(snapshot, panel)),
@@ -58,6 +59,16 @@ fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) ->
             .unwrap_or_else(|| hint_row(snapshot)),
     );
     lines
+}
+
+fn status_label(snapshot: &TmuxManagerSnapshot) -> &'static str {
+    match snapshot.status {
+        TmuxManagerStatus::Missing => "missing",
+        TmuxManagerStatus::NoServer => "no server",
+        TmuxManagerStatus::Available if snapshot.current.is_some() => "attached",
+        TmuxManagerStatus::Available if snapshot.state.sessions.is_empty() => "no server",
+        TmuxManagerStatus::Available => "detached",
+    }
 }
 
 fn focus_label(focus: TmuxManagerFocus) -> &'static str {

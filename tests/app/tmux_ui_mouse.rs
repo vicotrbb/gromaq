@@ -61,7 +61,7 @@ fn runtime_mouse_press_focuses_rendered_tmux_manager_panel_row() {
             .unwrap()
             .lines
             .iter()
-            .any(|line| line.contains("tmux manager | focus windows"))
+            .any(|line| line.contains("tmux manager | status attached | focus windows"))
     );
 }
 

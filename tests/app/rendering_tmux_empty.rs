@@ -28,6 +28,7 @@ fn native_terminal_runtime_renders_empty_tmux_manager_start_session_affordance()
     );
 
     let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[2].contains("status no server"));
     assert!(frame.lines[3].contains("Sessions none"));
     assert!(frame.lines[4].contains("Windows none"));
     assert!(frame.lines[5].contains("Panes none"));
@@ -63,7 +64,9 @@ fn native_terminal_runtime_renders_outside_tmux_attach_command_hint() {
             .unwrap()
     );
 
-    let hint_line = &renderer.frames.last().unwrap().lines[7];
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[2].contains("status detached"));
+    let hint_line = &frame.lines[7];
     assert!(hint_line.contains("Outside tmux"), "{hint_line}");
     assert!(
         renderer
@@ -99,6 +102,7 @@ fn native_terminal_runtime_renders_missing_tmux_manager_explanation() {
     );
 
     let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[2].contains("status missing"));
     assert!(frame.lines[7].contains("tmux missing"));
     assert!(!frame.lines[7].contains("No tmux server"));
     assert!(frame.lines[7].contains("r refresh"));
