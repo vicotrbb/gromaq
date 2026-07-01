@@ -12,6 +12,7 @@ mod shortcuts;
 mod skipped_handoffs;
 mod workspace;
 
+use super::availability::tmux_missing_skip_exit;
 use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
 use crate::cli::CliExit;
 use crate::renderer::{RendererConfig, WgpuRenderer};
@@ -52,11 +53,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
         Err(error) => return ui_failure(format!("tmux probe failed: {error:?}")),
     };
     if !probe.installed {
-        return CliExit {
-            code: 0,
-            stdout: "runtime tmux ui smoke: ok\ntmux available: false\nskipped: tmux not found on PATH\n".to_owned(),
-            stderr: String::new(),
-        };
+        return tmux_missing_skip_exit("runtime tmux ui smoke");
     }
 
     let socket = format!("gromaq-runtime-tmux-ui-{}", std::process::id());

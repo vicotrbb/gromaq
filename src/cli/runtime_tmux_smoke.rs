@@ -1,5 +1,6 @@
 //! Isolated tmux action and state-reader runtime smoke.
 
+mod availability;
 mod ui;
 
 use crate::cli::CliExit;
@@ -7,6 +8,7 @@ use crate::tmux::{
     ActionId, SocketTmuxCommandRunner, SystemTmuxCommandRunner, TmuxActionRequest,
     TmuxActionResult, TmuxActionRunner, TmuxCommandRunner, TmuxProbe, TmuxStateReader,
 };
+use availability::tmux_missing_skip_exit;
 pub(super) use ui::runtime_tmux_ui_smoke_exit;
 
 const SESSION: &str = "gromaq-runtime-tmux";
@@ -17,13 +19,7 @@ pub(super) fn runtime_tmux_smoke_exit() -> CliExit {
         Err(error) => return failure(format!("tmux probe failed: {error:?}")),
     };
     if !probe.installed {
-        return CliExit {
-            code: 0,
-            stdout:
-                "runtime tmux smoke: ok\ntmux available: false\nskipped: tmux not found on PATH\n"
-                    .to_owned(),
-            stderr: String::new(),
-        };
+        return tmux_missing_skip_exit("runtime tmux smoke");
     }
 
     let socket = format!("gromaq-runtime-tmux-{}", std::process::id());
