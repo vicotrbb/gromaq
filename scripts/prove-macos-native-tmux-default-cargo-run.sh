@@ -143,6 +143,11 @@ if ! grep -F "tmux manager panel rendered: true" "${manager_reference_stdout_pat
   exit 1
 fi
 
+if ! grep -F "terminal cells:" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default manager reference did not report terminal cells." >&2
+  exit 1
+fi
+
 for count_label in "tmux manager sessions:" "tmux manager windows:" "tmux manager panes:"; do
   if ! grep -F "${count_label}" "${manager_reference_stdout_path}" >/dev/null; then
     printf '%s\n' "error: default manager reference did not report ${count_label}" >&2
@@ -287,6 +292,7 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   fi
   printf '%s\n' "tmux-default-cargo-run-manager-reference.stdout: ${manager_reference_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-manager-reference.stderr: ${manager_reference_stderr_path}"
+  grep -F "terminal cells:" "${manager_reference_stdout_path}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
   printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"

@@ -217,6 +217,7 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "tmux-default-cargo-run-manager-reference.stdout",
         "tmux-default-cargo-run-manager-reference.stderr",
         "tmux status pane command rendered: true",
+        "terminal cells:",
         "tmux manager sessions:",
         "tmux manager windows:",
         "tmux manager panes:",
