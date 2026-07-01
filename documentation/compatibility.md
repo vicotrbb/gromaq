@@ -90,7 +90,8 @@ and write `target/ci-compatibility-proof/summary.txt`.
 Manual tmux proof harnesses distinguish preflight from interactive proof in
 their summaries: non-interactive preflight reports
 `live app-window proof: not run`, while completed live harnesses report
-`live app-window proof: completed`.
+`live app-window proof: completed`. They also write the same state to
+`live-app-window-proof.txt` under the proof root.
 
 | Workflow | Current proof | Status |
 | --- | --- | --- |

@@ -102,7 +102,6 @@ fn public_docs_avoid_drift_prone_current_head_remote_proof_claims() {
         );
     }
 }
-
 #[test]
 fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -333,6 +332,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (compat, "live app-window proof: not run"),
         (compat, "live app-window proof: completed"),
+        (compat, "live-app-window-proof.txt"),
         ("TESTING.md", "live app-window proof: not run"),
         ("TESTING.md", "live app-window proof: completed"),
     ] {
