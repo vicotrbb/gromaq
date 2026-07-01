@@ -5,6 +5,7 @@ use super::hints::{action_choice_label, action_hint, enter_action_label, hint_ro
 use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
+use super::target::{current_target_label, pane_command_label, pane_dimensions};
 use super::workspaces::workspace_row;
 use crate::tmux::{TmuxAction, TmuxManagerSnapshot, TmuxPane};
 use crate::{CellSnapshot, Color, DirtyRegion, GridSnapshot, Style};
@@ -34,16 +35,7 @@ pub fn apply_tmux_manager_panel(
 }
 
 fn panel_lines(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> Vec<String> {
-    let target = snapshot
-        .current
-        .as_ref()
-        .map(|current| {
-            format!(
-                "{}:{}:{}",
-                current.session_name, current.window_index, current.pane_id
-            )
-        })
-        .unwrap_or_else(|| "none".to_owned());
+    let target = current_target_label(snapshot);
     let mut lines = vec![
         format!(
             "tmux manager | focus {} | target {target}",
@@ -142,18 +134,11 @@ fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> 
 }
 
 fn pane_label(pane: &TmuxPane, selected: bool) -> String {
-    let mut command = if pane.title.is_empty() || pane.title == pane.current_command {
-        pane.current_command.clone()
-    } else {
-        format!("{}:{}", pane.title, pane.current_command)
-    };
+    let mut command = pane_command_label(pane);
     if selected {
         command.push('*');
     }
-    let dimensions = match (pane.width, pane.height) {
-        (Some(width), Some(height)) => format!(" {width}x{height}"),
-        _ => String::new(),
-    };
+    let dimensions = pane_dimensions(pane);
     format!("{} {}{}", pane.id, command, dimensions)
 }
 

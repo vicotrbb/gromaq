@@ -10,6 +10,7 @@ mod refresh;
 mod rendering;
 mod selection;
 mod state;
+mod target;
 mod workspaces;
 
 pub use input::{TmuxManagerKeyOutcome, TmuxManagerMouseOutcome};

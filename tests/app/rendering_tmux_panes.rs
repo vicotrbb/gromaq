@@ -31,6 +31,31 @@ fn native_terminal_runtime_renders_pane_titles_commands_and_dimensions() {
     assert!(pane_line.contains("%2 editor:nvim* 100x30"));
 }
 
+#[test]
+fn native_terminal_runtime_renders_current_target_pane_details_in_header() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 160,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let header = &renderer.frames.last().unwrap().lines[2];
+    assert!(header.contains("target alpha:1:%2"), "{header}");
+    assert!(header.contains("editor:nvim"), "{header}");
+    assert!(header.contains("100x30"), "{header}");
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
