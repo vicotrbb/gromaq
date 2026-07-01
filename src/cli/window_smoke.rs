@@ -119,7 +119,7 @@ where
         Ok(report)
             if report.glyph_frame_snapshot_written
                 && report.tmux_status_strip_rendered
-                && report.tmux_status_pane_command_rendered
+                && (report.tmux_status_pane_command_rendered || report.tmux_manager_panes == 0)
                 && report.tmux_manager_panel_rendered
                 && report.default_startup_content_checked =>
         {

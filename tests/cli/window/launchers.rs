@@ -1,5 +1,6 @@
 use gromaq::app::NativeAppRunReport;
 use gromaq::cli::{NativeAppLaunchConfig, NativeAppLaunchError, NativeAppLauncher};
+use std::fs;
 
 #[derive(Debug)]
 pub(crate) struct NoGlyphFrameAppLauncher;
@@ -12,6 +13,9 @@ pub(crate) struct DroppedFrameAppLauncher;
 
 #[derive(Debug)]
 pub(crate) struct NoServerTmuxUiAppLauncher;
+
+#[derive(Debug)]
+pub(crate) struct NoServerTmuxUiSnapshotAppLauncher;
 
 impl NativeAppLauncher for DroppedFrameAppLauncher {
     fn launch(
@@ -108,6 +112,34 @@ impl NativeAppLauncher for NoServerTmuxUiAppLauncher {
             tmux_status_pane_command_rendered: false,
             tmux_manager_panel_rendered: true,
             default_startup_content_checked: true,
+            ..NativeAppRunReport::default()
+        })
+    }
+}
+
+impl NativeAppLauncher for NoServerTmuxUiSnapshotAppLauncher {
+    fn launch(
+        &self,
+        config: NativeAppLaunchConfig,
+    ) -> Result<NativeAppRunReport, NativeAppLaunchError> {
+        let snapshot_bytes = b"P6\n1 1\n255\n\x17\x1b$";
+        if let Some(path) = &config.app.glyph_frame_snapshot_path {
+            fs::write(path, snapshot_bytes)
+                .map_err(|error| NativeAppLaunchError::new(error.to_string()))?;
+        }
+        Ok(NativeAppRunReport {
+            glyph_frame_snapshot_written: true,
+            glyph_frame_snapshot_bytes: snapshot_bytes.len(),
+            glyph_frame_snapshot_width: 1,
+            glyph_frame_snapshot_height: 1,
+            default_startup_content_checked: true,
+            tmux_status_strip_rendered: true,
+            tmux_status_pane_command_rendered: false,
+            tmux_manager_panel_rendered: true,
+            terminal_cols: 140,
+            terminal_rows: 35,
+            glyph_frame_glyph_quads: 12,
+            glyph_frame_background_quads: 1,
             ..NativeAppRunReport::default()
         })
     }

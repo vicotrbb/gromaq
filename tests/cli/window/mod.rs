@@ -6,5 +6,5 @@ mod snapshot_failure;
 
 pub(super) use launchers::{
     DroppedFrameAppLauncher, NoGlyphFrameAppLauncher, NoServerTmuxUiAppLauncher,
-    NoTmuxUiFrameAppLauncher,
+    NoServerTmuxUiSnapshotAppLauncher, NoTmuxUiFrameAppLauncher,
 };

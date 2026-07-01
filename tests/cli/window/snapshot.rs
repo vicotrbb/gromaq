@@ -5,6 +5,7 @@ use std::fs;
 use gromaq::cli::NativeAppLaunchConfig;
 
 use super::super::{MockAppLauncher, MockBackend, run_with_backend_and_app, test_cli_config_path};
+use super::NoServerTmuxUiSnapshotAppLauncher;
 
 #[test]
 fn window_glyph_frame_snapshot_smoke_writes_artifact() {
@@ -115,6 +116,37 @@ fn window_tmux_manager_snapshot_smoke_writes_artifact() {
     );
     assert_eq!(launch.app.startup_text.as_deref(), None);
     assert_eq!(launch.runtime, NativeAppLaunchConfig::default().runtime);
+}
+
+#[test]
+fn window_tmux_manager_snapshot_accepts_no_server_without_pane_command() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = NoServerTmuxUiSnapshotAppLauncher;
+    let path = test_cli_config_path("window-tmux-manager-no-server.ppm");
+    let _ = fs::remove_file(&path);
+
+    let exit = run_with_backend_and_app(
+        [
+            "gromaq",
+            "--window-tmux-manager-snapshot",
+            &path.to_string_lossy(),
+        ],
+        &backend,
+        &app,
+    );
+
+    assert_eq!(exit.code, 0);
+    assert!(exit.stderr.is_empty());
+    assert!(exit.stdout.contains("window tmux manager snapshot: ok"));
+    assert!(
+        exit.stdout
+            .contains("tmux status pane command rendered: false")
+    );
+    assert!(exit.stdout.contains("tmux manager panes: 0"));
+    assert!(path.exists());
+    let _ = fs::remove_file(&path);
 }
 
 #[test]
