@@ -2,7 +2,7 @@
 
 mod fixtures;
 
-use crate::app::{NativeTerminalRuntimeConfig, TmuxStatusKind, TmuxUiSnapshot};
+use crate::app::{NativeTerminalRuntimeConfig, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
 use crate::tmux::TmuxManagerSnapshot;
 
@@ -18,6 +18,22 @@ pub(super) fn render_status_strip(
         .render_terminal_frame_with_tmux_status_strip(renderer, &strip)
         .is_ok_and(|rendered| rendered)
         && last_plan_text(renderer).contains("tmux:")
+}
+
+pub(super) fn render_status_pane_command(
+    runtime: &mut super::SmokeRuntime,
+    renderer: &mut WgpuRenderer,
+    snapshot: &TmuxManagerSnapshot,
+) -> bool {
+    let strip = status_strip(snapshot);
+    let Some(command) = strip.active_pane_command.as_deref() else {
+        return false;
+    };
+    runtime.invalidate_terminal_frame();
+    runtime
+        .render_terminal_frame_with_tmux_status_strip(renderer, &strip)
+        .is_ok_and(|rendered| rendered)
+        && last_plan_text(renderer).contains(command)
 }
 
 pub(super) fn render_status_feedback(
@@ -136,40 +152,8 @@ pub(super) fn render_outside_attach_hint(renderer: &mut WgpuRenderer) -> bool {
         && render_manager_panel_contains(&mut runtime, renderer, "tmuxattach-session-t<session>")
 }
 
-fn tmux_status(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
-    if snapshot.state.sessions.is_empty() {
-        TmuxStatusKind::NoServer
-    } else {
-        TmuxStatusKind::Detached
-    }
-}
-
 fn status_strip(snapshot: &TmuxManagerSnapshot) -> TmuxUiSnapshot {
-    TmuxUiSnapshot {
-        status: tmux_status(snapshot),
-        current_session: snapshot
-            .current
-            .as_ref()
-            .map(|current| current.session_name.clone()),
-        current_window: snapshot
-            .current
-            .as_ref()
-            .map(|current| current.window_index.to_string()),
-        visible_windows: snapshot
-            .state
-            .windows
-            .iter()
-            .map(|window| format!("{}:{}", window.index, window.name))
-            .collect(),
-        pane_count: Some(snapshot.state.panes.len()),
-        active_pane_id: snapshot
-            .current
-            .as_ref()
-            .map(|current| current.pane_id.clone()),
-        active_pane_command: None,
-        pending_feedback: None,
-        confirmation_feedback: None,
-    }
+    TmuxUiSnapshot::from_manager_snapshot(snapshot)
 }
 
 fn last_plan_text(renderer: &WgpuRenderer) -> String {

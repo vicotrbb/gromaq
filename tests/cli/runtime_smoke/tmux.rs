@@ -42,6 +42,7 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
     if exit.stdout.contains("tmux available: true") {
         assert!(exit.stdout.contains("manager panel opened: true"));
         assert!(exit.stdout.contains("status strip rendered: true"));
+        assert!(exit.stdout.contains("status pane command checked: true"));
         assert!(exit.stdout.contains("status feedback checked: true"));
         assert!(exit.stdout.contains("manager panel rendered: true"));
         assert!(exit.stdout.contains("manager state checked: true"));
