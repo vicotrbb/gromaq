@@ -1,6 +1,6 @@
 //! Render-plan proof helpers for the native tmux UI smoke.
 
-use crate::app::{TmuxStatusKind, TmuxUiSnapshot};
+use crate::app::{NativeTerminalRuntimeConfig, TmuxStatusKind, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
 use crate::tmux::TmuxManagerSnapshot;
 
@@ -63,6 +63,24 @@ pub(super) fn render_manager_panel_contains(
         && last_plan_text(renderer).contains(expected)
 }
 
+pub(super) fn render_startup_manager_after_shell_prompt(
+    renderer: &mut WgpuRenderer,
+    snapshot: &TmuxManagerSnapshot,
+) -> bool {
+    let Ok(mut runtime) = super::SmokeRuntime::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 69,
+        terminal_rows: 17,
+        ..NativeTerminalRuntimeConfig::default()
+    }) else {
+        return false;
+    };
+    if runtime.write_startup_text(&full_prompt_grid()).is_err() {
+        return false;
+    }
+    runtime.toggle_tmux_manager_panel(snapshot.clone());
+    render_manager_panel(&mut runtime, renderer)
+}
+
 fn tmux_status(snapshot: &TmuxManagerSnapshot) -> TmuxStatusKind {
     if snapshot.state.sessions.is_empty() {
         TmuxStatusKind::NoServer
@@ -81,4 +99,13 @@ fn last_plan_text(renderer: &WgpuRenderer) -> String {
                 .collect::<String>()
         })
         .unwrap_or_default()
+}
+
+fn full_prompt_grid() -> String {
+    (0..16)
+        .map(|row| format!("gromaq startup line {row:02}\r\n"))
+        .chain(std::iter::once(
+            "Now using node v20.20.0 (npm v10.8.2)\r\n~ ................................ rb 2.7.5 22:17:47\r\n> ".to_owned(),
+        ))
+        .collect()
 }
