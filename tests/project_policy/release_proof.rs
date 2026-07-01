@@ -140,6 +140,7 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
         "tmux-safe-action.txt",
         "tmux-destructive-confirmation.txt",
         "tmux-normal-shell-input.txt",
+        "launch-mode.txt",
         "Native tmux manager manual proof",
         "macOS native tmux manual proof: ok",
         "summary.txt",

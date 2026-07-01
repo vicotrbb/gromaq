@@ -85,6 +85,7 @@ rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
 trap cleanup EXIT INT TERM
 cleanup
+printf '%s\n' "${launch_mode}" > "${proof_root}/launch-mode.txt"
 
 tmux new-session -d -s "${session}" -n code
 tmux split-window -t "${session}:0" -h
@@ -217,5 +218,6 @@ fi
   printf '%s\n' "tmux-destructive-confirmation.txt: ${destructive_confirmation}"
   printf '%s\n' "tmux-workspace-visible.txt: ${workspace_visible}"
   printf '%s\n' "tmux-normal-shell-input.txt: ${normal_shell_input}"
+  printf '%s\n' "launch-mode.txt: ${launch_mode}"
   printf '%s\n' "Proof root: ${proof_root}"
 } | tee "${summary_path}"
