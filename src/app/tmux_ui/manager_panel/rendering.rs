@@ -128,8 +128,9 @@ fn action_row(snapshot: &TmuxManagerSnapshot, panel: &TmuxManagerPanelState) -> 
         .iter()
         .enumerate()
         .filter_map(|(index, action_id)| {
-            TmuxAction::by_id(*action_id)
-                .map(|action| action_choice_label(action, index == panel.selected_action))
+            TmuxAction::by_id(*action_id).map(|action| {
+                action_choice_label(action, index == panel.selected_action, snapshot, panel)
+            })
         })
         .collect::<Vec<_>>()
         .join(" ");

@@ -62,6 +62,39 @@ fn native_terminal_runtime_renders_action_choices_with_shortcuts() {
     assert!(action_line.contains("? show-help"), "{action_line}");
 }
 
+#[test]
+fn native_terminal_runtime_marks_unavailable_actions_without_active_tmux_target() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 900,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::NoServer,
+        state: TmuxState::default(),
+        current: None,
+    };
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let action_line = &renderer.frames.last().unwrap().lines[6];
+    assert!(action_line.contains("s split-pane-right[needs-active]"));
+    assert!(action_line.contains("v split-pane-down[needs-active]"));
+    assert!(action_line.contains("z zoom-pane[needs-active]"));
+    assert!(action_line.contains("t start-session*"));
+    assert!(!action_line.contains("t start-session[needs-active]"));
+    assert!(action_line.contains("? show-help"));
+    assert!(!action_line.contains("? show-help[needs-active]"));
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,
