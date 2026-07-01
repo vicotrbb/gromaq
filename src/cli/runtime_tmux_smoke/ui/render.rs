@@ -6,7 +6,7 @@ use crate::app::{NativeTerminalRuntimeConfig, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;
 use crate::tmux::TmuxManagerSnapshot;
 
-use fixtures::{detached_snapshot, full_prompt_grid, no_server_snapshot};
+use fixtures::{current_target_snapshot, detached_snapshot, full_prompt_grid, no_server_snapshot};
 
 pub(super) fn render_status_strip(
     runtime: &mut super::SmokeRuntime,
@@ -104,6 +104,18 @@ pub(super) fn render_manager_state(
         && text.contains("rrefresh")
         && text.contains("Escclose")
         && (pane.current_command.is_empty() || text.contains(&pane.current_command))
+}
+
+pub(super) fn render_current_target_pane_detail(renderer: &mut WgpuRenderer) -> bool {
+    let Ok(mut runtime) = super::smoke_runtime() else {
+        return false;
+    };
+    runtime.open_tmux_manager_panel_with_workspaces(current_target_snapshot(), Vec::new());
+    if !render_manager_panel(&mut runtime, renderer) {
+        return false;
+    }
+    let text = last_plan_text(renderer);
+    text.contains("targetalpha:1:%2") && text.contains("editor:nvim") && text.contains("100x30")
 }
 
 pub(super) fn render_manager_panel_contains(

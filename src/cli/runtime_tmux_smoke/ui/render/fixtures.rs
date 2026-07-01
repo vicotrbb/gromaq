@@ -1,6 +1,9 @@
 //! Snapshot fixtures for native tmux UI render smoke checks.
 
-use crate::tmux::{TmuxManagerSnapshot, TmuxManagerStatus, TmuxSession, TmuxState};
+use crate::tmux::{
+    TmuxManagerCurrent, TmuxManagerSnapshot, TmuxManagerStatus, TmuxPane, TmuxSession, TmuxState,
+    TmuxWindow,
+};
 
 pub(super) fn no_server_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
@@ -22,6 +25,40 @@ pub(super) fn detached_snapshot() -> TmuxManagerSnapshot {
             panes: Vec::new(),
         },
         current: None,
+    }
+}
+
+pub(super) fn current_target_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState {
+            sessions: vec![TmuxSession {
+                name: "alpha".to_owned(),
+                attached: true,
+            }],
+            windows: vec![TmuxWindow {
+                session_name: "alpha".to_owned(),
+                index: 1,
+                name: "code".to_owned(),
+                active: true,
+            }],
+            panes: vec![TmuxPane {
+                session_name: "alpha".to_owned(),
+                window_index: 1,
+                index: 0,
+                id: "%2".to_owned(),
+                title: "editor".to_owned(),
+                current_command: "nvim".to_owned(),
+                active: true,
+                width: Some(100),
+                height: Some(30),
+            }],
+        },
+        current: Some(TmuxManagerCurrent {
+            session_name: "alpha".to_owned(),
+            window_index: 1,
+            pane_id: "%2".to_owned(),
+        }),
     }
 }
 
