@@ -101,6 +101,9 @@ fn native_terminal_runtime_renders_missing_tmux_manager_explanation() {
     let frame = renderer.frames.last().unwrap();
     assert!(frame.lines[7].contains("tmux missing"));
     assert!(!frame.lines[7].contains("No tmux server"));
+    assert!(frame.lines[7].contains("r refresh"));
+    assert!(frame.lines[7].contains("? help"));
+    assert!(frame.lines[7].contains("Esc close"));
 }
 
 #[test]

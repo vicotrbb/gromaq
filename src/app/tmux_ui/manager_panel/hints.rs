@@ -59,7 +59,8 @@ pub(super) fn enter_action_label(
 
 pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
     if snapshot.status == TmuxManagerStatus::Missing {
-        return "tmux missing; install tmux or disable tmux workflows | Esc close".to_owned();
+        return "tmux missing; install tmux or disable tmux workflows | r refresh | ? help | Esc close"
+            .to_owned();
     }
     if snapshot.state.sessions.is_empty() {
         return "No tmux server; Enter start-session to create | r refresh | ? help | Esc close"
