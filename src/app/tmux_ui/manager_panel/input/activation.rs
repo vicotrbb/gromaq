@@ -13,7 +13,7 @@ impl TmuxManagerPanelState {
         snapshot: &TmuxManagerSnapshot,
     ) -> TmuxManagerKeyOutcome {
         if self.focus == TmuxManagerFocus::Workspaces {
-            return if self.workspace_presets.is_empty() {
+            return if self.workspace_presets.is_empty() || self.block_invalid_selected_workspace() {
                 TmuxManagerKeyOutcome::Consumed
             } else {
                 TmuxManagerKeyOutcome::WorkspaceLaunchRequested

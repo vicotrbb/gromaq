@@ -27,6 +27,18 @@ impl TmuxWorkspaceUiPreset {
 }
 
 impl TmuxManagerPanelState {
+    /// Validate the selected workspace preset before runtime dispatch.
+    pub(super) fn block_invalid_selected_workspace(&mut self) -> bool {
+        let Some(preset) = self.workspace_presets.get(self.selected_workspace) else {
+            return false;
+        };
+        let Some(reason) = workspace_invalid_reason(&preset.settings) else {
+            return false;
+        };
+        self.workspace_feedback = Some(format!("workspace {} invalid: {reason}", preset.key));
+        true
+    }
+
     /// Launch the selected workspace preset using the existing tmux workspace launcher.
     pub fn launch_selected_workspace<R>(
         &mut self,
