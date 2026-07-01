@@ -147,6 +147,8 @@ use the release installer or install Rust from your package manager or
 - Developer ID signed and notarized macOS distribution.
 - Live desktop menu, Dock/Finder, Linux menu UI, and OS paste-menu workflows.
 - Manual app-window proof for the full native tmux manager workflow.
+  Preflight writes `live-app-window-proof.txt` as `not-run`; only the live
+  checklist writes `completed`.
 
 These gaps are tracked as proof boundaries, not hidden failures. The current
 compatibility matrix is in

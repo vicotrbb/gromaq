@@ -81,4 +81,5 @@ pub(super) const REQUIRED_README_COMPLETION_GAP_MARKERS: &[&str] = &[
     "Hardware-backed 144 Hz frame pacing proof",
     "Wider compatibility matrix coverage",
     "Developer ID signed and notarized macOS distribution",
+    "live-app-window-proof.txt",
 ];
