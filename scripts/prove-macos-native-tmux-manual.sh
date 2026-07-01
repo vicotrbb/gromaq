@@ -149,12 +149,18 @@ printf '%s\n' "\${manager_visible}" > "${proof_root}/tmux-manager-visible.txt"
 printf '%s\n' "Confirm the manager is a real panel, not a tiny hint or palette. Type exactly: not-hint"
 IFS= read -r manager_not_hint
 printf '%s\n' "\${manager_not_hint}" > "${proof_root}/tmux-manager-not-hint.txt"
+printf '%s\n' "Confirm sessions/windows/panes/current target/pane command text are visible. Type exactly: state-visible"
+IFS= read -r state_visible
+printf '%s\n' "\${state_visible}" > "${proof_root}/tmux-state-visible.txt"
 printf '%s\n' "Navigate with arrows or h/j/k/l and click at least one session/window/pane/action/workspace row. Type exactly: navigation-checked"
 IFS= read -r navigation_checked
 printf '%s\n' "\${navigation_checked}" > "${proof_root}/tmux-navigation-checked.txt"
 printf '%s\n' "Verify prompt/right-prompt layout remains legible with the tmux surfaces visible. Type exactly: right-prompt-legible"
 IFS= read -r right_prompt_legible
 printf '%s\n' "\${right_prompt_legible}" > "${proof_root}/tmux-right-prompt-legible.txt"
+printf '%s\n' "Confirm the UI feels like native terminal control, not web UI. Type exactly: native-control-plane"
+IFS= read -r native_control_plane
+printf '%s\n' "\${native_control_plane}" > "${proof_root}/tmux-native-control-plane.txt"
 printf '%s\n' "Start a tmux session named ${started_session} from the UI. Type exactly: start-session"
 IFS= read -r start_session
 printf '%s\n' "\${start_session}" > "${proof_root}/tmux-start-session.txt"
@@ -247,8 +253,10 @@ fi
 manager_visible="$(cat "${proof_root}/tmux-manager-visible.txt" 2>/dev/null || true)"
 manager_not_hint="$(cat "${proof_root}/tmux-manager-not-hint.txt" 2>/dev/null || true)"
 status_strip_visible="$(cat "${proof_root}/tmux-status-strip-visible.txt" 2>/dev/null || true)"
+state_visible="$(cat "${proof_root}/tmux-state-visible.txt" 2>/dev/null || true)"
 navigation_checked="$(cat "${proof_root}/tmux-navigation-checked.txt" 2>/dev/null || true)"
 right_prompt_legible="$(cat "${proof_root}/tmux-right-prompt-legible.txt" 2>/dev/null || true)"
+native_control_plane="$(cat "${proof_root}/tmux-native-control-plane.txt" 2>/dev/null || true)"
 start_session="$(cat "${proof_root}/tmux-start-session.txt" 2>/dev/null || true)"
 attach_session="$(cat "${proof_root}/tmux-attach-session.txt" 2>/dev/null || true)"
 safe_action="$(cat "${proof_root}/tmux-safe-action.txt" 2>/dev/null || true)"
@@ -270,12 +278,20 @@ if [ "${manager_not_hint}" != "not-hint" ]; then
   printf '%s\n' "error: expected not-hint confirmation, got '${manager_not_hint}'." >&2
   exit 1
 fi
+if [ "${state_visible}" != "state-visible" ]; then
+  printf '%s\n' "error: expected state-visible confirmation, got '${state_visible}'." >&2
+  exit 1
+fi
 if [ "${navigation_checked}" != "navigation-checked" ]; then
   printf '%s\n' "error: expected navigation-checked confirmation, got '${navigation_checked}'." >&2
   exit 1
 fi
 if [ "${right_prompt_legible}" != "right-prompt-legible" ]; then
   printf '%s\n' "error: expected right-prompt-legible confirmation, got '${right_prompt_legible}'." >&2
+  exit 1
+fi
+if [ "${native_control_plane}" != "native-control-plane" ]; then
+  printf '%s\n' "error: expected native-control-plane confirmation, got '${native_control_plane}'." >&2
   exit 1
 fi
 if [ "${start_session}" != "start-session" ]; then
@@ -365,8 +381,10 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "tmux-status-strip-visible.txt: ${status_strip_visible}"
   printf '%s\n' "tmux-manager-visible.txt: ${manager_visible}"
   printf '%s\n' "tmux-manager-not-hint.txt: ${manager_not_hint}"
+  printf '%s\n' "tmux-state-visible.txt: ${state_visible}"
   printf '%s\n' "tmux-navigation-checked.txt: ${navigation_checked}"
   printf '%s\n' "tmux-right-prompt-legible.txt: ${right_prompt_legible}"
+  printf '%s\n' "tmux-native-control-plane.txt: ${native_control_plane}"
   printf '%s\n' "tmux-start-session.txt: ${start_session}"
   printf '%s\n' "tmux-start-session-exists.txt: ${started_session_exists_path}"
   printf '%s\n' "started-session exists: true"

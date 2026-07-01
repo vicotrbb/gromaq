@@ -173,12 +173,15 @@ the tester must open it with Control/Super Shift `T`; set
 - Confirm the manager is not a tiny hint or palette; the configured manual
   proof records this as `tmux-manager-not-hint.txt`.
 - Inspect sessions, windows, panes, current target, and current pane
-  title/command/dimension text.
+  title/command/dimension text; the configured manual proof records this as
+  `tmux-state-visible.txt`.
 - Navigate with arrows or `h`/`j`/`k`/`l`.
 - Click session/window/pane/action/workspace rows and verify selection moves;
   the harness records this as `tmux-navigation-checked.txt`.
 - Check a right-prompt or long prompt layout for legible overlap behavior; the
   harness records this as `tmux-right-prompt-legible.txt`.
+- Confirm the UI feels like native terminal control, not web UI; the configured
+  manual proof records this as `tmux-native-control-plane.txt`.
 - Start a named session from the UI; the harness records this as
   `tmux-start-session.txt`.
 - Attach the prepared session from the UI; the harness records this as

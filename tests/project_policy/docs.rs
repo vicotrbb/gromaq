@@ -252,8 +252,19 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "tmux-manager-not-hint.txt",
         ),
+        ("documentation/compatibility.md", "tmux-state-visible.txt"),
+        (
+            "documentation/compatibility.md",
+            "tmux-native-control-plane.txt",
+        ),
+        (
+            "documentation/compatibility.md",
+            "native terminal control, not web UI",
+        ),
         ("TESTING.md", "tmux-binary-markers.txt"),
         ("TESTING.md", "tmux-manager-not-hint.txt"),
+        ("TESTING.md", "tmux-state-visible.txt"),
+        ("TESTING.md", "tmux-native-control-plane.txt"),
         (
             "documentation/compatibility.md",
             "cancellation feedback checked: true",
