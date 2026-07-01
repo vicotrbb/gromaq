@@ -176,6 +176,46 @@ fn tmux_manager_panel_shortcuts_kill_session_requires_confirmation() {
 }
 
 #[test]
+fn tmux_manager_panel_shortcuts_block_unavailable_safe_actions() {
+    let snapshot = empty_manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("s".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert_eq!(panel.pending_action(), None);
+    assert_eq!(
+        panel.last_action_feedback(),
+        Some("split-pane-right needs active tmux")
+    );
+}
+
+#[test]
+fn tmux_manager_panel_shortcuts_block_unavailable_destructive_actions() {
+    let snapshot = empty_manager_snapshot();
+    let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+
+    assert_eq!(
+        panel.handle_key(
+            &Key::Character("q".into()),
+            ModifiersState::empty(),
+            &snapshot
+        ),
+        TmuxManagerKeyOutcome::Consumed
+    );
+    assert_eq!(panel.confirmation_message(), None);
+    assert_eq!(
+        panel.last_action_feedback(),
+        Some("kill-session needs active tmux")
+    );
+}
+
+#[test]
 fn tmux_manager_panel_shortcuts_open_help() {
     let snapshot = manager_snapshot();
     let mut panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
@@ -237,5 +277,13 @@ fn manager_snapshot() -> TmuxManagerSnapshot {
             window_index: 1,
             pane_id: "%2".to_owned(),
         }),
+    }
+}
+
+fn empty_manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::NoServer,
+        state: TmuxState::default(),
+        current: None,
     }
 }

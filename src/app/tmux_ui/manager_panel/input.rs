@@ -70,7 +70,7 @@ impl TmuxManagerPanelState {
             return TmuxManagerKeyOutcome::RefreshRequested;
         }
         if let Some(action_id) = shortcut_action(key) {
-            return self.activate_action(action_id);
+            return self.activate_action(action_id, snapshot);
         }
         match key {
             Key::Named(NamedKey::Escape) => {

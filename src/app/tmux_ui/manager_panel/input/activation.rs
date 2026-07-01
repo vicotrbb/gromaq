@@ -1,5 +1,6 @@
 //! Action activation helpers for native tmux manager keyboard input.
 
+use super::super::availability::action_available;
 use super::super::state::{TmuxActionInputState, TmuxManagerFocus, TmuxManagerPanelState};
 use super::PANEL_ACTIONS;
 use crate::app::TmuxManagerKeyOutcome;
@@ -19,23 +20,35 @@ impl TmuxManagerPanelState {
         }
         if self.focus == TmuxManagerFocus::Sessions {
             return if self.selected_session_name(snapshot).is_some() {
-                self.activate_action(ActionId::AttachSession)
+                self.activate_action(ActionId::AttachSession, snapshot)
             } else {
-                self.activate_action(ActionId::StartSession)
+                self.activate_action(ActionId::StartSession, snapshot)
             };
         }
         if self.focus == TmuxManagerFocus::Panes {
-            return self.activate_action(ActionId::SelectPane);
+            return self.activate_action(ActionId::SelectPane, snapshot);
         }
         let action_id = PANEL_ACTIONS
             .get(self.selected_action)
             .copied()
             .unwrap_or(ActionId::SplitPaneRight);
-        self.activate_action(action_id)
+        self.activate_action(action_id, snapshot)
     }
 
-    pub(super) fn activate_action(&mut self, action_id: ActionId) -> TmuxManagerKeyOutcome {
+    pub(super) fn activate_action(
+        &mut self,
+        action_id: ActionId,
+        snapshot: &TmuxManagerSnapshot,
+    ) -> TmuxManagerKeyOutcome {
         let action = TmuxAction::by_id(action_id).expect("panel action is registered");
+        if !action_available(action, snapshot, self) {
+            self.pending_action = None;
+            self.pending_action_name = None;
+            self.confirmation = None;
+            self.confirmation_action = None;
+            self.record_action_feedback(format!("{} needs active tmux", action.stable_id));
+            return TmuxManagerKeyOutcome::Consumed;
+        }
         if action_needs_name(action_id) {
             self.action_input = Some(TmuxActionInputState {
                 action_id,

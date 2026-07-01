@@ -1,6 +1,7 @@
 //! Native tmux manager panel state and rendering helpers.
 
 mod actions;
+mod availability;
 mod enter_action;
 mod hints;
 mod initial_action;
