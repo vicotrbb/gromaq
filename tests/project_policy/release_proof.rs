@@ -286,6 +286,16 @@ fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
     assert!(stale_check < window_smoke);
     assert!(runtime_tmux_ui_smoke < interactive_launch);
     assert!(window_smoke < runtime_tmux_ui_smoke);
+
+    let summary_window_smoke = proof_script
+        .find("tmux-default-cargo-run-window-smoke.stdout: ${window_smoke_stdout_path}")
+        .unwrap();
+    assert!(
+        proof_script[summary_window_smoke..].contains(
+            "grep -F \"tmux status pane command rendered: true\" \"${window_smoke_stdout_path}\""
+        ),
+        "default cargo-run proof summary must surface the active-pane window-smoke line"
+    );
 }
 
 #[test]
