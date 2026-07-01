@@ -41,6 +41,21 @@ pub(super) fn drive_attach_session_handoff(runtime: &mut super::SmokeRuntime) ->
     ) && after == before + 1
 }
 
+pub(super) fn drive_detach_session_failure(
+    runtime: &mut super::SmokeRuntime,
+    runner: &SocketTmuxCommandRunner,
+) -> bool {
+    let requested =
+        runtime.handle_tmux_manager_key(&Key::Character("d".into()), ModifiersState::empty());
+    matches!(
+        runtime.dispatch_tmux_manager_action(requested, runner),
+        Some(TmuxActionResult::CommandFailed {
+            action_id: ActionId::DetachSession,
+            ..
+        })
+    )
+}
+
 pub(super) fn drive_select_pane_shortcut(
     runtime: &mut super::SmokeRuntime,
     runner: &SocketTmuxCommandRunner,

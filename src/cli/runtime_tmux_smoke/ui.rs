@@ -1,22 +1,22 @@
 //! Native tmux manager UI runtime smoke.
 
 mod cleanup;
+mod confirmation;
 mod mouse;
 mod pty;
 mod render;
 mod shortcuts;
 mod workspace;
 
-use winit::keyboard::{Key, ModifiersState, NamedKey};
-
-use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig, TmuxManagerKeyOutcome};
+use crate::app::{NativeTerminalRuntime, NativeTerminalRuntimeConfig};
 use crate::cli::CliExit;
 use crate::renderer::{RendererConfig, WgpuRenderer};
 use crate::tmux::{
-    ActionId, SocketTmuxCommandRunner, SystemTmuxCommandRunner, TmuxActionResult,
-    TmuxCommandRunner, TmuxManager, TmuxProbe, TmuxStateReader,
+    SocketTmuxCommandRunner, SystemTmuxCommandRunner, TmuxCommandRunner, TmuxManager, TmuxProbe,
+    TmuxStateReader,
 };
 use cleanup::TmuxUiSmokeCleanup;
+use confirmation::{drive_confirmation_cancel, drive_safe_action};
 use mouse::{drive_mouse_action_selection, drive_mouse_focus, drive_mouse_workspace_selection};
 use pty::{TmuxUiSmokePtySession, TmuxUiSmokePtySpawner};
 use render::{
@@ -25,10 +25,11 @@ use render::{
 };
 use shortcuts::{
     drive_attach_session_handoff, drive_destructive_shortcut_confirmation,
-    drive_kill_pane_confirmation, drive_kill_window_confirmation, drive_name_entry_action,
-    drive_refresh_shortcut, drive_rename_session_action, drive_rename_window_action,
-    drive_select_pane_shortcut, drive_shortcut_action, drive_split_down_shortcut,
-    drive_unavailable_shortcut_block, drive_window_cycle_shortcuts, drive_zoom_shortcut,
+    drive_detach_session_failure, drive_kill_pane_confirmation, drive_kill_window_confirmation,
+    drive_name_entry_action, drive_refresh_shortcut, drive_rename_session_action,
+    drive_rename_window_action, drive_select_pane_shortcut, drive_shortcut_action,
+    drive_split_down_shortcut, drive_unavailable_shortcut_block, drive_window_cycle_shortcuts,
+    drive_zoom_shortcut,
 };
 use workspace::{docs_workspace_preset, run_workspace_proof, workspace_preset};
 
@@ -42,8 +43,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     if !probe.installed {
         return CliExit {
             code: 0,
-            stdout: "runtime tmux ui smoke: ok\ntmux available: false\nskipped: tmux not found on PATH\n"
-                .to_owned(),
+            stdout: "runtime tmux ui smoke: ok\ntmux available: false\nskipped: tmux not found on PATH\n".to_owned(),
             stderr: String::new(),
         };
     }
@@ -91,6 +91,9 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     let split_down_shortcut_checked = drive_split_down_shortcut(&mut runtime, &runner);
     let safe_action_dispatched = drive_safe_action(&mut runtime, &runner);
     let attach_session_pty_handoff_checked = drive_attach_session_handoff(&mut runtime);
+    let detach_session_failure_feedback_checked =
+        drive_detach_session_failure(&mut runtime, &runner)
+            && render_manager_panel_contains(&mut runtime, &mut renderer, "detach-sessionfailed");
     let rename_window_dispatched = drive_rename_window_action(&mut runtime, &runner);
     let rename_session_dispatched = drive_rename_session_action(
         &mut runtime,
@@ -135,7 +138,7 @@ pub(in crate::cli) fn runtime_tmux_ui_smoke_exit() -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nwindow cycle shortcuts checked: {window_cycle_shortcuts_checked}\nzoom shortcut checked: {zoom_shortcut_checked}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsplit down shortcut checked: {split_down_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nattach session pty handoff checked: {attach_session_pty_handoff_checked}\nrename window action dispatched: {rename_window_dispatched}\nrename session action dispatched: {rename_session_dispatched}\nkill pane confirmation dispatched: {kill_pane_confirmation_dispatched}\nkill window confirmation dispatched: {kill_window_confirmation_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
+            "runtime tmux ui smoke: ok\ntmux available: true\nsocket: {socket}\nsession: {UI_SESSION}\nmanager panel opened: {manager_opened}\nstatus strip rendered: {status_rendered}\nmanager panel rendered: {manager_rendered}\nstartup manager after shell prompt checked: {startup_manager_after_shell_prompt_checked}\nconfirmation path checked: {confirmation_checked}\ncancellation feedback checked: {cancellation_feedback_checked}\ndestructive shortcut checked: {destructive_shortcut_checked}\nunavailable shortcut blocked: {unavailable_shortcut_blocked}\nmouse focus checked: {mouse_focus_checked}\nmouse action selection checked: {mouse_action_selection_checked}\nmouse workspace selection checked: {mouse_workspace_selection_checked}\nrefresh shortcut requested: {refresh_shortcut_requested}\nshortcut action dispatched: {shortcut_action_dispatched}\nwindow cycle shortcuts checked: {window_cycle_shortcuts_checked}\nzoom shortcut checked: {zoom_shortcut_checked}\nselect pane shortcut checked: {select_pane_shortcut_checked}\nsplit down shortcut checked: {split_down_shortcut_checked}\nsafe action dispatched: {safe_action_dispatched}\nattach session pty handoff checked: {attach_session_pty_handoff_checked}\ndetach session failure feedback checked: {detach_session_failure_feedback_checked}\nrename window action dispatched: {rename_window_dispatched}\nrename session action dispatched: {rename_session_dispatched}\nkill pane confirmation dispatched: {kill_pane_confirmation_dispatched}\nkill window confirmation dispatched: {kill_window_confirmation_dispatched}\nname entry action dispatched: {name_entry_dispatched}\nworkspace launch: {workspace_launch}\nworkspace feedback checked: {}\nworkspace duplicate prevented: {}\nstate reader observed session: {observed_session}\nstate sessions: {}\nstate windows: {}\nstate panes: {}\ncleanup killed session: {cleanup_ok}\n",
             workspace_result.feedback_checked,
             workspace_result.duplicate_prevented,
             state.sessions.len(),
@@ -170,45 +173,4 @@ fn ui_failure(message: String) -> CliExit {
         stdout: String::new(),
         stderr: format!("runtime tmux ui smoke failed: {message}\n"),
     }
-}
-
-fn drive_confirmation_cancel(runtime: &mut SmokeRuntime) -> bool {
-    for key in [
-        Key::Named(NamedKey::ArrowRight),
-        Key::Named(NamedKey::ArrowRight),
-        Key::Named(NamedKey::ArrowRight),
-        Key::Named(NamedKey::ArrowRight),
-        Key::Named(NamedKey::ArrowDown),
-    ] {
-        if matches!(
-            runtime.handle_tmux_manager_key(&key, ModifiersState::empty()),
-            TmuxManagerKeyOutcome::Ignored
-        ) {
-            return false;
-        }
-    }
-    let confirmation =
-        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
-    let canceled =
-        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Escape), ModifiersState::empty());
-    matches!(
-        confirmation,
-        TmuxManagerKeyOutcome::ConfirmationRequired(ActionId::KillWindow)
-    ) && matches!(canceled, TmuxManagerKeyOutcome::Consumed)
-}
-
-fn drive_safe_action(runtime: &mut SmokeRuntime, runner: &SocketTmuxCommandRunner) -> bool {
-    let previous_action =
-        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::ArrowUp), ModifiersState::empty());
-    let requested =
-        runtime.handle_tmux_manager_key(&Key::Named(NamedKey::Enter), ModifiersState::empty());
-    let result = runtime.dispatch_tmux_manager_action(requested, runner);
-    !matches!(previous_action, TmuxManagerKeyOutcome::Ignored)
-        && matches!(
-            result,
-            Some(TmuxActionResult::Success {
-                action_id: ActionId::SplitPaneRight,
-                ..
-            })
-        )
 }
