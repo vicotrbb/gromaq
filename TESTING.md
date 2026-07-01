@@ -110,6 +110,11 @@ so stale pre-tmux startup copy cannot satisfy the default-startup proof. The
 live screenshot capture also samples tmux ANSI-14 accent pixels from the PNG
 and rejects captures below `GROMAQ_SCREENSHOT_MIN_TMUX_PIXELS`, so a generic
 terminal background cannot satisfy the tmux UI proof by itself.
+The packaged app-identity proof summary includes the
+`LaunchServices smoke stdout` artifact and repeats
+`window screenshot smoke: ok` plus the current tmux startup markers so reviewers
+can inspect the app-bundle render proof from
+`target/macos-app-identity-proof/summary.txt`.
 
 For native tmux manager app-window proof, use an isolated tmux target and record
 the exact result. The required manual checklist is:
