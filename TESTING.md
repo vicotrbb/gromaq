@@ -120,6 +120,9 @@ proof retries. The manual tmux harnesses retry only transient `surface occluded`
 or `no surface frame was presented` failures and still fail immediately for
 other command errors or missing proof lines. They record each bounded native
 window attempt in `native-window-proof-attempts.txt` under the proof root.
+Both manual tmux harnesses also write `manual-checklist.txt` before the live
+window phase so the exact expected tokens and target session names remain
+available outside the app window.
 
 `scripts/prove-macos-native-tmux-default-cargo-run.sh` opens the default app
 path through plain `cargo run`, matching the no-argument developer workflow. It

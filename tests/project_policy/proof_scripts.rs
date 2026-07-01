@@ -209,6 +209,10 @@ fn native_tmux_manual_proofs_retry_transient_surface_occlusion() {
             "native-window-proof-attempts.txt",
             "native window proof attempts:",
             "native window proof attempt log:",
+            "manual-checklist.txt",
+            "manual checklist:",
+            "native-control-plane",
+            "right-prompt-legible",
         ] {
             assert!(
                 source.contains(marker),

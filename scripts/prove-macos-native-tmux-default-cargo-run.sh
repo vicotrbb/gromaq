@@ -59,6 +59,7 @@ manager_reference_stdout_path="${proof_root}/tmux-default-cargo-run-manager-refe
 manager_reference_stderr_path="${proof_root}/tmux-default-cargo-run-manager-reference.stderr"
 native_window_proof_attempts="${GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS:-3}"
 native_window_attempt_log_path="${proof_root}/native-window-proof-attempts.txt"
+manual_checklist_path="${proof_root}/manual-checklist.txt"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -237,6 +238,28 @@ if command -v sips >/dev/null 2>&1; then
   sips -s format png "${manager_reference_ppm_path}" --out "${manager_reference_png_path}" >/dev/null
 fi
 
+cat > "${manual_checklist_path}" <<EOF
+macOS native tmux default cargo run checklist
+target session: ${session}
+expected started session: ${started_session}
+disposable kill target: ${kill_session}
+
+- The welcome Input row says '${startup_marker}', not the old keyboard/mouse/paste copy. Type exactly: current-startup-copy
+- Persistent tmux status strip is visible and legible. Type exactly: status-strip-visible
+- If the manager is already visible on startup, close it with Esc.
+- Control/Super Shift+T opens or reopens a real manager panel, not a tiny hint. Type exactly: manager-visible
+- Sessions, windows, panes, current target, and pane command text are visible. Type exactly: state-visible
+- Keyboard navigation changes selection. Type exactly: navigation-checked
+- Start a new tmux session named ${started_session} from the UI. Type exactly: start-session
+- Attach ${session} from the UI, then run a safe split-pane action. Type exactly: attach-session and safe-action
+- Create a tmux window from the UI. Type exactly: new-window
+- A destructive action shows inline confirmation before running. Type exactly: destructive-confirmation
+- Confirm a kill-session action only against ${kill_session}. Type exactly: isolated-kill-confirmed
+- Close the panel and verify normal shell input still reaches the prompt. Type exactly: shell-input
+- Check prompt/right-prompt layout for legible overlap behavior. Type exactly: right-prompt-legible
+- Confirm the UI felt like native terminal control, not web UI. Type exactly: native-control-plane
+EOF
+
 if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux default cargo run preflight: ok"
@@ -246,6 +269,8 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "git branch: ${git_branch}"
     printf '%s\n' "git dirty: ${git_dirty}"
     printf '%s\n' "git-status.txt: ${git_status_path}"
+    printf '%s\n' "manual checklist: ${manual_checklist_path}"
+    printf '%s\n' "manual-checklist.txt: ${manual_checklist_path}"
     printf '%s\n' "debug binary: ${binary_path}"
     printf '%s\n' "session: ${session}"
     printf '%s\n' "tmux-default-cargo-run-initial-windows.txt: ${initial_windows_path}"
@@ -291,6 +316,7 @@ printf '%s\n' "Expected manager reference snapshot: ${manager_reference_ppm_path
 if [ -f "${manager_reference_png_path}" ]; then
   printf '%s\n' "Expected manager reference PNG: ${manager_reference_png_path}"
 fi
+printf '%s\n' "Manual checklist: ${manual_checklist_path}"
 printf '%s\n' "A default Gromaq window will open through plain cargo run."
 printf '%s\n' "In that window, verify the native tmux UI against the checklist below."
 printf '%s\n' "Close the Gromaq window when the checklist is complete; this script will then ask for exact confirmation tokens."
@@ -395,6 +421,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "git branch: ${git_branch}"
   printf '%s\n' "git dirty: ${git_dirty}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
+  printf '%s\n' "manual checklist: ${manual_checklist_path}"
+  printf '%s\n' "manual-checklist.txt: ${manual_checklist_path}"
   printf '%s\n' "debug binary: ${binary_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "tmux-default-cargo-run-initial-windows.txt: ${initial_windows_path}"

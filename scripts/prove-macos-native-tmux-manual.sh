@@ -64,6 +64,7 @@ manager_reference_stdout_path="${proof_root}/tmux-manager-reference.stdout"
 manager_reference_stderr_path="${proof_root}/tmux-manager-reference.stderr"
 native_window_proof_attempts="${GROMAQ_NATIVE_WINDOW_PROOF_ATTEMPTS:-3}"
 native_window_attempt_log_path="${proof_root}/native-window-proof-attempts.txt"
+manual_checklist_path="${proof_root}/manual-checklist.txt"
 
 case "${open_manager_on_start}" in
   true | false) ;;
@@ -260,6 +261,32 @@ if command -v sips >/dev/null 2>&1; then
   sips -s format png "${manager_reference_ppm_path}" --out "${manager_reference_png_path}" >/dev/null
 fi
 
+cat > "${manual_checklist_path}" <<EOF
+macOS native tmux manual checklist
+launch mode: ${launch_mode}
+open manager on start: ${open_manager_on_start}
+target session: ${session}
+disposable kill target: ${kill_session}
+workspace preset session: ${workspace_session}
+expected started session: ${started_session}
+
+- Confirm the persistent tmux status strip is visible. Type exactly: status-strip-visible
+- Press Control/Super Shift+T if the manager is closed, then confirm the real manager is visible. Type exactly: manager-visible
+- Confirm the manager is a real panel, not a tiny hint or palette. Type exactly: not-hint
+- Confirm sessions/windows/panes/current target/pane command text are visible. Type exactly: state-visible
+- Navigate with arrows or h/j/k/l and click at least one session/window/pane/action/workspace row. Type exactly: navigation-checked
+- Verify prompt/right-prompt layout remains legible with the tmux surfaces visible. Type exactly: right-prompt-legible
+- Confirm the UI feels like native terminal control, not web UI. Type exactly: native-control-plane
+- Start a tmux session named ${started_session} from the UI. Type exactly: start-session
+- Attach ${session} from the UI so active-target actions can run. Type exactly: attach-session
+- Run one safe split-pane action from the UI. Type exactly: safe-action
+- Create a tmux window from the UI. Type exactly: new-window
+- Press r and verify the manager refreshes without sending shell input. Type exactly: refresh-checked
+- Use q to run kill-session, verify inline confirmation appears, and only confirm against ${kill_session}. Type exactly: destructive-confirmation
+- Launch the configured workspace preset and verify it is listed with root/windows summary. Type exactly: workspace-launched
+- Close the manager and verify normal shell input still reaches this prompt. Type exactly: normal-shell-input
+EOF
+
 if [ "${preflight_only}" = "true" ]; then
   {
     printf '%s\n' "macOS native tmux manual preflight: ok"
@@ -274,6 +301,8 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "git branch: ${git_branch}"
     printf '%s\n' "git dirty: ${git_dirty}"
     printf '%s\n' "git-status.txt: ${git_status_path}"
+    printf '%s\n' "manual checklist: ${manual_checklist_path}"
+    printf '%s\n' "manual-checklist.txt: ${manual_checklist_path}"
     printf '%s\n' "tmux-binary-markers.txt: ${startup_marker}"
     printf '%s\n' "tmux-window-smoke.stdout: ${window_smoke_stdout_path}"
     printf '%s\n' "tmux-window-smoke.stderr: ${window_smoke_stderr_path}"
@@ -408,6 +437,7 @@ printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "Workspace preset session: ${workspace_session}"
 printf '%s\n' "Expected started session: ${started_session}"
+printf '%s\n' "Manual checklist: ${manual_checklist_path}"
 printf '%s\n' "A Gromaq window will open with tmux UI enabled and open_manager_on_start=${open_manager_on_start}."
 printf '%s\n' "Follow the prompts inside the Gromaq terminal window exactly."
 
@@ -553,6 +583,8 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   printf '%s\n' "git branch: ${git_branch}"
   printf '%s\n' "git dirty: ${git_dirty}"
   printf '%s\n' "git-status.txt: ${git_status_path}"
+  printf '%s\n' "manual checklist: ${manual_checklist_path}"
+  printf '%s\n' "manual-checklist.txt: ${manual_checklist_path}"
   printf '%s\n' "tmux-binary-markers.txt: ${startup_marker}"
   printf '%s\n' "tmux-window-smoke.stdout: ${window_smoke_stdout_path}"
   printf '%s\n' "tmux-window-smoke.stderr: ${window_smoke_stderr_path}"
