@@ -217,6 +217,10 @@ run_native_window_proof_with_retry \
   "${window_smoke_stderr_path}" \
   "${executable}" --window-smoke
 
+if ! grep -F "terminal cells:" "${window_smoke_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: selected executable window smoke did not report terminal cells." >&2
+  exit 1
+fi
 if ! grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}" >/dev/null; then
   printf '%s\n' "error: selected executable window smoke did not render the tmux status strip." >&2
   exit 1
@@ -320,6 +324,7 @@ if [ "${preflight_only}" = "true" ]; then
     printf '%s\n' "native window proof attempts: ${native_window_proof_attempts}"
     printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
     printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
+    grep -F "terminal cells:" "${window_smoke_stdout_path}"
     grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
     grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
@@ -604,6 +609,7 @@ printf '%s\n' "true" > "${workspace_exists_path}"
   printf '%s\n' "native window proof attempts: ${native_window_proof_attempts}"
   printf '%s\n' "native window proof attempt log: ${native_window_attempt_log_path}"
   printf '%s\n' "native-window-proof-attempts.txt: ${native_window_attempt_log_path}"
+  grep -F "terminal cells:" "${window_smoke_stdout_path}"
   grep -F "tmux status strip rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux status pane command rendered: true" "${window_smoke_stdout_path}"
   grep -F "tmux manager panel rendered: true" "${window_smoke_stdout_path}"
