@@ -69,5 +69,8 @@ pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
     if snapshot.current.is_none() {
         return "Outside tmux; Enter attach-session | r refresh | ? help | Esc close".to_owned();
     }
-    format!("Shortcuts {} | Esc close", super::input::shortcut_hint())
+    format!(
+        "Shortcuts ? help | r refresh | Esc close | {}",
+        super::input::shortcut_hint()
+    )
 }

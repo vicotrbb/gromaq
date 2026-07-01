@@ -65,6 +65,31 @@ fn native_terminal_runtime_renders_help_shortcut_hint() {
     assert!(shortcut_line.contains("q kill-session"), "{shortcut_line}");
 }
 
+#[test]
+fn native_terminal_runtime_keeps_attached_shortcut_controls_visible_when_narrow() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 96,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = manager_snapshot();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let shortcut_line = &renderer.frames.last().unwrap().lines[7];
+    assert!(shortcut_line.contains("? help"), "{shortcut_line}");
+    assert!(shortcut_line.contains("r refresh"), "{shortcut_line}");
+    assert!(shortcut_line.contains("Esc close"), "{shortcut_line}");
+}
+
 fn manager_snapshot() -> TmuxManagerSnapshot {
     TmuxManagerSnapshot {
         status: TmuxManagerStatus::Available,

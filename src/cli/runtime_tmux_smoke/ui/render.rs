@@ -100,6 +100,9 @@ pub(super) fn render_manager_state(
         && text.contains(&format!("{}:{}", window.index, window.name))
         && text.contains("Panes")
         && text.contains(&pane.id)
+        && text.contains("?help")
+        && text.contains("rrefresh")
+        && text.contains("Escclose")
         && (pane.current_command.is_empty() || text.contains(&pane.current_command))
 }
 
