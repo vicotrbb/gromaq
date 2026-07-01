@@ -42,6 +42,7 @@ run_step "theme preview proof" scripts/prove-theme-preview.sh
 run_step "avatar asset freshness proof" node images/avatar/generate.mjs --check
 run_step "welcome preview proof" scripts/prove-welcome-preview.sh
 run_step "README welcome preview freshness proof" scripts/prove-readme-welcome-preview.sh
+run_step "native tmux default snapshot proof" scripts/prove-native-tmux-default-snapshot.sh
 run_step "GPU welcome image snapshot proof" \
   cargo run -- --welcome-image-snapshot "${proof_dir}/gromaq-welcome-image.ppm"
 run_step "GPU terminal text smoke" cargo run -- --gpu-terminal-text-smoke
@@ -56,5 +57,6 @@ run_step "parser benchmark inventory" cargo bench --bench parser_throughput -- -
   printf '%s\n' "Theme proof summary: ${root}/target/theme-preview-proof/summary.txt"
   printf '%s\n' "Welcome proof summary: ${root}/target/welcome-preview-proof/summary.txt"
   printf '%s\n' "README welcome proof summary: ${root}/target/readme-welcome-preview-proof/summary.txt"
+  printf '%s\n' "Native tmux default snapshot proof summary: ${root}/target/native-tmux-default-snapshot-proof/summary.txt"
   printf '%s\n' "Compatibility proof summary: ${root}/target/compatibility-proof/summary.txt"
 } | tee "${summary_path}"
