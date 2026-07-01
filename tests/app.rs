@@ -14,6 +14,8 @@ mod rendering_tmux;
 mod rendering_tmux_actions;
 #[path = "app/rendering_tmux_empty.rs"]
 mod rendering_tmux_empty;
+#[path = "app/rendering_tmux_panes.rs"]
+mod rendering_tmux_panes;
 #[path = "app/runtime_core/mod.rs"]
 mod runtime_core;
 #[path = "app/runtime_input.rs"]

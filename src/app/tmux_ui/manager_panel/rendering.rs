@@ -143,7 +143,11 @@ fn action_row(panel: &TmuxManagerPanelState) -> String {
 }
 
 fn pane_label(pane: &TmuxPane, selected: bool) -> String {
-    let mut command = pane.current_command.clone();
+    let mut command = if pane.title.is_empty() || pane.title == pane.current_command {
+        pane.current_command.clone()
+    } else {
+        format!("{}:{}", pane.title, pane.current_command)
+    };
     if selected {
         command.push('*');
     }

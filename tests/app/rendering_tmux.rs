@@ -221,7 +221,7 @@ fn native_terminal_runtime_renders_compact_tmux_manager_panel() {
     assert!(frame.lines[2].contains("tmux manager"));
     assert!(frame.lines[3].contains("Sessions alpha* beta"));
     assert!(frame.lines[4].contains("Windows 0:shell 1:code*"));
-    assert!(frame.lines[5].contains("Panes %1 zsh 100x30 %2 nvim* 100x30"));
+    assert!(frame.lines[5].contains("Panes %1 shell:zsh 100x30 %2 editor:nvim* 100x30"));
     assert!(frame.lines[6].contains("Enter split-pane-right"));
     assert!(frame.lines[6].contains("Ctrl-b %"));
     assert!(frame.lines[7].contains("confirm kill-window with y"));
