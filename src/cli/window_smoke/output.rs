@@ -70,6 +70,21 @@ pub(super) fn window_smoke_no_default_tmux_ui_failure(report: &NativeAppRunRepor
     }
 }
 
+pub(super) fn window_screenshot_smoke_no_default_tmux_ui_failure(
+    report: &NativeAppRunReport,
+) -> CliExit {
+    CliExit {
+        code: 1,
+        stdout: String::new(),
+        stderr: format!(
+            "window screenshot smoke failed: default tmux UI was not rendered; default startup content checked: {}; tmux status strip rendered: {}; tmux manager panel rendered: {}\n",
+            report.default_startup_content_checked,
+            report.tmux_status_strip_rendered,
+            report.tmux_manager_panel_rendered
+        ),
+    }
+}
+
 pub(super) fn window_glyph_frame_snapshot_success(
     path: &str,
     report: &NativeAppRunReport,

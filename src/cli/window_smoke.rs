@@ -12,7 +12,8 @@ use launch_config::{
 };
 use output::{
     window_glyph_frame_snapshot_failure, window_glyph_frame_snapshot_success,
-    window_perf_no_glyph_failure, window_perf_success, window_screenshot_smoke_success,
+    window_perf_no_glyph_failure, window_perf_success,
+    window_screenshot_smoke_no_default_tmux_ui_failure, window_screenshot_smoke_success,
     window_smoke_no_default_tmux_ui_failure, window_smoke_no_surface_failure, window_smoke_success,
     window_tmux_manager_snapshot_failure, window_tmux_manager_snapshot_success,
 };
@@ -46,6 +47,9 @@ where
             } else if command == CliCommand::WindowScreenshotSmoke {
                 if report.frames_presented == 0 {
                     window_smoke_no_surface_failure(&report)
+                } else if !report.tmux_status_strip_rendered || !report.tmux_manager_panel_rendered
+                {
+                    window_screenshot_smoke_no_default_tmux_ui_failure(&report)
                 } else {
                     window_screenshot_smoke_success(&report, frame_limit)
                 }

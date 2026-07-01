@@ -146,3 +146,22 @@ fn window_screenshot_smoke_keeps_native_terminal_window_alive_for_capture() {
     assert_eq!(launch.config_path, None);
     assert!(backend.requests.borrow().is_empty());
 }
+
+#[test]
+fn window_screenshot_smoke_fails_when_tmux_ui_is_not_rendered() {
+    let backend = MockBackend {
+        requests: RefCell::new(Vec::new()),
+    };
+    let app = NoTmuxUiFrameAppLauncher;
+
+    let exit = run_with_backend_and_app(["gromaq", "--window-screenshot-smoke"], &backend, &app);
+
+    assert_eq!(exit.code, 1);
+    assert!(exit.stdout.is_empty());
+    assert!(
+        exit.stderr.contains(
+            "window screenshot smoke failed: default tmux UI was not rendered; default startup content checked: false; tmux status strip rendered: false; tmux manager panel rendered: false"
+        )
+    );
+    assert!(backend.requests.borrow().is_empty());
+}
