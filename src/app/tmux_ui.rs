@@ -62,6 +62,9 @@ impl TmuxUiSnapshot {
     fn status_line(&self) -> String {
         let mut parts = vec![format!("tmux: {}", self.status_label())];
         parts.push("manager Cmd/Ctrl+Shift+T".to_owned());
+        if let Some(guidance) = self.status_guidance() {
+            parts.push(guidance.to_owned());
+        }
         push_optional(&mut parts, self.current_session.as_deref());
         push_optional(&mut parts, self.current_window.as_deref());
         if let Some(pane_count) = self.pane_count {
@@ -83,6 +86,15 @@ impl TmuxUiSnapshot {
             parts.push(format!("windows {}", self.visible_windows.join(" ")));
         }
         parts.join(" | ")
+    }
+
+    fn status_guidance(&self) -> Option<&'static str> {
+        match self.status {
+            TmuxStatusKind::Missing => Some("install tmux"),
+            TmuxStatusKind::NoServer => Some("start session"),
+            TmuxStatusKind::Detached => Some("attach session"),
+            TmuxStatusKind::Disabled | TmuxStatusKind::Attached => None,
+        }
     }
 }
 

@@ -83,6 +83,31 @@ fn retained_tmux_status_strip_renders_when_viewport_has_no_blank_row() {
 }
 
 #[test]
+fn status_strip_teaches_missing_no_server_and_detached_next_steps() {
+    for (snapshot, expected) in [
+        (empty_status(TmuxStatusKind::Missing), "install tmux"),
+        (empty_status(TmuxStatusKind::NoServer), "start session"),
+        (detached_snapshot(), "attach session"),
+    ] {
+        let mut runtime =
+            NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+                terminal_cols: 96,
+                terminal_rows: 3,
+                ..NativeTerminalRuntimeConfig::default()
+            })
+            .unwrap();
+        runtime.write_startup_text("> ").unwrap();
+        runtime.set_tmux_status_snapshot(snapshot);
+        let mut renderer = MockFrameRenderer::default();
+
+        assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+        let strip = &renderer.frames.last().unwrap().lines[2];
+        assert!(strip.contains(expected), "{strip}");
+    }
+}
+
+#[test]
 fn hidden_tmux_status_strip_still_allows_retained_manager_panel() {
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
         terminal_cols: 96,
@@ -120,6 +145,34 @@ fn attached_snapshot() -> TmuxUiSnapshot {
         pane_count: Some(3),
         active_pane_id: Some("%2".to_owned()),
         active_pane_command: Some("nvim".to_owned()),
+        pending_feedback: None,
+        confirmation_feedback: None,
+    }
+}
+
+fn detached_snapshot() -> TmuxUiSnapshot {
+    TmuxUiSnapshot {
+        status: TmuxStatusKind::Detached,
+        current_session: Some("alpha".to_owned()),
+        current_window: Some("1:code".to_owned()),
+        visible_windows: vec!["0:shell".to_owned(), "1:code*".to_owned()],
+        pane_count: Some(2),
+        active_pane_id: Some("%2".to_owned()),
+        active_pane_command: Some("nvim".to_owned()),
+        pending_feedback: None,
+        confirmation_feedback: None,
+    }
+}
+
+fn empty_status(status: TmuxStatusKind) -> TmuxUiSnapshot {
+    TmuxUiSnapshot {
+        status,
+        current_session: None,
+        current_window: None,
+        visible_windows: Vec::new(),
+        pane_count: None,
+        active_pane_id: None,
+        active_pane_command: None,
         pending_feedback: None,
         confirmation_feedback: None,
     }
