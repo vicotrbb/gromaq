@@ -390,6 +390,8 @@ if [ "${preflight_only}" = "true" ]; then
 fi
 
 printf '%s\n' "incomplete" > "${live_app_window_proof_path}"
+printf '%s\n' "live app-window proof: incomplete"
+printf '%s\n' "live-app-window-proof.txt: ${live_app_window_proof_path}"
 cat > "${shell_path}" <<EOF
 #!/bin/sh
 set -eu

@@ -252,7 +252,6 @@ fn native_tmux_manual_proofs_require_startup_marker_outputs() {
         }
     }
 }
-
 #[test]
 fn ci_compatibility_artifact_proof_checks_both_host_summaries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -331,6 +330,7 @@ fn native_tmux_manual_proofs_write_live_app_window_proof_artifact() {
             "live-app-window-proof.txt:",
             "printf '%s\\n' \"not-run\" > \"${live_app_window_proof_path}\"",
             "printf '%s\\n' \"incomplete\" > \"${live_app_window_proof_path}\"",
+            "\"live app-window proof: incomplete\"",
             "printf '%s\\n' \"completed\" > \"${live_app_window_proof_path}\"",
         ] {
             assert!(

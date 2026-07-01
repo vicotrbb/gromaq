@@ -358,6 +358,8 @@ fi
 
 printf '%s\n' "incomplete" > "${live_app_window_proof_path}"
 printf '%s\n' "macOS native tmux default cargo run proof"
+printf '%s\n' "live app-window proof: incomplete"
+printf '%s\n' "live-app-window-proof.txt: ${live_app_window_proof_path}"
 printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "git HEAD: ${head_sha}"
 printf '%s\n' "git branch: ${git_branch}"
