@@ -1,6 +1,13 @@
 //! User-facing tmux manager hint rows.
 
-use crate::tmux::TmuxManagerSnapshot;
+use crate::tmux::{TmuxAction, TmuxManagerSnapshot};
+
+pub(super) fn action_hint(action: &TmuxAction) -> String {
+    match action.key_binding {
+        Some(key) => format!("{} | {key}", action.tmux_command),
+        None => action.tmux_command.to_owned(),
+    }
+}
 
 pub(super) fn hint_row(snapshot: &TmuxManagerSnapshot) -> String {
     if snapshot.state.sessions.is_empty() {

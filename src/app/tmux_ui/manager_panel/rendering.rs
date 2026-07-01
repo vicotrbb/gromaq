@@ -1,6 +1,6 @@
 //! Native tmux manager panel rendering.
 
-use super::hints::hint_row;
+use super::hints::{action_hint, hint_row};
 use super::input::panel_actions;
 use super::selection::{selected_panes, selected_windows, window_label};
 use super::state::{TmuxManagerFocus, TmuxManagerPanelState};
@@ -138,9 +138,7 @@ fn action_row(panel: &TmuxManagerPanelState) -> String {
     format!(
         "Actions | Enter {} | {} | choices {actions} | Esc close",
         selected_action.stable_id,
-        selected_action
-            .key_binding
-            .unwrap_or(selected_action.tmux_command)
+        action_hint(selected_action)
     )
 }
 

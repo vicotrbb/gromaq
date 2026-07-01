@@ -10,6 +10,8 @@ mod presentation;
 mod rendering;
 #[path = "app/rendering_tmux.rs"]
 mod rendering_tmux;
+#[path = "app/rendering_tmux_actions.rs"]
+mod rendering_tmux_actions;
 #[path = "app/rendering_tmux_empty.rs"]
 mod rendering_tmux_empty;
 #[path = "app/runtime_core/mod.rs"]
