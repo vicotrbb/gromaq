@@ -3,9 +3,11 @@
 mod current_marker;
 mod fixtures;
 mod header_status;
+mod status_guidance;
 
 pub(super) use current_marker::{render_current_pane_marker, render_current_target_row_markers};
 pub(super) use header_status::render_manager_header_status;
+pub(super) use status_guidance::render_status_guidance;
 
 use crate::app::{NativeTerminalRuntimeConfig, TmuxUiSnapshot};
 use crate::renderer::WgpuRenderer;

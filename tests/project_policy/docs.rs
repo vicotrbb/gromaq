@@ -135,6 +135,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "documentation/compatibility.md",
             "status feedback checked: true",
         ),
+        (compat, "status guidance checked: true"),
         (
             "documentation/compatibility.md",
             "target pane detail checked: true",
