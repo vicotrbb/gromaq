@@ -219,7 +219,7 @@ fn tmux_manager_panel_mouse_press_selects_clicked_workspace() {
         ],
     );
     let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 220,
+        terminal_cols: 320,
         terminal_rows: 9,
         ..NativeTerminalRuntimeConfig::default()
     })
@@ -245,8 +245,8 @@ fn tmux_manager_panel_mouse_press_selects_clicked_workspace() {
         .expect("second workspace should render");
     let command_hint_col = workspace_line
         .find("Enter start/attach")
-        .expect("workspace command hint should render after workspace labels");
-    assert!(docs_col < command_hint_col, "{workspace_line}");
+        .expect("workspace command hint should render before workspace labels");
+    assert!(command_hint_col < docs_col, "{workspace_line}");
 
     assert_eq!(
         panel.handle_mouse_event(

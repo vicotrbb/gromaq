@@ -5,7 +5,7 @@ use winit::keyboard::ModifiersState;
 use crate::app::NativeWindowMouseInput;
 use crate::{MouseButton, MouseEventKind};
 
-const SMOKE_WINDOW_WIDTH_PX: u32 = 2200;
+const SMOKE_WINDOW_WIDTH_PX: u32 = 3200;
 const SMOKE_WINDOW_HEIGHT_PX: u32 = 100;
 const SMOKE_CELL_WIDTH_PX: u16 = 10;
 const SMOKE_LINE_HEIGHT_PX: u16 = 10;
@@ -14,7 +14,7 @@ const MANAGER_WINDOW_ROW: u16 = MANAGER_START_ROW + 2;
 const MANAGER_WORKSPACE_ROW: u16 = MANAGER_START_ROW + 4;
 const MANAGER_ACTION_ROW: u16 = MANAGER_START_ROW + 5;
 const KILL_WINDOW_ACTION_COL: u16 = 90;
-const DOCS_WORKSPACE_COL: u16 = 95;
+const DOCS_WORKSPACE_COL: u16 = 240;
 
 pub(super) fn drive_mouse_focus(runtime: &mut super::SmokeRuntime) -> bool {
     send_manager_mouse_press(runtime, 1, MANAGER_WINDOW_ROW)

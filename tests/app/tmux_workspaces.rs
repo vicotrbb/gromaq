@@ -90,12 +90,7 @@ fn tmux_manager_panel_renders_workspace_preset_summary() {
             .unwrap()
     );
 
-    let frame = renderer.frames.last().unwrap();
-    let workspace_line = frame
-        .lines
-        .iter()
-        .find(|line| line.contains("Workspaces gromaq*"))
-        .expect("workspace preset row should render");
+    let workspace_line = frame_workspace_line(&renderer);
     assert!(workspace_line.contains("session gromaq"));
     assert!(workspace_line.contains("root /repo"));
     assert!(workspace_line.contains("windows code(2) test(1)"));
@@ -133,6 +128,38 @@ fn tmux_manager_panel_quotes_workspace_command_hints() {
     let workspace_line = frame_workspace_line(&renderer);
     assert!(workspace_line.contains("tmux new-session -d -s 'delta work'"));
     assert!(workspace_line.contains("tmux attach-session -t 'delta work'"));
+}
+
+#[test]
+fn tmux_manager_panel_keeps_workspace_launch_hint_visible_when_narrow() {
+    let snapshot = TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState::default(),
+        current: None,
+    };
+    let panel = TmuxManagerPanelState::open_for_snapshot_with_workspaces(
+        &snapshot,
+        vec![workspace_preset()],
+    );
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 96,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let workspace_line = frame_workspace_line(&renderer);
+    assert!(workspace_line.contains("Enter start/attach"));
+    assert!(workspace_line.contains("tmux new-session"));
+    assert!(workspace_line.contains("tmux attach-session"));
 }
 
 #[test]
@@ -301,7 +328,6 @@ fn tmux_manager_panel_workspace_launch_starts_absent_session() {
 fn workspace_preset() -> TmuxWorkspaceUiPreset {
     workspace_preset_with_session("gromaq")
 }
-
 fn workspace_preset_with_session(session: &str) -> TmuxWorkspaceUiPreset {
     TmuxWorkspaceUiPreset::new(
         "gromaq",
@@ -329,6 +355,6 @@ fn frame_workspace_line(renderer: &MockFrameRenderer) -> &str {
         .unwrap()
         .lines
         .iter()
-        .find(|line| line.contains("Workspaces gromaq*"))
+        .find(|line| line.contains("Workspaces"))
         .expect("workspace preset row should render")
 }

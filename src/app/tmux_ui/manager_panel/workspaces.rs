@@ -85,12 +85,14 @@ pub(super) fn workspace_row(panel: &TmuxManagerPanelState) -> Option<String> {
         .map(|(index, preset)| workspace_summary(preset, index == panel.selected_workspace))
         .collect::<Vec<_>>()
         .join(" ");
-    let hint = panel
-        .workspace_presets
-        .get(panel.selected_workspace)
-        .map(workspace_command_hint)
-        .unwrap_or_default();
-    Some(format!("Workspaces {presets}{hint}"))
+    let hint = selected_workspace_command_hint(panel);
+    Some(format!("Workspaces{hint} | {presets}"))
+}
+
+pub(super) fn workspace_labels_start_col(panel: &TmuxManagerPanelState) -> usize {
+    format!("Workspaces{} | ", selected_workspace_command_hint(panel))
+        .chars()
+        .count()
 }
 
 pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) -> String {
@@ -107,6 +109,14 @@ pub(super) fn workspace_summary(preset: &TmuxWorkspaceUiPreset, selected: bool) 
         "{}{marker} session {} root {root} windows {windows}",
         preset.key, preset.settings.session
     )
+}
+
+fn selected_workspace_command_hint(panel: &TmuxManagerPanelState) -> String {
+    panel
+        .workspace_presets
+        .get(panel.selected_workspace)
+        .map(workspace_command_hint)
+        .unwrap_or_default()
 }
 
 fn workspace_command_hint(preset: &TmuxWorkspaceUiPreset) -> String {

@@ -186,7 +186,7 @@ type SmokeRuntime = NativeTerminalRuntime<TmuxUiSmokePtySession>;
 
 fn smoke_runtime() -> Result<SmokeRuntime, String> {
     let mut runtime = SmokeRuntime::new(NativeTerminalRuntimeConfig {
-        terminal_cols: 220,
+        terminal_cols: 320,
         terminal_rows: 10,
         ..NativeTerminalRuntimeConfig::default()
     })
