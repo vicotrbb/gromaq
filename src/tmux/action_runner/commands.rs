@@ -27,7 +27,7 @@ pub(super) fn command_args(request: &TmuxActionRequest) -> Result<Vec<String>, S
         ActionId::RenameWindow => vec!["rename-window".into(), "-t".into(), target()?, name()?],
         ActionId::NextWindow => vec!["next-window".into()],
         ActionId::PreviousWindow => vec!["previous-window".into()],
-        ActionId::ZoomPane => vec!["resize-pane".into(), "-Z".into()],
+        ActionId::ZoomPane => zoom_args(request.target.clone()),
         ActionId::SelectPane => vec!["select-pane".into(), "-t".into(), target()?],
         ActionId::KillPane => vec!["kill-pane".into(), "-t".into(), target()?],
         ActionId::KillWindow => vec!["kill-window".into(), "-t".into(), target()?],
@@ -52,6 +52,14 @@ fn new_window_args(target: Option<String>, name: Option<String>) -> Vec<String> 
     }
     if let Some(name) = name {
         args.extend(["-n".into(), name]);
+    }
+    args
+}
+
+fn zoom_args(target: Option<String>) -> Vec<String> {
+    let mut args = vec!["resize-pane".into(), "-Z".into()];
+    if let Some(target) = target {
+        args.extend(["-t".into(), target]);
     }
     args
 }

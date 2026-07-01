@@ -56,3 +56,5 @@ mod tmux_ui_startup;
 mod tmux_workspace_runtime;
 #[path = "app/tmux_workspaces.rs"]
 mod tmux_workspaces;
+#[path = "app/tmux_zoom_action.rs"]
+mod tmux_zoom_action;
