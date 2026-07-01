@@ -1,5 +1,6 @@
 //! Shortcut dispatch proof helpers for the native tmux UI smoke.
 
+mod detach;
 mod missing;
 mod name_entry;
 mod split;
@@ -10,6 +11,7 @@ use winit::keyboard::{Key, ModifiersState, NamedKey};
 use crate::app::TmuxManagerKeyOutcome;
 use crate::tmux::{ActionId, SocketTmuxCommandRunner, TmuxActionResult, TmuxManagerSnapshot};
 
+pub(super) use detach::drive_detach_session_shortcut;
 pub(super) use missing::drive_missing_tmux_feedback;
 pub(super) use name_entry::{
     drive_name_entry_action, drive_rename_session_action, drive_rename_window_action,

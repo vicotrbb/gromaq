@@ -91,6 +91,10 @@ fn runtime_tmux_ui_smoke_cli_reports_native_manager_ui_proof_or_clean_skip() {
             exit.stdout
                 .contains("detach session failure feedback checked: true")
         );
+        assert!(
+            exit.stdout
+                .contains("detach session shortcut checked: true")
+        );
         assert!(exit.stdout.contains("tmux missing feedback checked: true"));
         assert!(
             exit.stdout
