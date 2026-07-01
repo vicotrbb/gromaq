@@ -30,7 +30,35 @@ fn native_terminal_runtime_renders_empty_tmux_manager_start_session_affordance()
     assert!(frame.lines[4].contains("Windows none"));
     assert!(frame.lines[5].contains("Panes none"));
     assert!(frame.lines[6].contains("Enter start-session"));
-    assert!(frame.lines[7].contains("create a tmux session"));
+    assert!(frame.lines[7].contains("tmux new-session -d -s <session>"));
+    assert!(frame.lines[7].contains("Enter start-session to create"));
+}
+
+#[test]
+fn native_terminal_runtime_renders_outside_tmux_attach_command_hint() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 128,
+        terminal_rows: 8,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let snapshot = detached_manager_snapshot();
+    let panel = TmuxManagerPanelState::open_for_snapshot(&snapshot);
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(
+        runtime
+            .render_terminal_frame_with_tmux_manager_panel(&mut renderer, &snapshot, &panel)
+            .unwrap()
+    );
+
+    let hint_line = &renderer.frames.last().unwrap().lines[7];
+    assert!(hint_line.contains("Outside tmux"), "{hint_line}");
+    assert!(
+        hint_line.contains("tmux attach-session -t <session>"),
+        "{hint_line}"
+    );
 }
 
 #[test]
@@ -81,6 +109,21 @@ fn missing_manager_snapshot() -> TmuxManagerSnapshot {
         status: TmuxManagerStatus::Missing,
         state: TmuxState {
             sessions: Vec::new(),
+            windows: Vec::new(),
+            panes: Vec::new(),
+        },
+        current: None,
+    }
+}
+
+fn detached_manager_snapshot() -> TmuxManagerSnapshot {
+    TmuxManagerSnapshot {
+        status: TmuxManagerStatus::Available,
+        state: TmuxState {
+            sessions: vec![gromaq::tmux::TmuxSession {
+                name: "alpha".to_owned(),
+                attached: false,
+            }],
             windows: Vec::new(),
             panes: Vec::new(),
         },
