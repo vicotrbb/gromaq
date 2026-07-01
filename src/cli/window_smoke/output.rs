@@ -9,10 +9,13 @@ pub(super) fn window_smoke_success(report: &NativeAppRunReport) -> CliExit {
     CliExit {
         code: 0,
         stdout: format!(
-            "window smoke: ok\npresented frame limit: 1\nredraw attempts: {}\nsurface timeouts: {}\nsurface occluded: {}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\n",
+            "window smoke: ok\npresented frame limit: 3\nredraw attempts: {}\nframes presented: {}\nsurface timeouts: {}\nsurface occluded: {}\nterminal cells: {}x{}\ndefault startup content checked: {}\ntmux status strip rendered: {}\ntmux status pane command rendered: {}\ntmux manager panel rendered: {}\n",
             report.redraw_attempts,
+            report.frames_presented,
             report.surface_frame_timeouts,
             report.surface_frame_occluded,
+            report.terminal_cols,
+            report.terminal_rows,
             report.default_startup_content_checked,
             report.tmux_status_strip_rendered,
             report.tmux_status_pane_command_rendered,

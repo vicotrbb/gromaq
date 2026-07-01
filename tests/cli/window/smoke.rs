@@ -20,14 +20,14 @@ fn window_smoke_launches_bounded_native_terminal_app() {
         exit,
         CliExit {
             code: 0,
-            stdout: "window smoke: ok\npresented frame limit: 1\nredraw attempts: 1\nsurface timeouts: 0\nsurface occluded: 0\ndefault startup content checked: true\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
+            stdout: "window smoke: ok\npresented frame limit: 3\nredraw attempts: 3\nframes presented: 3\nsurface timeouts: 0\nsurface occluded: 0\nterminal cells: 140x35\ndefault startup content checked: true\ntmux status strip rendered: true\ntmux status pane command rendered: true\ntmux manager panel rendered: true\n".to_owned(),
             stderr: String::new(),
         }
     );
     assert!(backend.requests.borrow().is_empty());
     assert_eq!(app.launches.borrow().len(), 1);
     let launch = &app.launches.borrow()[0];
-    assert_eq!(launch.app.exit_after_presented_frames, Some(1));
+    assert_eq!(launch.app.exit_after_presented_frames, Some(3));
     assert_eq!(launch.app.exit_after_redraw_attempts, Some(16));
     assert!(launch.app.redraw_until_presented_frame_limit);
     assert!(launch.app.tmux_ui_enabled);

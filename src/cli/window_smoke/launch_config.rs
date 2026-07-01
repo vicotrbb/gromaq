@@ -7,6 +7,7 @@ use crate::pty::ShellCommand;
 const WINDOW_PERF_SMOKE_FRAME_LIMIT: u64 = 180;
 const WINDOW_PERF_SMOKE_WARMUP_FRAMES: u64 = 12;
 const WINDOW_SCREENSHOT_SMOKE_FRAME_LIMIT: u64 = 900;
+const WINDOW_SMOKE_FRAME_LIMIT: u64 = 3;
 const WINDOW_SMOKE_REDRAW_ATTEMPT_LIMIT: u64 = 16;
 const WINDOW_PERF_SMOKE_REDRAW_ATTEMPT_MULTIPLIER: u64 = 4;
 const WINDOW_SCREENSHOT_SMOKE_REDRAW_ATTEMPT_MULTIPLIER: u64 = 4;
@@ -14,7 +15,7 @@ const WINDOW_SCREENSHOT_SMOKE_REDRAW_ATTEMPT_MULTIPLIER: u64 = 4;
 pub(super) fn window_smoke_launch_config(command: CliCommand<'_>) -> (NativeAppLaunchConfig, u64) {
     let mut launch_config = NativeAppLaunchConfig::default();
     let frame_limit = match command {
-        CliCommand::WindowSmoke => 1,
+        CliCommand::WindowSmoke => WINDOW_SMOKE_FRAME_LIMIT,
         CliCommand::WindowPerfSmoke => {
             launch_config.app.frame_interval_warmup_frames = WINDOW_PERF_SMOKE_WARMUP_FRAMES;
             WINDOW_PERF_SMOKE_FRAME_LIMIT + WINDOW_PERF_SMOKE_WARMUP_FRAMES
