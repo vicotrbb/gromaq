@@ -190,6 +190,8 @@ fn macos_window_screenshot_proof_requires_tmux_accent_pixels() {
         "minimumTmuxAccent",
         "tmuxAccentMatches",
         "tmux accent sampled pixels:",
+        "tmux accent minimum pixels:",
+        "grep -F \"tmux accent sampled pixels:\" \"${log_path}\"",
     ] {
         assert!(
             source.contains(marker),

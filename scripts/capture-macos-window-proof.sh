@@ -290,4 +290,6 @@ fi
   printf '%s\n' "Window region: ${window_region}"
   printf '%s\n' "Window sharing state: ${window_sharing_state}"
   printf '%s\n' "Capture method: ${capture_method}"
+  printf '%s\n' "tmux accent minimum pixels: ${min_tmux_pixels}"
+  grep -F "tmux accent sampled pixels:" "${log_path}"
 } | tee "${summary_path}"
