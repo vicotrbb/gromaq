@@ -171,6 +171,8 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
         "Darwin",
         "tmux -V",
         "cargo run",
+        "tmux Cmd/Ctrl+Shift+T",
+        "tmux-default-cargo-run-current-startup.txt",
         "tmux-default-cargo-run-status-strip.txt",
         "tmux-default-cargo-run-manager-visible.txt",
         "tmux-default-cargo-run-not-hint.txt",

@@ -22,6 +22,8 @@ if ! command -v tmux >/dev/null 2>&1; then
   exit 1
 fi
 tmux_version="$(tmux -V)"
+head_sha="$(git -C "${root}" rev-parse --short HEAD)"
+startup_marker="tmux Cmd/Ctrl+Shift+T"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -34,6 +36,7 @@ tmux new-session -d -s "${kill_session}" -n disposable
 
 printf '%s\n' "macOS native tmux default cargo run proof"
 printf '%s\n' "tmux: ${tmux_version}"
+printf '%s\n' "git HEAD: ${head_sha}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
 printf '%s\n' "A default Gromaq window will open through plain cargo run."
@@ -41,6 +44,7 @@ printf '%s\n' "In that window, verify the native tmux UI against the checklist b
 printf '%s\n' "Close the Gromaq window when the checklist is complete; this script will then ask for exact confirmation tokens."
 printf '%s\n' ""
 printf '%s\n' "Checklist while cargo run is open:"
+printf '%s\n' "- The welcome Input row says '${startup_marker}', not the old keyboard/mouse/paste copy."
 printf '%s\n' "- Persistent tmux status strip is visible and legible."
 printf '%s\n' "- Control/Super Shift+T opens a real manager panel, not a tiny hint."
 printf '%s\n' "- Sessions, windows, panes, current target, and pane command text are visible."
@@ -69,6 +73,7 @@ record_confirmation() {
   fi
 }
 
+record_confirmation "Confirm the welcome Input row used the current tmux shortcut copy." "current-startup-copy" "tmux-default-cargo-run-current-startup.txt"
 record_confirmation "Confirm the persistent tmux status strip was visible and legible." "status-strip-visible" "tmux-default-cargo-run-status-strip.txt"
 record_confirmation "Confirm Control/Super Shift+T opened a real manager panel." "manager-visible" "tmux-default-cargo-run-manager-visible.txt"
 record_confirmation "Confirm the manager was not a tiny hint or palette." "not-hint" "tmux-default-cargo-run-not-hint.txt"
@@ -83,10 +88,12 @@ record_confirmation "Confirm prompt/right-prompt layout stayed legible." "right-
 {
   printf '%s\n' "macOS native tmux default cargo run proof: ok"
   printf '%s\n' "tmux: ${tmux_version}"
+  printf '%s\n' "git HEAD: ${head_sha}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "kill-session target: ${kill_session}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
+  printf '%s\n' "tmux-default-cargo-run-current-startup.txt: current-startup-copy"
   printf '%s\n' "tmux-default-cargo-run-status-strip.txt: status-strip-visible"
   printf '%s\n' "tmux-default-cargo-run-manager-visible.txt: manager-visible"
   printf '%s\n' "tmux-default-cargo-run-not-hint.txt: not-hint"
