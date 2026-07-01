@@ -46,6 +46,26 @@ git -C "${root}" status --short --branch > "${git_status_path}"
 trap cleanup EXIT INT TERM
 cleanup
 
+(
+  cd "${root}"
+  cargo build > "${proof_root}/cargo-build.stdout" 2> "${proof_root}/cargo-build.stderr"
+)
+
+if [ ! -x "${binary_path}" ]; then
+  printf '%s\n' "error: expected cargo build debug binary at ${binary_path}." >&2
+  exit 1
+fi
+
+if ! strings "${binary_path}" | grep -F "${startup_marker}" > "${binary_markers_path}"; then
+  printf '%s\n' "error: ${binary_path} does not contain current startup marker '${startup_marker}'." >&2
+  exit 1
+fi
+
+if strings "${binary_path}" | grep -F "${old_startup_marker}" >> "${binary_markers_path}"; then
+  printf '%s\n' "error: unexpected old startup marker '${old_startup_marker}' remains in ${binary_path}." >&2
+  exit 1
+fi
+
 tmux new-session -d -s "${session}" -n code
 tmux split-window -t "${session}:0" -h
 tmux new-session -d -s "${kill_session}" -n disposable
@@ -89,16 +109,6 @@ fi
 
 if ! grep -F "Running \`target/debug/gromaq\`" "${proof_root}/cargo-run.stderr" >/dev/null; then
   printf '%s\n' "error: cargo run stderr did not show target/debug/gromaq launch." >&2
-  exit 1
-fi
-
-if ! strings "${binary_path}" | grep -F "${startup_marker}" > "${binary_markers_path}"; then
-  printf '%s\n' "error: ${binary_path} does not contain current startup marker '${startup_marker}'." >&2
-  exit 1
-fi
-
-if strings "${binary_path}" | grep -F "${old_startup_marker}" >> "${binary_markers_path}"; then
-  printf '%s\n' "error: unexpected old startup marker '${old_startup_marker}' remains in ${binary_path}." >&2
   exit 1
 fi
 
@@ -175,6 +185,8 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "session: ${session}"
   printf '%s\n' "started-session: ${started_session}"
   printf '%s\n' "kill-session target: ${kill_session}"
+  printf '%s\n' "cargo-build stdout: ${proof_root}/cargo-build.stdout"
+  printf '%s\n' "cargo-build stderr: ${proof_root}/cargo-build.stderr"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
   printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"

@@ -228,6 +228,27 @@ fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
 }
 
 #[test]
+fn macos_native_tmux_default_cargo_run_proof_checks_binary_before_window() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-macos-native-tmux-default-cargo-run.sh"))
+            .unwrap();
+
+    let build = proof_script.find("cargo build").unwrap();
+    let marker_check = proof_script
+        .find("does not contain current startup marker")
+        .unwrap();
+    let stale_check = proof_script.find("unexpected old startup marker").unwrap();
+    let interactive_launch = proof_script
+        .find("A default Gromaq window will open through plain cargo run.")
+        .unwrap();
+
+    assert!(build < interactive_launch);
+    assert!(marker_check < interactive_launch);
+    assert!(stale_check < interactive_launch);
+}
+
+#[test]
 fn native_tmux_default_snapshot_proof_exports_inspectable_artifact() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let proof_script =
