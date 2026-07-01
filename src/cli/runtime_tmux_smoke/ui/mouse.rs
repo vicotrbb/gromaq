@@ -11,12 +11,22 @@ const SMOKE_CELL_WIDTH_PX: u16 = 10;
 const SMOKE_LINE_HEIGHT_PX: u16 = 10;
 const MANAGER_START_ROW: u16 = 2;
 const MANAGER_WINDOW_ROW: u16 = MANAGER_START_ROW + 2;
+const MANAGER_ACTION_ROW: u16 = MANAGER_START_ROW + 5;
+const KILL_WINDOW_ACTION_COL: u16 = 90;
 
 pub(super) fn drive_mouse_focus(runtime: &mut super::SmokeRuntime) -> bool {
+    send_manager_mouse_press(runtime, 1, MANAGER_WINDOW_ROW)
+}
+
+pub(super) fn drive_mouse_action_selection(runtime: &mut super::SmokeRuntime) -> bool {
+    send_manager_mouse_press(runtime, KILL_WINDOW_ACTION_COL, MANAGER_ACTION_ROW)
+}
+
+fn send_manager_mouse_press(runtime: &mut super::SmokeRuntime, col: u16, row: u16) -> bool {
     runtime
         .send_window_mouse_input_event_result(NativeWindowMouseInput {
-            x: 1.0,
-            y: f64::from(MANAGER_WINDOW_ROW) * f64::from(SMOKE_LINE_HEIGHT_PX) + 1.0,
+            x: f64::from(col) * f64::from(SMOKE_CELL_WIDTH_PX) + 1.0,
+            y: f64::from(row) * f64::from(SMOKE_LINE_HEIGHT_PX) + 1.0,
             window_width_px: SMOKE_WINDOW_WIDTH_PX,
             window_height_px: SMOKE_WINDOW_HEIGHT_PX,
             cell_width_px: SMOKE_CELL_WIDTH_PX,

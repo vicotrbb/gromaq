@@ -125,6 +125,10 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
         ),
         (
             "documentation/compatibility.md",
+            "mouse action selection checked: true",
+        ),
+        (
+            "documentation/compatibility.md",
             "startup manager after shell prompt checked: true",
         ),
         (
@@ -152,10 +156,7 @@ fn native_tmux_docs_track_ui_smoke_and_manual_boundaries() {
             "TESTING.md",
             "Use `q` or another destructive shortcut and verify inline confirmation",
         ),
-        (
-            "TESTING.md",
-            "startup shell output fills the first window",
-        ),
+        ("TESTING.md", "startup shell output fills the first window"),
         (
             "TESTING.md",
             "Click session/window/pane/action/workspace rows",
