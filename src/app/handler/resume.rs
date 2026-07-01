@@ -65,6 +65,14 @@ impl NativeTerminalApp {
             event_loop.exit();
             return;
         }
+        if self.lifecycle.config().tmux_ui_enabled
+            && self.lifecycle.config().open_tmux_manager_on_start
+        {
+            self.runtime.open_tmux_manager_panel_with_workspaces(
+                super::actions::read_tmux_manager_snapshot(),
+                self.lifecycle.config().tmux_workspaces.clone(),
+            );
+        }
         if let Some(window) = &self.window {
             window.request_redraw();
         }

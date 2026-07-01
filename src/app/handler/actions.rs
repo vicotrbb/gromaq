@@ -193,7 +193,7 @@ impl NativeTerminalApp {
     }
 }
 
-fn read_tmux_manager_snapshot() -> crate::tmux::TmuxManagerSnapshot {
+pub(super) fn read_tmux_manager_snapshot() -> crate::tmux::TmuxManagerSnapshot {
     crate::tmux::TmuxManager::new(crate::tmux::SystemTmuxCommandRunner)
         .snapshot()
         .unwrap_or_else(|error| match error {

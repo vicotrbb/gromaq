@@ -75,6 +75,21 @@ impl<S> NativeTerminalRuntime<S> {
         self.toggle_tmux_manager_panel_with_workspaces(snapshot, Vec::new());
     }
 
+    /// Open or refresh the native tmux manager panel without closing it when already visible.
+    pub fn open_tmux_manager_panel_with_workspaces(
+        &mut self,
+        snapshot: TmuxManagerSnapshot,
+        workspace_presets: Vec<TmuxWorkspaceUiPreset>,
+    ) {
+        self.tmux_status_snapshot = Some(TmuxUiSnapshot::from_manager_snapshot(&snapshot));
+        self.tmux_manager_panel = Some(TmuxManagerPanelState::open_for_snapshot_with_workspaces(
+            &snapshot,
+            workspace_presets,
+        ));
+        self.tmux_manager_snapshot = Some(snapshot);
+        self.terminal.invalidate_viewport();
+    }
+
     /// Toggle the native tmux manager panel with configured workspace presets.
     pub fn toggle_tmux_manager_panel_with_workspaces(
         &mut self,
@@ -85,13 +100,8 @@ impl<S> NativeTerminalRuntime<S> {
             self.tmux_manager_panel = None;
             self.tmux_manager_snapshot = None;
         } else {
-            self.tmux_status_snapshot = Some(TmuxUiSnapshot::from_manager_snapshot(&snapshot));
-            self.tmux_manager_panel =
-                Some(TmuxManagerPanelState::open_for_snapshot_with_workspaces(
-                    &snapshot,
-                    workspace_presets,
-                ));
-            self.tmux_manager_snapshot = Some(snapshot);
+            self.open_tmux_manager_panel_with_workspaces(snapshot, workspace_presets);
+            return;
         }
         self.terminal.invalidate_viewport();
     }

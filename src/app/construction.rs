@@ -99,7 +99,7 @@ impl NativeTerminalApp {
             runtime.set_tmux_status_strip_enabled(config.tmux_status_strip_enabled);
             runtime.set_tmux_status_snapshot(super::tmux_status::read_tmux_status_snapshot());
             if config.open_tmux_manager_on_start {
-                runtime.toggle_tmux_manager_panel_with_workspaces(
+                runtime.open_tmux_manager_panel_with_workspaces(
                     super::tmux_status::read_tmux_manager_snapshot(),
                     config.tmux_workspaces.clone(),
                 );
