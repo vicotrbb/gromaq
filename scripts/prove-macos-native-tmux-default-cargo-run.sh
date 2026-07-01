@@ -43,6 +43,10 @@ window_smoke_stdout_path="${proof_root}/tmux-default-cargo-run-window-smoke.stdo
 window_smoke_stderr_path="${proof_root}/tmux-default-cargo-run-window-smoke.stderr"
 runtime_tmux_ui_smoke_stdout_path="${proof_root}/tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout"
 runtime_tmux_ui_smoke_stderr_path="${proof_root}/tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr"
+manager_reference_ppm_path="${proof_root}/tmux-default-cargo-run-manager-reference.ppm"
+manager_reference_png_path="${proof_root}/tmux-default-cargo-run-manager-reference.png"
+manager_reference_stdout_path="${proof_root}/tmux-default-cargo-run-manager-reference.stdout"
+manager_reference_stderr_path="${proof_root}/tmux-default-cargo-run-manager-reference.stderr"
 
 rm -rf "${proof_root}"
 mkdir -p "${proof_root}"
@@ -114,6 +118,42 @@ tmux new-session -d -s "${session}" -n code
 tmux split-window -t "${session}:0" -h
 tmux new-session -d -s "${kill_session}" -n disposable
 
+(
+  cd "${root}"
+  cargo run -- --window-tmux-manager-snapshot "${manager_reference_ppm_path}" > "${manager_reference_stdout_path}" 2> "${manager_reference_stderr_path}"
+)
+
+if ! grep -F "default startup content checked: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default manager reference did not prove current startup content." >&2
+  exit 1
+fi
+
+if ! grep -F "tmux status strip rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default manager reference did not render the tmux status strip." >&2
+  exit 1
+fi
+
+if ! grep -F "tmux status pane command rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default manager reference did not render the tmux active pane command." >&2
+  exit 1
+fi
+
+if ! grep -F "tmux manager panel rendered: true" "${manager_reference_stdout_path}" >/dev/null; then
+  printf '%s\n' "error: default manager reference did not render the tmux manager panel." >&2
+  exit 1
+fi
+
+for count_label in "tmux manager sessions:" "tmux manager windows:" "tmux manager panes:"; do
+  if ! grep -F "${count_label}" "${manager_reference_stdout_path}" >/dev/null; then
+    printf '%s\n' "error: default manager reference did not report ${count_label}" >&2
+    exit 1
+  fi
+done
+
+if command -v sips >/dev/null 2>&1; then
+  sips -s format png "${manager_reference_ppm_path}" --out "${manager_reference_png_path}" >/dev/null
+fi
+
 printf '%s\n' "macOS native tmux default cargo run proof"
 printf '%s\n' "tmux: ${tmux_version}"
 printf '%s\n' "git HEAD: ${head_sha}"
@@ -123,6 +163,10 @@ printf '%s\n' "debug binary: ${binary_path}"
 printf '%s\n' "Target session: ${session}"
 printf '%s\n' "Expected started session: ${started_session}"
 printf '%s\n' "Disposable kill target: ${kill_session}"
+printf '%s\n' "Expected manager reference snapshot: ${manager_reference_ppm_path}"
+if [ -f "${manager_reference_png_path}" ]; then
+  printf '%s\n' "Expected manager reference PNG: ${manager_reference_png_path}"
+fi
 printf '%s\n' "A default Gromaq window will open through plain cargo run."
 printf '%s\n' "In that window, verify the native tmux UI against the checklist below."
 printf '%s\n' "Close the Gromaq window when the checklist is complete; this script will then ask for exact confirmation tokens."
@@ -236,6 +280,12 @@ printf '%s\n' "true" > "${started_session_exists_path}"
   printf '%s\n' "tmux-default-cargo-run-window-smoke.stderr: ${window_smoke_stderr_path}"
   printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stdout: ${runtime_tmux_ui_smoke_stdout_path}"
   printf '%s\n' "tmux-default-cargo-run-runtime-tmux-ui-smoke.stderr: ${runtime_tmux_ui_smoke_stderr_path}"
+  printf '%s\n' "tmux-default-cargo-run-manager-reference.ppm: ${manager_reference_ppm_path}"
+  if [ -f "${manager_reference_png_path}" ]; then
+    printf '%s\n' "tmux-default-cargo-run-manager-reference.png: ${manager_reference_png_path}"
+  fi
+  printf '%s\n' "tmux-default-cargo-run-manager-reference.stdout: ${manager_reference_stdout_path}"
+  printf '%s\n' "tmux-default-cargo-run-manager-reference.stderr: ${manager_reference_stderr_path}"
   printf '%s\n' "cargo-run stdout: ${proof_root}/cargo-run.stdout"
   printf '%s\n' "cargo-run stderr: ${proof_root}/cargo-run.stderr"
   printf '%s\n' "tmux-default-cargo-run-binary-markers.txt: ${startup_marker}"
