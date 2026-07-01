@@ -53,7 +53,7 @@ pub(crate) fn default_welcome_text(
             ),
         ),
         WelcomeLine::metric("Palette", "truecolor ANSI + dim text"),
-        WelcomeLine::metric("Input", "keyboard, mouse, paste, zoom"),
+        WelcomeLine::metric("Input", "tmux Cmd/Ctrl+Shift+T"),
     ];
 
     let style = WelcomeStyle::from_renderer(renderer);

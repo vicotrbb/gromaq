@@ -28,6 +28,7 @@ fn default_welcome_text_reports_terminal_and_renderer_stats() {
     assert!(text.contains("18px wide"));
     assert!(text.contains("14px padding, opacity 100%"));
     assert!(text.contains("truecolor ANSI + dim text"));
+    assert!(text.contains("tmux Cmd/Ctrl+Shift+T"));
     assert!(text.contains(WELCOME_AVATAR_ANSI.lines().nth(2).unwrap()));
     assert!(!text.contains("GMQ"));
     assert!(!text.contains("TERMINAL"));

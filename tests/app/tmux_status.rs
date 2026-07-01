@@ -29,6 +29,27 @@ fn native_terminal_runtime_renders_retained_tmux_status_strip_on_normal_frame() 
     assert_eq!(runtime.terminal().dump_grid().line_text(1), ">");
 }
 
+#[test]
+fn retained_tmux_status_strip_renders_when_terminal_frame_is_clean() {
+    let mut runtime = NativeTerminalRuntime::<MockPtySession>::new(NativeTerminalRuntimeConfig {
+        terminal_cols: 72,
+        terminal_rows: 5,
+        ..NativeTerminalRuntimeConfig::default()
+    })
+    .unwrap();
+    runtime.write_startup_text("ready\r\n> ").unwrap();
+    let mut renderer = MockFrameRenderer::default();
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+    runtime.set_tmux_status_snapshot(attached_snapshot());
+
+    assert!(runtime.render_terminal_frame(&mut renderer).unwrap());
+
+    let frame = renderer.frames.last().unwrap();
+    assert!(frame.lines[4].contains("tmux: attached"));
+    assert!(frame.lines[4].contains("alpha"));
+}
+
 fn attached_snapshot() -> TmuxUiSnapshot {
     TmuxUiSnapshot {
         status: TmuxStatusKind::Attached,
