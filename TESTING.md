@@ -104,8 +104,18 @@ For native tmux manager app-window proof, use an isolated tmux target and record
 the exact result. The required manual checklist is:
 
 ```bash
+scripts/prove-macos-native-tmux-default-cargo-run.sh
 scripts/prove-macos-native-tmux-manual.sh
 ```
+
+`scripts/prove-macos-native-tmux-default-cargo-run.sh` opens the default app
+path through plain `cargo run`, matching the no-argument developer workflow. It
+prepares uniquely named tmux sessions, asks the tester to verify the default
+status strip, Control/Super Shift `T` manager panel, visible tmux state,
+navigation, safe action dispatch, destructive confirmation against the
+disposable target, shell input after closing the panel, and right-prompt
+legibility, then records confirmation files under
+`target/macos-native-tmux-default-cargo-run-proof`.
 
 When no packaged app bundle is selected, the helper builds and launches
 `target/debug/gromaq` directly with its generated tmux proof config. Set

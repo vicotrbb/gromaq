@@ -159,3 +159,34 @@ fn macos_native_tmux_manual_proof_guides_live_manager_workflow() {
         );
     }
 }
+
+#[test]
+fn macos_native_tmux_default_cargo_run_proof_guides_no_arg_workflow() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let proof_script =
+        fs::read_to_string(root.join("scripts/prove-macos-native-tmux-default-cargo-run.sh"))
+            .unwrap();
+
+    for marker in [
+        "Darwin",
+        "tmux -V",
+        "cargo run",
+        "tmux-default-cargo-run-status-strip.txt",
+        "tmux-default-cargo-run-manager-visible.txt",
+        "tmux-default-cargo-run-not-hint.txt",
+        "tmux-default-cargo-run-state-visible.txt",
+        "tmux-default-cargo-run-navigation.txt",
+        "tmux-default-cargo-run-safe-action.txt",
+        "tmux-default-cargo-run-destructive-confirmation.txt",
+        "tmux-default-cargo-run-isolated-kill.txt",
+        "tmux-default-cargo-run-shell-input.txt",
+        "tmux-default-cargo-run-right-prompt.txt",
+        "macOS native tmux default cargo run proof: ok",
+        "summary.txt",
+    ] {
+        assert!(
+            proof_script.contains(marker),
+            "macOS native tmux default cargo run proof must include marker `{marker}`"
+        );
+    }
+}
